@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(flutter --version)",
+      "PowerShell(scoop bucket add extras 2>&1)",
+      "PowerShell(scoop bucket list)",
+      "PowerShell(git clone --depth 1 -b stable https://github.com/flutter/flutter.git D:\\\\Dev\\\\tools\\\\flutter)",
+      "PowerShell(flutter --version 2>&1 | Select-Object -First 1; Write-Output \"exit=$LASTEXITCODE\")",
+      "Read(//c/Users/morni/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/subagent-driven-development/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\morni\\.claude\\projects\\d--Dev-Trilumos-hourglass\\memory"
+    ]
+  }
+}
