@@ -73,4 +73,36 @@ void main() {
     ];
     expect(calc.sessionsCompleted(sessions), 1);
   });
+
+  group('focusInWeekEnding', () {
+    test('includes completed sessions within the inclusive 7-day window', () {
+      final day = DateTime(2026, 6, 11);
+      final sessions = [
+        _session(startedAt: DateTime(2026, 6, 11)), // today (window end)
+        _session(startedAt: DateTime(2026, 6, 5)),  // 6 days earlier (window start, included)
+      ];
+      expect(calc.focusInWeekEnding(day, sessions), const Duration(minutes: 50));
+    });
+
+    test('excludes sessions just outside the 7-day window', () {
+      final day = DateTime(2026, 6, 11);
+      final sessions = [
+        _session(startedAt: DateTime(2026, 6, 11)),
+        _session(startedAt: DateTime(2026, 6, 4)), // 7 days earlier -> outside window
+      ];
+      expect(calc.focusInWeekEnding(day, sessions), const Duration(minutes: 25));
+    });
+
+    test('excludes abandoned sessions inside the window', () {
+      final day = DateTime(2026, 6, 11);
+      final sessions = [
+        _session(startedAt: DateTime(2026, 6, 10)),
+        _session(
+            startedAt: DateTime(2026, 6, 10),
+            completed: false,
+            abandoned: true),
+      ];
+      expect(calc.focusInWeekEnding(day, sessions), const Duration(minutes: 25));
+    });
+  });
 }
