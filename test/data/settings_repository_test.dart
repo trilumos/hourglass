@@ -26,4 +26,9 @@ void main() {
     await repo.setInt('staminaSeconds', 1500);
     expect(await repo.getInt('staminaSeconds', defaultValue: 0), 1500);
   });
+
+  test('getInt returns the default when the stored value is not an int', () async {
+    await repo.setBool('weird', false); // stores the string 'false', not a number
+    expect(await repo.getInt('weird', defaultValue: 7), 7);
+  });
 }

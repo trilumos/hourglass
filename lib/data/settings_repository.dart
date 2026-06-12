@@ -29,7 +29,8 @@ class SettingsRepository {
 
   Future<int> getInt(String key, {required int defaultValue}) async {
     final v = await _raw(key);
-    return v == null ? defaultValue : int.parse(v);
+    if (v == null) return defaultValue;
+    return int.tryParse(v) ?? defaultValue;
   }
 
   Future<void> setInt(String key, int value) => _write(key, '$value');
