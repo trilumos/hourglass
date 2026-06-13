@@ -6,7 +6,7 @@ class StatsCalculator {
 
   Duration focusOnDay(DateTime day, List<SessionRecord> sessions) {
     return sessions
-        .where((s) => s.completed && _sameDay(s.startedAt, day))
+        .where((s) => s.completed && !s.abandoned && _sameDay(s.startedAt, day))
         .fold(Duration.zero, (sum, s) => sum + s.recordedFocus);
   }
 
@@ -17,6 +17,7 @@ class StatsCalculator {
     return sessions
         .where((s) =>
             s.completed &&
+            !s.abandoned &&
             !_dateOnly(s.startedAt).isBefore(start) &&
             !_dateOnly(s.startedAt).isAfter(end))
         .fold(Duration.zero, (sum, s) => sum + s.recordedFocus);
@@ -24,7 +25,7 @@ class StatsCalculator {
 
   int currentStreak(DateTime today, List<SessionRecord> sessions) {
     final days = sessions
-        .where((s) => s.completed)
+        .where((s) => s.completed && !s.abandoned)
         .map((s) => _dateOnly(s.startedAt))
         .toSet();
     var streak = 0;
@@ -37,7 +38,7 @@ class StatsCalculator {
   }
 
   int sessionsCompleted(List<SessionRecord> sessions) {
-    return sessions.where((s) => s.completed).length;
+    return sessions.where((s) => s.completed && !s.abandoned).length;
   }
 
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);

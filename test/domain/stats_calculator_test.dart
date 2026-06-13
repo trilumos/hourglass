@@ -74,6 +74,17 @@ void main() {
     expect(calc.sessionsCompleted(sessions), 1);
   });
 
+  test('a session marked both completed and abandoned is never counted', () {
+    final day = DateTime(2026, 6, 11);
+    final sessions = [
+      _session(startedAt: DateTime(2026, 6, 11), abandoned: true),
+    ];
+    expect(calc.focusOnDay(day, sessions), Duration.zero);
+    expect(calc.focusInWeekEnding(day, sessions), Duration.zero);
+    expect(calc.sessionsCompleted(sessions), 0);
+    expect(calc.currentStreak(day, sessions), 0);
+  });
+
   group('focusInWeekEnding', () {
     test('includes completed sessions within the inclusive 7-day window', () {
       final day = DateTime(2026, 6, 11);
