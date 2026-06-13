@@ -28,5 +28,15 @@ A session runs **Set intention → Flip → Struggle → Flow → Recovery**. Si
 - Plan 1 (Foundation & Core Domain): `docs/superpowers/plans/2026-06-11-hourglass-v1-foundation.md`
 - Roadmap: v1 "The Ritual" (P1) → P2 money/skins/stats → P3 ecosystem (sync/widgets/mixer) → P4 best-in-class (social, physics-grade sand).
 
-## Status (2026-06-11)
-Design approved. Plan 1 written. v1 split into 3 plans: P1 Foundation (written), P2 Session UI & Hourglass, P3 Stickiness & Share. Awaiting decision on how to execute Plan 1.
+## Status (2026-06-13)
+Design approved. v1 split into 3 plans: **P1 Foundation — DONE & reviewed SHIP-READY** (30 tests pass, `flutter analyze` clean); P2 Session UI & Hourglass (next, plan not yet written); P3 Stickiness & Share.
+
+Foundation built (subagent-driven, two-stage reviews): pure-Dart domain (`lib/domain/`: enums, PhaseEngine, computeRecordedFocus, SessionRecord, StaminaCalculator, StatsCalculator) + Drift data layer (`lib/data/`: AppDatabase with Sessions/Settings tables using `storeDateTimeAsText: true`, SessionRepository, SettingsRepository). Engineering mandate from founder: act as senior engineer, leave no bugs or security/privacy/legal holes; security work scales by phase (real rigor lands at P2 payments / P3 sync).
+
+## Carry-forward into Plan 2 (from final review — DO NOT lose these)
+- **Android release signing:** `android/app/build.gradle.kts` still signs release with the DEBUG keystore (scaffold default). Must create a real keystore + `android/key.properties` (gitignored) before any Play release.
+- **`android:allowBackup="false"`** (or backup rules) in AndroidManifest — the focus-history SQLite is privacy data; default auto-backup should be disabled for a privacy-first app.
+- **DB lifecycle:** wire `AppDatabase.open()` to a Riverpod provider that calls `db.close()` on dispose.
+- **Android toolchain setup needed before building APK:** accept licenses (`flutter doctor --android-licenses`), set up an emulator/device. (Flutter SDK lives at `D:\Dev\tools\flutter`.)
+- Already handled defensively in P1: stats ignore `abandoned` even if `completed` (guard test added); `.gitignore` excludes keystores/`google-services.json`/`GoogleService-Info.plist`/`.env`/etc.; `getInt` hardened against malformed values.
+- **Hourglass visual = prototyping step** at the start of P2 (try fluid-to-particle styles, pick default). Keep it lightweight (no grain physics in v1).
