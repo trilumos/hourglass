@@ -26,4 +26,15 @@ class HourglassSkin {
     glassOutline: Color(0x33FFFFFF),
     neckWidth: 0.012,
   );
+
+  /// Light-theme variant: the dark-tuned glass (white tints) is invisible on a
+  /// pale background, so the glass body/outline go DARK and the sand darkens to
+  /// the light-theme accent so it reads on warm paper. Shape/animation identical.
+  static const classicLight = HourglassSkin(
+    id: 'classic',
+    sandColor: Color(0xFFC69A5E),
+    glassTint: Color(0xFF1F1B14),
+    glassOutline: Color(0x331F1B14),
+    neckWidth: 0.012,
+  );
 }

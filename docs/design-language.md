@@ -33,9 +33,10 @@ Three words: **calm, warm, exact.**
    centering for short, isolated, symmetric things (the hero, a single button).
 6. **Whitespace is the premium signal.** Start over-spaced, then tighten.
 7. **Defer to content; keep chrome quiet.** Wordmark, nav, labels recede.
-8. **Depth comes from light, not boxes.** Dark: lighter warm surfaces + soft
-   glow (no drop shadows — they're invisible on near-black). Light: white cards +
-   soft warm shadow. Delineate with low-opacity hairlines, not heavy borders.
+8. **Depth comes from light, not boxes.** Dark: lighter warm surfaces + a subtle
+   full-screen gradient (ambient light from above), no drop shadows (invisible on
+   near-black) and no spotlight "glow blob". Light: white cards + soft warm
+   shadow. Delineate with low-opacity hairlines, not heavy borders.
 9. **Accent is punctuation.** Sand appears on the primary action, live progress,
    and the hero glow — not on every interactive element, never as decoration.
 10. **Motion is meaning.** Animate transitions, state changes, and the one
@@ -71,17 +72,17 @@ Widgets never use raw hex. Each theme/mode remaps these names to its palette.
 | Token | Hex |
 |---|---|
 | backdrop | `#000000` (AMOLED outermost only) |
-| background | `#0A0907` |
-| surface | `#131210` |
-| surfaceRaised | `#1C1A16` |
-| surfaceSunken | `#0E0D0B` |
+| background | `#15120E` (warm charcoal) |
+| surface | `#1E1A15` |
+| surfaceRaised | `#272118` |
+| surfaceSunken | `#110E0A` |
 | textPrimary | `#F2EDE4` |
 | textSecondary | `#B7AF9F` |
 | textMuted | `#8A8378` |
 | accent | `#E8C9A0` |
 | accentMuted | `#3A3024` |
 | onAccent | `#1A1206` |
-| hairline | `#272521` |
+| hairline | `#2E2A24` |
 | glow | `#1FE8C9A0` (sand @ ~12%) |
 | focusRing | `#E8C9A0` |
 | scrim | `#B3000000` |
@@ -113,16 +114,16 @@ Widgets never use raw hex. Each theme/mode remaps these names to its palette.
 
 ## 3. Typography
 
-**Fraunces (serif display) + Inter (sans UI/body)** — both SIL OFL 1.1, safe to
-bundle in a commercial app. The serif/sans split gives premium hierarchy for free
-and lets greetings feel editorial and human while the sans does the quiet work.
+**Geist (single family, SIL OFL 1.1)** — Vercel's typeface, for the minimal,
+premium, productivity feel the founder wants. One clean sans for everything; no
+curvy serif (Fraunces was tried and rejected as too decorative / "AI-slop").
 
-- **Fraunces** — greetings, section titles, the occasional hero line. Carries the
-  warm-cream accent in dark. Never below ~20sp (its hairlines vanish on black).
-- **Inter** — all body, labels, stats, buttons, settings. For the session
-  **timer**, use Inter with **tabular figures** (`FontFeature.tabularFigures()`)
-  so digits don't jitter. (Geist Mono is a possible future "instrument" option
-  for the timer only — not adopted now; it reads too technical for our warmth.)
+- **Geist** — greetings, titles, body, labels, stats, buttons. Greetings are
+  larger/heavier weight with slight negative tracking (editorial, not ornamental).
+- Secondary/supporting lines (e.g. the rotating encouragement) are **italic** for
+  a quiet voice distinction.
+- Session **timer** will use Geist with **tabular figures** so digits don't
+  jitter (Geist Mono is a possible future "instrument" option).
 
 ### Type scale (tuned for dark/AMOLED)
 
@@ -232,17 +233,24 @@ dashboard layouts.
 
 ## 9. Home screen — applied spec (top zone)
 
-- **Header row:** wordmark "HOURGLASS" top-left (Inter overline, `textMuted`,
-  +1.0 tracking, quiet); a single settings gear top-right (one icon, low-contrast,
-  ~40px tap target, faint hairline rim). All on the 24px screen margin / shared
-  left edge.
-- **Greeting:** the varied greeting (§6) as the largest type — Fraunces 30–34,
-  `accent` (warm cream in dark), left-aligned.
-- **Subtitle:** the rotating encouragement — Inter Body @ `textSecondary`,
-  left-aligned, cross-fade.
-- **Hero:** the locked hourglass centered, resting on the `glow`.
-- **Action cluster (bottom):** quiet Today / Streak stats, mode selector, and the
-  prominent **Begin** (pill, `accent` / `onAccent`).
+**Alignment:** wordmark, tagline, hourglass hero, and the bottom stats are
+**centered**; the **greeting block is left-aligned** (editorial, reads well left).
+The whole screen sits on a subtle **full-screen radial gradient** (ambient light
+from above: `surface` → `background`) — NOT a glowing blob behind the hero (the
+blob read as AI-slop and was removed).
+
+- **Top:** wordmark "HOURGLASS" centered (Geist overline, `textMuted`, +4
+  tracking, quiet) with a single settings gear at top-right (low-contrast,
+  ~40px tap target). The gear opens a light/dark/system sheet.
+- **Tagline:** the adaptive tagline (§ below), centered.
+- **Greeting:** the varied greeting (§6) as the largest type — Geist 30, w500,
+  `textPrimary`, **left-aligned**.
+- **Encouragement:** rotating line under the greeting — Geist 15, *italic*,
+  `textSecondary`, left-aligned, **slide-up + fade** transition (no flash).
+- **Hero:** the locked hourglass, centered, on the gradient.
+- **Action cluster (bottom, centered):** quiet Today / Streak stats (divider
+  between), mode selector, and the prominent **Begin** (pill, `accent` /
+  `onAccent`).
 - Adaptive tagline: prominent for new users; recedes once they've completed a
   block.
 
@@ -374,10 +382,17 @@ takeover must always show a calm visible exit — never trap the user.
 
 ## 15. Iconography
 
-**Phosphor** (`phosphor_flutter`, **MIT** — commercial-safe, cleanest licensing).
-Rounded terminals match "warm precision." Use **Regular** weight for UI, **Fill**
-only for selected/active states. Default icon **24dp** (20 dense, 28 emphasis),
-always inside a **≥48dp** touch target. Color via tokens (`textSecondary` resting,
+**Interim: Flutter built-in Material icons (rounded variants, e.g.
+`Icons.settings_outlined`, `Icons.check_rounded`).** Plain `IconData`, always
+compatible, rounded enough to fit. **Phosphor was the chosen set but is currently
+deferred** — `phosphor_flutter` 2.1.0 subclasses `IconData`, which became a
+`final` class in our Flutter version, so it won't compile. Revisit when Phosphor
+ships a compatible release, or adopt `material_symbols_icons` (Rounded, OFL) as
+the branded set. Either way the *rules* hold regardless of set:
+
+Rounded style to match "warm precision." Outline by default, filled only for
+selected/active states. Default icon **24dp** (20 dense, 28 emphasis), always
+inside a **≥48dp** touch target. Color via tokens (`textSecondary` resting,
 `accent`/`textPrimary` active). Icons are chrome — they recede. One weight per
 screen.
 

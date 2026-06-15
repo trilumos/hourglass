@@ -68,6 +68,10 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 
 ---
 
+## Open follow-ups (don't lose)
+- **Hardcoded greeting name "Deep"** in `lib/ui/widgets/greeting_line.dart` (`_name`). Placeholder until Plan 3 onboarding captures the user's real name into settings; then read it from there. (Founder asked to note this 2026-06-15.)
+- **Home top-right gear → full Settings page (future).** Currently the gear opens a small light/dark/system bottom sheet (interim). Plan: point it at a proper **Settings page** that hosts theme switching, **Profile access**, and more. The **Profile** then holds analytics/stats and other things. Other pages (stats dashboard, recovery, etc.) need entry points too — **brainstorm placement/accessibility when we build them** (don't just bolt on buttons). (Founder asked to note this 2026-06-15.)
+
 ## CONTINUATION — pick up here in a new session (updated 2026-06-15)
 
 ### What's DONE and committed (branch `master`)

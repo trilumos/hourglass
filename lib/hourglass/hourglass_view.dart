@@ -9,12 +9,16 @@ import 'hourglass_skin.dart';
 /// [RepaintBoundary].
 class HourglassView extends StatefulWidget {
   final double progress;
-  final HourglassSkin skin;
+
+  /// Explicit skin override. When null, the skin is chosen from the current
+  /// theme brightness (dark = [HourglassSkin.classic], light =
+  /// [HourglassSkin.classicLight]) so the hourglass stays visible in both modes.
+  final HourglassSkin? skin;
 
   const HourglassView({
     super.key,
     required this.progress,
-    this.skin = HourglassSkin.classic,
+    this.skin,
   });
 
   @override
@@ -42,6 +46,10 @@ class _HourglassViewState extends State<HourglassView>
 
   @override
   Widget build(BuildContext context) {
+    final skin = widget.skin ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? HourglassSkin.classic
+            : HourglassSkin.classicLight);
     return RepaintBoundary(
       child: AspectRatio(
         aspectRatio: 0.52,
@@ -50,7 +58,7 @@ class _HourglassViewState extends State<HourglassView>
           painter: HourglassPainter(
             progress: widget.progress.clamp(0.0, 1.0),
             time: _time,
-            skin: widget.skin,
+            skin: skin,
           ),
         ),
       ),

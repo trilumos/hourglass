@@ -39,6 +39,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   path_provider: ^2.1.5
   path: ^1.9.1
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,11 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  fonts:
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
