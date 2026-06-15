@@ -9,6 +9,10 @@
 - Bootstrapping — prefers **free tools** until there's traction. Values honesty/integrity (no overclaiming) as part of the brand.
 - **Save all project context/memory inside this project folder**, not in `C:\Users\...\.claude\...`.
 
+## Repo & git workflow (founder, standing)
+- **GitHub remote:** `origin` → `https://github.com/trilumos/hourglass.git` (branch `master`). Auth via Git Credential Manager (already authenticated on this machine).
+- **STANDING RULE: whenever something is "locked" / approved by the founder, commit it and `git push origin master`.** Keep the remote current with locked work. (Founder requested this 2026-06-15 after locking the hourglass visual.)
+
 ## Design mandate (founder, standing) — premium / buttery-smooth / no-friction
 Every screen must feel **premium, minimal, flow-state, and buttery-smooth** — no nonsense, no friction, no clutter. Motion is a feature: soft transitions, ~60fps verified on device, isolated repaints. The founder expects to **iterate the UI heavily** (color palette, button shapes, positions) — so ALL styling must flow from **centralized design tokens** (one theme file: colors, typography, spacing, shape, motion) and never be hardcoded per-screen, making restyles cheap. When building UI, lean on the `frontend-design` / `impeccable` skills for quality. **Why:** the aesthetic-study audience shares beautiful tools; craft IS the moat. **How to apply:** tokens-first, reusable restyleable widgets, verify smoothness on a real device, default to calm/minimal over feature-dense.
 
