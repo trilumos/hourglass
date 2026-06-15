@@ -9,6 +9,9 @@
 - Bootstrapping — prefers **free tools** until there's traction. Values honesty/integrity (no overclaiming) as part of the brand.
 - **Save all project context/memory inside this project folder**, not in `C:\Users\...\.claude\...`.
 
+## Design mandate (founder, standing) — premium / buttery-smooth / no-friction
+Every screen must feel **premium, minimal, flow-state, and buttery-smooth** — no nonsense, no friction, no clutter. Motion is a feature: soft transitions, ~60fps verified on device, isolated repaints. The founder expects to **iterate the UI heavily** (color palette, button shapes, positions) — so ALL styling must flow from **centralized design tokens** (one theme file: colors, typography, spacing, shape, motion) and never be hardcoded per-screen, making restyles cheap. When building UI, lean on the `frontend-design` / `impeccable` skills for quality. **Why:** the aesthetic-study audience shares beautiful tools; craft IS the moat. **How to apply:** tokens-first, reusable restyleable widgets, verify smoothness on a real device, default to calm/minimal over feature-dense.
+
 ## What Hourglass is
 A study/focus app positioned as **focus training** ("Train your focus like an athlete, recover like one too"), NOT "a prettier timer." Core invented method: **The Flow Block**, grounded in Flow Research Collective science (Rian Doris / Steven Kotler).
 
