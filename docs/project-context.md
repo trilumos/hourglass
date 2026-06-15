@@ -25,12 +25,14 @@ A session runs **Set intention → Flip → Struggle → Flow → Recovery**. Si
 - **Flutter + Dart**; **Android first** (Play Store, founder has Google dev account); iOS later, revenue-funded.
 - Stack: Riverpod, Drift (SQLite), just_audio, Firebase Analytics/Crashlytics. Pre-chosen for later: RevenueCat (P2), Firebase Auth/Firestore (P3).
 - Royalty-free soundscapes for now. Brand name still **TBD** (working title "Hourglass" is generic/hard to trademark — brainstorm before launch).
+- **Technique name = "Flow Block" (LOCKED 2026-06-15).** Founder briefly considered renaming it "Flowmodoro"; I validated and advised against. "Flowmodoro" is an existing generic term (nickname for the Flowtime Technique, invented by Zoe Read-Bivens, 2016), already used by live competing apps (**Flowmo: Flowmodoro Timer** on App Store + Google Play, **Flowcycle**, etc.), effectively un-trademarkable, and tethers the brand to Pomodoro — all of which clash with the "we invented this method / focus training, not a prettier timer" positioning. "Flow Block" is ownable, distinct, and on-narrative. Do not rename without re-checking this.
 - Hourglass visual = fluid-to-fine-particle spray, minimalist/premium, lightweight (no grain physics in v1); exact style prototyped during build.
 
 ## Honesty constraints (baked into the product)
 - Don't claim Doris/Kotler attack Pomodoro by name (no such quote). The "4% rule" and "500% productivity" figures are heuristics, not lab constants. The beginner stamina ramp is our approach, not an FRC claim.
 
 ## Key documents
+- **Design Language (LOOK/FEEL SOURCE OF TRUTH): `docs/design-language.md`** — our own branded style ("Warm Precision"): semantic color tokens (Sand light+dark), themes×modes model, Fraunces+Inter type system, spacing/radius/motion, voice & greeting personality, anti-patterns, and the Flutter token architecture (ThemeExtension). All screens build to this. Synthesized 2026-06-15 from category + Vercel/Geist + theming research.
 - Design spec: `docs/superpowers/specs/2026-06-11-hourglass-flow-block-app-design.md`
 - Plan 1 (Foundation & Core Domain): `docs/superpowers/plans/2026-06-11-hourglass-v1-foundation.md`
 - Roadmap: v1 "The Ritual" (P1) → P2 money/skins/stats → P3 ecosystem (sync/widgets/mixer) → P4 best-in-class (social, physics-grade sand).
