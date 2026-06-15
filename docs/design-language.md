@@ -245,3 +245,156 @@ dashboard layouts.
   prominent **Begin** (pill, `accent` / `onAccent`).
 - Adaptive tagline: prominent for new users; recedes once they've completed a
   block.
+
+---
+
+## 10. Layout system
+
+**Every screen is four vertical bands** so the app feels like one room rearranged:
+1. **System band** — status bar / safe-area insets. Never draw into it (`SafeArea`).
+2. **Chrome band** — minimal app bar: wordmark/back left, ≤1 quiet icon right. Recedes.
+3. **Content band** — the screen's reason to exist; scrolls if needed; single shared
+   left edge at the **24dp screen margin**.
+4. **Action band** — the one primary action, anchored low in the thumb easy-zone,
+   ≥16dp above the bottom safe inset.
+
+**Thumb zone:** reading flows top→down, acting happens bottom→up. The primary action
+lives in the bottom ~25% (full-width-ish pill); the top-right holds only a single
+low-stakes control (settings). Never put the primary CTA up top.
+
+**Grid & rhythm:** 8pt grid (4pt only for intra-component nudges). Screen margin
+24dp. Spacing *semantics* (which gap means what): `8` related · `12` label↔control ·
+`16` within group · `24` group↔group · `32` minor section · `48` hero isolation ·
+`64+` max breathing. **Optical alignment over mathematical** (center the hourglass by
+visual mass, align text to glyph edge). Single column is the default. **3–5
+meaningful elements per screen.**
+
+### Per-screen skeletons
+- **Home** = editorial top (greeting/subline, left) → **centered hero on glow** →
+  action cluster bottom (quiet stats · mode selector · **Begin** pill).
+- **Session** = chrome nearly gone → enlarged centered hero + tabular timer +
+  optional intention → one **Start/Stop** pill low, secondary action text-only.
+- **Setup** = stacked single-column groups (intention field · duration capsules ·
+  soundscape), 24dp apart, left-aligned → sticky **Begin** pill at bottom.
+- **Stats** = the *only* screen with a grid (bento) and no action band: a large
+  headline-metric tile + asymmetric 2-col tiles (bigger tile = more important).
+- **Settings** = pure single-column list, hairline-separated rows (not cards),
+  section labels + 32dp gaps; destructive items mid-list, never in the thumb zone.
+
+**Bento/cards stance:** bento for **Stats only**. Home & Session are single-focus
+(no cards). Setup uses fields/rows; Settings uses hairline rows. Never a card in a
+card.
+
+---
+
+## 11. Shape & form language
+
+**"Curves carry the calm; the hourglass sets the curve."** Rounded forms read as
+calm/human and are processed faster; sharp corners read as tension. We lean rounded,
+but *deliberately tuned*, not bubbly.
+
+1. **The hourglass silhouette is the master shape** — its pinched-waist opposed
+   curve gives the UI its vocabulary: smooth curvature, no hard angles, the pill as
+   signature.
+2. **Pill = primary action + live progress only** (Begin/Start-Stop, timer ring) —
+   the shape equivalent of "accent is punctuation."
+3. **Capsule (small pill) = a choice** (duration/soundscape chips) — quieter, no
+   accent fill.
+4. **Soft-rect containers** — `sm 12` fields/chips · `md 16` default surface ·
+   `lg 20` large tiles/sheets/hero plates. **0px corners forbidden.**
+5. **Circle = singular/live/ambient** — settings tap target, status dots, radial
+   progress (not for actions).
+6. **One curvature family per screen** — never drop a sharp element into a rounded
+   layout.
+
+---
+
+## 12. Interaction principles (UX laws, applied)
+
+- **Hick's** — one primary action per screen; setup choices ≤4 preset chips behind a
+  sheet, never a grid of options on launch.
+- **Fitts's** — the hero is large and thumb-reachable; the CTA is ≥56dp in the
+  bottom zone; secondary controls are small and cornered.
+- **Tesler's / smart defaults** — the app absorbs complexity: last-used duration
+  pre-selected, auto-resume, no required config. Happy path to focus = **one tap**.
+- **Doherty** — every tap responds <100ms; the flip starts on touch-down, not
+  release; no spinner for local (offline) actions.
+- **Peak-End** — spend the polish budget on the two highest-ROI moments: entering
+  flow (the peak) and the **completion** screen (the end). Payload first
+  ("You focused 25 minutes"), forward action last.
+- **Zeigarnik / Goal-Gradient** — an interrupted session offers a quiet "Resume —
+  4:12 left"; the falling sand *is* felt progress.
+- **Recognition over recall** — pre-highlight prior choices; show presets/recents;
+  never make the user type or remember.
+- **Progressive disclosure** — first run shows only "begin"; customization, stats,
+  advanced settings live one layer down.
+- **Aesthetic-Usability caution** — our polish buys goodwill but can *mask*
+  friction; test flows on their own merit.
+
+---
+
+## 13. Workflow & screen states
+
+**Session ritual arc** (each a distinct calm state): set intention (lightweight,
+skippable, ceremonial) → flip (one gesture, instant feedback) → struggle/flow
+(immersive, minimal chrome) → **complete** (serene resolution, gentle haptic,
+calm-celebratory — never confetti) → recover (soft optional next step).
+
+**Good vs bad friction:** delete setup friction; **keep** the brief
+intention/breath moment — it's a feature. **Confirmation vs undo:** prefer
+undo/resume over "Are you sure?"; reserve modals for truly irreversible actions.
+**Interruption:** persist session state on every interruption; offer low-friction
+resume, never force restart.
+
+**Six states every screen designs for:**
+- **Empty** — never blank; teach + invite. **New user → never show "0m / 0 days"**
+  (demotivating); show warm framing ("Your focus story begins with one flip").
+- **Loading** — offline v1 ≈ no real loading; prefer instant transitions over
+  spinners; calm low-contrast shimmer only if unavoidable.
+- **Error** — plain kind language, recovery action inline, no codes; treat each
+  error as a design failure to eliminate.
+- **Success** — completion is the flagship; smaller successes get quiet inline
+  confirmation, never an interrupting toast.
+- **First-use** — only "begin"; one gentle coach hint that fades.
+- **Offline** — the default, not an error; never surface "no connection" in v1.
+
+---
+
+## 14. Navigation model
+
+**Single-screen hub, NOT bottom navigation.** Hourglass's destinations (Focus hub,
+Stats, Settings) aren't co-equal; a persistent bottom bar would add chrome and
+dilute the single action. Flow: **Home hub** → Setup (bottom sheet) → Session
+(full-screen takeover) → Completion → Recovery → back to hub. Stats reached via a
+small deliberate affordance; Settings via the corner gear. Honor platform
+back/dismiss (Android edge-back, swipe-down to dismiss sheets). The session
+takeover must always show a calm visible exit — never trap the user.
+
+---
+
+## 15. Iconography
+
+**Phosphor** (`phosphor_flutter`, **MIT** — commercial-safe, cleanest licensing).
+Rounded terminals match "warm precision." Use **Regular** weight for UI, **Fill**
+only for selected/active states. Default icon **24dp** (20 dense, 28 emphasis),
+always inside a **≥48dp** touch target. Color via tokens (`textSecondary` resting,
+`accent`/`textPrimary` active). Icons are chrome — they recede. One weight per
+screen.
+
+---
+
+## 16. Shape & layout consistency tokens
+
+`const`, alongside `HgRadius`/`HgSpacing` (don't vary per skin):
+
+- **Radius:** `sm 12` (fields/chips) · `md 16` (containers) · `lg 20`
+  (tiles/sheets) · `pill 999` (primary action, live progress, capsules, circular
+  targets). Pill reserved for primary/live + small single-select capsules only.
+- **Touch targets:** every interactive hit area ≥ **48dp** regardless of visual size.
+- **Icon sizes:** 20 / 24 (default) / 28.
+- **Layout:** screen margin 24 · bento tile gap 12 · tile padding 16 · action
+  clearance ≥16 from bottom inset.
+- **Coherence rules:** one curvature family per screen · pill=primary/live,
+  capsule=choice, soft-rect=container · ≥48dp hit areas · one shared left edge (24),
+  center only hero + the single bottom CTA · primary action always in the bottom
+  thumb zone, reading content up top.
