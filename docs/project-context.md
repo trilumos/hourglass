@@ -31,8 +31,8 @@ A session runs **Set intention → Flip → Struggle → Flow → Recovery**. Si
 - Plan 1 (Foundation & Core Domain): `docs/superpowers/plans/2026-06-11-hourglass-v1-foundation.md`
 - Roadmap: v1 "The Ritual" (P1) → P2 money/skins/stats → P3 ecosystem (sync/widgets/mixer) → P4 best-in-class (social, physics-grade sand).
 
-## Status (2026-06-13)
-Design approved. v1 split into 3 plans: **P1 Foundation — DONE & reviewed SHIP-READY** (30 tests pass, `flutter analyze` clean); P2 Session UI & Hourglass (next, plan not yet written); P3 Stickiness & Share.
+## Status (2026-06-15)
+Design approved. v1 split into 3 plans: **P1 Foundation — DONE & reviewed SHIP-READY** (30 tests pass); **P2 Session UI & Hourglass — IN PROGRESS** (foundation tasks done; hourglass visual DONE & LOCKED; screens not yet built); P3 Stickiness & Share. See "Continuation" section at the bottom for exactly where to pick up.
 
 Foundation built (subagent-driven, two-stage reviews): pure-Dart domain (`lib/domain/`: enums, PhaseEngine, computeRecordedFocus, SessionRecord, StaminaCalculator, StatsCalculator) + Drift data layer (`lib/data/`: AppDatabase with Sessions/Settings tables using `storeDateTimeAsText: true`, SessionRepository, SettingsRepository). Engineering mandate from founder: act as senior engineer, leave no bugs or security/privacy/legal holes; security work scales by phase (real rigor lands at P2 payments / P3 sync).
 
@@ -58,4 +58,40 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 - **DB lifecycle:** wire `AppDatabase.open()` to a Riverpod provider that calls `db.close()` on dispose.
 - **Android toolchain setup needed before building APK:** accept licenses (`flutter doctor --android-licenses`), set up an emulator/device. (Flutter SDK lives at `D:\Dev\tools\flutter`.)
 - Already handled defensively in P1: stats ignore `abandoned` even if `completed` (guard test added); `.gitignore` excludes keystores/`google-services.json`/`GoogleService-Info.plist`/`.env`/etc.; `getInt` hardened against malformed values.
-- **Hourglass visual = prototyping step** at the start of P2 (try fluid-to-particle styles, pick default). Keep it lightweight (no grain physics in v1).
+- **Hourglass visual = prototyping step** at the start of P2 (try fluid-to-particle styles, pick default). Keep it lightweight (no grain physics in v1). — ✅ DONE & LOCKED (see below).
+
+---
+
+## CONTINUATION — pick up here in a new session (updated 2026-06-15)
+
+### What's DONE and committed (branch `master`)
+- **P1 Foundation** — `lib/domain/` + `lib/data/`, fully tested (30 tests green). Reviewed ship-ready.
+- **P2 logic** — `lib/app/` (Riverpod providers, theme, app shell — `home:` is a placeholder Scaffold), `lib/session/` (`SessionConfig`, `Ticker`, `SessionState`, `SessionController`, `SessionFinalizer`). All tested (38 tests green at last count).
+- **P2 hourglass visual — LOCKED** (commit `8fbfaa9`): `lib/hourglass/` (`hourglass_skin.dart`, `hourglass_painter.dart`, `hourglass_view.dart`, `hourglass_preview.dart`) + `lib/hourglass_preview_main.dart` (standalone preview entrypoint with a drain slider). The founder approved and **locked** this look after long on-device iteration — do NOT change it without being asked. Key choices already settled: andyfitz 2-layer parallax liquid top (light back / base front, ~1.4× speed apart, Catmull-Rom rendered); thin hole-width gravity sand-fall (~30 fine matte grains, phase² acceleration, no glow); two-phase pile; reduced fill so top/bottom never merge; wave fades flat near empty.
+
+### Dev environment (all set up, don't redo)
+- **Flutter 3.44.2** at `D:\Dev\tools\flutter` (on PATH). Dev on Windows; build via `flutter build apk` / preview on device.
+- **Android licenses accepted** (had to run the SDK's `sdkmanager --licenses` directly with `SKIP_JDK_VERSION_CHECK=1` + JDK 21 — `flutter doctor --android-licenses` mis-detects Java 21).
+- **Low-memory Gradle fix is committed** (`android/gradle.properties`: `-Xmx1536m`, kotlin in-process, no parallel) — the template's `-Xmx8G` crashed the daemon on this ~16GB/<5GB-free machine. Don't revert it.
+- **Real Android phone** used for preview: Vivo **V2521**, Android 16, id `10MG18FQQG0008L`. `adb` at `C:\Users\morni\AppData\Local\Android\Sdk\platform-tools\adb.exe`.
+
+### How to preview the hourglass on the phone (the loop used all session)
+```
+export PATH="/d/Dev/tools/flutter/bin:$PATH"; export JAVA_HOME="/c/Program Files/Java/jdk-21"; export MSYS_NO_PATHCONV=1
+ADB="/c/Users/morni/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+flutter build apk --debug -t lib/hourglass_preview_main.dart
+"$ADB" install -r build/app/outputs/flutter-apk/app-debug.apk
+"$ADB" shell am start -n com.trilumos.hourglass/.MainActivity
+# screenshot (note MSYS path quirk): screencap to /sdcard then pull to a C:/ path
+"$ADB" shell screencap -p /sdcard/s.png; "$ADB" pull /sdcard/s.png "C:/Users/morni/AppData/Local/Temp/s.png"
+```
+(`adb shell input tap 300 1518` taps the drain slider; screen stays awake via `svc power stayon usb`.)
+
+### NEXT (Plan 2 remaining) — see `docs/superpowers/plans/2026-06-13-hourglass-v1-session-ui.md`
+Build the screens that USE the locked `HourglassView` + the `SessionController`:
+1. **Home screen** (Task 6): calm landing, `HourglassView(progress:0)` at rest, Begin, mode selector, today/streak from a stats provider. Then point `lib/app/app.dart` `home:` at it (replace the placeholder).
+2. **Setup/Intention screen** (Task 7): intention + duration (stamina-suggested) + soundscape → builds a `SessionConfig`.
+3. **Session screen** (Task 8): wires `SessionController` (real `PeriodicTicker`) to `HourglassView(progress: elapsed/planned)`, surfaces the Struggle line, pause, protect-the-block (lifecycle), completion.
+4. **Audio** (Task 4): `just_audio` soundscapes — needs sourcing royalty-free CC0 loops + a CREDITS.md (deferred; signature "sand" sound is the hard one).
+5. **Wire `SessionFinalizer`** into the session-complete + abandon paths (Task 9 step 5).
+6. **Verify on device** (Task 10), then Plan 3 (Recovery/Boring-Break screen, stats dashboard, settings, share cards, optional sign-in/cloud-sync) + the release-security carry-forward items above.
