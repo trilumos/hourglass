@@ -97,4 +97,14 @@ void main() {
     ticker.advance(const Duration(minutes: 5));
     expect(c.state.elapsed, const Duration(minutes: 10));
   });
+
+  test('calling start twice is a safe no-op and does not throw', () {
+    final ticker = FakeTicker();
+    final c = _controller(ticker, autoContinue: false);
+    c.start();
+    ticker.advance(const Duration(minutes: 3));
+    c.start(); // must NOT throw LateInitializationError, must not reset elapsed
+    expect(c.state.status, SessionStatus.running);
+    expect(c.state.elapsed, const Duration(minutes: 3));
+  });
 }

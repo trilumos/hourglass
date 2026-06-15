@@ -27,6 +27,7 @@ class SessionController extends ChangeNotifier {
   SessionState get state => _state;
 
   void start() {
+    if (_state.status != SessionStatus.idle) return;
     _startedAt = now();
     _set(_state.copyWith(status: SessionStatus.running));
     ticker.start(_onTick);
