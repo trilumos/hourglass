@@ -127,22 +127,24 @@ curvy serif (Fraunces was tried and rejected as too decorative / "AI-slop").
 
 ### Type scale (tuned for dark/AMOLED)
 
+Single family **Geist** for all roles (weight carries hierarchy):
+
 | Role | Font | Size | Line-height | Tracking | Weight |
 |---|---|---|---|---|---|
-| Display (rare) | Fraunces | 40–44 | 1.15 | 0 | 400 |
-| Greeting / H1 | Fraunces | 30–34 | 1.2 | 0 | 400–500 |
-| Headline / H2 | Fraunces | 24–26 | 1.25 | 0 | 500 |
-| Title / H3 | Inter | 20 | 1.3 | +0.1 | 600 |
-| Subtitle | Inter | 16 | 1.4 | +0.1 | 600 |
-| Body Large | Inter | 17 | 1.5 | +0.15 | 500 |
-| Body | Inter | 15 | 1.45 | +0.15 | 500 |
-| Label (buttons/chips) | Inter | 14 | 1.4 | +0.3 | 600 |
-| Caption | Inter | 12–13 | 1.4 | +0.3 | 500 |
-| Overline / wordmark | Inter | 11 | 1.4 | +1.0 | 600 |
-| Timer numerals | Inter (tabular) | 64–96 | 1.0 | -1→0 | 500–600 |
+| Display (rare) | Geist | 40–44 | 1.15 | -0.5 | 500 |
+| Greeting / H1 | Geist | 29–34 | 1.15 | -0.3→-0.5 | 400–500 |
+| Headline / H2 | Geist | 24–26 | 1.25 | -0.2 | 500–600 |
+| Title / H3 | Geist | 20 | 1.3 | +0.1 | 600 |
+| Subtitle | Geist | 16 | 1.4 | +0.1 | 600 |
+| Body Large | Geist | 17 | 1.5 | +0.15 | 500 |
+| Body | Geist | 15 | 1.45 | +0.15 | 400–500 |
+| Label (buttons/chips) | Geist | 14 | 1.4 | +0.3 | 600 |
+| Caption | Geist | 12–13 | 1.4 | +0.3 | 500 |
+| Overline / wordmark | Geist | 11–14 | 1.4 | +3.5→+4 | 600–700 |
+| Timer numerals | Geist (tabular) | 64–96 | 1.0 | -1→0 | 500–600 |
 
-OFL obligation: ship each font's `OFL.txt` and surface it in an in-app licenses
-screen; record sources in `assets/fonts/CREDITS.md`.
+OFL obligation: ship `Geist-OFL.txt` and surface it in an in-app licenses screen;
+sources recorded in `assets/fonts/CREDITS.md`.
 
 ---
 
