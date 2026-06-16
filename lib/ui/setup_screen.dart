@@ -7,15 +7,42 @@ import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../session/session_config.dart';
+import '../session/session_plan.dart';
 import 'widgets/primary_button.dart';
 import 'widgets/screen_background.dart';
 
-/// Set the intention and length for a block, then begin. Mode is fixed (chosen
-/// on Home) and shown as the title; the length control differs per mode:
-/// Flow Block = stamina-suggested presets (+5 can exceed 90 with a warning),
-/// Pomodoro = a work-time stepper with an auto-derived break,
-/// Custom = a free stepper for any length (up to 4h). The big duration readout
-/// is the focal element.
+/// A Pomodoro work/break ratio preset.
+class _Ratio {
+  final int work;
+  final int short;
+  final int long;
+  const _Ratio(this.work, this.short, this.long);
+  String get label => '$work/$short';
+}
+
+const _ratios = [
+  _Ratio(25, 5, 15),
+  _Ratio(50, 10, 20),
+  _Ratio(52, 17, 25),
+  _Ratio(90, 15, 30),
+];
+
+enum _PomoEntry { duration, blocks }
+
+enum _CustomMode { count, interval }
+
+Duration _m(int min) => Duration(minutes: min);
+
+String _fmt(Duration d) {
+  final h = d.inHours;
+  final mm = d.inMinutes % 60;
+  if (h == 0) return '${mm}m';
+  if (mm == 0) return '${h}h';
+  return '${h}h ${mm}m';
+}
+
+/// Build a session plan for the chosen mode, then begin. Layout hierarchy:
+/// total duration (big) → focus time (stepper) → configuration.
 class SetupScreen extends ConsumerStatefulWidget {
   final SessionMode mode;
   const SetupScreen({super.key, required this.mode});
@@ -25,12 +52,28 @@ class SetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupScreenState extends ConsumerState<SetupScreen> {
-  static const _maxMinutes = 240; // 4 hours
-  static const _flowSoftCap = 90; // beyond this we warn
+  static const _flowSoftCap = 90;
+  static const _longEvery = 4;
 
   final _intention = TextEditingController();
-  int? _selectedMinutes;
   bool _endless = false;
+
+  // Flow
+  int? _flowMinutes;
+
+  // Pomodoro
+  _PomoEntry _pomoEntry = _PomoEntry.duration;
+  int _ratioIndex = 0;
+  int _blocks = 4; // by-blocks: explicit block count (fixed-length blocks)
+  int _pomoTarget = 120; // by-duration: chosen focus time (min) — exact, never auto-changes
+  int _durBlocks = 4; // by-duration: how many variable-length blocks to split into
+
+  // Custom
+  _CustomMode _customMode = _CustomMode.count;
+  int _customWork = 120; // total focus minutes
+  int _customBreaks = 3;
+  int _customInterval = 30;
+  int _customBreakLen = 10;
 
   SessionMode get _mode => widget.mode;
 
@@ -40,32 +83,79 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     SessionMode.custom: 'Custom',
   };
 
-  /// Pomodoro break auto-derived from work time (~5:1, kept sane).
-  int _breakFor(int work) => (work / 5).round().clamp(5, 30);
-
-  List<int> _flowPresets(int suggested) =>
-      ({15, 25, 30, 45, 60, 90, suggested}.where((m) => m <= _flowSoftCap).toList()
-        ..sort());
-
-  int _defaultMinutes(int suggested) => switch (_mode) {
-        SessionMode.flowBlock => suggested,
-        SessionMode.pomodoro => 25,
-        SessionMode.custom => 30,
-      };
-
-  void _set(int minutes) {
+  void _tap(VoidCallback f) {
     HapticFeedback.selectionClick();
-    setState(() => _selectedMinutes = minutes.clamp(5, _maxMinutes));
+    setState(f);
   }
 
-  void _begin(int minutes) {
+  int _suggestedFlow() =>
+      ref.read(suggestedFlowLengthProvider).asData?.value.inMinutes ?? 25;
+
+  /// One-line "what is this mode" under the title.
+  String _modeDescription() => switch (_mode) {
+        SessionMode.flowBlock =>
+          'One unbroken block of deep focus — recovery comes after.',
+        SessionMode.pomodoro => 'Focus in cycles with short breaks between.',
+        SessionMode.custom => 'Design your own focus-and-break schedule.',
+      };
+
+  /// Helper under the Pomodoro entry toggle.
+  String _pomodoroHint() => _pomoEntry == _PomoEntry.duration
+      ? 'Set your exact focus time — we split it into blocks with rests.'
+      : 'Pick a classic work/break length and how many blocks.';
+
+  /// Helper under the Custom breaks toggle.
+  String _customBreaksHint() => _customMode == _CustomMode.count
+      ? 'Choose how many breaks — spread evenly through your focus.'
+      : 'Take a break every set interval of focus.';
+
+  SessionPlan _buildPlan() {
+    switch (_mode) {
+      case SessionMode.flowBlock:
+        return SessionPlan.flowBlock(_m(_flowMinutes ?? _suggestedFlow()));
+      case SessionMode.pomodoro:
+        if (_pomoEntry == _PomoEntry.duration) {
+          // Flowmodoro: exact focus time split into variable-length blocks.
+          return SessionPlan.flowmodoro(
+            totalFocus: _m(_pomoTarget),
+            blocks: _durBlocks,
+          );
+        }
+        final r = _ratios[_ratioIndex];
+        return SessionPlan.pomodoro(
+          work: _m(r.work),
+          shortBreak: _m(r.short),
+          longBreak: _m(r.long),
+          blocks: _blocks,
+          longEvery: _longEvery,
+        );
+      case SessionMode.custom:
+        return _customMode == _CustomMode.count
+            ? SessionPlan.customByCount(
+                totalWork: _m(_customWork),
+                breaks: _customBreaks,
+                breakDuration: _m(_customBreakLen),
+              )
+            : SessionPlan.customByInterval(
+                totalWork: _m(_customWork),
+                intervalWork: _m(_customInterval),
+                breakDuration: _m(_customBreakLen),
+              );
+    }
+  }
+
+  bool get _endlessAvailable =>
+      _mode != SessionMode.pomodoro && _buildPlan().isSingleFocus;
+
+  void _begin() {
     HapticFeedback.lightImpact();
+    final plan = _buildPlan();
     final config = SessionConfig(
       mode: _mode,
-      plannedDuration: Duration(minutes: minutes),
-      autoContinue: _endless,
+      plan: plan,
+      autoContinue: _endlessAvailable && _endless,
       intention: _intention.text.trim(),
-      soundscape: 'sand', // soundscape picker lands with the audio task
+      soundscape: 'sand',
       skinId: 'classic',
     );
     // TODO(Task 8): replace with SessionScreen(config: config).
@@ -75,9 +165,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           appBar: AppBar(title: const Text('Session')),
           body: Center(
             child: Text(
-              '${config.mode.name} · ${config.plannedDuration.inMinutes} min'
-              '${config.autoContinue ? ' · endless' : ''}\n'
-              '“${config.intention}”',
+              '${config.mode.name}\n'
+              '${plan.focusCount} focus · ${plan.segments.length - plan.focusCount} breaks\n'
+              'focus ${_fmt(plan.totalFocus)} · total ${_fmt(plan.totalDuration)}'
+              '${config.autoContinue ? ' · endless' : ''}\n“${config.intention}”',
               textAlign: TextAlign.center,
             ),
           ),
@@ -89,22 +180,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    final suggested =
-        ref.watch(suggestedFlowLengthProvider).asData?.value.inMinutes ?? 25;
-    final minutes = _selectedMinutes ?? _defaultMinutes(suggested);
+    final plan = _buildPlan();
+    final topLabel = _mode == SessionMode.flowBlock ? 'BLOCK LENGTH' : 'TOTAL TIME';
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       body: ScreenBackground(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: HgSpacing.sm),
-                // Chrome: back + mode title.
-                Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: HgSpacing.sm),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
+                child: Row(
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).maybePop(),
@@ -125,230 +214,437 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: HgSpacing.xl),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(HgSpacing.screen,
+                      HgSpacing.lg, HgSpacing.screen, HgSpacing.lg),
+                  children: [
+                    _Label('Intention'),
+                    const SizedBox(height: HgSpacing.sm),
+                    TextField(
+                      controller: _intention,
+                      style: TextStyle(
+                          fontFamily: HgFont.sans,
+                          fontSize: 22,
+                          color: hg.textPrimary),
+                      cursorColor: hg.accent,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        hintText: 'What are you focusing on?',
+                        hintStyle: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 22,
+                            color: hg.textMuted),
+                        isDense: true,
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: HgSpacing.sm),
+                        enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: hg.hairline)),
+                        focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: hg.accent)),
+                      ),
+                    ),
+                    const SizedBox(height: HgSpacing.xl),
 
-                // Intention — the framing line.
-                _Label('Intention'),
-                const SizedBox(height: HgSpacing.sm),
-                TextField(
-                  controller: _intention,
-                  style: TextStyle(
-                    fontFamily: HgFont.sans,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w400,
-                    color: hg.textPrimary,
-                  ),
-                  cursorColor: hg.accent,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    hintText: 'What are you focusing on?',
-                    hintStyle: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w400,
-                      color: hg.textMuted,
-                    ),
-                    isDense: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: HgSpacing.sm),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: hg.hairline),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: hg.accent),
-                    ),
-                  ),
+                    // Hierarchy: TOTAL (big) → subline → focus time → config.
+                    Center(child: _CenteredLabel(topLabel)),
+                    const SizedBox(height: HgSpacing.sm),
+                    Center(child: _BigDuration(plan.totalDuration)),
+                    const SizedBox(height: HgSpacing.sm),
+                    // Full width so a long cadence line wraps to 2 rows.
+                    SizedBox(width: double.infinity, child: _subline(hg, plan)),
+                    const SizedBox(height: HgSpacing.xl),
+                    ..._modeControls(hg),
+
+                    if (_endlessAvailable) ...[
+                      const SizedBox(height: HgSpacing.lg),
+                      _EndlessToggle(
+                        value: _endless,
+                        onChanged: (v) => _tap(() => _endless = v),
+                      ),
+                    ],
+                  ],
                 ),
-
-                // Focal: big duration readout (steppers for Pomodoro/Custom).
-                const Spacer(),
-                Center(child: _focal(minutes)),
-                const Spacer(),
-
-                // Length band — differs per mode.
-                ..._lengthBand(hg, suggested, minutes),
-                const SizedBox(height: HgSpacing.xl),
-
-                if (_mode != SessionMode.pomodoro)
-                  _EndlessToggle(
-                    value: _endless,
-                    onChanged: (v) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _endless = v);
-                    },
-                  ),
-
-                const SizedBox(height: HgSpacing.lg),
-                PrimaryButton(
-                  label: 'Flip to begin',
-                  onPressed: () => _begin(minutes),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    HgSpacing.screen, 0, HgSpacing.screen, HgSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _modeDescription(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 13,
+                        height: 1.35,
+                        fontStyle: FontStyle.italic,
+                        color: hg.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: HgSpacing.md),
+                    PrimaryButton(label: 'Flip to begin', onPressed: _begin),
+                  ],
                 ),
-                const SizedBox(height: HgSpacing.xl),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _focal(int minutes) {
+  List<Widget> _modeControls(HgTokens hg) {
     switch (_mode) {
       case SessionMode.flowBlock:
-        return _DurationReadout(minutes: minutes, endless: _endless);
+        return _flowControls(hg);
       case SessionMode.pomodoro:
-        return _StepperRow(
-          minusEnabled: minutes > 5,
-          plusEnabled: minutes < _flowSoftCap,
-          onMinus: () => _set(minutes - 5),
-          onPlus: () => _set(minutes + 5),
-          center: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _BigMinutes(minutes: minutes),
-              const SizedBox(height: HgSpacing.sm),
-              Text(
-                '$minutes min work · ${_breakFor(minutes)} min break',
-                style: TextStyle(
-                  fontFamily: HgFont.sans,
-                  fontSize: 13,
-                  color: context.hg.accent,
-                ),
-              ),
-            ],
-          ),
-        );
+        return _pomodoroControls(hg);
       case SessionMode.custom:
-        return _StepperRow(
-          minusEnabled: minutes > 5,
-          plusEnabled: minutes < _maxMinutes,
-          onMinus: () => _set(minutes - 5),
-          onPlus: () => _set(minutes + 5),
-          center: _endless
-              ? _DurationReadout(minutes: minutes, endless: true)
-              : _BigMinutes(minutes: minutes),
-        );
+        return _customControls(hg);
     }
   }
 
-  List<Widget> _lengthBand(HgTokens hg, int suggested, int minutes) {
+  List<Widget> _flowControls(HgTokens hg) {
+    final suggested = _suggestedFlow();
+    final minutes = _flowMinutes ?? suggested;
+    final presets = ({15, 25, 30, 45, 60, 90, suggested}
+        .where((m) => m <= _flowSoftCap)
+        .toList()
+      ..sort());
+    return [
+      const _SectionHeading('Length'),
+      const SizedBox(height: HgSpacing.md),
+      Wrap(
+        spacing: HgSpacing.sm,
+        runSpacing: HgSpacing.sm,
+        children: [
+          for (final mm in presets)
+            _Chip(
+              label: '$mm min',
+              active: mm == minutes,
+              onTap: () => _tap(() => _flowMinutes = mm),
+            ),
+          _Chip(
+            label: '+5',
+            active: false,
+            outline: true,
+            onTap: () =>
+                _tap(() => _flowMinutes = (minutes + 5).clamp(5, 240)),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _pomodoroControls(HgTokens hg) {
+    return [
+      _SubToggle(
+        options: const ['By duration', 'By blocks'],
+        selectedIndex: _pomoEntry.index,
+        onChanged: (i) => _tap(() => _pomoEntry = _PomoEntry.values[i]),
+      ),
+      const SizedBox(height: HgSpacing.sm),
+      _Hint(_pomodoroHint()),
+      const SizedBox(height: HgSpacing.lg),
+      if (_pomoEntry == _PomoEntry.duration) ...[
+        // Exact focus time → split into N variable-length blocks (rests ~5:1).
+        _LabeledStepper(
+          label: 'Focus time',
+          value: _fmt(_m(_pomoTarget)),
+          onMinus: _pomoTarget > 30 ? () => _tap(() => _pomoTarget -= 15) : null,
+          onPlus: _pomoTarget < 360 ? () => _tap(() => _pomoTarget += 15) : null,
+        ),
+        const SizedBox(height: HgSpacing.lg),
+        _LabeledStepper(
+          label: 'Blocks',
+          value: '$_durBlocks',
+          onMinus: _durBlocks > 1 ? () => _tap(() => _durBlocks--) : null,
+          onPlus: _durBlocks < 12 ? () => _tap(() => _durBlocks++) : null,
+        ),
+      ] else ...[
+        _LabeledStepper(
+          label: 'Focus blocks',
+          value: '$_blocks',
+          onMinus: _blocks > 1 ? () => _tap(() => _blocks--) : null,
+          onPlus: _blocks < 16 ? () => _tap(() => _blocks++) : null,
+        ),
+        const SizedBox(height: HgSpacing.lg),
+        const _SectionHeading('Work / break per block'),
+        const SizedBox(height: HgSpacing.md),
+        Wrap(
+          spacing: HgSpacing.sm,
+          runSpacing: HgSpacing.sm,
+          children: [
+            for (var i = 0; i < _ratios.length; i++)
+              _Chip(
+                label: _ratios[i].label,
+                active: i == _ratioIndex,
+                onTap: () => _tap(() => _ratioIndex = i),
+              ),
+          ],
+        ),
+      ],
+    ];
+  }
+
+  List<Widget> _customControls(HgTokens hg) {
+    return [
+      _LabeledStepper(
+        label: 'Focus time',
+        value: _fmt(_m(_customWork)),
+        onMinus: _customWork > 15 ? () => _tap(() => _customWork -= 15) : null,
+        onPlus: _customWork < 480 ? () => _tap(() => _customWork += 15) : null,
+      ),
+      const SizedBox(height: HgSpacing.xl),
+      const _SectionHeading('Break schedule'),
+      const SizedBox(height: HgSpacing.md),
+      _SubToggle(
+        options: const ['By count', 'By interval'],
+        selectedIndex: _customMode.index,
+        onChanged: (i) => _tap(() => _customMode = _CustomMode.values[i]),
+      ),
+      const SizedBox(height: HgSpacing.sm),
+      _Hint(_customBreaksHint()),
+      const SizedBox(height: HgSpacing.lg),
+      if (_customMode == _CustomMode.count)
+        _LabeledStepper(
+          label: 'Number of breaks',
+          value: '$_customBreaks',
+          onMinus: _customBreaks > 0 ? () => _tap(() => _customBreaks--) : null,
+          onPlus: (_customBreaks < 12 &&
+                  _customWork ~/ (_customBreaks + 2) >= 5)
+              ? () => _tap(() => _customBreaks++)
+              : null,
+        )
+      else
+        _LabeledStepper(
+          label: 'Break every',
+          value: _fmt(_m(_customInterval)),
+          onMinus: _customInterval > 10
+              ? () => _tap(() => _customInterval -= 5)
+              : null,
+          onPlus: _customInterval < 120
+              ? () => _tap(() => _customInterval += 5)
+              : null,
+        ),
+      const SizedBox(height: HgSpacing.lg),
+      _LabeledStepper(
+        label: 'Break length',
+        value: _fmt(_m(_customBreakLen)),
+        onMinus:
+            _customBreakLen > 1 ? () => _tap(() => _customBreakLen -= 1) : null,
+        onPlus:
+            _customBreakLen < 30 ? () => _tap(() => _customBreakLen += 1) : null,
+      ),
+    ];
+  }
+
+  /// Accurate cadence description read back from the generated plan.
+  Widget _subline(HgTokens hg, SessionPlan plan) {
+    String text;
+    Color color = hg.accent;
     switch (_mode) {
       case SessionMode.flowBlock:
-        final over = minutes > _flowSoftCap;
-        return [
-          _Label('Length'),
-          const SizedBox(height: HgSpacing.md),
-          Wrap(
-            spacing: HgSpacing.sm,
-            runSpacing: HgSpacing.sm,
-            children: [
-              for (final m in _flowPresets(suggested))
-                _Chip(label: '$m min', active: m == minutes, onTap: () => _set(m)),
-              _Chip(
-                label: '+5',
-                active: false,
-                outline: true,
-                onTap: () => _set(minutes + 5),
-              ),
-            ],
-          ),
-          const SizedBox(height: HgSpacing.sm),
-          Text(
-            over
-                ? 'Past ~90 min, focus tends to fade and recovery gets harder — '
-                    'a fresh block after a break often serves you better.'
-                : 'Grows with your focus stamina. One unbroken block — a '
-                    'phone-free recovery follows.',
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 12,
-              height: 1.4,
-              color: over ? hg.warning : hg.textMuted,
-            ),
-          ),
-        ];
+        final minutes = _flowMinutes ?? _suggestedFlow();
+        if (minutes > _flowSoftCap) {
+          text = 'Past ~90 min, focus tends to fade — a fresh block after a '
+              'break often serves you better.';
+          color = hg.warning;
+        } else {
+          text = 'Grows with your stamina · one unbroken block, recovery after.';
+          color = hg.textMuted;
+        }
       case SessionMode.pomodoro:
-        return [
-          Center(
-            child: Text(
-              'Set your work time — the break is auto-set (~5:1).',
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 12,
-                color: hg.textMuted,
-              ),
-            ),
-          ),
-        ];
+        if (_pomoEntry == _PomoEntry.duration) {
+          final focus = plan.segments.where((s) => s.isFocus).toList();
+          final rests = plan.segments.where((s) => !s.isFocus).toList();
+          if (rests.isEmpty) {
+            text = 'One ${_fmt(plan.totalFocus)} block · no breaks';
+          } else {
+            final avg = (plan.totalFocus.inMinutes / focus.length).round();
+            text = '${focus.length} × ~${avg}m focus + '
+                '${rests.first.duration.inMinutes}m break';
+          }
+          break;
+        }
+        final r = _ratios[_ratioIndex];
+        text = '${plan.focusCount} rounds of ${r.work}m focus + ${r.short}m break';
+        if (plan.focusCount > _longEvery) {
+          // Long-break note on its own row.
+          text += '\n${r.long}m long break every ${_longEvery}th';
+        }
       case SessionMode.custom:
-        return [
-          Center(
-            child: Text(
-              'Set any length, up to 4 hours.',
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 12,
-                color: hg.textMuted,
-              ),
-            ),
-          ),
-        ];
+        final focus = plan.segments.where((s) => s.isFocus).toList();
+        final rests = plan.segments.where((s) => !s.isFocus).toList();
+        if (rests.isEmpty) {
+          text = 'One ${_fmt(plan.totalFocus)} block · no breaks';
+        } else {
+          final allEqual = focus.every((s) =>
+              s.duration.inMinutes == focus.first.duration.inMinutes);
+          final avg = (plan.totalFocus.inMinutes / focus.length).round();
+          final focusPart = allEqual
+              ? '${focus.length} × ${focus.first.duration.inMinutes}m focus'
+              : '${focus.length} × ~${avg}m focus';
+          text = '$focusPart · ${rests.length} × '
+              '${rests.first.duration.inMinutes}m break';
+        }
     }
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 13,
+        height: 1.4,
+        color: color,
+      ),
+    );
   }
 }
 
-/// The large focal duration number (counts when it changes).
-class _DurationReadout extends StatelessWidget {
-  final int minutes;
-  final bool endless;
-  const _DurationReadout({required this.minutes, required this.endless});
+// ── Shared sub-widgets ──────────────────────────────────────────────────────
+
+class _BigDuration extends StatelessWidget {
+  final Duration d;
+  const _BigDuration(this.d);
 
   @override
   Widget build(BuildContext context) {
-    if (endless) {
-      return Text(
-        '∞',
-        style: TextStyle(
-          fontFamily: HgFont.sans,
-          fontSize: 84,
-          fontWeight: FontWeight.w300,
-          height: 1.0,
-          color: context.hg.textPrimary,
-        ),
-      );
+    final hg = context.hg;
+    final h = d.inHours;
+    final mm = d.inMinutes % 60;
+    final numStyle = TextStyle(
+      fontFamily: HgFont.sans,
+      fontSize: 72,
+      fontWeight: FontWeight.w300,
+      height: 1.0,
+      letterSpacing: -2,
+      color: hg.textPrimary,
+    );
+    final unitStyle =
+        TextStyle(fontFamily: HgFont.sans, fontSize: 18, color: hg.textMuted);
+    final parts = <Widget>[];
+    if (h > 0) {
+      parts.addAll([Text('$h', style: numStyle), Text('h', style: unitStyle)]);
+      if (mm > 0) {
+        parts.add(const SizedBox(width: HgSpacing.sm));
+        parts.addAll(
+            [Text('$mm', style: numStyle), Text('m', style: unitStyle)]);
+      }
+    } else {
+      parts.addAll([
+        Text('$mm', style: numStyle),
+        const SizedBox(width: HgSpacing.sm),
+        Text('min', style: unitStyle),
+      ]);
     }
-    return _BigMinutes(minutes: minutes);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: parts,
+    );
   }
 }
 
-/// A big number flanked by − / + stepper buttons.
-class _StepperRow extends StatelessWidget {
-  final Widget center;
-  final VoidCallback onMinus;
-  final VoidCallback onPlus;
-  final bool minusEnabled;
-  final bool plusEnabled;
-  const _StepperRow({
-    required this.center,
-    required this.onMinus,
-    required this.onPlus,
-    required this.minusEnabled,
-    required this.plusEnabled,
+class _SubToggle extends StatelessWidget {
+  final List<String> options;
+  final int selectedIndex;
+  final ValueChanged<int> onChanged;
+  const _SubToggle({
+    required this.options,
+    required this.selectedIndex,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hg = context.hg;
+    return Container(
+      padding: const EdgeInsets.all(HgSpacing.xs),
+      decoration: BoxDecoration(
+        color: hg.surface,
+        borderRadius: BorderRadius.circular(HgRadius.pill),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < options.length; i++)
+            Expanded(
+              child: GestureDetector(
+                onTap: () => onChanged(i),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: HgMotion.fast,
+                  curve: HgMotion.calm,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: HgSpacing.sm + 2),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: i == selectedIndex ? hg.accent : Colors.transparent,
+                    borderRadius: BorderRadius.circular(HgRadius.pill),
+                  ),
+                  child: Text(
+                    options[i],
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 13,
+                      fontWeight: i == selectedIndex
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: i == selectedIndex ? hg.onAccent : hg.textMuted,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LabeledStepper extends StatelessWidget {
+  final String label;
+  final String value;
+  final VoidCallback? onMinus;
+  final VoidCallback? onPlus;
+  const _LabeledStepper({
+    required this.label,
+    required this.value,
+    required this.onMinus,
+    required this.onPlus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _StepButton(icon: Icons.remove_rounded, onTap: minusEnabled ? onMinus : null),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: HgSpacing.sm),
-            child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: center)),
+          child: Text(
+            label,
+            style: TextStyle(
+                fontFamily: HgFont.sans, fontSize: 16, color: hg.textPrimary),
           ),
         ),
-        _StepButton(icon: Icons.add_rounded, onTap: plusEnabled ? onPlus : null),
+        _StepButton(icon: Icons.remove_rounded, onTap: onMinus),
+        SizedBox(
+          width: 92,
+          child: Text(
+            value,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: hg.textPrimary,
+            ),
+          ),
+        ),
+        _StepButton(icon: Icons.add_rounded, onTap: onPlus),
       ],
     );
   }
@@ -362,13 +658,12 @@ class _StepButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    final enabled = onTap != null;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        width: 48,
-        height: 48,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: hg.hairline),
@@ -376,55 +671,9 @@ class _StepButton extends StatelessWidget {
         child: Icon(
           icon,
           size: HgSize.iconMd,
-          color: enabled ? hg.textPrimary : hg.textMuted,
+          color: onTap != null ? hg.textPrimary : hg.textMuted,
         ),
       ),
-    );
-  }
-}
-
-/// The shared big "NN min" readout, with a gentle count tween.
-class _BigMinutes extends StatelessWidget {
-  final int minutes;
-  const _BigMinutes({required this.minutes});
-
-  @override
-  Widget build(BuildContext context) {
-    final hg = context.hg;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        TweenAnimationBuilder<double>(
-          tween: Tween(end: minutes.toDouble()),
-          duration: HgMotion.fast,
-          curve: HgMotion.calm,
-          builder: (_, value, _) => Text(
-            value.round().toString(),
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 72,
-              fontWeight: FontWeight.w300,
-              height: 1.0,
-              letterSpacing: -2,
-              color: hg.textPrimary,
-            ),
-          ),
-        ),
-        const SizedBox(width: HgSpacing.sm),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            'min',
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 18,
-              color: hg.textMuted,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -437,6 +686,64 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
+      style: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 11,
+        letterSpacing: 2,
+        fontWeight: FontWeight.w600,
+        color: context.hg.textMuted,
+      ),
+    );
+  }
+}
+
+/// A small muted helper line explaining a control/option.
+class _Hint extends StatelessWidget {
+  final String text;
+  const _Hint(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 12,
+        height: 1.35,
+        color: context.hg.textMuted,
+      ),
+    );
+  }
+}
+
+/// A descriptive, friendly section heading (matches the "Focus time" register).
+class _SectionHeading extends StatelessWidget {
+  final String text;
+  const _SectionHeading(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: context.hg.textPrimary,
+      ),
+    );
+  }
+}
+
+class _CenteredLabel extends StatelessWidget {
+  final String text;
+  const _CenteredLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      textAlign: TextAlign.center,
       style: TextStyle(
         fontFamily: HgFont.sans,
         fontSize: 11,
@@ -470,9 +777,7 @@ class _Chip extends StatelessWidget {
         duration: HgMotion.fast,
         curve: HgMotion.calm,
         padding: const EdgeInsets.symmetric(
-          horizontal: HgSpacing.md,
-          vertical: HgSpacing.sm + 2,
-        ),
+            horizontal: HgSpacing.md, vertical: HgSpacing.sm + 2),
         decoration: BoxDecoration(
           color: active ? hg.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(HgRadius.pill),
@@ -508,24 +813,18 @@ class _EndlessToggle extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Endless flow',
-                style: TextStyle(
-                  fontFamily: HgFont.sans,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: hg.textPrimary,
-                ),
-              ),
+              Text('Endless flow',
+                  style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: hg.textPrimary)),
               const SizedBox(height: 2),
-              Text(
-                'Keep going past the goal until you stop.',
-                style: TextStyle(
-                  fontFamily: HgFont.sans,
-                  fontSize: 13,
-                  color: hg.textMuted,
-                ),
-              ),
+              Text('Keep going past the goal until you stop.',
+                  style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 13,
+                      color: hg.textMuted)),
             ],
           ),
         ),

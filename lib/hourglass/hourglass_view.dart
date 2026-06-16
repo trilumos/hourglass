@@ -3,6 +3,10 @@ import 'package:flutter/scheduler.dart';
 import 'hourglass_painter.dart';
 import 'hourglass_skin.dart';
 
+/// Shared [Hero] tag so the hourglass flies as one continuous object between
+/// screens that both show it (e.g. Home ↔ Session).
+const kHourglassHeroTag = 'hourglass-hero';
+
 /// Animated hourglass widget. Pass [progress] (0..1) to set the sand level.
 /// A ticker advances [time] each frame, which drives the kinematic liquid
 /// surface and the falling spray. Repaints are isolated behind a
@@ -15,10 +19,16 @@ class HourglassView extends StatefulWidget {
   /// [HourglassSkin.classicLight]) so the hourglass stays visible in both modes.
   final HourglassSkin? skin;
 
+  /// When set, the hourglass becomes a [Hero] with this tag so it animates
+  /// continuously between routes. The flight uses a frozen (cheap) painter to
+  /// avoid running the live simulation during the transition.
+  final String? heroTag;
+
   const HourglassView({
     super.key,
     required this.progress,
     this.skin,
+    this.heroTag,
   });
 
   @override
@@ -50,18 +60,38 @@ class _HourglassViewState extends State<HourglassView>
         (Theme.of(context).brightness == Brightness.dark
             ? HourglassSkin.classic
             : HourglassSkin.classicLight);
-    return RepaintBoundary(
+    final progress = widget.progress.clamp(0.0, 1.0);
+
+    Widget visual = RepaintBoundary(
       child: AspectRatio(
         aspectRatio: 0.52,
         child: CustomPaint(
           size: Size.infinite,
-          painter: HourglassPainter(
-            progress: widget.progress.clamp(0.0, 1.0),
-            time: _time,
-            skin: skin,
-          ),
+          painter: HourglassPainter(progress: progress, time: _time, skin: skin),
         ),
       ),
     );
+
+    final tag = widget.heroTag;
+    if (tag != null) {
+      visual = Hero(
+        tag: tag,
+        // Cheap, frozen hourglass during flight — don't run the live sim while
+        // the route is also animating. AspectRatio stays locked so the glass
+        // never warps; only the box size lerps.
+        flightShuttleBuilder: (_, _, _, _, _) => RepaintBoundary(
+          child: AspectRatio(
+            aspectRatio: 0.52,
+            child: CustomPaint(
+              size: Size.infinite,
+              painter:
+                  HourglassPainter(progress: progress, time: 0, skin: skin),
+            ),
+          ),
+        ),
+        child: visual,
+      );
+    }
+    return visual;
   }
 }

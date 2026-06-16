@@ -7,10 +7,12 @@ import '../app/theme_controller.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../hourglass/hourglass_view.dart';
+import 'setup_screen.dart';
 import 'widgets/adaptive_tagline.dart';
 import 'widgets/greeting_line.dart';
 import 'widgets/mode_selector.dart';
 import 'widgets/primary_button.dart';
+import 'widgets/screen_background.dart';
 
 /// The calm landing screen. Centered wordmark, tagline and hourglass hero; a
 /// left-aligned editorial greeting; a quiet centered stats + action cluster.
@@ -25,14 +27,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   SessionMode _mode = SessionMode.flowBlock;
 
   void _begin() {
-    // TODO(Task 7): replace with SetupScreen(mode: _mode).
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: Text('Setup — ${_mode.name}')),
-          body: const Center(child: Text('Setup screen — coming next')),
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => SetupScreen(mode: _mode)),
     );
   }
 
@@ -84,15 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final stats = ref.watch(homeStatsProvider);
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: const Alignment(0, -0.75),
-            radius: 1.2,
-            colors: [hg.surface, hg.background],
-            stops: const [0.0, 0.7],
-          ),
-        ),
+      body: ScreenBackground(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
@@ -135,7 +123,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       // available vertical space without displacing anything.
                       padding:
                           const EdgeInsets.symmetric(vertical: HgSpacing.xs),
-                      child: const HourglassView(progress: 0),
+                      child: const HourglassView(
+                        progress: 0,
+                        heroTag: kHourglassHeroTag,
+                      ),
                     ),
                   ),
                 ),

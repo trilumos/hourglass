@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/app_database.dart';
 import '../data/session_repository.dart';
 import '../data/settings_repository.dart';
+import '../domain/stamina_calculator.dart';
 import '../domain/stats_calculator.dart';
+import '../session/session_finalizer.dart';
 
 /// The on-device database. Closed automatically when the provider is disposed.
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -38,6 +40,17 @@ class HomeStats {
   static const empty =
       HomeStats(todayFocus: Duration.zero, streak: 0, sessionsCompleted: 0);
 }
+
+/// The stamina-suggested next Flow Block length, derived from stored stamina.
+final suggestedFlowLengthProvider = FutureProvider<Duration>((ref) async {
+  final settings = ref.watch(settingsRepositoryProvider);
+  final seconds = await settings.getInt(
+    SessionFinalizer.staminaKey,
+    defaultValue: StaminaCalculator.defaultStart.inSeconds,
+  );
+  const calc = StaminaCalculator();
+  return calc.suggestedNextLength(Duration(seconds: seconds));
+});
 
 /// Loads all sessions and derives the home stats via [StatsCalculator].
 final homeStatsProvider = FutureProvider<HomeStats>((ref) async {

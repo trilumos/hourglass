@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'page_transitions.dart';
 import 'tokens.dart';
 
 /// Centralized non-color design tokens (color lives in [HgTokens]). Every screen
@@ -62,6 +63,7 @@ ThemeData buildTheme(HgTokens t, Brightness brightness) {
   final base = ThemeData(brightness: brightness, useMaterial3: true);
   return base.copyWith(
     scaffoldBackgroundColor: t.background,
+    pageTransitionsTheme: hgPageTransitionsTheme,
     colorScheme: base.colorScheme.copyWith(
       brightness: brightness,
       surface: t.surface,

@@ -24,34 +24,62 @@ void main() {
         ),
       );
 
-  testWidgets('shows intention, the stamina-suggested length, and begins',
+  testWidgets('Flow: intention, stamina-suggested length, endless, begin',
       (tester) async {
     await phoneSurface(tester);
     await tester.pumpWidget(harness(SessionMode.flowBlock));
-    await tester.pump(); // resolve suggested length
+    await tester.pump();
 
     expect(find.text('INTENTION'), findsOneWidget);
-    expect(find.text('LENGTH'), findsOneWidget);
+    expect(find.text('Length'), findsOneWidget);
     expect(find.text('Endless flow'), findsOneWidget);
-    // Stamina-suggested 30-min chip is present (and pre-selected).
-    expect(find.text('30 min'), findsOneWidget);
+    expect(find.text('30 min'), findsOneWidget); // stamina-suggested chip
 
     await tester.enterText(find.byType(TextField), 'Read chapter 4');
     await tester.tap(find.text('Flip to begin'));
     await tester.pumpAndSettle();
 
-    // Navigated to the session destination carrying the config.
     expect(find.textContaining('Read chapter 4'), findsOneWidget);
-    expect(find.textContaining('30 min'), findsOneWidget);
+    expect(find.textContaining('30m'), findsOneWidget);
   });
 
-  testWidgets('Pomodoro hides the endless-flow toggle and shows work/break',
+  testWidgets('Pomodoro: total → focus time → block length, no endless',
       (tester) async {
     await phoneSurface(tester);
     await tester.pumpWidget(harness(SessionMode.pomodoro));
     await tester.pump();
+
+    // By duration (default): exact focus time → variable blocks (flowmodoro).
+    expect(find.text('TOTAL TIME'), findsOneWidget);
+    expect(find.text('By duration'), findsOneWidget);
+    expect(find.text('By blocks'), findsOneWidget);
+    expect(find.text('Focus time'), findsOneWidget);
+    expect(find.text('Blocks'), findsOneWidget);
     expect(find.text('Endless flow'), findsNothing);
-    // Work-time stepper with an auto-derived break readout.
-    expect(find.textContaining('25 min work · 5 min break'), findsOneWidget);
+    expect(find.text('Work / break per block'), findsNothing); // not in by-duration
+    expect(find.textContaining('focus'), findsWidgets); // cadence subline
+
+    // By blocks: fixed-length ratio chips + block count.
+    await tester.tap(find.text('By blocks'));
+    await tester.pump();
+    expect(find.text('Focus blocks'), findsOneWidget);
+    expect(find.text('Work / break per block'), findsOneWidget);
+    expect(find.text('25/5'), findsOneWidget);
+    expect(find.textContaining('rounds'), findsWidgets);
+  });
+
+  testWidgets('Custom: total → focus time → breaks (count/interval)',
+      (tester) async {
+    await phoneSurface(tester);
+    await tester.pumpWidget(harness(SessionMode.custom));
+    await tester.pump();
+
+    expect(find.text('TOTAL TIME'), findsOneWidget);
+    expect(find.text('Focus time'), findsOneWidget);
+    expect(find.text('Break schedule'), findsOneWidget);
+    expect(find.text('By count'), findsOneWidget);
+    expect(find.text('By interval'), findsOneWidget);
+    expect(find.text('Number of breaks'), findsOneWidget);
+    expect(find.text('Break length'), findsOneWidget);
   });
 }
