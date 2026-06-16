@@ -8,8 +8,10 @@ class SessionRepository {
   final AppDatabase _db;
   SessionRepository(this._db);
 
-  Future<void> insertSession(SessionRecord r) async {
-    await _db.into(_db.sessions).insert(
+  /// Inserts [r] and returns the new row id (used to revise the same record when
+  /// a Flow Block is extended via "Keep going").
+  Future<int> insertSession(SessionRecord r) async {
+    return _db.into(_db.sessions).insert(
           SessionsCompanion.insert(
             startedAt: r.startedAt,
             mode: r.mode,
@@ -23,6 +25,23 @@ class SessionRepository {
             skinId: Value(r.skinId),
           ),
         );
+  }
+
+  /// Revises the recorded focus (and completed/abandoned flags) of an existing
+  /// session — used when a Flow Block is extended past its original length.
+  Future<void> updateRecordedFocus(
+    int id, {
+    required Duration recorded,
+    required bool completed,
+    required bool abandoned,
+  }) async {
+    await (_db.update(_db.sessions)..where((t) => t.id.equals(id))).write(
+      SessionsCompanion(
+        recordedSeconds: Value(recorded.inSeconds),
+        completed: Value(completed),
+        abandoned: Value(abandoned),
+      ),
+    );
   }
 
   Future<List<SessionRecord>> allSessions() async {

@@ -37,7 +37,8 @@ So 25 done ≈ 33, 50 done ≈ 78, 60 done = 100, give-up scores low, push adds 
 - **Focus Score = round( sum(last 10 sessionScores) ÷ 10 )** — note the divisor is
   ALWAYS 10. This builds a **ramp**: one perfect early session only yields ~10 (not
   100); it can reach 100 only after ~10 strong sessions, then becomes a true rolling
-  recent-10 average. Range 0–100. **100 = hourglass full → level up** (roadmap).
+  recent-10 average. Range 0–100. **100 = level up** → collectible + share card +
+  theme unlock + reset (see Collectibles & Levels; next milestone).
   Flow-Block-only. Reflects current ability: strong sessions raise it, give-ups lower it.
 - **All ends are scored:** completed, given-up, or app-left all produce points from
   their actual focused length (≥ 2 min); sub-2-min ends are ignored.
@@ -68,14 +69,26 @@ score is Flow-only); their partial-credit question stays a separate open follow-
 reflects whether the planned goal was reached (for messaging/celebration), but does
 not zero the recorded length.
 
-## Collectible hourglasses
-- Completing a Flow Block plays the **drain → flip → empty** animation and
-  **collects one hourglass** — a running count (e.g. "12 hourglasses"). **Same art,
-  no new design.**
-- The count is **derivable** (number of completed Flow Blocks) — no new storage
-  needed; or store a simple counter. Displayed in the **Profile** (future screen);
-  for v1 it may surface as a small Home/completion indicator. (Founder said "in your
-  profile" — Profile is a later screen, so v1 tracks it and shows it where it fits.)
+## Collectibles & Levels — REVISED 2026-06-16 (supersedes per-session collectible)
+**Founder correction (confirmed, supersedes the locked "1 per completed block"):**
+collectibles are **milestone** rewards, not per-session.
+- A Flow Block session **does NOT** grant a collectible. Each session only earns
+  **points** that move the overall Focus Score.
+- When the **overall Focus Score reaches 100** → **level up**: grant **one hourglass
+  collectible + a share card**, **unlock the next app theme**, and **reset the score
+  to 0**. The next level is **harder** (progressive difficulty). Locked themes behind
+  levels give a "veteran/experienced" progression.
+- Completion screen (this build) therefore shows the **Focus Score (count-up) + the
+  points earned this session** — NOT "hourglass collected." The level-up celebration
+  (collect + share + theme unlock) is the **Level/Progression milestone** below.
+
+**OPEN math question for the Level milestone (do NOT assume):** a literal "reset to 0"
+does not sit naturally on a rolling average of the last 10 — a strong user's average
+would climb straight back to ~100. Resolve when building Levels (options: reset the
+score window after level-up; or treat 100 as a *progress bar* that fills from the
+average and the bar resets while the underlying ability number persists; or apply
+harder per-level scaling so the same performance yields fewer points). Confirm with
+founder before implementing.
 
 ## Data / engine
 - New pure `FocusScoreCalculator`:
@@ -100,15 +113,35 @@ the app ends the block) and the score being a **private, self-only number** (no
 social/leaderboard to fake for — gaming it only cheats yourself). True
 work-verification arrives with the roadmap's PC/web blocking + monitoring.
 
-## Roadmap (recorded; NOT v1)
-1. **Focus Levels:** the score fills the hourglass → flip → upgrades to a **new
-   hourglass design** (collectible skins) → numbered levels.
+## Hourglass Lottery / gacha (founder, 2026-06-16 — FUTURE VERSION, recorded)
+On each **level completion** the user gets a **wrapped** hourglass. **Unwrapping** it
+(a reward-opening moment) reveals a **random themed hourglass** — each future theme has
+its own hourglass design, so a collectible *represents the theme it unlocks*.
+- Builds **anticipation** (you don't know which you'll get) and drives repeated use:
+  unique themes — including **festival/seasonal themes** (Christmas, Halloween, etc.) —
+  give people reasons to keep coming back.
+- **Rarity tiers, RPG-style:** some themes are **very luck-based / hard to get** (like
+  rare gun/clothing skins). A drop-rate/rarity table governs the gacha.
+- Open design questions for that version: does the unwrapped theme = the one "unlocked,"
+  or is the theme unlocked separately and the wrapped hourglass purely cosmetic-random?
+  Duplicate handling (dupe protection / shards?), pity timer for rare drops, whether
+  rarity is purely luck or partly effort-gated. Ethics: keep it free/earned (no paid
+  loot-box mechanics) to stay on-brand and avoid dark patterns. Confirm before building.
+
+## Roadmap (recorded; NOT this build)
+1. **Level / Progression system (next milestone):** score→100 = level up → grant
+   **hourglass collectible + share card**, **unlock a new app theme** (some themes
+   locked behind levels), **reset score to 0**, raise difficulty. Resolve the
+   rolling-average-vs-reset math (see Collectibles & Levels above). Needs the **theme
+   system** in place. Numbered levels → "veteran" identity.
 2. **Progressive difficulty:** higher levels average more blocks with **decaying
-   weights**, so leveling takes more sustained focus.
-3. **Streak effects:** at higher levels (~L3+), broken streaks pull the score down.
-4. **Honesty / anti-idle checks.**
-5. **PC / web versions** with **site/app/application blocking + activity monitoring**
+   weights** / harder scaling, so leveling takes more sustained focus.
+3. **Share card:** shareable image of the milestone (level reached / hourglass).
+4. **Streak effects:** at higher levels (~L3+), broken streaks pull the score down.
+5. **Honesty / anti-idle checks.**
+6. **PC / web versions** with **site/app/application blocking + activity monitoring**
    — the real work-verification.
+7. **Profile screen:** displays the collected hourglasses + level history.
 
 ## Testing
 - `FocusScoreCalculator.sessionPoints`: depth bonus (50 > 2×25), completion² penalty

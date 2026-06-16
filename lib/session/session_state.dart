@@ -1,7 +1,21 @@
 import '../domain/focus_phase.dart';
 import 'session_plan.dart';
 
-enum SessionStatus { idle, running, paused, finished }
+enum SessionStatus {
+  idle,
+  running,
+  paused,
+
+  /// A break finished and the session is waiting for the user to start the next
+  /// focus block (tap-to-continue mode). [currentKind] already points at the
+  /// upcoming focus segment.
+  awaitingResume,
+
+  /// A Flow Block reached its planned length and stopped, offering the user a
+  /// choice: collect it (Done) or "Keep going" to extend the same block.
+  completed,
+  finished,
+}
 
 /// Immutable snapshot of the live session, consumed by the UI.
 class SessionState {

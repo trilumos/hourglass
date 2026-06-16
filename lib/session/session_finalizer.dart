@@ -16,18 +16,32 @@ class SessionFinalizer {
   /// Settings key holding the user's current Focus Stamina, in seconds.
   static const staminaKey = 'staminaSeconds';
 
-  /// Records [record], then (only for a completed, non-abandoned Flow Block)
-  /// recomputes Focus Stamina from recent completed flow blocks and stores it.
-  /// Abandoned sessions and non-flow-block sessions are persisted but never
-  /// affect stamina.
-  Future<void> persist(SessionRecord record) async {
-    await _sessions.insertSession(record);
+  /// Records [record] and returns its new row id, then recomputes Focus Stamina.
+  /// The id lets the caller revise the same record if a Flow Block is extended.
+  Future<int> persist(SessionRecord record) async {
+    final id = await _sessions.insertSession(record);
+    await _recomputeStamina();
+    return id;
+  }
 
-    final countsTowardStamina = record.completed &&
-        !record.abandoned &&
-        record.mode == SessionMode.flowBlock;
-    if (!countsTowardStamina) return;
+  /// Revises an existing session's recorded focus (a Flow Block extended via
+  /// "Keep going"), then recomputes stamina. Keeps it as ONE record.
+  Future<void> reviseRecordedFocus(
+    int id, {
+    required Duration recorded,
+    required bool completed,
+    required bool abandoned,
+  }) async {
+    await _sessions.updateRecordedFocus(
+      id,
+      recorded: recorded,
+      completed: completed,
+      abandoned: abandoned,
+    );
+    await _recomputeStamina();
+  }
 
+  Future<void> _recomputeStamina() async {
     final all = await _sessions.allSessions(); // oldest -> newest
     final recentBlocks = all
         .where((s) =>

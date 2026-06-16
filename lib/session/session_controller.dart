@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../domain/focus_phase.dart';
 import '../domain/phase_engine.dart';
+import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
 import 'session_config.dart';
 import 'session_plan.dart';
@@ -102,8 +103,14 @@ class SessionController extends ChangeNotifier {
         remaining -= room;
         if (idx == segs.length - 1) {
           ticker.stop();
+          // A Flow Block (single focus) pauses at a "completed" decision point
+          // so the user can collect it or keep going. Everything else finishes.
+          final completable =
+              plan.isSingleFocus && config.mode == SessionMode.flowBlock;
           _set(_state.copyWith(
-            status: SessionStatus.finished,
+            status: completable
+                ? SessionStatus.completed
+                : SessionStatus.finished,
             segmentIndex: idx,
             currentKind: seg.kind,
             segmentElapsed: seg.duration,
@@ -113,6 +120,22 @@ class SessionController extends ChangeNotifier {
                 ? _phaseFor(seg.duration, seg.duration)
                 : _state.phase,
             goalReached: true,
+          ));
+          return;
+        }
+        // Tap-to-continue: a break just ended → wait for the user before the
+        // next focus block (drop the tiny leftover delta).
+        if (!seg.isFocus && !config.autoAdvanceBreaks) {
+          ticker.stop();
+          final next = segs[idx + 1];
+          _set(_state.copyWith(
+            status: SessionStatus.awaitingResume,
+            segmentIndex: idx + 1,
+            currentKind: next.kind,
+            segmentElapsed: Duration.zero,
+            elapsed: elapsed,
+            recordedFocus: recorded,
+            phase: _phaseFor(next.duration, Duration.zero),
           ));
           return;
         }
@@ -144,6 +167,33 @@ class SessionController extends ChangeNotifier {
     ticker.start(_onTick);
   }
 
+  /// Start the next focus block after a break (tap-to-continue mode).
+  void continueToNext() {
+    if (_state.status != SessionStatus.awaitingResume) return;
+    _set(_state.copyWith(status: SessionStatus.running));
+    ticker.start(_onTick);
+  }
+
+  /// Skip the current break — advance straight to the boundary (which either
+  /// starts the next block, or parks at the wait point in tap-to-continue mode).
+  void skipRest() {
+    if (_state.status != SessionStatus.running || !_state.isResting) return;
+    _onTick(segmentRemaining);
+  }
+
+  /// Extend a completed Flow Block: drain the same block again (the hourglass
+  /// refills and flips), accumulating focus. Overflow past the chosen length
+  /// rewards the Focus Score. Reaching the length again returns to `completed`.
+  void keepGoing() {
+    if (_state.status != SessionStatus.completed) return;
+    _set(_state.copyWith(
+      status: SessionStatus.running,
+      segmentElapsed: Duration.zero, // drain from full again
+      phase: _phaseFor(currentSegment.duration, Duration.zero),
+    ));
+    ticker.start(_onTick);
+  }
+
   /// User ends the session (e.g. an endless block, or stopping early).
   void end() {
     ticker.stop();
@@ -156,11 +206,21 @@ class SessionController extends ChangeNotifier {
     _set(_state.copyWith(status: SessionStatus.finished));
   }
 
-  /// Builds the record to persist. completed iff the planned end was reached.
-  /// Abandoned sessions record zero focus (Plan-1 protect-the-block rule).
+  /// Builds the record to persist. `completed` iff the planned end was reached.
+  ///
+  /// Recording rule: **Flow Block** records the actual focused length on EVERY
+  /// end (completed, given-up, or app-left) if ≥ 2 min — this feeds the Focus
+  /// Score. Pomodoro/Custom keep the older rule (only a completed session counts).
   SessionRecord finalize() {
     final completed = _state.goalReached;
-    final recorded = completed ? _state.recordedFocus : Duration.zero;
+    final Duration recorded;
+    if (config.mode == SessionMode.flowBlock) {
+      recorded = _state.recordedFocus.inSeconds >= 120
+          ? _state.recordedFocus
+          : Duration.zero;
+    } else {
+      recorded = completed ? _state.recordedFocus : Duration.zero;
+    }
     return SessionRecord(
       id: 0,
       startedAt: _startedAt,

@@ -190,8 +190,8 @@ class HourglassPainter extends CustomPainter {
           (1.0 - (drain - drainCutoff) / (1.0 - drainCutoff)).clamp(0.0, 1.0);
       final double gate = gapFade * supplyFade;
       if (gate > 0.01 && gapNow > 1) {
-        final Color grain = Color.lerp(skin.sandColor, Colors.white, 0.18)!;
-        const int grainCount = 30;
+        final Color grain = skin.grainColor;
+        const int grainCount = 36;
         const double fallPeriod = 0.5;
         const double v0Frac = 0.10; // small exit speed; rest is gravity (phase^2)
         final double colHalf = neckHalf * 1.3; // thin column ~ the hole width
@@ -209,15 +209,50 @@ class HourglassPainter extends CustomPainter {
           final double px = cx +
               lane.abs() * lane * colHalf +
               math.sin(phase * 2 * math.pi + i) * 0.5;
-          // fine grains: ~0.9px leaving the hole -> ~0.5px near the pile
-          final double r = ((0.95 - 0.45 * fall) * (0.55 + 0.45 * sizeR))
-              .clamp(0.3, 1.05)
+          // visible grains: ~1.6px leaving the hole -> ~1.0px near the pile
+          final double r = ((1.5 - 0.55 * fall) * (0.6 + 0.45 * sizeR))
+              .clamp(0.6, 1.8)
               .toDouble();
-          final double a = ((0.98 - 0.22 * fall) * (0.74 + 0.26 * laneR) * gate)
+          final double a = ((1.0 - 0.16 * fall) * (0.82 + 0.18 * laneR) * gate)
               .clamp(0.0, 1.0)
               .toDouble();
           canvas.drawCircle(
             Offset(px, py),
+            r,
+            Paint()..color = grain.withValues(alpha: a),
+          );
+        }
+
+        // IMPACT SCATTER: grains the stream kicks off the pile apex. Each is a
+        // tiny ballistic hop — launched out at a random low angle; gravity pulls
+        // it back to the slope (g = 2·v·sinθ, so it lands exactly at p=1, giving
+        // the parabola v·sinθ·p·(1−p)). Count and energy GROW with the pile, so
+        // a small pile barely stirs and a tall pile visibly sprays. The grain
+        // disappears the instant it meets the surface at its x — no floating.
+        final double fill = drain.clamp(0.0, 1.0);
+        final int scatterN = (3 + 13 * fill).round();
+        final double hScale = maxHalf * (0.10 + 0.40 * fill) * 2.2;
+        final double vScale = usableH * (0.010 + 0.055 * fill) * 2.2;
+        final math.Random erng = math.Random(31);
+        for (int i = 0; i < scatterN; i++) {
+          final double dir = erng.nextDouble() < 0.5 ? -1.0 : 1.0;
+          final double ang = (20 + 65 * erng.nextDouble()) * math.pi / 180;
+          final double v = 0.55 + 0.45 * erng.nextDouble();
+          final double sizeR = erng.nextDouble();
+          final double per = 0.30 + 0.35 * erng.nextDouble(); // varied cycle
+          final double offR = erng.nextDouble();
+          final double p = ((time / per) + offR) % 1.0;
+          final double vsin = v * math.sin(ang);
+          final double yUp = vsin * p * (1 - p); // 0 at p=0 and p=1, peak mid-flight
+          final double ex = cx + dir * (v * math.cos(ang)) * p * hScale;
+          final double ey = landY - yUp * vScale;
+          final double surf = floorY - pileHeightAt(ex); // pile top at this x
+          if (ey >= surf) continue; // fallen back onto the slope → gone
+          final double r = 0.25 + 0.35 * sizeR; // fine grains
+          final double a = ((1 - p) * 0.8 * gate).clamp(0.0, 1.0).toDouble();
+          if (a <= 0.02) continue;
+          canvas.drawCircle(
+            Offset(ex, ey),
             r,
             Paint()..color = grain.withValues(alpha: a),
           );

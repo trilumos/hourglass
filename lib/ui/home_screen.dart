@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
 import '../app/theme.dart';
-import '../app/theme_controller.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../hourglass/hourglass_view.dart';
+import 'settings_screen.dart';
 import 'setup_screen.dart';
 import 'widgets/adaptive_tagline.dart';
 import 'widgets/greeting_line.dart';
@@ -32,45 +32,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _openThemeSheet() {
-    final hg = context.hg;
-    final current = ref.read(themeControllerProvider).mode;
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: hg.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(HgRadius.lg)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: HgSpacing.md),
-              for (final mode in ThemeMode.values)
-                ListTile(
-                  title: Text(
-                    switch (mode) {
-                      ThemeMode.system => 'Match system',
-                      ThemeMode.light => 'Light',
-                      ThemeMode.dark => 'Dark',
-                    },
-                    style: TextStyle(
-                        fontFamily: HgFont.sans, color: hg.textPrimary),
-                  ),
-                  trailing: mode == current
-                      ? Icon(Icons.check_rounded, color: hg.accent, size: 18)
-                      : null,
-                  onTap: () {
-                    ref.read(themeControllerProvider.notifier).setMode(mode);
-                    Navigator.of(sheetContext).pop();
-                  },
-                ),
-              const SizedBox(height: HgSpacing.sm),
-            ],
-          ),
-        );
-      },
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
     );
   }
 
@@ -104,7 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     IconButton(
-                      onPressed: _openThemeSheet,
+                      onPressed: _openSettings,
                       iconSize: HgSize.iconMd,
                       color: hg.textSecondary,
                       icon: const Icon(Icons.settings_outlined),
@@ -133,7 +97,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const AdaptiveTagline(), // tagline below the hourglass, centered
                 const SizedBox(height: HgSpacing.lg),
                 // ── Bottom cluster (centered, as before) ───────────────────
-                _StatRow(stats: stats),
+                _StatRow(
+                  stats: stats,
+                  focusScore: ref.watch(focusScoreProvider).asData?.value,
+                ),
                 const SizedBox(height: HgSpacing.lg),
                 Center(
                   child: ModeSelector(
@@ -153,25 +120,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-/// Two quiet centered stats: today's focus time and the current streak.
+/// Quiet centered stats: Focus Score (the Flow Block metric), today's focus, streak.
 class _StatRow extends StatelessWidget {
   final AsyncValue<HomeStats> stats;
-  const _StatRow({required this.stats});
+  final int? focusScore;
+  const _StatRow({required this.stats, required this.focusScore});
 
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
     final data = stats.asData?.value ?? HomeStats.empty;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
-        Container(
+    Widget divider() => Container(
           width: 1,
           height: 28,
           margin: const EdgeInsets.symmetric(horizontal: HgSpacing.lg),
           color: hg.hairline,
-        ),
+        );
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _Stat(label: 'Focus', value: '${focusScore ?? 0}', accent: true),
+        divider(),
+        _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
+        divider(),
         _Stat(label: 'Streak', value: _formatStreak(data.streak)),
       ],
     );
@@ -192,7 +163,8 @@ class _StatRow extends StatelessWidget {
 class _Stat extends StatelessWidget {
   final String label;
   final String value;
-  const _Stat({required this.label, required this.value});
+  final bool accent;
+  const _Stat({required this.label, required this.value, this.accent = false});
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +178,7 @@ class _Stat extends StatelessWidget {
             fontFamily: HgFont.sans,
             fontSize: 22,
             fontWeight: FontWeight.w600,
-            color: hg.textPrimary,
+            color: accent ? hg.accent : hg.textPrimary,
           ),
         ),
         const SizedBox(height: HgSpacing.xs),

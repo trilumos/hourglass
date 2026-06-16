@@ -31,6 +31,7 @@ SessionController _controller(
   FakeTicker ticker, {
   required SessionPlan plan,
   bool autoContinue = false,
+  bool autoAdvanceBreaks = true,
   SessionMode mode = SessionMode.flowBlock,
 }) {
   return SessionController(
@@ -38,6 +39,7 @@ SessionController _controller(
       mode: mode,
       plan: plan,
       autoContinue: autoContinue,
+      autoAdvanceBreaks: autoAdvanceBreaks,
       intention: 'x',
       soundscape: 'sand',
       skinId: 'classic',
@@ -62,17 +64,37 @@ void main() {
       expect(c.state.phase, FocusPhase.flow);
     });
 
-    test('fixed mode auto-finishes exactly at the planned mark', () {
+    test('fixed Flow Block stops at the mark in a completable state', () {
       final ticker = FakeTicker();
       final c = _controller(ticker, plan: SessionPlan.flowBlock(m(25)));
       c.start();
       ticker.advance(m(25));
-      expect(c.state.status, SessionStatus.finished);
+      // Not finished — it waits, offering Done / Keep going.
+      expect(c.state.status, SessionStatus.completed);
+      expect(c.state.goalReached, isTrue);
       expect(ticker.running, isFalse);
       final record = c.finalize();
       expect(record.completed, isTrue);
       expect(record.abandoned, isFalse);
       expect(record.recordedFocus, m(25));
+    });
+
+    test('keepGoing extends a completed block — drains again, accumulates', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker, plan: SessionPlan.flowBlock(m(25)));
+      c.start();
+      ticker.advance(m(25));
+      expect(c.state.status, SessionStatus.completed);
+      c.keepGoing();
+      expect(c.state.status, SessionStatus.running);
+      expect(c.state.segmentElapsed, Duration.zero, reason: 'drains from full');
+      ticker.advance(m(10));
+      expect(c.state.recordedFocus, m(35)); // 25 + 10 accumulated
+      c.end();
+      expect(c.state.status, SessionStatus.finished);
+      final record = c.finalize();
+      expect(record.recordedFocus, m(35));
+      expect(record.plannedDuration, m(25), reason: 'overflow rewards score');
     });
 
     test('endless signals goal reached but keeps running past planned', () {
@@ -92,17 +114,39 @@ void main() {
       expect(record.recordedFocus, m(37));
     });
 
-    test('ending before the goal records an abandoned, uncounted session', () {
+    test('Flow Block records actual focused length on give-up (>= 2 min)', () {
       final ticker = FakeTicker();
       final c = _controller(ticker, plan: SessionPlan.flowBlock(m(25)));
       c.start();
       ticker.advance(m(10));
-      c.abandon();
+      c.abandon(); // gave up before the goal
       expect(c.state.status, SessionStatus.finished);
       final record = c.finalize();
-      expect(record.completed, isFalse);
+      expect(record.completed, isFalse, reason: 'goal not reached');
       expect(record.abandoned, isTrue);
-      expect(record.recordedFocus, Duration.zero);
+      // New rule: the 10 focused minutes ARE recorded (feeds Focus Score).
+      expect(record.recordedFocus, m(10));
+    });
+
+    test('Flow Block give-up under 2 min records nothing', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker, plan: SessionPlan.flowBlock(m(25)));
+      c.start();
+      ticker.advance(const Duration(seconds: 90));
+      c.abandon();
+      expect(c.finalize().recordedFocus, Duration.zero);
+    });
+
+    test('non-Flow abandon stays uncounted (old rule)', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          mode: SessionMode.custom,
+          plan: SessionPlan.customByCount(
+              totalWork: m(60), breaks: 1, breakDuration: m(5)));
+      c.start();
+      ticker.advance(m(10));
+      c.abandon();
+      expect(c.finalize().recordedFocus, Duration.zero);
     });
 
     test('pause stops accumulating; resume continues', () {
@@ -162,6 +206,57 @@ void main() {
       expect(record.recordedFocus, m(50));
       expect(record.plannedDuration, m(50));
       expect(record.completed, isTrue);
+    });
+
+    test('tap-to-continue: a break waits at the boundary, then continues', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(),
+          mode: SessionMode.pomodoro,
+          autoAdvanceBreaks: false);
+      c.start();
+      ticker.advance(m(25)); // first focus done → into the break
+      expect(c.state.isResting, isTrue);
+
+      ticker.advance(m(5)); // break done → wait for the user
+      expect(c.state.status, SessionStatus.awaitingResume);
+      expect(c.state.segmentIndex, 2, reason: 'parked at the next focus block');
+      expect(c.state.currentKind, SegmentKind.focus);
+      expect(c.state.recordedFocus, m(25));
+      expect(ticker.running, isFalse, reason: 'clock stops while waiting');
+
+      ticker.advance(m(10)); // ignored while waiting (ticker stopped)
+      expect(c.state.recordedFocus, m(25));
+
+      c.continueToNext();
+      expect(c.state.status, SessionStatus.running);
+      expect(ticker.running, isTrue);
+      ticker.advance(m(25)); // finish the last focus block
+      expect(c.state.status, SessionStatus.finished);
+      expect(c.finalize().recordedFocus, m(50));
+    });
+
+    test('auto-advance (default) flows break → next focus with no wait', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker, plan: twoBlocks(), mode: SessionMode.pomodoro);
+      c.start();
+      ticker.advance(m(25));
+      ticker.advance(m(5)); // break ends and the next focus starts immediately
+      expect(c.state.status, SessionStatus.running);
+      expect(c.state.isResting, isFalse);
+      expect(c.state.segmentIndex, 2);
+    });
+
+    test('skipRest jumps straight to the next focus block', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker, plan: twoBlocks(), mode: SessionMode.pomodoro);
+      c.start();
+      ticker.advance(m(25)); // into the break
+      expect(c.state.isResting, isTrue);
+      c.skipRest();
+      expect(c.state.isResting, isFalse);
+      expect(c.state.segmentIndex, 2);
+      expect(c.state.status, SessionStatus.running);
     });
 
     test('carries delta across a segment boundary in one tick', () {

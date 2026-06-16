@@ -11,6 +11,11 @@ class SessionConfig {
   final String soundscape;
   final String skinId;
 
+  /// When false, the session pauses after each break and waits for the user to
+  /// start the next focus block ("tap to continue"). When true (default), the
+  /// next focus block begins automatically. A user-level preference.
+  final bool autoAdvanceBreaks;
+
   const SessionConfig({
     required this.mode,
     required this.plan,
@@ -18,6 +23,7 @@ class SessionConfig {
     required this.intention,
     required this.soundscape,
     required this.skinId,
+    this.autoAdvanceBreaks = true,
   });
 
   /// Total planned focus time across the plan's focus segments.

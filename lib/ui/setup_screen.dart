@@ -8,6 +8,7 @@ import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../session/session_config.dart';
 import '../session/session_plan.dart';
+import 'session_screen.dart';
 import 'widgets/primary_button.dart';
 import 'widgets/screen_background.dart';
 
@@ -147,33 +148,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   bool get _endlessAvailable =>
       _mode != SessionMode.pomodoro && _buildPlan().isSingleFocus;
 
-  void _begin() {
+  Future<void> _begin() async {
     HapticFeedback.lightImpact();
+    // Honor the user's break-advance preference (default auto-advance).
+    final autoAdvanceBreaks =
+        await ref.read(breakAutoAdvanceProvider.future);
+    if (!mounted) return;
     final plan = _buildPlan();
     final config = SessionConfig(
       mode: _mode,
       plan: plan,
       autoContinue: _endlessAvailable && _endless,
+      autoAdvanceBreaks: autoAdvanceBreaks,
       intention: _intention.text.trim(),
       soundscape: 'sand',
       skinId: 'classic',
     );
-    // TODO(Task 8): replace with SessionScreen(config: config).
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('Session')),
-          body: Center(
-            child: Text(
-              '${config.mode.name}\n'
-              '${plan.focusCount} focus · ${plan.segments.length - plan.focusCount} breaks\n'
-              'focus ${_fmt(plan.totalFocus)} · total ${_fmt(plan.totalDuration)}'
-              '${config.autoContinue ? ' · endless' : ''}\n“${config.intention}”',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => SessionScreen(config: config)),
     );
   }
 

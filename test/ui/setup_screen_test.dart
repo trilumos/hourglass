@@ -5,6 +5,7 @@ import 'package:hourglass/app/providers.dart';
 import 'package:hourglass/app/theme.dart';
 import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/domain/session_mode.dart';
+import 'package:hourglass/ui/session_screen.dart';
 import 'package:hourglass/ui/setup_screen.dart';
 
 void main() {
@@ -17,6 +18,7 @@ void main() {
         overrides: [
           suggestedFlowLengthProvider
               .overrideWith((ref) async => const Duration(minutes: 30)),
+          breakAutoAdvanceProvider.overrideWith((ref) async => true),
         ],
         child: MaterialApp(
           theme: buildTheme(HgThemes.sand.dark, Brightness.dark),
@@ -37,10 +39,10 @@ void main() {
 
     await tester.enterText(find.byType(TextField), 'Read chapter 4');
     await tester.tap(find.text('Flip to begin'));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Read chapter 4'), findsOneWidget);
-    expect(find.textContaining('30m'), findsOneWidget);
+    // The live session animates indefinitely — push the route without settling.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(SessionScreen), findsOneWidget);
   });
 
   testWidgets('Pomodoro: total → focus time → block length, no endless',

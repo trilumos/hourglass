@@ -41,6 +41,7 @@ dependencies:
   path: ^1.9.1
   shared_preferences: ^2.5.5
   animations: ^2.2.0
+  wakelock_plus: ^1.2.8
 
 dev_dependencies:
   flutter_test:

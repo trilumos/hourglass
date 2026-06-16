@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'hourglass_painter.dart';
@@ -24,11 +26,16 @@ class HourglassView extends StatefulWidget {
   /// avoid running the live simulation during the transition.
   final String? heroTag;
 
+  /// Whether the live sand simulation advances. When false the sand freezes
+  /// mid-fall (used to make a paused session unmistakable). Default true.
+  final bool animate;
+
   const HourglassView({
     super.key,
     required this.progress,
     this.skin,
     this.heroTag,
+    this.animate = true,
   });
 
   @override
@@ -39,13 +46,48 @@ class _HourglassViewState extends State<HourglassView>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   double _time = 0;
+  double _last = 0; // previous frame's elapsed seconds
+
+  /// The level actually drawn. The session clock only ticks once per second, so
+  /// we ease this toward [widget.progress] every frame — the sand flows like
+  /// water instead of stepping. Big backward jumps (a flip/reset) snap.
+  late double _shown;
 
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker((elapsed) {
-      setState(() => _time = elapsed.inMicroseconds / 1e6);
-    })..start();
+    _shown = widget.progress.clamp(0.0, 1.0);
+    _ticker = createTicker(_onFrame);
+    if (widget.animate) _ticker.start();
+  }
+
+  void _onFrame(Duration elapsed) {
+    final t = elapsed.inMicroseconds / 1e6;
+    final dt = (t - _last).clamp(0.0, 0.1);
+    _last = t;
+    final target = widget.progress.clamp(0.0, 1.0);
+    setState(() {
+      _time = t;
+      if (target < _shown - 0.2) {
+        _shown = target; // reset / flip refill — snap, the flip hides it
+      } else {
+        // Exponential ease (~0.35s time constant) → smooth, watery descent.
+        _shown += (target - _shown) * (1 - math.exp(-dt / 0.35));
+        if ((target - _shown).abs() < 0.0005) _shown = target;
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(HourglassView old) {
+    super.didUpdateWidget(old);
+    if (!widget.animate) {
+      // Frozen: show the exact level (e.g. the settled completion hourglass).
+      _shown = widget.progress.clamp(0.0, 1.0);
+      if (_ticker.isTicking) _ticker.stop();
+    } else if (!_ticker.isTicking) {
+      _ticker.start();
+    }
   }
 
   @override
@@ -60,7 +102,7 @@ class _HourglassViewState extends State<HourglassView>
         (Theme.of(context).brightness == Brightness.dark
             ? HourglassSkin.classic
             : HourglassSkin.classicLight);
-    final progress = widget.progress.clamp(0.0, 1.0);
+    final progress = (widget.animate ? _shown : widget.progress).clamp(0.0, 1.0);
 
     Widget visual = RepaintBoundary(
       child: AspectRatio(
