@@ -27,9 +27,18 @@ overflowRate  = (1 + chosen/D) × M           // grit reward for pushing past  (
 Worked: 25 done → 31 · 50 done → 75 · 50 quit@25 → 19 · 25 pushed→40 → 59.
 Constants (D=100, completion exponent 2, M=1.5) are tunable.
 
-- **Focus Score = the average of your most recent 10 Flow Block sessions' points.**
-  Flow-Block-only (Pomodoro/Custom never score). It's a steady "current ability"
-  number: long/completed/pushed sessions raise it, give-ups (low points) lower it.
+**Normalize each session to 0–100:**
+```
+sessionScore = clamp(round(rawPoints / perfectPoints × 100), 0, 100)
+perfectPoints = base(PERFECT)   // PERFECT = 60 min (the "100" anchor, tunable)
+```
+So 25 done ≈ 33, 50 done ≈ 78, 60 done = 100, give-up scores low, push adds toward 100.
+
+- **Focus Score = round( sum(last 10 sessionScores) ÷ 10 )** — note the divisor is
+  ALWAYS 10. This builds a **ramp**: one perfect early session only yields ~10 (not
+  100); it can reach 100 only after ~10 strong sessions, then becomes a true rolling
+  recent-10 average. Range 0–100. **100 = hourglass full → level up** (roadmap).
+  Flow-Block-only. Reflects current ability: strong sessions raise it, give-ups lower it.
 - **All ends are scored:** completed, given-up, or app-left all produce points from
   their actual focused length (≥ 2 min); sub-2-min ends are ignored.
 - **Shown on Home** as the headline stat. Separate from the **suggested next Flow
