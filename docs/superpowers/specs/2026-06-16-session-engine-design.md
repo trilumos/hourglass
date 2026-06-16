@@ -30,26 +30,42 @@ class SessionPlan {
 }
 ```
 
-### Pure builders (tested)
+### Pure builders (tested) — both modes are FULL implementations
+
+**Flow Block**
 - **`SessionPlan.flowBlock(Duration work)`** → `[focus(work)]`. One unbroken block;
   recovery happens after (separate, Plan 3). No mid-breaks.
-- **`SessionPlan.custom({Duration totalWork, int breaks, Duration breakDuration})`**
-  → if `breaks <= 0`: `[focus(totalWork)]`. Else split `totalWork` into
-  `breaks + 1` focus chunks of `totalWork ~/ (breaks+1)` (the **last chunk absorbs
-  any remainder** so focus sums exactly to `totalWork`), separated by
-  `rest(breakDuration)`. Example: 240 min, 3 breaks, 10 → `60·r10·60·r10·60·r10·60`.
-- **`SessionPlan.pomodoroSingle({Duration work, Duration breakDuration})`** →
-  `[focus(work), rest(breakDuration)]` (one classic pomodoro).
-- **`SessionPlan.pomodoroSession({Duration totalWork, Duration work,
-  Duration shortBreak, Duration longBreak, int longEvery = 4})`** → repeat
-  `focus(work)`; after each focus, if accumulated focus `>= totalWork` **stop (no
-  trailing rest)**, else append a break — every `longEvery`-th break is `longBreak`,
-  otherwise `shortBreak`. So breaks only sit *between* focus blocks; the plan ends
-  on a focus block.
 
-Break auto-derivation for Pomodoro work length: `shortBreak ≈ round(work/5)`
-(min 5), `longBreak ≈ 3 × shortBreak` (classic ~15 for 25/5). Computed in the
-Setup layer and passed to the builder.
+**Pomodoro — proper, two entry paths that both feed one builder.**
+- Builder: **`SessionPlan.pomodoro({Duration work, Duration shortBreak,
+  Duration longBreak, int blocks, int longEvery = 4})`** → `blocks` focus segments;
+  between consecutive focus blocks insert a rest — every `longEvery`-th break is
+  `longBreak`, else `shortBreak`. **Ends on a focus block** (no trailing rest).
+  e.g. blocks=6, 25/5, long 15: `f25 r5 f25 r5 f25 r5 f25 r15 f25 r5 f25`.
+- Ratio presets (work/shortBreak): **25/5, 50/10, 52/17, 90/15** (longBreak per
+  preset, e.g. 25/5→15, 50/10→20; `longEvery = 4`).
+- **Entry A — By blocks:** user picks a ratio preset + **block count** (stepper);
+  total is computed & shown.
+- **Entry B — By duration:** user enters a **target total work** → for each ratio
+  preset compute `blocks = (target / work).round()` (≥1) and its resulting total;
+  present those as options ("25/5 ×6 = 2h 25m", "50/10 ×3 = 2h 50m", …) → user
+  picks → same builder. (Suggest only presets whose resulting total is reasonably
+  near the target.)
+
+**Custom — full autonomy. The chosen time is TOTAL WORK; breaks add on top.**
+- **`SessionPlan.customByCount({Duration totalWork, int breaks,
+  Duration breakDuration})`** → if `breaks <= 0`: `[focus(totalWork)]`; else
+  `breaks+1` focus chunks of `totalWork ~/ (breaks+1)` (**last chunk absorbs the
+  remainder** so focus sums exactly to `totalWork`), `rest(breakDuration)` between.
+  Even spacing; the implied interval is shown.
+- **`SessionPlan.customByInterval({Duration totalWork, Duration intervalWork,
+  Duration breakDuration})`** → focus chunks of `intervalWork` with
+  `rest(breakDuration)` between, repeated until `totalWork` is consumed (**final
+  chunk = remainder**, no trailing rest). e.g. 120 work, every 30, break 10 →
+  `f30 r10 f30 r10 f30 r10 f30`.
+
+`longBreak`/`shortBreak` defaults for Pomodoro are per-preset constants in the
+Setup layer; Custom break length is user-chosen.
 
 ## `SessionConfig` change (`lib/session/session_config.dart`)
 Replace `plannedDuration` with `SessionPlan plan`. Keep `mode`, `intention`,
@@ -86,16 +102,19 @@ completed, non-abandoned **Flow Block** (single focus). Uses the record's focus
 duration. Multi-segment Pomodoro/Custom persist but don't move stamina.
 
 ## Setup wiring (`lib/ui/setup_screen.dart`)
-Each mode produces a `SessionPlan`; show a live **preview** of the generated plan.
+Each mode produces a `SessionPlan`; always show a live **preview** of the schedule
+(e.g. "4 × 60m focus · 3 × 10m break · 4h 30m total").
 - **Flow Block** — length presets/+5 (as now) → `flowBlock`. Endless toggle.
-- **Pomodoro** — a sub-toggle **Single / Full session**:
-  - *Single*: work-length stepper → `pomodoroSingle`. Preview "25 min work · 5 min break".
-  - *Full session*: total stepper + work-length (25/50) → `pomodoroSession`.
-    Preview e.g. "≈4 focus blocks · 3 short + 1 long break · 2h 5m total".
+- **Pomodoro** — a sub-toggle **Blocks / Duration**:
+  - *Blocks*: ratio chips (25/5, 50/10, 52/17, 90/15) + a **block-count** stepper →
+    `pomodoro(...)`. Preview shows total.
+  - *Duration*: a target-total stepper → computed **ratio options** as chips
+    ("25/5 ×6 · 2h 25m", …) → pick → `pomodoro(...)`.
   - No endless toggle for Pomodoro.
-- **Custom** — total-work stepper + **# breaks** stepper + **break-length** stepper
-  → `custom`. Preview e.g. "4 × 60 min focus · 3 × 10 min break". Endless toggle
-  only when breaks = 0.
+- **Custom** — total-**work** stepper, a **By count / By interval** sub-toggle
+  (count → `customByCount`; interval "break every X" → `customByInterval`), and a
+  **break-length** stepper. Preview shows chunks/breaks/total. Endless toggle only
+  when there are no breaks.
 
 ## Testing (TDD, the heart)
 - **Builders:** segment sequences + math for each builder, incl. remainder
