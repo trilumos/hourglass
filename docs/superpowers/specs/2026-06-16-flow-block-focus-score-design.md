@@ -13,19 +13,28 @@ way to grow your number is to choose Flow Block. The give-up option turns each
 session into a willpower test ("meet or beat your average"); the collectible adds a
 satisfying, tangible payoff.
 
-## Focus Score (the core)
-- **Definition:** the average focused length of your **most recent 10 Flow Block
-  sessions** that lasted **≥ 2 minutes**. Flow-Block-only (Pomodoro/Custom never
-  count).
-- **Give-ups count:** a session's recorded length is the **actual minutes focused**,
-  whether you completed the planned length, hit "give up", or left the app — as long
-  as it's ≥ 2 min. Pushing longer raises the average; quitting early lowers it.
-- **Drives the suggestion:** the suggested next Flow Block length = the Focus Score
-  (a "meet or beat" target). New users with no history get a gentle starter
-  (e.g. 25 min, the existing default).
-- **Shown on Home** as the headline stat (your focus capacity), replacing the
-  internal-only "Focus Stamina" as the user-facing number. (Stamina's recent-average
-  idea is reused; window becomes 10 and give-up lengths are included.)
+## Focus Score (the core) — a weighted points game
+
+**Per-session points** (computed when a Flow Block ends, only if focused ≥ 2 min):
+```
+points = round( base(chosen) × completion²  +  overflow × overflowRate )
+
+base(L)       = L + L²/D          // depth bonus: longer = more per minute   (D = 100)
+completion    = min(actual/chosen, 1)        // squared → partial completion costs a lot
+overflow      = max(0, actual − chosen)      // minutes past the chosen length
+overflowRate  = (1 + chosen/D) × M           // grit reward for pushing past  (M = 1.5)
+```
+Worked: 25 done → 31 · 50 done → 75 · 50 quit@25 → 19 · 25 pushed→40 → 59.
+Constants (D=100, completion exponent 2, M=1.5) are tunable.
+
+- **Focus Score = the average of your most recent 10 Flow Block sessions' points.**
+  Flow-Block-only (Pomodoro/Custom never score). It's a steady "current ability"
+  number: long/completed/pushed sessions raise it, give-ups (low points) lower it.
+- **All ends are scored:** completed, given-up, or app-left all produce points from
+  their actual focused length (≥ 2 min); sub-2-min ends are ignored.
+- **Shown on Home** as the headline stat. Separate from the **suggested next Flow
+  length** (which stays a simple recent-completed-length estimate, default 25).
+- This replaces the user-facing "Focus Stamina" with the points-average score.
 
 ## Give up (willpower)
 - In the Session screen, a clear but not-too-easy **"Give up"** affordance (a quiet
@@ -60,15 +69,17 @@ not zero the recorded length.
   profile" — Profile is a later screen, so v1 tracks it and shows it where it fits.)
 
 ## Data / engine
-- New pure calculator `FocusScoreCalculator` (or extend `StaminaCalculator`): given
-  recent Flow Block recorded lengths (oldest→newest), return the average of the last
-  10 that are ≥ 2 min; default to the starter when empty. Unit-tested.
+- New pure `FocusScoreCalculator`:
+  - `sessionPoints(chosen, actual)` → the weighted formula above (0 if actual < 2m).
+  - `score(recentSessions)` → average of `sessionPoints` over the last 10 Flow Block
+    sessions (chosen = stored `plannedSeconds`, actual = `recordedSeconds`); 0 when
+    none. Unit-tested.
 - A Riverpod `focusScoreProvider` (FutureProvider) loads Flow Block sessions via
-  `SessionRepository` and computes the score; `suggestedFlowLengthProvider` becomes
-  "= focus score" (with the starter fallback).
-- `SessionRepository`/`AppDatabase` already store `recordedSeconds`, `mode`,
-  `completed`, `abandoned` — sufficient. (No schema change; we just stop zeroing
-  Flow Block lengths.)
+  `SessionRepository` and computes the score. `suggestedFlowLengthProvider` stays a
+  separate recent-completed-length estimate (unchanged), default 25.
+- **No schema change:** points are derived from stored `plannedSeconds` (chosen) +
+  `recordedSeconds` (actual) + `mode`. The only data change is that Flow Block ends
+  now store the actual focused length (we stop zeroing them).
 
 ## Home
 - The **Focus Score** is the headline stat (your focus capacity). Today/Streak stay
@@ -91,8 +102,11 @@ work-verification arrives with the roadmap's PC/web blocking + monitoring.
    — the real work-verification.
 
 ## Testing
-- `FocusScoreCalculator`: recent-10 window, ignores < 2 min, ignores non-Flow,
-  averages give-up + completed lengths, starter when empty.
+- `FocusScoreCalculator.sessionPoints`: depth bonus (50 > 2×25), completion² penalty
+  (50 quit@25 ≈ 19), overflow bonus (25→40 ≈ 59), 0 when < 2 min. Worked-example
+  values locked.
+- `FocusScoreCalculator.score`: recent-10 window, ignores non-Flow, 0 when empty;
+  a give-up lowers the average, a strong session raises it.
 - Recording: a given-up Flow Block records its actual length (not 0); a < 2 min end
   is uncounted; Pomodoro/Custom unaffected.
 - Widget: Home shows the Focus Score; Session screen shows a give-up action.
