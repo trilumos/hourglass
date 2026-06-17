@@ -142,6 +142,26 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     requiredDuringInsert: false,
     defaultValue: const Constant('classic'),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -155,6 +175,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     autoContinue,
     soundscape,
     skinId,
+    uuid,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -240,6 +262,18 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         skinId.isAcceptableOrUnknown(data['skin_id']!, _skinIdMeta),
       );
     }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -295,6 +329,14 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.string,
         data['${effectivePrefix}skin_id'],
       )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -319,6 +361,8 @@ class Session extends DataClass implements Insertable<Session> {
   final bool autoContinue;
   final String soundscape;
   final String skinId;
+  final String? uuid;
+  final DateTime? updatedAt;
   const Session({
     required this.id,
     required this.startedAt,
@@ -331,6 +375,8 @@ class Session extends DataClass implements Insertable<Session> {
     required this.autoContinue,
     required this.soundscape,
     required this.skinId,
+    this.uuid,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -348,6 +394,12 @@ class Session extends DataClass implements Insertable<Session> {
     map['auto_continue'] = Variable<bool>(autoContinue);
     map['soundscape'] = Variable<String>(soundscape);
     map['skin_id'] = Variable<String>(skinId);
+    if (!nullToAbsent || uuid != null) {
+      map['uuid'] = Variable<String>(uuid);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -364,6 +416,10 @@ class Session extends DataClass implements Insertable<Session> {
       autoContinue: Value(autoContinue),
       soundscape: Value(soundscape),
       skinId: Value(skinId),
+      uuid: uuid == null && nullToAbsent ? const Value.absent() : Value(uuid),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -386,6 +442,8 @@ class Session extends DataClass implements Insertable<Session> {
       autoContinue: serializer.fromJson<bool>(json['autoContinue']),
       soundscape: serializer.fromJson<String>(json['soundscape']),
       skinId: serializer.fromJson<String>(json['skinId']),
+      uuid: serializer.fromJson<String?>(json['uuid']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -405,6 +463,8 @@ class Session extends DataClass implements Insertable<Session> {
       'autoContinue': serializer.toJson<bool>(autoContinue),
       'soundscape': serializer.toJson<String>(soundscape),
       'skinId': serializer.toJson<String>(skinId),
+      'uuid': serializer.toJson<String?>(uuid),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -420,6 +480,8 @@ class Session extends DataClass implements Insertable<Session> {
     bool? autoContinue,
     String? soundscape,
     String? skinId,
+    Value<String?> uuid = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => Session(
     id: id ?? this.id,
     startedAt: startedAt ?? this.startedAt,
@@ -432,6 +494,8 @@ class Session extends DataClass implements Insertable<Session> {
     autoContinue: autoContinue ?? this.autoContinue,
     soundscape: soundscape ?? this.soundscape,
     skinId: skinId ?? this.skinId,
+    uuid: uuid.present ? uuid.value : this.uuid,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -454,6 +518,8 @@ class Session extends DataClass implements Insertable<Session> {
           ? data.soundscape.value
           : this.soundscape,
       skinId: data.skinId.present ? data.skinId.value : this.skinId,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -470,7 +536,9 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('abandoned: $abandoned, ')
           ..write('autoContinue: $autoContinue, ')
           ..write('soundscape: $soundscape, ')
-          ..write('skinId: $skinId')
+          ..write('skinId: $skinId, ')
+          ..write('uuid: $uuid, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -488,6 +556,8 @@ class Session extends DataClass implements Insertable<Session> {
     autoContinue,
     soundscape,
     skinId,
+    uuid,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -503,7 +573,9 @@ class Session extends DataClass implements Insertable<Session> {
           other.abandoned == this.abandoned &&
           other.autoContinue == this.autoContinue &&
           other.soundscape == this.soundscape &&
-          other.skinId == this.skinId);
+          other.skinId == this.skinId &&
+          other.uuid == this.uuid &&
+          other.updatedAt == this.updatedAt);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -518,6 +590,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<bool> autoContinue;
   final Value<String> soundscape;
   final Value<String> skinId;
+  final Value<String?> uuid;
+  final Value<DateTime?> updatedAt;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.startedAt = const Value.absent(),
@@ -530,6 +604,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.autoContinue = const Value.absent(),
     this.soundscape = const Value.absent(),
     this.skinId = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -543,6 +619,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.autoContinue = const Value.absent(),
     this.soundscape = const Value.absent(),
     this.skinId = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : startedAt = Value(startedAt),
        mode = Value(mode),
        plannedSeconds = Value(plannedSeconds),
@@ -559,6 +637,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<bool>? autoContinue,
     Expression<String>? soundscape,
     Expression<String>? skinId,
+    Expression<String>? uuid,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -572,6 +652,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (autoContinue != null) 'auto_continue': autoContinue,
       if (soundscape != null) 'soundscape': soundscape,
       if (skinId != null) 'skin_id': skinId,
+      if (uuid != null) 'uuid': uuid,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -587,6 +669,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<bool>? autoContinue,
     Value<String>? soundscape,
     Value<String>? skinId,
+    Value<String?>? uuid,
+    Value<DateTime?>? updatedAt,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -600,6 +684,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       autoContinue: autoContinue ?? this.autoContinue,
       soundscape: soundscape ?? this.soundscape,
       skinId: skinId ?? this.skinId,
+      uuid: uuid ?? this.uuid,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -641,6 +727,12 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (skinId.present) {
       map['skin_id'] = Variable<String>(skinId.value);
     }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -657,7 +749,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('abandoned: $abandoned, ')
           ..write('autoContinue: $autoContinue, ')
           ..write('soundscape: $soundscape, ')
-          ..write('skinId: $skinId')
+          ..write('skinId: $skinId, ')
+          ..write('uuid: $uuid, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -868,16 +962,415 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   }
 }
 
+class $ProfileTable extends Profile with TableInfo<$ProfileTable, ProfileData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProfileTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _imagePathMeta = const VerificationMeta(
+    'imagePath',
+  );
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+    'image_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    name,
+    imagePath,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'profile';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProfileData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('image_path')) {
+      context.handle(
+        _imagePathMeta,
+        imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProfileData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProfileData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      imagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_path'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ProfileTable createAlias(String alias) {
+    return $ProfileTable(attachedDatabase, alias);
+  }
+}
+
+class ProfileData extends DataClass implements Insertable<ProfileData> {
+  final int id;
+  final String uuid;
+  final String name;
+  final String? imagePath;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const ProfileData({
+    required this.id,
+    required this.uuid,
+    required this.name,
+    this.imagePath,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || imagePath != null) {
+      map['image_path'] = Variable<String>(imagePath);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  ProfileCompanion toCompanion(bool nullToAbsent) {
+    return ProfileCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      name: Value(name),
+      imagePath: imagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imagePath),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ProfileData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProfileData(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
+      imagePath: serializer.fromJson<String?>(json['imagePath']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
+      'imagePath': serializer.toJson<String?>(imagePath),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ProfileData copyWith({
+    int? id,
+    String? uuid,
+    String? name,
+    Value<String?> imagePath = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => ProfileData(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    name: name ?? this.name,
+    imagePath: imagePath.present ? imagePath.value : this.imagePath,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ProfileData copyWithCompanion(ProfileCompanion data) {
+    return ProfileData(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      name: data.name.present ? data.name.value : this.name,
+      imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProfileData(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, uuid, name, imagePath, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProfileData &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.name == this.name &&
+          other.imagePath == this.imagePath &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ProfileCompanion extends UpdateCompanion<ProfileData> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> name;
+  final Value<String?> imagePath;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const ProfileCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
+    this.imagePath = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  ProfileCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    this.name = const Value.absent(),
+    this.imagePath = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : uuid = Value(uuid),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ProfileData> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? name,
+    Expression<String>? imagePath,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
+      if (imagePath != null) 'image_path': imagePath,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  ProfileCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? name,
+    Value<String?>? imagePath,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return ProfileCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
+      imagePath: imagePath ?? this.imagePath,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProfileCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
+  late final $ProfileTable profile = $ProfileTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [sessions, settings];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    sessions,
+    settings,
+    profile,
+  ];
 }
 
 typedef $$SessionsTableCreateCompanionBuilder =
@@ -893,6 +1386,8 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<bool> autoContinue,
       Value<String> soundscape,
       Value<String> skinId,
+      Value<String?> uuid,
+      Value<DateTime?> updatedAt,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
@@ -907,6 +1402,8 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<bool> autoContinue,
       Value<String> soundscape,
       Value<String> skinId,
+      Value<String?> uuid,
+      Value<DateTime?> updatedAt,
     });
 
 class $$SessionsTableFilterComposer
@@ -971,6 +1468,16 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get skinId => $composableBuilder(
     column: $table.skinId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1038,6 +1545,16 @@ class $$SessionsTableOrderingComposer
     column: $table.skinId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -1089,6 +1606,12 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<String> get skinId =>
       $composableBuilder(column: $table.skinId, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$SessionsTableTableManager
@@ -1130,6 +1653,8 @@ class $$SessionsTableTableManager
                 Value<bool> autoContinue = const Value.absent(),
                 Value<String> soundscape = const Value.absent(),
                 Value<String> skinId = const Value.absent(),
+                Value<String?> uuid = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 startedAt: startedAt,
@@ -1142,6 +1667,8 @@ class $$SessionsTableTableManager
                 autoContinue: autoContinue,
                 soundscape: soundscape,
                 skinId: skinId,
+                uuid: uuid,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -1156,6 +1683,8 @@ class $$SessionsTableTableManager
                 Value<bool> autoContinue = const Value.absent(),
                 Value<String> soundscape = const Value.absent(),
                 Value<String> skinId = const Value.absent(),
+                Value<String?> uuid = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 startedAt: startedAt,
@@ -1168,6 +1697,8 @@ class $$SessionsTableTableManager
                 autoContinue: autoContinue,
                 soundscape: soundscape,
                 skinId: skinId,
+                uuid: uuid,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -1324,6 +1855,216 @@ typedef $$SettingsTableProcessedTableManager =
       Setting,
       PrefetchHooks Function()
     >;
+typedef $$ProfileTableCreateCompanionBuilder =
+    ProfileCompanion Function({
+      Value<int> id,
+      required String uuid,
+      Value<String> name,
+      Value<String?> imagePath,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+    });
+typedef $$ProfileTableUpdateCompanionBuilder =
+    ProfileCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> name,
+      Value<String?> imagePath,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+class $$ProfileTableFilterComposer
+    extends Composer<_$AppDatabase, $ProfileTable> {
+  $$ProfileTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProfileTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProfileTable> {
+  $$ProfileTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProfileTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProfileTable> {
+  $$ProfileTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get imagePath =>
+      $composableBuilder(column: $table.imagePath, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$ProfileTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProfileTable,
+          ProfileData,
+          $$ProfileTableFilterComposer,
+          $$ProfileTableOrderingComposer,
+          $$ProfileTableAnnotationComposer,
+          $$ProfileTableCreateCompanionBuilder,
+          $$ProfileTableUpdateCompanionBuilder,
+          (
+            ProfileData,
+            BaseReferences<_$AppDatabase, $ProfileTable, ProfileData>,
+          ),
+          ProfileData,
+          PrefetchHooks Function()
+        > {
+  $$ProfileTableTableManager(_$AppDatabase db, $ProfileTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProfileTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProfileTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProfileTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> imagePath = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => ProfileCompanion(
+                id: id,
+                uuid: uuid,
+                name: name,
+                imagePath: imagePath,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                Value<String> name = const Value.absent(),
+                Value<String?> imagePath = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+              }) => ProfileCompanion.insert(
+                id: id,
+                uuid: uuid,
+                name: name,
+                imagePath: imagePath,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProfileTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProfileTable,
+      ProfileData,
+      $$ProfileTableFilterComposer,
+      $$ProfileTableOrderingComposer,
+      $$ProfileTableAnnotationComposer,
+      $$ProfileTableCreateCompanionBuilder,
+      $$ProfileTableUpdateCompanionBuilder,
+      (ProfileData, BaseReferences<_$AppDatabase, $ProfileTable, ProfileData>),
+      ProfileData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1332,4 +2073,6 @@ class $AppDatabaseManager {
       $$SessionsTableTableManager(_db, _db.sessions);
   $$SettingsTableTableManager get settings =>
       $$SettingsTableTableManager(_db, _db.settings);
+  $$ProfileTableTableManager get profile =>
+      $$ProfileTableTableManager(_db, _db.profile);
 }
