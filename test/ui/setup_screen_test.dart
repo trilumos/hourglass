@@ -19,6 +19,7 @@ void main() {
           suggestedFlowLengthProvider
               .overrideWith((ref) async => const Duration(minutes: 30)),
           breakAutoAdvanceProvider.overrideWith((ref) async => true),
+          flowRunUntilEndedProvider.overrideWith((ref) async => false),
         ],
         child: MaterialApp(
           theme: buildTheme(HgThemes.sand.dark, Brightness.dark),

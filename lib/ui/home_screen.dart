@@ -139,7 +139,12 @@ class _StatRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _Stat(label: 'Focus', value: '${focusScore ?? 0}', accent: true),
+        _Stat(
+          label: 'Focus',
+          value: '${focusScore ?? 0}',
+          animatedNumber: focusScore ?? 0,
+          accent: true,
+        ),
         divider(),
         _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
         divider(),
@@ -164,23 +169,38 @@ class _Stat extends StatelessWidget {
   final String label;
   final String value;
   final bool accent;
-  const _Stat({required this.label, required this.value, this.accent = false});
+
+  /// When set, the value animates (counts up/down) from its previous number to
+  /// this one whenever it changes — used for the Focus Score after a session.
+  final int? animatedNumber;
+  const _Stat({
+    required this.label,
+    required this.value,
+    this.accent = false,
+    this.animatedNumber,
+  });
 
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
+    final style = TextStyle(
+      fontFamily: HgFont.sans,
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+      color: accent ? hg.accent : hg.textPrimary,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: HgFont.sans,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            color: accent ? hg.accent : hg.textPrimary,
-          ),
-        ),
+        if (animatedNumber != null)
+          TweenAnimationBuilder<double>(
+            tween: Tween(end: animatedNumber!.toDouble()),
+            duration: const Duration(milliseconds: 900),
+            curve: HgMotion.calm,
+            builder: (_, v, _) => Text('${v.round()}', style: style),
+          )
+        else
+          Text(value, style: style),
         const SizedBox(height: HgSpacing.xs),
         Text(
           label.toUpperCase(),

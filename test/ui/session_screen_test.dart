@@ -104,7 +104,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('FOCUS SCORE'), findsOneWidget);
+    expect(find.text('SESSION SCORE'), findsOneWidget);
     expect(find.textContaining('minutes focused'), findsOneWidget);
     expect(find.text('Done'), findsOneWidget);
   });

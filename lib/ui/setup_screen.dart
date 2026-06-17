@@ -150,15 +150,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Future<void> _begin() async {
     HapticFeedback.lightImpact();
-    // Honor the user's break-advance preference (default auto-advance).
-    final autoAdvanceBreaks =
-        await ref.read(breakAutoAdvanceProvider.future);
+    // Honor user preferences (break-advance + run-flow-until-ended default).
+    final autoAdvanceBreaks = await ref.read(breakAutoAdvanceProvider.future);
+    final flowRunUntilEnded = await ref.read(flowRunUntilEndedProvider.future);
     if (!mounted) return;
     final plan = _buildPlan();
+    // Flow Blocks run open-ended if the per-session toggle is on OR the global
+    // "run until I end" preference is on.
+    final endless = (_endlessAvailable && _endless) ||
+        (_mode == SessionMode.flowBlock && flowRunUntilEnded);
     final config = SessionConfig(
       mode: _mode,
       plan: plan,
-      autoContinue: _endlessAvailable && _endless,
+      autoContinue: endless,
       autoAdvanceBreaks: autoAdvanceBreaks,
       intention: _intention.text.trim(),
       soundscape: 'sand',

@@ -97,6 +97,20 @@ void main() {
       expect(record.plannedDuration, m(25), reason: 'overflow rewards score');
     });
 
+    test('enableEndless near the end keeps the block running past its length', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker, plan: SessionPlan.flowBlock(m(25)));
+      c.start();
+      ticker.advance(m(24));
+      c.enableEndless(); // "don't stop"
+      ticker.advance(m(6)); // would normally have completed at 25
+      expect(c.state.status, SessionStatus.running);
+      expect(c.state.goalReached, isTrue);
+      expect(c.state.recordedFocus, m(30));
+      c.end();
+      expect(c.finalize().recordedFocus, m(30));
+    });
+
     test('endless signals goal reached but keeps running past planned', () {
       final ticker = FakeTicker();
       final c = _controller(ticker,
@@ -137,7 +151,7 @@ void main() {
       expect(c.finalize().recordedFocus, Duration.zero);
     });
 
-    test('non-Flow abandon stays uncounted (old rule)', () {
+    test('non-Flow abandon now records the focus done (for Today/history)', () {
       final ticker = FakeTicker();
       final c = _controller(ticker,
           mode: SessionMode.custom,
@@ -146,7 +160,8 @@ void main() {
       c.start();
       ticker.advance(m(10));
       c.abandon();
-      expect(c.finalize().recordedFocus, Duration.zero);
+      // New rule: the 10 focused minutes count (no score, but Today/history do).
+      expect(c.finalize().recordedFocus, m(10));
     });
 
     test('pause stops accumulating; resume continues', () {

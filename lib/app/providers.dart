@@ -34,6 +34,11 @@ class SettingsKeys {
   /// Whether the next focus block starts automatically after a break (true) or
   /// waits for the user to tap continue (false). Default: auto-advance.
   static const breakAutoAdvance = 'breakAutoAdvance';
+
+  /// Whether Flow Blocks run open-ended by default — until the user ends the
+  /// session manually — instead of auto-stopping at their length. Default: off
+  /// (the block auto-ends, offering a "don't stop" nudge near the end).
+  static const flowRunUntilEnded = 'flowRunUntilEnded';
 }
 
 /// User preference: auto-advance into the next focus block after a break.
@@ -41,6 +46,13 @@ final breakAutoAdvanceProvider = FutureProvider<bool>(
   (ref) => ref
       .watch(settingsRepositoryProvider)
       .getBool(SettingsKeys.breakAutoAdvance, defaultValue: true),
+);
+
+/// User preference: Flow Blocks run until manually ended (open-ended by default).
+final flowRunUntilEndedProvider = FutureProvider<bool>(
+  (ref) => ref
+      .watch(settingsRepositoryProvider)
+      .getBool(SettingsKeys.flowRunUntilEnded, defaultValue: false),
 );
 
 /// The calm numbers shown on the home screen.

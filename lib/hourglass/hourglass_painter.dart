@@ -235,7 +235,9 @@ class HourglassPainter extends CustomPainter {
         final double vScale = usableH * (0.010 + 0.055 * fill) * 2.2;
         final math.Random erng = math.Random(31);
         for (int i = 0; i < scatterN; i++) {
-          final double dir = erng.nextDouble() < 0.5 ? -1.0 : 1.0;
+          // Alternate sides by index so the spray is always balanced left/right
+          // (a seeded coin-flip skewed to one side with so few grains).
+          final double dir = i.isEven ? -1.0 : 1.0;
           final double ang = (20 + 65 * erng.nextDouble()) * math.pi / 180;
           final double v = 0.55 + 0.45 * erng.nextDouble();
           final double sizeR = erng.nextDouble();

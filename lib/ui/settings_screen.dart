@@ -18,6 +18,8 @@ class SettingsScreen extends ConsumerWidget {
     final hg = context.hg;
     final themeMode = ref.watch(themeControllerProvider).mode;
     final autoAdvance = ref.watch(breakAutoAdvanceProvider).asData?.value ?? true;
+    final runUntilEnded =
+        ref.watch(flowRunUntilEndedProvider).asData?.value ?? false;
 
     return Scaffold(
       body: ScreenBackground(
@@ -85,6 +87,22 @@ class SettingsScreen extends ConsumerWidget {
                         .read(settingsRepositoryProvider)
                         .setBool(SettingsKeys.breakAutoAdvance, v);
                     ref.invalidate(breakAutoAdvanceProvider);
+                  },
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                _SwitchRow(
+                  title: 'Run Flow Blocks until I end them',
+                  subtitle:
+                      "When on, a Flow Block never stops on its own — it keeps "
+                      "running until you tap End. When off, it stops at its set "
+                      "length (with a “keep going” option near the end).",
+                  value: runUntilEnded,
+                  onChanged: (v) async {
+                    HapticFeedback.selectionClick();
+                    await ref
+                        .read(settingsRepositoryProvider)
+                        .setBool(SettingsKeys.flowRunUntilEnded, v);
+                    ref.invalidate(flowRunUntilEndedProvider);
                   },
                 ),
                 const SizedBox(height: HgSpacing.xl),

@@ -8,6 +8,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../app/providers.dart';
 import '../app/theme.dart';
+import '../app/theme_controller.dart';
 import '../app/tokens.dart';
 import '../domain/focus_phase.dart';
 import '../domain/focus_score_calculator.dart';
@@ -47,18 +48,21 @@ class SessionScreen extends ConsumerStatefulWidget {
 }
 
 class _SessionScreenState extends ConsumerState<SessionScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   late final SessionController _controller;
   late final AnimationController _flip;
+  late final AnimationController _pulse;
   bool _finished = false;
   bool _showTime = false;
   bool _dimmed = false;
   bool _persisted = false;
+  bool _autoRevealed = false;
   int? _recordId;
   int _flippedIndex = -1; // last focus-block index we played the flip for
   SessionRecord? _record;
   Timer? _revealTimer;
   Timer? _idleTimer;
+  Timer? _checkpointTimer;
 
   static const _idleDelay = Duration(seconds: 45);
 
@@ -73,6 +77,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       duration: const Duration(milliseconds: 850),
       value: 1,
     );
+    // Gentle pulse for the "don't stop" nudge near the end of a block.
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
     _controller = SessionController(
       config: widget.config,
       ticker: widget.ticker ?? PeriodicTicker(),
@@ -80,6 +89,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     )..addListener(_onChange);
     _controller.start();
     _resetIdle();
+    // Safety net: continuously checkpoint focus-so-far so a force-kill (or any
+    // crash) can't lose the block — and force-killing counts as a give-up, just
+    // like the button. Skipped under test (a fake ticker drives time).
+    if (widget.ticker == null) {
+      _checkpointTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+        final s = _controller.state;
+        if (s.status == SessionStatus.running &&
+            s.recordedFocus.inSeconds >= 120) {
+          _saveCheckpoint(_controller.finalize());
+        }
+      });
+    }
   }
 
   /// Flip the hourglass over to begin a (new) block. Skipped under test where a
@@ -98,6 +119,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         _flippedIndex != s.segmentIndex) {
       _flippedIndex = s.segmentIndex;
       _playFlip();
+      // Show the time briefly when the session first begins, then let it fade.
+      if (!_autoRevealed) {
+        _autoRevealed = true;
+        _revealTime(hold: const Duration(seconds: 4), haptic: false);
+      }
     }
 
     if (s.status == SessionStatus.completed) {
@@ -124,6 +150,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   /// extended — one record per block. Refresh derived providers only after the
   /// write lands (invalidating early recomputes from stale data).
   Future<void> _saveCheckpoint(SessionRecord record) async {
+    // Nothing focused worth keeping (e.g. a sub-2-min give-up) → don't store a
+    // 0-minute row.
+    if (record.recordedFocus.inSeconds == 0) return;
     final finalizer = ref.read(sessionFinalizerProvider);
     if (!_persisted) {
       _persisted = true;
@@ -160,8 +189,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   @override
   void dispose() {
     _flip.dispose();
+    _pulse.dispose();
     _revealTimer?.cancel();
     _idleTimer?.cancel();
+    _checkpointTimer?.cancel();
     WakelockPlus.disable();
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_onChange);
@@ -181,11 +212,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     });
   }
 
-  void _revealTime() {
-    HapticFeedback.selectionClick();
+  void _revealTime({Duration hold = const Duration(seconds: 3), bool haptic = true}) {
+    if (haptic) HapticFeedback.selectionClick();
     setState(() => _showTime = true);
     _revealTimer?.cancel();
-    _revealTimer = Timer(const Duration(seconds: 3), () {
+    _revealTimer = Timer(hold, () {
       if (mounted) setState(() => _showTime = false);
     });
     _resetIdle();
@@ -194,7 +225,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Future<void> _confirmGiveUp() async {
     final isFlow = widget.config.mode == SessionMode.flowBlock;
     final mins = _controller.state.recordedFocus.inMinutes;
-    final give = await _showGiveUpSheet(isFlow: isFlow, focusedMinutes: mins);
+    // Ending after the goal (e.g. an endless block past its length) is a finish,
+    // not a give-up — use positive copy.
+    final reached = _controller.state.goalReached;
+    final give = await _showGiveUpSheet(
+      isFlow: isFlow,
+      focusedMinutes: mins,
+      reached: reached,
+    );
     if (give == true) {
       HapticFeedback.selectionClick();
       _controller.end();
@@ -204,10 +242,15 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Future<bool?> _showGiveUpSheet({
     required bool isFlow,
     required int focusedMinutes,
+    required bool reached,
   }) {
     final hg = context.hg;
+    final String title = reached ? 'End this session?' : 'End this block?';
+    final String confirmLabel = reached ? 'End session' : 'End block';
     final String body;
-    if (isFlow) {
+    if (reached) {
+      body = "You've focused $focusedMinutes min — nicely done. It'll be saved.";
+    } else if (isFlow) {
       body = focusedMinutes >= 2
           ? "You've focused $focusedMinutes min. Ending now records this block — "
               'but a short block lowers your Focus Score. Staying with it builds it.'
@@ -232,7 +275,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'End this block?',
+                title,
                 style: TextStyle(
                   fontFamily: HgFont.sans,
                   fontSize: 20,
@@ -259,7 +302,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               TextButton(
                 onPressed: () => Navigator.of(sheetCtx).pop(true),
                 child: Text(
-                  'End block',
+                  confirmLabel,
                   style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted),
                 ),
               ),
@@ -270,9 +313,121 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     );
   }
 
+  /// Quick mid-session settings — change theme and the controls relevant to THIS
+  /// session's mode (endless for a Flow Block; auto-advance only when the plan
+  /// has breaks). Changes apply to the live session immediately.
+  void _openQuickSettings() {
+    final hg = context.hg;
+    final isFlow = widget.config.mode == SessionMode.flowBlock;
+    final hasBreaks = widget.config.plan.segments.any((seg) => !seg.isFocus);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: hg.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(HgRadius.lg)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (context, setSheet) {
+          final mode = ref.read(themeControllerProvider).mode;
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  HgSpacing.lg, HgSpacing.lg, HgSpacing.lg, HgSpacing.md),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Quick settings',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: hg.textPrimary,
+                      )),
+                  const SizedBox(height: HgSpacing.md),
+                  Text('THEME',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 11,
+                        letterSpacing: 2,
+                        color: hg.textMuted,
+                      )),
+                  const SizedBox(height: HgSpacing.xs),
+                  Row(
+                    children: [
+                      for (final m in ThemeMode.values)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: HgSpacing.xs),
+                            child: _ModeChip(
+                              label: switch (m) {
+                                ThemeMode.system => 'Auto',
+                                ThemeMode.light => 'Light',
+                                ThemeMode.dark => 'Dark',
+                              },
+                              selected: m == mode,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                ref
+                                    .read(themeControllerProvider.notifier)
+                                    .setMode(m);
+                                setSheet(() {});
+                              },
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  // Flow Block → endless toggle (no breaks to auto-advance).
+                  if (isFlow) ...[
+                    const SizedBox(height: HgSpacing.lg),
+                    _QuickToggle(
+                      title: "Don't stop — run until I end",
+                      subtitle: _controller.isEndless
+                          ? 'This block keeps running until you tap End.'
+                          : 'This block stops at its set length.',
+                      value: _controller.isEndless,
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        if (v) {
+                          _controller.enableEndless();
+                        } else {
+                          _controller.disableEndless();
+                        }
+                        setSheet(() {});
+                      },
+                    ),
+                  ]
+                  // Pomodoro/Custom with breaks → auto-advance.
+                  else if (hasBreaks) ...[
+                    const SizedBox(height: HgSpacing.lg),
+                    _QuickToggle(
+                      title: 'Auto-start next block',
+                      subtitle: _controller.autoAdvanceBreaks
+                          ? 'Next block begins on its own after a break.'
+                          : 'You tap to start the next block after a break.',
+                      value: _controller.autoAdvanceBreaks,
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        _controller.setAutoAdvanceBreaks(v);
+                        setSheet(() {});
+                      },
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = _controller.state;
+    final terminal = s.status == SessionStatus.completed ||
+        s.status == SessionStatus.finished;
     final Widget view = switch (s.status) {
       SessionStatus.finished => _Completion(
           key: const ValueKey('done'),
@@ -293,16 +448,25 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       _ => s.isResting ? _restView(s) : _focusView(s),
     };
 
-    return Listener(
-      onPointerDown: (_) => _resetIdle(),
-      child: Scaffold(
-        body: ScreenBackground(
-          child: SafeArea(
-            child: AnimatedSwitcher(
-              duration: HgMotion.slow, // the "breath" between states
-              switchInCurve: HgMotion.enter,
-              switchOutCurve: HgMotion.exit,
-              child: view,
+    return PopScope(
+      // Back = abandoning the block → intercept and confirm, unless we're
+      // already on a completion screen (then back just leaves).
+      canPop: terminal,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _confirmGiveUp();
+      },
+      child: Listener(
+        onPointerDown: (_) => _resetIdle(),
+        child: Scaffold(
+          body: ScreenBackground(
+            child: SafeArea(
+              child: AnimatedSwitcher(
+                duration: HgMotion.slow, // the "breath" between states
+                switchInCurve: HgMotion.enter,
+                switchOutCurve: HgMotion.exit,
+                child: view,
+              ),
             ),
           ),
         ),
@@ -315,9 +479,33 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final hg = context.hg;
     final paused = s.status == SessionStatus.paused;
     final struggle = s.phase == FocusPhase.struggle && !paused;
+    final isFlow = widget.config.mode == SessionMode.flowBlock;
+    final score = ref.watch(focusScoreProvider).asData?.value;
 
     // Everything except the hourglass dims when idle (calm, ambient).
     final chrome = _dimmed ? 0.18 : 1.0;
+
+    // Center of the top bar: the overall Focus Score (flow) or the block label.
+    final Widget topCenter = (isFlow && score != null)
+        ? Text(
+            'FOCUS · $score',
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 12,
+              letterSpacing: 1,
+              fontWeight: FontWeight.w600,
+              color: hg.textMuted,
+            ),
+          )
+        : Text(
+            _segmentLabel(),
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 12,
+              letterSpacing: 1,
+              color: hg.textMuted,
+            ),
+          );
 
     return Padding(
       key: const ValueKey('focus'),
@@ -328,27 +516,37 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           AnimatedOpacity(
             opacity: chrome,
             duration: HgMotion.medium,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _segmentLabel(),
-                  style: TextStyle(
-                    fontFamily: HgFont.sans,
-                    fontSize: 12,
-                    letterSpacing: 1,
-                    color: hg.textMuted,
+            // Stack so the center label is TRULY screen-centered regardless of
+            // the (unequal) widths of the gear and the give-up button.
+            child: SizedBox(
+              height: 44,
+              child: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      onPressed: _openQuickSettings,
+                      icon: const Icon(Icons.tune_rounded),
+                      iconSize: HgSize.iconSm,
+                      color: hg.textMuted,
+                      tooltip: 'Quick settings',
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                ),
-                TextButton(
-                  onPressed: _confirmGiveUp,
-                  child: Text(
-                    'Give up',
-                    style:
-                        TextStyle(fontFamily: HgFont.sans, color: hg.textMuted),
+                  Align(alignment: Alignment.center, child: topCenter),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _confirmGiveUp,
+                      child: Text(
+                        _controller.isEndless ? 'End' : 'Give up',
+                        style: TextStyle(
+                            fontFamily: HgFont.sans, color: hg.textMuted),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           AnimatedOpacity(
@@ -463,6 +661,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               ),
             ),
           ),
+          // "Don't stop" nudge — appears in the last stretch of a fixed Flow
+          // Block so the user can flow past the mark instead of stopping.
+          _endlessNudge(s, hg),
           const SizedBox(height: HgSpacing.lg),
           AnimatedOpacity(
             opacity: chrome,
@@ -481,6 +682,40 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           ),
           const SizedBox(height: HgSpacing.xl),
         ],
+      ),
+    );
+  }
+
+  /// A gently pulsing "let it run / don't stop" affordance shown only in the
+  /// final stretch of a fixed Flow Block (turns the block open-ended).
+  Widget _endlessNudge(SessionState s, HgTokens hg) {
+    final isFlow = widget.config.mode == SessionMode.flowBlock;
+    final remaining = _controller.segmentRemaining.inSeconds;
+    final show = isFlow &&
+        !_controller.isEndless &&
+        s.status == SessionStatus.running &&
+        remaining > 0 &&
+        remaining <= 60;
+    if (!show) return const SizedBox(height: HgSpacing.sm);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: HgSpacing.sm),
+      child: FadeTransition(
+        opacity: Tween(begin: 0.55, end: 1.0).animate(_pulse),
+        child: OutlinedButton(
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            _controller.enableEndless();
+            setState(() {});
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: hg.accent,
+            side: BorderSide(color: hg.accent.withValues(alpha: 0.6)),
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(
+                horizontal: HgSpacing.lg, vertical: HgSpacing.sm),
+          ),
+          child: const Text("Don't stop — keep flowing"),
+        ),
       ),
     );
   }
@@ -624,6 +859,96 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   }
 }
 
+/// A small selectable theme-mode chip for the quick-settings sheet.
+class _ModeChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _ModeChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(HgRadius.pill),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: HgSpacing.sm),
+        decoration: BoxDecoration(
+          color: selected ? hg.accentMuted : Colors.transparent,
+          borderRadius: BorderRadius.circular(HgRadius.pill),
+          border: Border.all(
+            color: selected ? hg.accent : hg.hairline,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: HgFont.sans,
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected ? hg.accent : hg.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A labelled switch row for the quick-settings sheet.
+class _QuickToggle extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  const _QuickToggle({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 15,
+                    color: hg.textPrimary,
+                  )),
+              const SizedBox(height: 2),
+              Text(subtitle,
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 12,
+                    color: hg.textMuted,
+                  )),
+            ],
+          ),
+        ),
+        Switch(
+          value: value,
+          activeThumbColor: hg.accent,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}
+
 /// Completion — a calm reveal: the settled hourglass glows, the Focus Score
 /// counts up, the session's points are named. Persist already happened.
 class _Completion extends ConsumerWidget {
@@ -674,22 +999,10 @@ class _Completion extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: HgSpacing.xl),
-          Text(
-            mins > 0
-              ? '$mins minutes focused'
-              : (canKeepGoing ? 'Block complete' : 'Session ended'),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 26,
-              fontWeight: FontWeight.w400,
-              color: hg.textPrimary,
-            ),
-          ),
           if (isFlow && mins > 0) ...[
-            const SizedBox(height: HgSpacing.lg),
+            // Hero = THIS session's score (it visibly changes block to block).
             Text(
-              'FOCUS SCORE',
+              'SESSION SCORE',
               style: TextStyle(
                 fontFamily: HgFont.sans,
                 fontSize: 11,
@@ -698,33 +1011,55 @@ class _Completion extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: HgSpacing.xs),
-            if (score != null)
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: score.toDouble()),
-                duration: const Duration(milliseconds: 900),
-                curve: HgMotion.calm,
-                builder: (_, v, _) => Text(
-                  '${v.round()}',
-                  style: TextStyle(
-                    fontFamily: HgFont.sans,
-                    fontSize: 48,
-                    fontWeight: FontWeight.w600,
-                    color: hg.accent,
-                  ),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: sessionPoints.toDouble()),
+              duration: const Duration(milliseconds: 900),
+              curve: HgMotion.calm,
+              builder: (_, v, _) => Text(
+                '${v.round()}',
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 64,
+                  fontWeight: FontWeight.w600,
+                  color: hg.accent,
                 ),
               ),
-            const SizedBox(height: HgSpacing.xs),
+            ),
+            const SizedBox(height: HgSpacing.sm),
             Text(
-              sessionPoints > 0
-                  ? 'This block scored $sessionPoints'
-                  : 'This block was too short to score',
+              '$mins minutes focused',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 15,
+                color: hg.textSecondary,
+              ),
+            ),
+            const SizedBox(height: HgSpacing.xs),
+            // The overall Focus Score (your standing) — updates on Home.
+            Text(
+              score != null
+                  ? 'Focus Score · $score'
+                  : 'Focus Score · …',
               style: TextStyle(
                 fontFamily: HgFont.sans,
                 fontSize: 13,
                 color: hg.textMuted,
               ),
             ),
-          ],
+          ] else
+            Text(
+              mins > 0
+                  ? '$mins minutes focused'
+                  : (canKeepGoing ? 'Block complete' : 'Session ended'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 26,
+                fontWeight: FontWeight.w400,
+                color: hg.textPrimary,
+              ),
+            ),
           const SizedBox(height: HgSpacing.xxl),
           if (canKeepGoing) ...[
             PrimaryButton(label: 'Keep going', onPressed: onKeepGoing),

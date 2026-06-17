@@ -20,6 +20,21 @@ class SessionController extends ChangeNotifier {
   SessionState _state = SessionState.initial();
   late final DateTime _startedAt;
 
+  /// Whether this block runs open-ended (never auto-stops). Seeded from the
+  /// config's pre-set toggle, but can be switched on mid-block by the user
+  /// ("don't stop" near the end).
+  bool _endless = false;
+  bool get isEndless => _endless;
+
+  /// Whether breaks auto-advance into the next focus block. Seeded from config,
+  /// but changeable live (mid-session quick settings).
+  bool _autoAdvanceBreaks = true;
+  bool get autoAdvanceBreaks => _autoAdvanceBreaks;
+  void setAutoAdvanceBreaks(bool v) {
+    _autoAdvanceBreaks = v;
+    notifyListeners();
+  }
+
   SessionController({
     required this.config,
     required this.ticker,
@@ -51,10 +66,12 @@ class SessionController extends ChangeNotifier {
     return (_state.elapsed.inSeconds / total).clamp(0.0, 1.0);
   }
 
-  bool get _endlessSingleFocus => plan.isSingleFocus && config.autoContinue;
+  bool get _endlessSingleFocus => plan.isSingleFocus && _endless;
 
   void start() {
     if (_state.status != SessionStatus.idle) return;
+    _endless = config.autoContinue;
+    _autoAdvanceBreaks = config.autoAdvanceBreaks;
     _startedAt = now();
     _set(_state.copyWith(
       status: SessionStatus.running,
@@ -125,7 +142,7 @@ class SessionController extends ChangeNotifier {
         }
         // Tap-to-continue: a break just ended → wait for the user before the
         // next focus block (drop the tiny leftover delta).
-        if (!seg.isFocus && !config.autoAdvanceBreaks) {
+        if (!seg.isFocus && !_autoAdvanceBreaks) {
           ticker.stop();
           final next = segs[idx + 1];
           _set(_state.copyWith(
@@ -181,6 +198,28 @@ class SessionController extends ChangeNotifier {
     _onTick(segmentRemaining);
   }
 
+  /// Switch the running block to open-ended ("don't stop") — typically tapped
+  /// near the end so the block flows past its length instead of stopping. If the
+  /// block already hit its completed decision point, resume it seamlessly.
+  void enableEndless() {
+    if (!plan.isSingleFocus || _endless) return;
+    _endless = true;
+    if (_state.status == SessionStatus.completed) {
+      _set(_state.copyWith(status: SessionStatus.running));
+      ticker.start(_onTick);
+    } else {
+      notifyListeners();
+    }
+  }
+
+  /// Turn endless back off before the goal (revert to stopping at the length).
+  void disableEndless() {
+    if (_endless && _state.status == SessionStatus.running && !_state.goalReached) {
+      _endless = false;
+      notifyListeners();
+    }
+  }
+
   /// Extend a completed Flow Block: drain the same block again (the hourglass
   /// refills and flips), accumulating focus. Overflow past the chosen length
   /// rewards the Focus Score. Reaching the length again returns to `completed`.
@@ -208,9 +247,11 @@ class SessionController extends ChangeNotifier {
 
   /// Builds the record to persist. `completed` iff the planned end was reached.
   ///
-  /// Recording rule: **Flow Block** records the actual focused length on EVERY
-  /// end (completed, given-up, or app-left) if ≥ 2 min — this feeds the Focus
-  /// Score. Pomodoro/Custom keep the older rule (only a completed session counts).
+  /// Recording rule: EVERY mode records the actual focused length on every end
+  /// (completed, given-up, or app-left) so it shows in Today's focus and the
+  /// session history. Flow Block ignores sub-2-min ends (they never count toward
+  /// the Focus Score, which is Flow-Block-only). Pomodoro/Custom record whatever
+  /// focus was done — there's no score or penalty, but the time still counts.
   SessionRecord finalize() {
     final completed = _state.goalReached;
     final Duration recorded;
@@ -219,7 +260,7 @@ class SessionController extends ChangeNotifier {
           ? _state.recordedFocus
           : Duration.zero;
     } else {
-      recorded = completed ? _state.recordedFocus : Duration.zero;
+      recorded = _state.recordedFocus; // record actual focus done in any mode
     }
     return SessionRecord(
       id: 0,
@@ -230,7 +271,7 @@ class SessionController extends ChangeNotifier {
       recordedFocus: recorded,
       completed: completed,
       abandoned: !completed,
-      autoContinue: config.autoContinue,
+      autoContinue: _endless,
       soundscape: config.soundscape,
       skinId: config.skinId,
     );
