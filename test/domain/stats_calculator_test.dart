@@ -37,16 +37,29 @@ void main() {
     expect(calc.focusOnDay(day, sessions), const Duration(minutes: 50));
   });
 
-  test('focusOnDay ignores abandoned sessions', () {
+  test('focusOnDay counts abandoned sessions too (all focus time shows)', () {
     final day = DateTime(2026, 6, 11);
     final sessions = [
-      _session(startedAt: DateTime(2026, 6, 11, 9)),
+      _session(startedAt: DateTime(2026, 6, 11, 9)), // completed 25m
       _session(
           startedAt: DateTime(2026, 6, 11, 10),
+          recorded: const Duration(minutes: 10),
+          completed: false,
+          abandoned: true), // gave up after 10m — still counts
+    ];
+    expect(calc.focusOnDay(day, sessions), const Duration(minutes: 35));
+  });
+
+  test('focusOnDay ignores sessions with no recorded focus', () {
+    final day = DateTime(2026, 6, 11);
+    final sessions = [
+      _session(
+          startedAt: DateTime(2026, 6, 11, 10),
+          recorded: Duration.zero,
           completed: false,
           abandoned: true),
     ];
-    expect(calc.focusOnDay(day, sessions), const Duration(minutes: 25));
+    expect(calc.focusOnDay(day, sessions), Duration.zero);
   });
 
   test('currentStreak counts consecutive days ending today', () {
@@ -74,15 +87,16 @@ void main() {
     expect(calc.sessionsCompleted(sessions), 1);
   });
 
-  test('a session marked both completed and abandoned is never counted', () {
+  test('abandoned session counts toward focus & streak, not sessionsCompleted',
+      () {
     final day = DateTime(2026, 6, 11);
     final sessions = [
       _session(startedAt: DateTime(2026, 6, 11), abandoned: true),
     ];
-    expect(calc.focusOnDay(day, sessions), Duration.zero);
-    expect(calc.focusInWeekEnding(day, sessions), Duration.zero);
-    expect(calc.sessionsCompleted(sessions), 0);
-    expect(calc.currentStreak(day, sessions), 0);
+    expect(calc.focusOnDay(day, sessions), const Duration(minutes: 25));
+    expect(calc.focusInWeekEnding(day, sessions), const Duration(minutes: 25));
+    expect(calc.sessionsCompleted(sessions), 0); // not a completed session
+    expect(calc.currentStreak(day, sessions), 1); // but a focused day
   });
 
   group('focusInWeekEnding', () {
@@ -104,16 +118,17 @@ void main() {
       expect(calc.focusInWeekEnding(day, sessions), const Duration(minutes: 25));
     });
 
-    test('excludes abandoned sessions inside the window', () {
+    test('includes focus from abandoned sessions inside the window', () {
       final day = DateTime(2026, 6, 11);
       final sessions = [
         _session(startedAt: DateTime(2026, 6, 10)),
         _session(
             startedAt: DateTime(2026, 6, 10),
+            recorded: const Duration(minutes: 10),
             completed: false,
             abandoned: true),
       ];
-      expect(calc.focusInWeekEnding(day, sessions), const Duration(minutes: 25));
+      expect(calc.focusInWeekEnding(day, sessions), const Duration(minutes: 35));
     });
   });
 }

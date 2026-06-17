@@ -254,14 +254,9 @@ class SessionController extends ChangeNotifier {
   /// focus was done — there's no score or penalty, but the time still counts.
   SessionRecord finalize() {
     final completed = _state.goalReached;
-    final Duration recorded;
-    if (config.mode == SessionMode.flowBlock) {
-      recorded = _state.recordedFocus.inSeconds >= 120
-          ? _state.recordedFocus
-          : Duration.zero;
-    } else {
-      recorded = _state.recordedFocus; // record actual focus done in any mode
-    }
+    // Record the actual focused time in every mode (for Today + history). The
+    // Focus Score (Flow-Block-only) separately ignores sub-2-min blocks.
+    final recorded = _state.recordedFocus;
     return SessionRecord(
       id: 0,
       startedAt: _startedAt,

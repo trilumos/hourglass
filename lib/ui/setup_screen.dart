@@ -178,6 +178,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final hg = context.hg;
     final plan = _buildPlan();
     final topLabel = _mode == SessionMode.flowBlock ? 'BLOCK LENGTH' : 'TOTAL TIME';
+    // Custom has the most controls — tighten its section gaps so it fits without
+    // scrolling on a normal phone (the ListView still scrolls for large fonts).
+    final sectionGap =
+        _mode == SessionMode.custom ? HgSpacing.lg : HgSpacing.xl;
 
     return Scaffold(
       body: ScreenBackground(
@@ -241,7 +245,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                             borderSide: BorderSide(color: hg.accent)),
                       ),
                     ),
-                    const SizedBox(height: HgSpacing.xl),
+                    SizedBox(height: sectionGap),
 
                     // Hierarchy: TOTAL (big) → subline → focus time → config.
                     Center(child: _CenteredLabel(topLabel)),
@@ -250,7 +254,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     const SizedBox(height: HgSpacing.sm),
                     // Full width so a long cadence line wraps to 2 rows.
                     SizedBox(width: double.infinity, child: _subline(hg, plan)),
-                    const SizedBox(height: HgSpacing.xl),
+                    SizedBox(height: sectionGap),
                     ..._modeControls(hg),
 
                     if (_endlessAvailable) ...[

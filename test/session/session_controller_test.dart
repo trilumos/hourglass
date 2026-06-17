@@ -142,13 +142,15 @@ void main() {
       expect(record.recordedFocus, m(10));
     });
 
-    test('Flow Block give-up under 2 min records nothing', () {
+    test('Flow Block under 2 min records the time (counts for Today, not score)',
+        () {
       final ticker = FakeTicker();
       final c = _controller(ticker, plan: SessionPlan.flowBlock(m(25)));
       c.start();
       ticker.advance(const Duration(seconds: 90));
       c.abandon();
-      expect(c.finalize().recordedFocus, Duration.zero);
+      // Recorded for Today/history; the score provider filters out < 2 min.
+      expect(c.finalize().recordedFocus, const Duration(seconds: 90));
     });
 
     test('non-Flow abandon now records the focus done (for Today/history)', () {

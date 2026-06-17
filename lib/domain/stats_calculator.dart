@@ -1,12 +1,16 @@
 import 'session_record.dart';
 
-/// Derives focus-time and streak stats from completed sessions.
+/// Derives focus-time and streak stats. Any session with real focus counts
+/// toward today's total, the weekly total, and the streak — completed OR
+/// abandoned (all focus time shows up). Only [sessionsCompleted] requires a
+/// fully-completed session.
 class StatsCalculator {
   const StatsCalculator();
 
   Duration focusOnDay(DateTime day, List<SessionRecord> sessions) {
     return sessions
-        .where((s) => s.completed && !s.abandoned && _sameDay(s.startedAt, day))
+        .where((s) =>
+            s.recordedFocus > Duration.zero && _sameDay(s.startedAt, day))
         .fold(Duration.zero, (sum, s) => sum + s.recordedFocus);
   }
 
@@ -16,8 +20,7 @@ class StatsCalculator {
     final start = end.subtract(const Duration(days: 6));
     return sessions
         .where((s) =>
-            s.completed &&
-            !s.abandoned &&
+            s.recordedFocus > Duration.zero &&
             !_dateOnly(s.startedAt).isBefore(start) &&
             !_dateOnly(s.startedAt).isAfter(end))
         .fold(Duration.zero, (sum, s) => sum + s.recordedFocus);
@@ -25,7 +28,7 @@ class StatsCalculator {
 
   int currentStreak(DateTime today, List<SessionRecord> sessions) {
     final days = sessions
-        .where((s) => s.completed && !s.abandoned)
+        .where((s) => s.recordedFocus > Duration.zero)
         .map((s) => _dateOnly(s.startedAt))
         .toSet();
     var streak = 0;

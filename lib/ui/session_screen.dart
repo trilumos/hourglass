@@ -428,13 +428,15 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final s = _controller.state;
     final terminal = s.status == SessionStatus.completed ||
         s.status == SessionStatus.finished;
+    // Ending a session returns all the way to Home (not back to Setup).
+    void goHome() => Navigator.of(context).popUntil((r) => r.isFirst);
     final Widget view = switch (s.status) {
       SessionStatus.finished => _Completion(
           key: const ValueKey('done'),
           record: _record,
           config: widget.config,
           canKeepGoing: false,
-          onDone: () => Navigator.of(context).pop(),
+          onDone: goHome,
         ),
       SessionStatus.completed => _Completion(
           key: const ValueKey('completed'),
@@ -442,19 +444,23 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           config: widget.config,
           canKeepGoing: true,
           onKeepGoing: _onKeepGoing,
-          onDone: () => Navigator.of(context).pop(),
+          onDone: goHome,
         ),
       SessionStatus.awaitingResume => _awaitingView(s),
       _ => s.isResting ? _restView(s) : _focusView(s),
     };
 
     return PopScope(
-      // Back = abandoning the block → intercept and confirm, unless we're
-      // already on a completion screen (then back just leaves).
-      canPop: terminal,
+      // Back is intercepted: mid-session it confirms (abandon = give up); on a
+      // completion screen it returns to Home, never to Setup.
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        _confirmGiveUp();
+        if (terminal) {
+          goHome();
+        } else {
+          _confirmGiveUp();
+        }
       },
       child: Listener(
         onPointerDown: (_) => _resetIdle(),
@@ -859,6 +865,19 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   }
 }
 
+/// Human focused-time label with seconds precision: "25m", "2m 1s", "45s".
+String _focusedLabel(Duration d) {
+  final h = d.inHours;
+  final m = d.inMinutes % 60;
+  final s = d.inSeconds % 60;
+  final parts = <String>[
+    if (h > 0) '${h}h',
+    if (m > 0) '${m}m',
+    if (s > 0 || (h == 0 && m == 0)) '${s}s',
+  ];
+  return parts.join(' ');
+}
+
 /// A small selectable theme-mode chip for the quick-settings sheet.
 class _ModeChip extends StatelessWidget {
   final String label;
@@ -969,7 +988,8 @@ class _Completion extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hg = context.hg;
-    final mins = record?.recordedFocus.inMinutes ?? 0;
+    final focused = record?.recordedFocus ?? Duration.zero;
+    final hasFocus = focused.inSeconds > 0;
     final isFlow = config.mode == SessionMode.flowBlock;
     final score = ref.watch(focusScoreProvider).asData?.value;
 
@@ -999,7 +1019,7 @@ class _Completion extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: HgSpacing.xl),
-          if (isFlow && mins > 0) ...[
+          if (isFlow && hasFocus) ...[
             // Hero = THIS session's score (it visibly changes block to block).
             Text(
               'SESSION SCORE',
@@ -1027,7 +1047,7 @@ class _Completion extends ConsumerWidget {
             ),
             const SizedBox(height: HgSpacing.sm),
             Text(
-              '$mins minutes focused',
+              '${_focusedLabel(focused)} focused',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: HgFont.sans,
@@ -1049,8 +1069,8 @@ class _Completion extends ConsumerWidget {
             ),
           ] else
             Text(
-              mins > 0
-                  ? '$mins minutes focused'
+              hasFocus
+                  ? '${_focusedLabel(focused)} focused'
                   : (canKeepGoing ? 'Block complete' : 'Session ended'),
               textAlign: TextAlign.center,
               style: TextStyle(
