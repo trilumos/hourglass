@@ -68,6 +68,25 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 
 ---
 
+## Roadmap — V1 ship plan + V2 (LOCKED 2026-06-17)
+> Founder confirmed this sequence 2026-06-17. Supersedes the older roadmap ordering in handoffs.
+
+**V1 (ship to Play Store):**
+1. **Profile / Account + DB** (foundation) — spec: `docs/superpowers/specs/2026-06-17-hourglass-profile-account-db-design.md`.
+2. **Analytics** (charts page — its own spec).
+3. **Onboarding** (branded first-run; captures the name → kills hardcoded "Deep").
+4. **Some Themes** (theme system + a few themes).
+5. **Monetization** — brainstorm + decide what's paid (calm / no dark patterns).
+→ **Ship V1 to the Play Store.**
+
+**No Level/Progression system in V1.** Profile shows real working stats now; Levels + collection land in V2.
+
+**V2 (built post-launch, shipped as traction grows):**
+- **Level / Progression system** (+ themes; score→100 = collectible + share card + theme unlock + reset + harder; resolve ramp-vs-reset math).
+- **Cloud auth + sync** (Google Sign-In + backup/sync; `uuid`/`updatedAt` schema already sync-ready; free tier confirmed sufficient at launch scale — see the Profile/DB spec's cost review).
+- **More monetization**, **home-screen widgets**, and **break-time activities** (sudoku, meditation, exercise, breathing exercises).
+- Keep adding features; ship V2 when traction is good.
+
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
