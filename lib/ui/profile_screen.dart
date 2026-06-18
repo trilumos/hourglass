@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
-import 'activity_screen.dart';
 import 'edit_profile_screen.dart';
 import 'focus_score_screen.dart';
 import 'guide_screen.dart';
+import 'insights_screen.dart';
 import 'photo_viewer_screen.dart';
 import 'session_format.dart';
 import 'session_history_screen.dart';
@@ -142,9 +142,9 @@ class ProfileScreen extends ConsumerWidget {
                 _SectionLabel('MORE'),
                 const SizedBox(height: HgSpacing.xs),
                 _NavRow(
-                  title: 'Activity',
-                  subtitle: 'Your focus grid and records',
-                  onTap: () => _push(context, const ActivityScreen()),
+                  title: 'Insights',
+                  subtitle: 'Charts of your focus',
+                  onTap: () => _push(context, const InsightsScreen()),
                 ),
                 Divider(height: 1, color: hg.hairline),
                 const SizedBox(height: HgSpacing.xs),
@@ -156,12 +156,6 @@ class ProfileScreen extends ConsumerWidget {
                 _NavRow(
                   title: 'How Hourglass works',
                   onTap: () => _push(context, const GuideScreen()),
-                ),
-                Divider(height: 1, color: hg.hairline),
-                const _NavRow(
-                  title: 'Analytics',
-                  subtitle: 'Charts of your focus',
-                  soon: true,
                 ),
                 const SizedBox(height: HgSpacing.xl),
               ],
@@ -295,18 +289,16 @@ class _NavRow extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback? onTap;
-  final bool soon;
   const _NavRow({
     required this.title,
     this.subtitle,
     this.onTap,
-    this.soon = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    final disabled = soon || onTap == null;
+    final disabled = onTap == null;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(HgRadius.md),
@@ -341,37 +333,9 @@ class _NavRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (soon)
-              _SoonChip()
-            else
-              Icon(Icons.chevron_right_rounded,
-                  color: hg.textMuted, size: HgSize.iconMd),
+            Icon(Icons.chevron_right_rounded,
+                color: hg.textMuted, size: HgSize.iconMd),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SoonChip extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final hg = context.hg;
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: HgSpacing.sm, vertical: 4),
-      decoration: BoxDecoration(
-        color: hg.accentMuted,
-        borderRadius: BorderRadius.circular(HgRadius.pill),
-      ),
-      child: Text(
-        'SOON',
-        style: TextStyle(
-          fontFamily: HgFont.sans,
-          fontSize: 10,
-          letterSpacing: 1.5,
-          fontWeight: FontWeight.w600,
-          color: hg.textSecondary,
         ),
       ),
     );

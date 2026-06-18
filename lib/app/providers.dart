@@ -5,6 +5,7 @@ import '../data/image_storage_service.dart';
 import '../data/profile_repository.dart';
 import '../data/session_repository.dart';
 import '../data/settings_repository.dart';
+import '../domain/analytics_calculator.dart';
 import '../domain/focus_score_calculator.dart';
 import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
@@ -213,4 +214,23 @@ final dailyFocusProvider = FutureProvider<Map<DateTime, DayStat>>((ref) async {
     );
   }
   return map;
+});
+
+/// The selected Insights window. Defaults to week; [set] swaps it.
+class AnalyticsRangeController extends Notifier<AnalyticsRange> {
+  @override
+  AnalyticsRange build() => AnalyticsRange.week;
+  void set(AnalyticsRange range) => state = range;
+}
+
+final analyticsRangeProvider =
+    NotifierProvider<AnalyticsRangeController, AnalyticsRange>(
+        AnalyticsRangeController.new);
+
+/// All Insights chart series for the selected range.
+final analyticsProvider = FutureProvider<AnalyticsData>((ref) async {
+  final sessions = await ref.watch(sessionRepositoryProvider).allSessions();
+  final now = ref.watch(clockProvider)();
+  final range = ref.watch(analyticsRangeProvider);
+  return const AnalyticsCalculator().compute(range, now, sessions);
 });
