@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
+import 'activity_screen.dart';
 import 'edit_profile_screen.dart';
 import 'focus_score_screen.dart';
 import 'guide_screen.dart';
@@ -13,6 +14,7 @@ import 'widgets/profile_avatar.dart';
 import 'widgets/score_ring.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
+import 'widgets/stat_tile.dart';
 import 'widgets/surface_tile.dart';
 
 /// The "you" hub: identity, a warm stats bento led by the Focus Score, and
@@ -71,6 +73,19 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (stats.firstDate != null) ...[
+                  const SizedBox(height: HgSpacing.xs),
+                  Center(
+                    child: Text(
+                      'Focusing since ${formatDate(stats.firstDate!)}',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 13,
+                        color: hg.textMuted,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: HgSpacing.md),
                 Center(
                   child: _Capsule(
@@ -91,19 +106,19 @@ class ProfileScreen extends ConsumerWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: _StatTile(
+                      child: StatTile(
                         label: 'Total focus',
                         value: formatFocusDuration(stats.totalFocus),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _StatTile(
+                      child: StatTile(
                           label: 'Streak', value: '${stats.streak}'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _StatTile(
+                      child: StatTile(
                           label: 'Sessions',
                           value: '${stats.sessionsCompleted}'),
                     ),
@@ -111,56 +126,15 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: HgSpacing.xl),
 
-                // ── Records ─────────────────────────────────────────────────
-                _SectionLabel('RECORDS'),
-                const SizedBox(height: HgSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatTile(
-                          label: 'This week',
-                          value: formatFocusDuration(stats.weekFocus)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatTile(
-                          label: 'Best streak', value: '${stats.bestStreak}'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatTile(
-                          label: 'Avg session',
-                          value: formatFocusDuration(stats.avgSession)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatTile(
-                          label: 'Longest',
-                          value: formatFocusDuration(stats.longestSession)),
-                    ),
-                  ],
-                ),
-                if (stats.firstDate != null) ...[
-                  const SizedBox(height: HgSpacing.md),
-                  Center(
-                    child: Text(
-                      'Focusing since ${formatDate(stats.firstDate!)}',
-                      style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 13,
-                        color: hg.textMuted,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: HgSpacing.xl),
-
                 // ── More ────────────────────────────────────────────────────
                 _SectionLabel('MORE'),
+                const SizedBox(height: HgSpacing.xs),
+                _NavRow(
+                  title: 'Activity',
+                  subtitle: 'Your focus grid and records',
+                  onTap: () => _push(context, const ActivityScreen()),
+                ),
+                Divider(height: 1, color: hg.hairline),
                 const SizedBox(height: HgSpacing.xs),
                 _NavRow(
                   title: 'Session history',
@@ -211,7 +185,7 @@ class _FocusTile extends StatelessWidget {
                 fontFamily: HgFont.sans,
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
-                color: hg.textPrimary,
+                color: hg.accent,
                 height: 1,
               ),
             ),
@@ -252,49 +226,6 @@ class _FocusTile extends StatelessWidget {
   }
 }
 
-class _StatTile extends StatelessWidget {
-  final String label;
-  final String value;
-  const _StatTile({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final hg = context.hg;
-    return SurfaceTile(
-      padding: const EdgeInsets.symmetric(
-          horizontal: HgSpacing.sm, vertical: HgSpacing.md),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                color: hg.textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label.toUpperCase(),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 9.5,
-              letterSpacing: 1.2,
-              color: hg.textMuted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Capsule extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
@@ -304,28 +235,22 @@ class _Capsule extends StatelessWidget {
   Widget build(BuildContext context) {
     final hg = context.hg;
     return Material(
-      color: hg.surfaceRaised,
+      color: hg.accent,
       borderRadius: BorderRadius.circular(HgRadius.pill),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(HgRadius.pill),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(HgRadius.pill),
-            border: Border.all(color: hg.hairline),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: HgSpacing.md, vertical: HgSpacing.sm),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.2,
-                color: hg.textSecondary,
-              ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: HgSpacing.lg, vertical: HgSpacing.sm),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+              color: hg.onAccent,
             ),
           ),
         ),

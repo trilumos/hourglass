@@ -123,18 +123,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: HgSpacing.xl),
 
-                // ── Data ─────────────────────────────────────────────────────
-                _SectionLabel('DATA'),
-                const SizedBox(height: HgSpacing.sm),
-                _ActionRow(
-                  title: 'Clear all data',
-                  subtitle:
-                      'Delete every session, your stats, and profile. Can’t be undone.',
-                  danger: true,
-                  onTap: () => _confirmClear(context, ref),
-                ),
-                const SizedBox(height: HgSpacing.xl),
-
                 // ── About ────────────────────────────────────────────────────
                 _SectionLabel('ABOUT'),
                 const SizedBox(height: HgSpacing.sm),
@@ -165,6 +153,18 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: HgSpacing.xxl),
+
+                // ── Data (last, so it's out of the way of accidental taps) ───
+                _SectionLabel('DATA'),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Clear all data',
+                  subtitle:
+                      'Delete every session, your stats, and profile. Can’t be undone.',
+                  danger: true,
+                  onTap: () => _confirmClear(context, ref),
+                ),
                 const SizedBox(height: HgSpacing.xl),
               ],
             ),
@@ -177,26 +177,49 @@ class SettingsScreen extends ConsumerWidget {
 
 Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
   final hg = context.hg;
+  final controller = TextEditingController();
   final ok = await showDialog<bool>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: hg.surfaceRaised,
-      title: const Text('Clear all data?'),
-      content: const Text(
-          'This permanently deletes every session, your stats, and your '
-          'profile. This can’t be undone.'),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel')),
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: TextButton.styleFrom(foregroundColor: hg.danger),
-          child: const Text('Delete everything'),
-        ),
-      ],
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setLocal) {
+        final canDelete = controller.text.trim() == 'Delete';
+        return AlertDialog(
+          backgroundColor: hg.surfaceRaised,
+          title: const Text('Clear all data?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                  'This permanently deletes every session, your stats, and '
+                  'your profile. This can’t be undone.'),
+              const SizedBox(height: HgSpacing.md),
+              Text('Type Delete to confirm.',
+                  style: TextStyle(color: hg.textMuted, fontSize: 13)),
+              const SizedBox(height: HgSpacing.sm),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                onChanged: (_) => setLocal(() {}),
+                decoration: const InputDecoration(hintText: 'Delete'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel')),
+            TextButton(
+              onPressed: canDelete ? () => Navigator.pop(ctx, true) : null,
+              style: TextButton.styleFrom(foregroundColor: hg.danger),
+              child: const Text('Delete everything'),
+            ),
+          ],
+        );
+      },
     ),
   );
+  controller.dispose();
   if (ok != true) return;
   await _clearAll(ref);
   if (context.mounted) {

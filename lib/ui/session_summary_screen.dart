@@ -91,20 +91,6 @@ class SessionSummaryScreen extends StatelessWidget {
                     Expanded(child: _Fact(label: 'Outcome', value: _outcome)),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                        child: _Fact(
-                            label: 'Started',
-                            value: formatClock(session.startedAt))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _Fact(
-                            label: 'Soundscape',
-                            value: _titleCase(session.soundscape))),
-                  ],
-                ),
 
                 if (session.intention.trim().isNotEmpty) ...[
                   const SizedBox(height: HgSpacing.xl),
@@ -185,8 +171,6 @@ class SessionSummaryScreen extends StatelessWidget {
     );
   }
 
-  static String _titleCase(String s) =>
-      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
 
 class _CompletionBar extends StatelessWidget {

@@ -192,3 +192,25 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
     firstDate: stats.firstSessionDate(sessions),
   );
 });
+
+/// Per-day focus + session count, keyed by date-only — for the activity graph.
+class DayStat {
+  final Duration focus;
+  final int sessions;
+  const DayStat(this.focus, this.sessions);
+}
+
+final dailyFocusProvider = FutureProvider<Map<DateTime, DayStat>>((ref) async {
+  final sessions = await ref.watch(sessionRepositoryProvider).allSessions();
+  final map = <DateTime, DayStat>{};
+  for (final s in sessions) {
+    if (s.recordedFocus <= Duration.zero) continue;
+    final d = DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day);
+    final prev = map[d];
+    map[d] = DayStat(
+      (prev?.focus ?? Duration.zero) + s.recordedFocus,
+      (prev?.sessions ?? 0) + 1,
+    );
+  }
+  return map;
+});

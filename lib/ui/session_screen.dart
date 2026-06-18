@@ -171,6 +171,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     ref.invalidate(suggestedFlowLengthProvider);
     ref.invalidate(profileStatsProvider);
     ref.invalidate(sessionHistoryProvider);
+    ref.invalidate(dailyFocusProvider);
   }
 
   void _onKeepGoing() {
