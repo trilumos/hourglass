@@ -25,6 +25,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _controller = TextEditingController();
   String? _pendingPath;
   File? _pendingFile;
+  String? _onDiskPath; // the avatar file currently written to disk (if any)
   bool _loaded = false;
   bool _saving = false;
 
@@ -42,6 +43,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (!mounted) return;
     _controller.text = profile.name;
     _pendingPath = profile.imagePath;
+    _onDiskPath = profile.imagePath;
     if (profile.imagePath != null) {
       _pendingFile =
           await ref.read(imageStorageProvider).resolve(profile.imagePath!);
@@ -64,6 +66,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       setState(() {
         _pendingPath = rel;
         _pendingFile = file;
+        _onDiskPath = rel;
       });
     } on ImageStorageException catch (e) {
       if (mounted) {
@@ -73,10 +76,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
-  Future<void> _removePhoto() async {
-    final path = _pendingPath;
-    if (path != null) await ref.read(imageStorageProvider).deleteAvatar(path);
-    if (!mounted) return;
+  void _removePhoto() {
+    // Defer the disk delete to Save, so cancelling leaves the saved photo intact.
     setState(() {
       _pendingPath = null;
       _pendingFile = null;
@@ -85,13 +86,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    await ref.read(profileRepositoryProvider).update(
-          name: _controller.text.trim(),
-          imagePath: _pendingPath,
-          clearImage: _pendingPath == null,
-        );
+    final clearImage = _pendingPath == null;
+    try {
+      await ref.read(profileRepositoryProvider).update(
+            name: _controller.text.trim(),
+            imagePath: _pendingPath,
+            clearImage: clearImage,
+          );
+      // Photo removed → delete the now-orphaned file on disk.
+      if (clearImage && _onDiskPath != null) {
+        await ref.read(imageStorageProvider).deleteAvatar(_onDiskPath!);
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+    if (!mounted) return;
     ref.invalidate(profileProvider);
-    if (mounted) Navigator.of(context).pop();
+    Navigator.of(context).pop();
   }
 
   @override

@@ -72,24 +72,41 @@ class AppDatabase extends _$AppDatabase {
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
-            // Additive, non-destructive: existing sessions are preserved and
-            // back-filled with sync metadata; the Profile table is created
-            // (its row self-creates lazily via ProfileRepository).
-            await m.addColumn(sessions, sessions.uuid);
-            await m.addColumn(sessions, sessions.updatedAt);
-            await m.createTable(profile);
+            // Additive, non-destructive AND idempotent. Drift only bumps
+            // user_version after onUpgrade returns; if a prior attempt was
+            // interrupted (process killed mid-migration), this re-runs from
+            // from==1 — so every step is guarded to never fail on re-apply.
+            final sessionCols =
+                await customSelect("PRAGMA table_info('sessions')")
+                    .get()
+                    .then((rows) => rows.map((r) => r.read<String>('name')).toSet());
+            if (!sessionCols.contains('uuid')) {
+              await m.addColumn(sessions, sessions.uuid);
+            }
+            if (!sessionCols.contains('updated_at')) {
+              await m.addColumn(sessions, sessions.updatedAt);
+            }
+            final hasProfile = await customSelect(
+              "SELECT 1 FROM sqlite_master WHERE type='table' AND name='profile'",
+            ).get().then((rows) => rows.isNotEmpty);
+            if (!hasProfile) {
+              await m.createTable(profile);
+            }
+            // Back-fill sync metadata only for rows still missing it.
             const gen = Uuid();
             final rows = await select(sessions).get();
             await batch((b) {
               for (final row in rows) {
-                b.update(
-                  sessions,
-                  SessionsCompanion(
-                    uuid: Value(gen.v4()),
-                    updatedAt: Value(row.startedAt),
-                  ),
-                  where: (t) => t.id.equals(row.id),
-                );
+                if (row.uuid == null) {
+                  b.update(
+                    sessions,
+                    SessionsCompanion(
+                      uuid: Value(gen.v4()),
+                      updatedAt: Value(row.updatedAt ?? row.startedAt),
+                    ),
+                    where: (t) => t.id.equals(row.id),
+                  );
+                }
               }
             });
           }

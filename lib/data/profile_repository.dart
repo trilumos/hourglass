@@ -20,8 +20,10 @@ class ProfileRepository {
 
   /// Returns the single profile, creating a default one if none exists.
   Future<UserProfile> load() async {
-    final existing =
-        await (_db.select(_db.profile)..limit(1)).getSingleOrNull();
+    final existing = await (_db.select(_db.profile)
+          ..orderBy([(t) => OrderingTerm(expression: t.id)])
+          ..limit(1))
+        .getSingleOrNull();
     if (existing != null) return _toDomain(existing);
     final now = _now();
     final id = await _db.into(_db.profile).insert(
