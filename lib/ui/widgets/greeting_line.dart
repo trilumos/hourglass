@@ -62,8 +62,8 @@ class _GreetingLineState extends ConsumerState<GreetingLine> {
     final hg = context.hg;
     final now = ref.watch(clockProvider)();
     final profileName =
-        ref.watch(profileProvider).asData?.value.name.trim() ?? '';
-    final stats = ref.watch(homeStatsProvider).asData?.value;
+        ref.watch(profileProvider).value?.name.trim() ?? '';
+    final stats = ref.watch(homeStatsProvider).value;
     final greeting = _greetingFor(
       now,
       (stats?.sessionsCompleted ?? 1) == 0,

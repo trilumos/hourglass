@@ -33,6 +33,16 @@ void main() {
     expect(decoded.height, 512);
   });
 
+  test('saveAvatarBytes persists a 512x512 jpg from encoded bytes', () async {
+    final rel = await service.saveAvatarBytes(
+        img.encodePng(img.Image(width: 300, height: 300)));
+    expect(rel, p.join('profile', 'avatar.jpg'));
+    final decoded =
+        img.decodeImage(await (await service.resolve(rel)).readAsBytes())!;
+    expect(decoded.width, 512);
+    expect(decoded.height, 512);
+  });
+
   test('deleteAvatar removes the file', () async {
     final rel = await service.saveAvatar(writePng(64, 64));
     await service.deleteAvatar(rel);

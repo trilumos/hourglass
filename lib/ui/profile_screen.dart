@@ -9,11 +9,13 @@ import 'focus_score_screen.dart';
 import 'session_format.dart';
 import 'session_history_screen.dart';
 import 'widgets/profile_avatar.dart';
+import 'widgets/score_ring.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
 
-/// The "you" hub: identity, headline stats, and entry points to the history and
-/// Focus Score pages. (Level + Collection arrive with the V2 Levels system.)
+/// The "you" hub: identity, a warm stats bento led by the Focus Score, and
+/// entry points to history. (Level + Collection arrive with the V2 Levels
+/// system.) Built to docs/design-language.md — bento is reserved for stats.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -24,12 +26,12 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hg = context.hg;
-    final profile = ref.watch(profileProvider).asData?.value;
-    final focusScore = ref.watch(focusScoreProvider).asData?.value ?? 0;
+    final profile = ref.watch(profileProvider).value;
+    final focusScore = ref.watch(focusScoreProvider).value ?? 0;
     final stats =
-        ref.watch(profileStatsProvider).asData?.value ?? ProfileStats.empty;
+        ref.watch(profileStatsProvider).value ?? ProfileStats.empty;
 
-    final name = (profile?.hasName ?? false) ? profile!.name : 'Add your name';
+    final hasName = profile?.hasName ?? false;
 
     return Scaffold(
       body: ScreenBackground(
@@ -43,73 +45,78 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: HgSpacing.xl),
 
                 // ── Identity ────────────────────────────────────────────────
-                const Center(child: ProfileAvatar(size: 88)),
+                Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: hg.glow, blurRadius: 28, spreadRadius: 1),
+                      ],
+                    ),
+                    child: const ProfileAvatar(size: 92),
+                  ),
+                ),
                 const SizedBox(height: HgSpacing.md),
                 Center(
                   child: Text(
-                    name,
+                    hasName ? profile!.name : 'Add your name',
                     style: TextStyle(
                       fontFamily: HgFont.sans,
-                      fontSize: 22,
+                      fontSize: 25,
                       fontWeight: FontWeight.w600,
-                      color: hg.textPrimary,
+                      letterSpacing: -0.2,
+                      color: hasName ? hg.textPrimary : hg.textMuted,
                     ),
                   ),
                 ),
-                const SizedBox(height: HgSpacing.xs),
+                const SizedBox(height: HgSpacing.md),
                 Center(
-                  child: TextButton(
-                    onPressed: () => _push(context, const EditProfileScreen()),
-                    child: const Text('Edit profile'),
+                  child: _Capsule(
+                    label: hasName ? 'Edit profile' : 'Set up your profile',
+                    onTap: () => _push(context, const EditProfileScreen()),
                   ),
                 ),
-                if (!(profile?.isSetUp ?? false)) ...[
-                  const SizedBox(height: HgSpacing.xs),
-                  Center(
-                    child: Text(
-                      'Set up your profile',
-                      style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 13,
-                        color: hg.textMuted,
-                      ),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: HgSpacing.xl),
 
-                // ── Headline stats ─────────────────────────────────────────
+                // ── Focus Score — the signature tile ────────────────────────
+                _FocusTile(
+                  score: focusScore,
+                  onTap: () => _push(context, const FocusScoreScreen()),
+                ),
+                const SizedBox(height: 12),
+
+                // ── Supporting stats ────────────────────────────────────────
                 Row(
                   children: [
-                    _StatCell(
-                      label: 'Focus',
-                      value: '$focusScore',
-                      accent: true,
-                      onTap: () =>
-                          _push(context, const FocusScoreScreen()),
+                    Expanded(
+                      child: _StatTile(
+                        label: 'Total focus',
+                        value: formatFocusDuration(stats.totalFocus),
+                      ),
                     ),
-                    _StatCell(
-                        label: 'Total',
-                        value: formatFocusDuration(stats.totalFocus)),
-                    _StatCell(label: 'Streak', value: '${stats.streak}'),
-                    _StatCell(
-                        label: 'Sessions',
-                        value: '${stats.sessionsCompleted}'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatTile(
+                          label: 'Streak', value: '${stats.streak}'),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatTile(
+                          label: 'Sessions',
+                          value: '${stats.sessionsCompleted}'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: HgSpacing.xl),
 
-                // ── Navigation ─────────────────────────────────────────────
+                // ── More ────────────────────────────────────────────────────
+                _SectionLabel('MORE'),
+                const SizedBox(height: HgSpacing.xs),
                 _NavRow(
                   title: 'Session history',
-                  onTap: () =>
-                      _push(context, const SessionHistoryScreen()),
+                  onTap: () => _push(context, const SessionHistoryScreen()),
                 ),
-                _NavRow(
-                  title: 'Focus Score',
-                  subtitle: 'How it’s calculated',
-                  onTap: () => _push(context, const FocusScoreScreen()),
-                ),
+                Divider(height: 1, color: hg.hairline),
                 const _NavRow(
                   title: 'Analytics',
                   subtitle: 'Charts of your focus',
@@ -125,56 +132,202 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _StatCell extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool accent;
+/// Soft-rect tile: lighter warm surface in dark, white + soft shadow in light.
+class _Tile extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets padding;
   final VoidCallback? onTap;
-  const _StatCell({
-    required this.label,
-    required this.value,
-    this.accent = false,
+  const _Tile({
+    required this.child,
+    this.padding = const EdgeInsets.all(HgSpacing.md),
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    final cell = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            value,
+    final light = Theme.of(context).brightness == Brightness.light;
+    return Material(
+      color: hg.surfaceRaised,
+      borderRadius: BorderRadius.circular(HgRadius.lg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(HgRadius.lg),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(HgRadius.lg),
+            border: Border.all(color: hg.hairline),
+            boxShadow: light ? hgShadowSoft : null,
+          ),
+          child: Padding(padding: padding, child: child),
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusTile extends StatelessWidget {
+  final int score;
+  final VoidCallback onTap;
+  const _FocusTile({required this.score, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return _Tile(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(
+          horizontal: HgSpacing.lg, vertical: HgSpacing.lg),
+      child: Row(
+        children: [
+          ScoreRing(
+            value: score,
+            size: 72,
+            stroke: 6,
+            child: Text(
+              '$score',
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: hg.textPrimary,
+                height: 1,
+              ),
+            ),
+          ),
+          const SizedBox(width: HgSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'FOCUS SCORE',
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w600,
+                    color: hg.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Your recent focus ability',
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 14,
+                    height: 1.3,
+                    color: hg.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: hg.textMuted),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String label;
+  final String value;
+  const _StatTile({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return _Tile(
+      padding: const EdgeInsets.symmetric(
+          horizontal: HgSpacing.sm, vertical: HgSpacing.md),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: hg.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label.toUpperCase(),
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: HgFont.sans,
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: accent ? hg.accent : hg.textPrimary,
+              fontSize: 9.5,
+              letterSpacing: 1.2,
+              color: hg.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Capsule extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _Capsule({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return Material(
+      color: hg.surfaceRaised,
+      borderRadius: BorderRadius.circular(HgRadius.pill),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(HgRadius.pill),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(HgRadius.pill),
+            border: Border.all(color: hg.hairline),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: HgSpacing.md, vertical: HgSpacing.sm),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+                color: hg.textSecondary,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: HgSpacing.xs),
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            fontFamily: HgFont.sans,
-            fontSize: 10,
-            letterSpacing: 1.5,
-            color: hg.textMuted,
-          ),
-        ),
-      ],
+      ),
     );
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(HgRadius.sm),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: HgSpacing.sm),
-          child: cell,
-        ),
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 11,
+        letterSpacing: 2,
+        fontWeight: FontWeight.w600,
+        color: hg.textMuted,
       ),
     );
   }

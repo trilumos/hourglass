@@ -122,7 +122,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // ── Bottom cluster (centered, as before) ───────────────────
                 _StatRow(
                   stats: stats,
-                  focusScore: ref.watch(focusScoreProvider).asData?.value,
+                  focusScore: ref.watch(focusScoreProvider).value,
                 ),
                 const SizedBox(height: HgSpacing.lg),
                 Center(
@@ -152,7 +152,7 @@ class _StatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    final data = stats.asData?.value ?? HomeStats.empty;
+    final data = stats.value ?? HomeStats.empty;
     Widget divider() => Container(
           width: 1,
           height: 28,

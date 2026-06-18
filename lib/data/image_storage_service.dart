@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
@@ -15,20 +16,33 @@ class ImageStorageService {
   static const _avatarName = 'avatar.jpg';
   static const _size = 512;
 
+  /// Saves a picked image, center-cropped to a square. (Fallback path.)
   Future<String> saveAvatar(File picked) async {
+    return _persist(_centerSquare(_decode(await picked.readAsBytes())));
+  }
+
+  /// Saves an already-cropped (square) image given its encoded bytes — used by
+  /// the interactive crop screen, which hands us exactly the chosen region.
+  Future<String> saveAvatarBytes(Uint8List bytes) async {
+    return _persist(_decode(bytes));
+  }
+
+  img.Image _decode(Uint8List bytes) {
     img.Image? decoded;
     try {
-      decoded = img.decodeImage(await picked.readAsBytes());
+      decoded = img.decodeImage(bytes);
     } catch (_) {
       decoded = null; // unsupported/corrupt data — treat as unreadable
     }
     if (decoded == null) {
       throw const ImageStorageException('Could not read that image.');
     }
-    final square = _centerSquare(decoded);
-    final resized = img.copyResize(square, width: _size, height: _size);
-    final jpg = img.encodeJpg(resized, quality: 85);
+    return decoded;
+  }
 
+  Future<String> _persist(img.Image image) async {
+    final resized = img.copyResize(image, width: _size, height: _size);
+    final jpg = img.encodeJpg(resized, quality: 85);
     final dir = Directory(p.join((await _baseDir()).path, _relDir));
     await dir.create(recursive: true);
     final file = File(p.join(dir.path, _avatarName));

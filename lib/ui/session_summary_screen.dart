@@ -6,6 +6,7 @@ import '../domain/focus_score_calculator.dart';
 import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
 import 'session_format.dart';
+import 'widgets/score_ring.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
 
@@ -157,14 +158,19 @@ class _ScoreCard extends StatelessWidget {
             )
           : Row(
               children: [
-                Text(
-                  '$s',
-                  style: TextStyle(
-                    fontFamily: HgFont.sans,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w600,
-                    color: hg.accent,
-                    height: 1,
+                ScoreRing(
+                  value: s,
+                  size: 56,
+                  stroke: 5,
+                  child: Text(
+                    '$s',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: hg.textPrimary,
+                      height: 1,
+                    ),
                   ),
                 ),
                 const SizedBox(width: HgSpacing.md),

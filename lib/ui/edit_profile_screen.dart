@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../data/image_storage_service.dart';
+import 'crop_avatar_screen.dart';
 import 'widgets/primary_button.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
@@ -55,11 +57,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Future<void> _pickPhoto() async {
     final picked = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, maxWidth: 1024);
-    if (picked == null) return; // cancelled
+        .pickImage(source: ImageSource.gallery, maxWidth: 2048);
+    if (picked == null || !mounted) return; // cancelled
+    // Let the user frame the crop, then persist exactly that region.
+    final bytes = await Navigator.of(context).push<Uint8List?>(
+      MaterialPageRoute(
+        builder: (_) => CropAvatarScreen(source: File(picked.path)),
+      ),
+    );
+    if (bytes == null || !mounted) return; // crop cancelled
     try {
       final storage = ref.read(imageStorageProvider);
-      final rel = await storage.saveAvatar(File(picked.path));
+      final rel = await storage.saveAvatarBytes(bytes);
       final file = await storage.resolve(rel);
       await FileImage(file).evict(); // bust the cache (fixed filename)
       if (!mounted) return;
