@@ -21,4 +21,19 @@ void main() {
     final sessions = await container.read(sessionRepositoryProvider).allSessions();
     expect(sessions, isEmpty);
   });
+
+  test('profileProvider self-creates a profile via the in-memory db', () async {
+    final container = ProviderContainer(overrides: [
+      databaseProvider.overrideWith((ref) {
+        final db = AppDatabase.memory();
+        ref.onDispose(db.close);
+        return db;
+      }),
+    ]);
+    addTearDown(container.dispose);
+
+    final profile = await container.read(profileProvider.future);
+    expect(profile.uuid, isNotEmpty);
+    expect(profile.isSetUp, isFalse);
+  });
 }

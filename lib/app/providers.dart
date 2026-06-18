@@ -1,12 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/app_database.dart';
+import '../data/image_storage_service.dart';
+import '../data/profile_repository.dart';
 import '../data/session_repository.dart';
 import '../data/settings_repository.dart';
 import '../domain/focus_score_calculator.dart';
 import '../domain/session_mode.dart';
+import '../domain/session_record.dart';
 import '../domain/stamina_calculator.dart';
 import '../domain/stats_calculator.dart';
+import '../domain/user_profile.dart';
 import '../session/session_finalizer.dart';
 
 /// The on-device database. Closed automatically when the provider is disposed.
@@ -110,6 +114,53 @@ final homeStatsProvider = FutureProvider<HomeStats>((ref) async {
   const stats = StatsCalculator();
   return HomeStats(
     todayFocus: stats.focusOnDay(now, sessions),
+    streak: stats.currentStreak(now, sessions),
+    sessionsCompleted: stats.sessionsCompleted(sessions),
+  );
+});
+
+/// The single on-device profile (self-creating). Invalidate after an edit.
+final profileRepositoryProvider = Provider<ProfileRepository>(
+  (ref) => ProfileRepository(ref.watch(databaseProvider)),
+);
+
+final imageStorageProvider =
+    Provider<ImageStorageService>((ref) => ImageStorageService());
+
+final profileProvider = FutureProvider<UserProfile>(
+  (ref) => ref.watch(profileRepositoryProvider).load(),
+);
+
+/// All sessions that recorded real focus, newest first (for the history list).
+final sessionHistoryProvider = FutureProvider<List<SessionRecord>>((ref) async {
+  final all = await ref.watch(sessionRepositoryProvider).allSessions();
+  return all
+      .where((s) => s.recordedFocus > Duration.zero)
+      .toList()
+      .reversed
+      .toList();
+});
+
+/// Lifetime stats shown on the Profile hub.
+class ProfileStats {
+  final Duration totalFocus;
+  final int streak;
+  final int sessionsCompleted;
+  const ProfileStats({
+    required this.totalFocus,
+    required this.streak,
+    required this.sessionsCompleted,
+  });
+  static const empty =
+      ProfileStats(totalFocus: Duration.zero, streak: 0, sessionsCompleted: 0);
+}
+
+final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
+  final sessions = await ref.watch(sessionRepositoryProvider).allSessions();
+  final now = ref.watch(clockProvider)();
+  const stats = StatsCalculator();
+  return ProfileStats(
+    totalFocus: stats.totalFocus(sessions),
     streak: stats.currentStreak(now, sessions),
     sessionsCompleted: stats.sessionsCompleted(sessions),
   );
