@@ -28,34 +28,29 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _TeachPage {
   final String headline;
   final String subcopy;
-  final double heroProgress;
-  const _TeachPage(this.headline, this.subcopy, this.heroProgress);
+  const _TeachPage(this.headline, this.subcopy);
 }
 
 const _teach = <_TeachPage>[
   _TeachPage(
     'Train your focus like an athlete.',
     'Focus is a skill you can build — with real training, and real recovery.',
-    0.0,
   ),
   _TeachPage(
     'Find your flow.',
     "In Flow, the first minutes feel hard — that's the struggle. Stay with it "
         'and focus takes over: effortless, absorbed.',
-    0.4,
   ),
   _TeachPage(
     'Rest without your phone.',
     'Then a short, boring break lets focus recover — no scrolling. Struggle, '
         'flow, recover: one full block.',
-    0.8,
   ),
   _TeachPage(
     'Watch your focus grow.',
     'Your Focus Score (0–100) tracks your focus ability as you train. Pomodoro '
         'and Custom are training wheels — Flow is the real method. The full '
         'guide is in Settings → How it works.',
-    0.0,
   ),
 ];
 
@@ -77,8 +72,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  double get _heroProgress =>
-      _index < _teach.length ? _teach[_index].heroProgress : 0.0;
+  // Drain deepens 10% per page (page 1 = 10% … profile page = 50%); the sand
+  // keeps falling the whole time (the stream animates whenever 0 < drain < 1).
+  // Home then shows its own filled, no-fall hourglass.
+  double get _heroProgress => 0.1 * (_index + 1);
 
   void _onCta() {
     if (_index < _profileIndex) {
@@ -181,7 +178,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: Center(
                     child: HourglassView(
                       progress: _heroProgress,
-                      heroTag: kHourglassHeroTag,
                     ),
                   ),
                 ),
