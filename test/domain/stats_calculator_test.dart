@@ -87,6 +87,25 @@ void main() {
     expect(calc.sessionsCompleted(sessions), 1);
   });
 
+  test('totalFocus sums all recorded focus, ignoring zero-focus sessions', () {
+    final sessions = [
+      _session(startedAt: DateTime(2026, 6, 11)), // 25m
+      _session(
+          startedAt: DateTime(2026, 6, 10),
+          recorded: const Duration(minutes: 5)),
+      _session(
+          startedAt: DateTime(2026, 6, 9),
+          recorded: Duration.zero,
+          completed: false,
+          abandoned: true),
+    ];
+    expect(calc.totalFocus(sessions), const Duration(minutes: 30));
+  });
+
+  test('totalFocus is zero for no sessions', () {
+    expect(calc.totalFocus(const []), Duration.zero);
+  });
+
   test('abandoned session counts toward focus & streak, not sessionsCompleted',
       () {
     final day = DateTime(2026, 6, 11);

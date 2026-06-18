@@ -44,6 +44,11 @@ class StatsCalculator {
     return sessions.where((s) => s.completed && !s.abandoned).length;
   }
 
+  /// Lifetime total focus across every session that recorded real focus.
+  Duration totalFocus(List<SessionRecord> sessions) => sessions
+      .where((s) => s.recordedFocus > Duration.zero)
+      .fold(Duration.zero, (sum, s) => sum + s.recordedFocus);
+
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
   bool _sameDay(DateTime a, DateTime b) =>
