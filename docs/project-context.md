@@ -162,7 +162,7 @@ export PATH="/d/Dev/tools/flutter/bin:$PATH"; export JAVA_HOME="/c/Program Files
 ADB="/c/Users/morni/AppData/Local/Android/Sdk/platform-tools/adb.exe"
 flutter build apk --debug -t lib/hourglass_preview_main.dart
 "$ADB" install -r build/app/outputs/flutter-apk/app-debug.apk
-"$ADB" shell am start -n com.trilumos.hourglass/.MainActivity
+"$ADB" shell am start -n com.trilumos.sustain/.MainActivity
 # screenshot (note MSYS path quirk): screencap to /sdcard then pull to a C:/ path
 "$ADB" shell screencap -p /sdcard/s.png; "$ADB" pull /sdcard/s.png "C:/Users/morni/AppData/Local/Temp/s.png"
 ```

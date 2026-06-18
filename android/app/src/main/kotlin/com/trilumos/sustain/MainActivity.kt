@@ -1,4 +1,4 @@
-package com.trilumos.hourglass
+package com.trilumos.sustain
 
 import io.flutter.embedding.android.FlutterActivity
 

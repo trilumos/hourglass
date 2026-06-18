@@ -11,7 +11,7 @@
 - ☐ **P0 — Real release signing.** `android/app/build.gradle.kts` still signs release with the **debug keystore**. Generate a real upload keystore, store it + `android/key.properties` **gitignored**, wire `signingConfigs.release`. Enroll in **Play App Signing**. (Carry-forward from P1 review.)
 - ☐ **P0 — App Bundle (.aab), not APK.** Play requires `flutter build appbundle --release`. Verify it builds, installs from an internal track, and launches.
 - ☐ **P0 — Target SDK / compile SDK** meet Google's current minimum for new apps (Play raises this yearly). Confirm `targetSdk` is current; test on that API level.
-- ☐ **P0 — Application id, versionCode, versionName** finalized (`com.trilumos.hourglass`, start `1.0.0+1`). versionCode must increment every upload.
+- ☐ **P0 — Application id, versionCode, versionName** finalized (`com.trilumos.sustain`, start `1.0.0+1`). versionCode must increment every upload.
 - ☐ **P1 — R8/ProGuard** shrink + obfuscate release; keep rules for Drift/sqlite3/Riverpod/reflection; verify the release build runs (not just debug).
 - ☐ **P1 — App icon + adaptive icon + splash** (branded, all densities). Confirm no default Flutter icon ships.
 - ☐ **P1 — Store listing:** title, short + full description, feature graphic, phone screenshots (premium ones — the app is the moat), category, contact email.
