@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../ui/home_screen.dart';
+import 'root_gate.dart';
 import 'theme.dart';
 import 'theme_controller.dart';
 import 'tokens.dart';
@@ -19,7 +19,7 @@ class HourglassApp extends ConsumerWidget {
       theme: buildTheme(theme.light, Brightness.light),
       darkTheme: buildTheme(theme.dark, Brightness.dark),
       themeMode: prefs.mode,
-      home: const HomeScreen(),
+      home: const RootGate(),
     );
   }
 }
