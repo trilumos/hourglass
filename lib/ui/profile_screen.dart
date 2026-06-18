@@ -8,6 +8,7 @@ import 'activity_screen.dart';
 import 'edit_profile_screen.dart';
 import 'focus_score_screen.dart';
 import 'guide_screen.dart';
+import 'photo_viewer_screen.dart';
 import 'session_format.dart';
 import 'session_history_screen.dart';
 import 'widgets/profile_avatar.dart';
@@ -50,14 +51,25 @@ class ProfileScreen extends ConsumerWidget {
 
                 // ── Identity ────────────────────────────────────────────────
                 Center(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(color: hg.glow, blurRadius: 28, spreadRadius: 1),
-                      ],
+                  child: GestureDetector(
+                    onTap: () {
+                      final path = profile?.imagePath;
+                      if (path != null) {
+                        _push(context, PhotoViewerScreen(imagePath: path));
+                      } else {
+                        _push(context, const EditProfileScreen());
+                      }
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                              color: hg.glow, blurRadius: 28, spreadRadius: 1),
+                        ],
+                      ),
+                      child: const ProfileAvatar(size: 92),
                     ),
-                    child: const ProfileAvatar(size: 92),
                   ),
                 ),
                 const SizedBox(height: HgSpacing.md),

@@ -176,55 +176,70 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
-  final hg = context.hg;
-  final controller = TextEditingController();
   final ok = await showDialog<bool>(
     context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setLocal) {
-        final canDelete = controller.text.trim() == 'Delete';
-        return AlertDialog(
-          backgroundColor: hg.surfaceRaised,
-          title: const Text('Clear all data?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                  'This permanently deletes every session, your stats, and '
-                  'your profile. This can’t be undone.'),
-              const SizedBox(height: HgSpacing.md),
-              Text('Type Delete to confirm.',
-                  style: TextStyle(color: hg.textMuted, fontSize: 13)),
-              const SizedBox(height: HgSpacing.sm),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                onChanged: (_) => setLocal(() {}),
-                decoration: const InputDecoration(hintText: 'Delete'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel')),
-            TextButton(
-              onPressed: canDelete ? () => Navigator.pop(ctx, true) : null,
-              style: TextButton.styleFrom(foregroundColor: hg.danger),
-              child: const Text('Delete everything'),
-            ),
-          ],
-        );
-      },
-    ),
+    builder: (_) => const _ClearDataDialog(),
   );
-  controller.dispose();
   if (ok != true) return;
   await _clearAll(ref);
   if (context.mounted) {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('All data cleared.')));
+  }
+}
+
+class _ClearDataDialog extends StatefulWidget {
+  const _ClearDataDialog();
+  @override
+  State<_ClearDataDialog> createState() => _ClearDataDialogState();
+}
+
+class _ClearDataDialogState extends State<_ClearDataDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    final canDelete = _controller.text.trim() == 'Delete';
+    return AlertDialog(
+      backgroundColor: hg.surfaceRaised,
+      title: const Text('Clear all data?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+              'This permanently deletes every session, your stats, and your '
+              'profile. This can’t be undone.'),
+          const SizedBox(height: HgSpacing.md),
+          Text('Type Delete to confirm.',
+              style: TextStyle(color: hg.textMuted, fontSize: 13)),
+          const SizedBox(height: HgSpacing.sm),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(hintText: 'Delete'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel')),
+        TextButton(
+          onPressed: canDelete ? () => Navigator.pop(context, true) : null,
+          style: TextButton.styleFrom(foregroundColor: hg.danger),
+          child: const Text('Delete everything'),
+        ),
+      ],
+    );
   }
 }
 
