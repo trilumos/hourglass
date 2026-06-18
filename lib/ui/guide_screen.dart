@@ -6,15 +6,15 @@ import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
 import 'widgets/surface_tile.dart';
 
-/// "How Hourglass works" — an honest, calm explainer of the app's purpose, the
-/// Flow Block method, the three modes, the Focus Score, and your numbers.
+/// "How it works" — an honest, calm explainer of the app's purpose, the
+/// Flow method, the three modes, the Focus Score, and your numbers.
 /// Copy follows the brand honesty rule: no invented science or stats.
 class GuideScreen extends StatelessWidget {
   const GuideScreen({super.key});
 
   static const _modes = <(String, String)>[
     (
-      'Flow Block',
+      'Flow',
       'One unbroken block of deep focus. Set an intention, flip the hourglass, '
           'and ride the Struggle into Flow. It is the only mode that feeds your '
           'Focus Score, and the one that grows your focus stamina over time.'
@@ -71,7 +71,7 @@ class GuideScreen extends StatelessWidget {
                   'it, so your focus grows stronger over time.',
                 ),
 
-                _Heading('THE FLOW BLOCK'),
+                _Heading('THE FLOW METHOD'),
                 _Body(
                   'Our core method. Set a small intention, flip the hourglass, '
                   'and begin. The first few minutes are the Struggle — that '
@@ -91,9 +91,9 @@ class GuideScreen extends StatelessWidget {
                 _Heading('YOUR FOCUS SCORE'),
                 _Body(
                   'A reading from 0 to 100 of your recent focus ability: the '
-                  'average of your last 10 Flow Blocks. It builds up over your '
+                  'average of your last 10 Flow sessions. It builds up over your '
                   'first several blocks, and it rewards finishing what you '
-                  'start. Only Flow Blocks count toward it. Open the Focus Score '
+                  'start. Only Flow sessions count toward it. Open the Focus Score '
                   'page any time to see how it is calculated.',
                 ),
 

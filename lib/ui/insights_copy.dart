@@ -72,7 +72,7 @@ class InsightsCopy {
     return null;
   }
 
-  /// "You're a Flow Block person." from the dominant mode.
+  /// "You're a Flow person." from the dominant mode.
   static String? modeInsight(List<ModeSlice> slices) {
     ModeSlice? top;
     for (final s in slices) {
@@ -82,7 +82,7 @@ class InsightsCopy {
     }
     if (top == null) return null;
     return switch (top.mode) {
-      SessionMode.flowBlock => "You're a Flow Block person.",
+      SessionMode.flowBlock => "You're a Flow person.",
       SessionMode.pomodoro => 'Pomodoro is your go-to.',
       SessionMode.custom => 'Custom sessions are your go-to.',
     };

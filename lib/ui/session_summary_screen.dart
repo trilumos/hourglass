@@ -121,7 +121,7 @@ class SessionSummaryScreen extends StatelessWidget {
                   SurfaceTile(
                     child: score == null
                         ? Text(
-                            'Not scored — Flow Blocks under 2 minutes don’t count.',
+                            'Not scored — Flow sessions under 2 minutes don’t count.',
                             style: TextStyle(
                               fontFamily: HgFont.sans,
                               fontSize: 14,

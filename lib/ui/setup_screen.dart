@@ -79,7 +79,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   SessionMode get _mode => widget.mode;
 
   static const _titles = {
-    SessionMode.flowBlock: 'Flow Block',
+    SessionMode.flowBlock: 'Flow',
     SessionMode.pomodoro: 'Pomodoro',
     SessionMode.custom: 'Custom',
   };

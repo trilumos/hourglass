@@ -107,9 +107,9 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: HgSpacing.sm),
                 _SwitchRow(
-                  title: 'Run Flow Blocks until I end them',
+                  title: 'Run Flow sessions until I end them',
                   subtitle:
-                      "When on, a Flow Block never stops on its own — it keeps "
+                      "When on, a Flow session never stops on its own — it keeps "
                       "running until you tap End. When off, it stops at its set "
                       "length (with a “keep going” option near the end).",
                   value: runUntilEnded,
@@ -128,7 +128,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: HgSpacing.sm),
                 _ActionRow(
                   title: 'How Hourglass works',
-                  subtitle: 'Modes, the Flow Block method, and your numbers',
+                  subtitle: 'Modes, the Flow method, and your numbers',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const GuideScreen()),
                   ),

@@ -17,7 +17,7 @@ class ModeSelector extends StatelessWidget {
   });
 
   static const _labels = {
-    SessionMode.flowBlock: 'Flow Block',
+    SessionMode.flowBlock: 'Flow',
     SessionMode.pomodoro: 'Pomodoro',
     SessionMode.custom: 'Custom',
   };

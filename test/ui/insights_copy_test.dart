@@ -59,7 +59,7 @@ void main() {
         const ModeSlice(SessionMode.pomodoro, Duration(minutes: 20), 0.3),
         const ModeSlice(SessionMode.custom, Duration.zero, 0.0),
       ];
-      expect(InsightsCopy.modeInsight(slices), "You're a Flow Block person.");
+      expect(InsightsCopy.modeInsight(slices), "You're a Flow person.");
     });
     test('null when there is no focus', () {
       final slices = [

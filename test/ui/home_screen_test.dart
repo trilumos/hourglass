@@ -53,7 +53,7 @@ void main() {
 
     expect(find.text('Begin'), findsOneWidget);
     // Mode selector shows the three modes.
-    expect(find.text('Flow Block'), findsOneWidget);
+    expect(find.text('Flow'), findsOneWidget);
     expect(find.text('Pomodoro'), findsOneWidget);
     expect(find.text('Custom'), findsOneWidget);
     // Today's focus reflects the seeded 25-minute completed session.

@@ -15,12 +15,12 @@ class FocusScoreScreen extends ConsumerWidget {
   const FocusScoreScreen({super.key});
 
   static const _paragraphs = <String>[
-    'Your Focus Score is the average of your last 10 Flow Blocks, on a scale of '
+    'Your Focus Score is the average of your last 10 Flow sessions, on a scale of '
         '0 to 100. It reflects your recent focus ability, not your whole history.',
-    "It builds up over your first several Flow Blocks. One great session won't "
+    "It builds up over your first several Flow sessions. One great session won't "
         'jump you to 100 — focus is trained, not flipped.',
     'Completing a block, and pushing a little past it, raises your score. '
-        'Giving up early lowers it. Only Flow Blocks of at least 2 minutes count.',
+        'Giving up early lowers it. Only Flow sessions of at least 2 minutes count.',
   ];
 
   @override

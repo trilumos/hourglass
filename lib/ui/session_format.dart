@@ -8,7 +8,7 @@ const _months = [
 ];
 
 String modeLabel(SessionMode m) => switch (m) {
-      SessionMode.flowBlock => 'Flow Block',
+      SessionMode.flowBlock => 'Flow',
       SessionMode.pomodoro => 'Pomodoro',
       SessionMode.custom => 'Custom',
     };
