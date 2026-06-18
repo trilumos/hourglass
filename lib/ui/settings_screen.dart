@@ -6,6 +6,7 @@ import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/theme_controller.dart';
 import '../app/tokens.dart';
+import 'profile_screen.dart';
 import 'widgets/screen_background.dart';
 
 /// User preferences. Calm, grouped rows — Display (theme) and Session (how
@@ -52,6 +53,20 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: HgSpacing.lg),
+
+                // ── Profile ──────────────────────────────────────────────────
+                _SectionLabel('PROFILE'),
+                const SizedBox(height: HgSpacing.sm),
+                _ChoiceRow(
+                  title: 'Profile',
+                  selected: false,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const ProfileScreen()),
+                  ),
+                ),
+
+                const SizedBox(height: HgSpacing.xl),
 
                 // ── Display ──────────────────────────────────────────────────
                 _SectionLabel('DISPLAY'),
