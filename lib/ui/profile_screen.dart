@@ -159,7 +159,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 Divider(height: 1, color: hg.hairline),
                 _NavRow(
-                  title: 'How Hourglass works',
+                  title: 'How it works',
                   onTap: () => _push(context, const GuideScreen()),
                 ),
                 const SizedBox(height: HgSpacing.xl),

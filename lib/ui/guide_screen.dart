@@ -50,7 +50,7 @@ class GuideScreen extends StatelessWidget {
             child: ListView(
               children: [
                 const SizedBox(height: HgSpacing.sm),
-                const ScreenHeader(title: 'How Hourglass works'),
+                const ScreenHeader(title: 'How it works'),
                 const SizedBox(height: HgSpacing.xl),
 
                 Text(
@@ -66,7 +66,7 @@ class GuideScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: HgSpacing.md),
                 _Body(
-                  'Hourglass is focus training, not just a timer. You build the '
+                  'Sustain is focus training, not just a timer. You build the '
                   'ability to concentrate deeply, and you learn to recover from '
                   'it, so your focus grows stronger over time.',
                 ),
@@ -102,7 +102,7 @@ class GuideScreen extends StatelessWidget {
 
                 _Heading('YOUR PRIVACY'),
                 _Body(
-                  'Hourglass works fully offline. Your sessions, stats, and '
+                  'Sustain works fully offline. Your sessions, stats, and '
                   'profile live only on your device. We collect nothing.',
                 ),
                 const SizedBox(height: HgSpacing.xxl),

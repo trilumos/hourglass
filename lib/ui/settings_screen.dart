@@ -127,7 +127,7 @@ class SettingsScreen extends ConsumerWidget {
                 _SectionLabel('ABOUT'),
                 const SizedBox(height: HgSpacing.sm),
                 _ActionRow(
-                  title: 'How Hourglass works',
+                  title: 'How it works',
                   subtitle: 'Modes, the Flow method, and your numbers',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const GuideScreen()),
@@ -138,7 +138,7 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Open-source licenses',
                   onTap: () => showLicensePage(
                     context: context,
-                    applicationName: 'Hourglass',
+                    applicationName: 'Sustain',
                     applicationVersion: '1.0.0',
                   ),
                 ),
@@ -159,7 +159,7 @@ class SettingsScreen extends ConsumerWidget {
                 // ── Version (absolute bottom) ────────────────────────────────
                 Center(
                   child: Text(
-                    'Hourglass 1.0.0',
+                    'Sustain 1.0.0',
                     style: TextStyle(
                       fontFamily: HgFont.sans,
                       fontSize: 12,

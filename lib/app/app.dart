@@ -14,7 +14,7 @@ class HourglassApp extends ConsumerWidget {
     final prefs = ref.watch(themeControllerProvider);
     final theme = HgThemes.byId(prefs.themeId);
     return MaterialApp(
-      title: 'Hourglass',
+      title: 'Sustain',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(theme.light, Brightness.light),
       darkTheme: buildTheme(theme.dark, Brightness.dark),

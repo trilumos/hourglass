@@ -79,7 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Expanded(
                       child: Center(
                         child: Text(
-                          'HOURGLASS',
+                          'SUSTAIN',
                           style: TextStyle(
                             fontFamily: HgFont.sans,
                             fontSize: 14,
