@@ -44,10 +44,6 @@ class _GreetingLineState extends ConsumerState<GreetingLine> {
     setState(() => _encIndex = nextQuoteIndex(_encIndex, _lines.length, _rng));
   }
 
-  // TODO(Plan 3): replace this hardcoded name with the user's name captured
-  // during onboarding (stored in settings). See docs/project-context.md.
-  static const _name = 'Deep';
-
   String _greetingFor(DateTime now, bool isNewUser, int streak) {
     return _greeting ??= () {
       final c = greetingCandidates(now, isNewUser: isNewUser, streak: streak);
@@ -65,6 +61,8 @@ class _GreetingLineState extends ConsumerState<GreetingLine> {
   Widget build(BuildContext context) {
     final hg = context.hg;
     final now = ref.watch(clockProvider)();
+    final profileName =
+        ref.watch(profileProvider).asData?.value.name.trim() ?? '';
     final stats = ref.watch(homeStatsProvider).asData?.value;
     final greeting = _greetingFor(
       now,
@@ -87,15 +85,19 @@ class _GreetingLineState extends ConsumerState<GreetingLine> {
               color: hg.textPrimary,
             ),
             children: [
-              TextSpan(text: '$greeting, '),
-              TextSpan(
-                text: _name,
-                style: TextStyle(
-                  color: hg.accent,
-                  fontWeight: FontWeight.w500,
+              if (profileName.isEmpty)
+                TextSpan(text: '$greeting${greetingPunctuation(greeting)}')
+              else ...[
+                TextSpan(text: '$greeting, '),
+                TextSpan(
+                  text: profileName,
+                  style: TextStyle(
+                    color: hg.accent,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              TextSpan(text: greetingPunctuation(greeting)),
+                TextSpan(text: greetingPunctuation(greeting)),
+              ],
             ],
           ),
         ),
