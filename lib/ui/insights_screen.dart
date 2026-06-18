@@ -5,6 +5,7 @@ import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../domain/analytics_calculator.dart';
+import 'insights_copy.dart';
 import 'session_format.dart';
 import 'widgets/contribution_graph.dart';
 import 'widgets/focus_trend_chart.dart';
@@ -31,6 +32,7 @@ class InsightsScreen extends ConsumerWidget {
     final data = ref.watch(analyticsProvider).value;
 
     final hasAnyData = stats.totalSessions > 0;
+    final activeDays = _activeDaysLast30(daily, now);
 
     return Scaffold(
       body: ScreenBackground(
@@ -47,7 +49,9 @@ class InsightsScreen extends ConsumerWidget {
                 else ...[
                   // ── Records (lifetime scorecard, first) ──────────────────
                   _Label('RECORDS'),
-                  const SizedBox(height: HgSpacing.sm),
+                  const SizedBox(height: HgSpacing.xs),
+                  const _Descriptor(InsightsCopy.records),
+                  const SizedBox(height: HgSpacing.md),
                   _row(
                     StatTile(
                         label: 'Total focus',
@@ -85,11 +89,14 @@ class InsightsScreen extends ConsumerWidget {
 
                   // ── Consistency (heatmap, lifetime, no toggle) ───────────
                   _Label('CONSISTENCY'),
+                  const SizedBox(height: HgSpacing.xs),
+                  const _Descriptor(InsightsCopy.consistency),
                   const SizedBox(height: HgSpacing.md),
                   SurfaceTile(
                     padding: const EdgeInsets.all(HgSpacing.md),
                     child: ContributionGraph(data: daily, today: now),
                   ),
+                  _Insight(InsightsCopy.consistencyInsight(activeDays)),
                   const SizedBox(height: HgSpacing.xl),
 
                   // ── Range toggle — governs everything below ──────────────
@@ -108,14 +115,7 @@ class InsightsScreen extends ConsumerWidget {
                     // ── Focus over time ───────────────────────────────────
                     _Label('FOCUS OVER TIME'),
                     const SizedBox(height: HgSpacing.xs),
-                    Text(
-                      '${formatFocusDuration(data.rangeTotal)} ${_periodWord(range)}',
-                      style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 14,
-                        color: context.hg.textSecondary,
-                      ),
-                    ),
+                    const _Descriptor(InsightsCopy.focusOverTime),
                     const SizedBox(height: HgSpacing.md),
                     SurfaceTile(
                       padding: const EdgeInsets.fromLTRB(
@@ -125,10 +125,14 @@ class InsightsScreen extends ConsumerWidget {
                         sparseLabels: range == AnalyticsRange.month,
                       ),
                     ),
+                    _Insight(InsightsCopy.focusTotal(
+                        formatFocusDuration(data.rangeTotal), _periodWord(range))),
                     const SizedBox(height: HgSpacing.xl),
 
                     // ── When you focus ────────────────────────────────────
                     _Label('WHEN YOU FOCUS'),
+                    const SizedBox(height: HgSpacing.xs),
+                    const _Descriptor(InsightsCopy.whenYouFocus),
                     const SizedBox(height: HgSpacing.md),
                     SurfaceTile(
                       padding: const EdgeInsets.all(HgSpacing.md),
@@ -138,10 +142,12 @@ class InsightsScreen extends ConsumerWidget {
                           _SubLabel('Time of day'),
                           const SizedBox(height: HgSpacing.sm),
                           RhythmBars(bars: data.timeOfDay),
+                          _Insight(InsightsCopy.timeOfDayInsight(data.timeOfDay)),
                           const SizedBox(height: HgSpacing.lg),
                           _SubLabel('Day of week'),
                           const SizedBox(height: HgSpacing.sm),
                           RhythmBars(bars: data.dayOfWeek),
+                          _Insight(InsightsCopy.dayOfWeekInsight(data.dayOfWeek)),
                         ],
                       ),
                     ),
@@ -149,11 +155,14 @@ class InsightsScreen extends ConsumerWidget {
 
                     // ── By mode ───────────────────────────────────────────
                     _Label('BY MODE'),
+                    const SizedBox(height: HgSpacing.xs),
+                    const _Descriptor(InsightsCopy.byMode),
                     const SizedBox(height: HgSpacing.md),
                     SurfaceTile(
                       padding: const EdgeInsets.all(HgSpacing.lg),
                       child: ModeDonut(slices: data.byMode),
                     ),
+                    _Insight(InsightsCopy.modeInsight(data.byMode)),
                   ],
                   const SizedBox(height: HgSpacing.xl),
                 ],
@@ -168,7 +177,7 @@ class InsightsScreen extends ConsumerWidget {
   static String _periodWord(AnalyticsRange r) => switch (r) {
         AnalyticsRange.week => 'this week',
         AnalyticsRange.month => 'this month',
-        AnalyticsRange.all => 'all time',
+        AnalyticsRange.all => 'in total',
       };
 
   Widget _row(Widget a, Widget b) => Row(
@@ -178,6 +187,17 @@ class InsightsScreen extends ConsumerWidget {
           Expanded(child: b),
         ],
       );
+}
+
+/// Days in the last 30 (inclusive of today) that recorded any focus.
+int _activeDaysLast30(Map<DateTime, DayStat> daily, DateTime now) {
+  final today = DateTime(now.year, now.month, now.day);
+  var count = 0;
+  for (var i = 0; i < 30; i++) {
+    final stat = daily[today.subtract(Duration(days: i))];
+    if (stat != null && stat.focus > Duration.zero) count++;
+  }
+  return count;
 }
 
 /// The Week / Month / All segmented control.
@@ -308,6 +328,49 @@ class _SubLabel extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: context.hg.textSecondary,
+      ),
+    );
+  }
+}
+
+/// A plain-language line under a section label saying what the chart shows.
+class _Descriptor extends StatelessWidget {
+  final String text;
+  const _Descriptor(this.text);
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 13,
+        height: 1.35,
+        color: context.hg.textMuted,
+      ),
+    );
+  }
+}
+
+/// The personalized takeaway under a chart — accent voice. Renders nothing
+/// (and takes no space) when there isn't enough data to say something true.
+class _Insight extends StatelessWidget {
+  final String? text;
+  const _Insight(this.text);
+  @override
+  Widget build(BuildContext context) {
+    final t = text;
+    if (t == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: HgSpacing.sm),
+      child: Text(
+        t,
+        style: TextStyle(
+          fontFamily: HgFont.sans,
+          fontSize: 14.5,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
+          color: context.hg.accent,
+        ),
       ),
     );
   }
