@@ -6,12 +6,15 @@ import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../hourglass/hourglass_view.dart';
+import 'focus_score_screen.dart';
+import 'profile_screen.dart';
 import 'settings_screen.dart';
 import 'setup_screen.dart';
 import 'widgets/adaptive_tagline.dart';
 import 'widgets/greeting_line.dart';
 import 'widgets/mode_selector.dart';
 import 'widgets/primary_button.dart';
+import 'widgets/profile_avatar.dart';
 import 'widgets/screen_background.dart';
 
 /// The calm landing screen. Centered wordmark, tagline and hourglass hero; a
@@ -38,6 +41,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  void _openProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
@@ -54,17 +63,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: HgSpacing.sm),
                 // ── Top: wordmark (left) + settings gear (right) ───────────
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'HOURGLASS',
-                      style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 14,
-                        letterSpacing: 3.5,
-                        color: hg.textSecondary,
-                        fontWeight: FontWeight.w700,
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: _openProfile,
+                          behavior: HitTestBehavior.opaque,
+                          child: const ProfileAvatar(size: 36),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          'HOURGLASS',
+                          style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 14,
+                            letterSpacing: 3.5,
+                            color: hg.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
                     IconButton(
@@ -139,11 +162,17 @@ class _StatRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _Stat(
-          label: 'Focus',
-          value: '${focusScore ?? 0}',
-          animatedNumber: focusScore ?? 0,
-          accent: true,
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const FocusScoreScreen()),
+          ),
+          child: _Stat(
+            label: 'Focus',
+            value: '${focusScore ?? 0}',
+            animatedNumber: focusScore ?? 0,
+            accent: true,
+          ),
         ),
         divider(),
         _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
