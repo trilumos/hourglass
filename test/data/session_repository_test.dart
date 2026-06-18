@@ -53,6 +53,30 @@ void main() {
     expect(all.first.startedAt, DateTime(2026, 6, 9));
     expect(all.last.startedAt, DateTime(2026, 6, 11));
   });
+
+  test('insertSession stamps a uuid and updatedAt', () async {
+    final repo2 = SessionRepository(db,
+        uuidGen: () => 'sess-uuid', clock: () => DateTime(2026, 6, 17, 12));
+    await repo2.insertSession(_draft(DateTime(2026, 6, 11)));
+    final row = await (db.select(db.sessions)).getSingle();
+    expect(row.uuid, 'sess-uuid');
+    expect(row.updatedAt, DateTime(2026, 6, 17, 12));
+  });
+
+  test('updateRecordedFocus bumps updatedAt', () async {
+    var t = DateTime(2026, 6, 17, 12);
+    final repo2 = SessionRepository(db, clock: () => t);
+    final id = await repo2.insertSession(_draft(DateTime(2026, 6, 11)));
+    t = DateTime(2026, 6, 17, 13);
+    await repo2.updateRecordedFocus(id,
+        recorded: const Duration(minutes: 40),
+        completed: true,
+        abandoned: false);
+    final row = await (db.select(db.sessions)..where((s) => s.id.equals(id)))
+        .getSingle();
+    expect(row.updatedAt, DateTime(2026, 6, 17, 13));
+    expect(row.recordedSeconds, 40 * 60);
+  });
 }
 
 SessionRecord _draft(DateTime startedAt) => SessionRecord(

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 
 import 'app_database.dart';
 import '../domain/session_record.dart';
@@ -6,7 +7,15 @@ import '../domain/session_record.dart';
 /// Persists and loads [SessionRecord]s, mapping to/from Drift rows.
 class SessionRepository {
   final AppDatabase _db;
-  SessionRepository(this._db);
+  final String Function() _uuidGen;
+  final DateTime Function() _now;
+
+  SessionRepository(
+    this._db, {
+    String Function()? uuidGen,
+    DateTime Function()? clock,
+  })  : _uuidGen = uuidGen ?? (() => const Uuid().v4()),
+        _now = clock ?? DateTime.now;
 
   /// Inserts [r] and returns the new row id (used to revise the same record when
   /// a Flow Block is extended via "Keep going").
@@ -23,6 +32,8 @@ class SessionRepository {
             autoContinue: Value(r.autoContinue),
             soundscape: Value(r.soundscape),
             skinId: Value(r.skinId),
+            uuid: Value(_uuidGen()),
+            updatedAt: Value(_now()),
           ),
         );
   }
@@ -40,6 +51,7 @@ class SessionRepository {
         recordedSeconds: Value(recorded.inSeconds),
         completed: Value(completed),
         abandoned: Value(abandoned),
+        updatedAt: Value(_now()),
       ),
     );
   }
