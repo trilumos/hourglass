@@ -10,12 +10,16 @@ class StatTile extends StatelessWidget {
   final String label;
   final String value;
   final bool accent;
+
+  /// A bigger value + taller tile, for "hero" stats that lead a group.
+  final bool large;
   final VoidCallback? onTap;
   const StatTile({
     super.key,
     required this.label,
     required this.value,
     this.accent = false,
+    this.large = false,
     this.onTap,
   });
 
@@ -24,8 +28,9 @@ class StatTile extends StatelessWidget {
     final hg = context.hg;
     return SurfaceTile(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(
-          horizontal: HgSpacing.sm, vertical: HgSpacing.md),
+      padding: EdgeInsets.symmetric(
+          horizontal: HgSpacing.sm,
+          vertical: large ? HgSpacing.lg : HgSpacing.md),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -35,7 +40,7 @@ class StatTile extends StatelessWidget {
               value,
               style: TextStyle(
                 fontFamily: HgFont.sans,
-                fontSize: 22,
+                fontSize: large ? 32 : 22,
                 fontWeight: FontWeight.w600,
                 color: accent ? hg.accent : hg.textPrimary,
               ),

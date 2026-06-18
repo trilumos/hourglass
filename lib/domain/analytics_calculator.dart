@@ -11,7 +11,13 @@ class TimeBar {
 
   /// Visually emphasized: the current period (over-time) or the peak (rhythm).
   final bool highlight;
-  const TimeBar(this.label, this.focus, {this.highlight = false});
+
+  /// A fuller label for the tap-to-read detail line (e.g. 'Tuesday',
+  /// 'Tue 16', 'Jun 2026'). Falls back to [label] when null.
+  final String? detail;
+  const TimeBar(this.label, this.focus, {this.highlight = false, this.detail});
+
+  String get readout => detail ?? label;
 }
 
 /// One mode's share of focus time in the selected range.
@@ -29,6 +35,10 @@ class AnalyticsData {
   final List<TimeBar> dayOfWeek; // always 7
   final List<ModeSlice> byMode; // always 3
   final Duration rangeTotal;
+
+  /// Focus in the window immediately before this one (for the comparison line).
+  /// Null for the all-time range, which has no "previous period".
+  final Duration? previousTotal;
   final bool isEmpty;
   const AnalyticsData({
     required this.focusOverTime,
@@ -36,6 +46,7 @@ class AnalyticsData {
     required this.dayOfWeek,
     required this.byMode,
     required this.rangeTotal,
+    required this.previousTotal,
     required this.isEmpty,
   });
 }
@@ -46,6 +57,12 @@ class AnalyticsCalculator {
   const AnalyticsCalculator();
 
   static const _weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  static const _weekdayAbbr = [
+    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+  ];
+  static const _weekdayFull = [
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ];
   static const _monthAbbr = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -85,7 +102,12 @@ class AnalyticsCalculator {
                 s.startedAt.month == cursor.month)
             .fold(Duration.zero, (a, s) => a + s.recordedFocus);
         final isCurrent = cursor.year == end.year && cursor.month == end.month;
-        bars.add(TimeBar(_monthAbbr[cursor.month - 1], focus, highlight: isCurrent));
+        bars.add(TimeBar(
+          _monthAbbr[cursor.month - 1],
+          focus,
+          highlight: isCurrent,
+          detail: '${_monthAbbr[cursor.month - 1]} ${cursor.year}',
+        ));
         cursor = DateTime(cursor.year, cursor.month + 1);
       }
       return bars;
@@ -101,7 +123,10 @@ class AnalyticsCalculator {
       final label = range == AnalyticsRange.week
           ? _weekdayInitials[day.weekday - 1]
           : '${day.day}';
-      bars.add(TimeBar(label, focus, highlight: i == 0));
+      final detail = range == AnalyticsRange.week
+          ? '${_weekdayAbbr[day.weekday - 1]} ${day.day}'
+          : '${day.day} ${_monthAbbr[day.month - 1]}';
+      bars.add(TimeBar(label, focus, highlight: i == 0, detail: detail));
     }
     return bars;
   }
@@ -122,7 +147,25 @@ class AnalyticsCalculator {
     for (final s in inRange) {
       totals[s.startedAt.weekday - 1] += s.recordedFocus;
     }
-    return _bars(_weekdayInitials, totals);
+    return _bars(_weekdayInitials, totals, details: _weekdayFull);
+  }
+
+  /// Focus in the window immediately before the current one (same length).
+  /// Null for all-time (no preceding period).
+  Duration? previousWindowTotal(
+      AnalyticsRange range, DateTime now, List<SessionRecord> sessions) {
+    if (range == AnalyticsRange.all) return null;
+    final span = range == AnalyticsRange.week ? 7 : 30;
+    final end = _dateOnly(now);
+    final prevEnd = end.subtract(Duration(days: span));
+    final prevStart = end.subtract(Duration(days: 2 * span - 1));
+    return sessions
+        .where((s) => s.recordedFocus > Duration.zero)
+        .where((s) {
+          final d = _dateOnly(s.startedAt);
+          return !d.isBefore(prevStart) && !d.isAfter(prevEnd);
+        })
+        .fold<Duration>(Duration.zero, (a, s) => a + s.recordedFocus);
   }
 
   /// Focus share across the three modes (fixed order, always 3).
@@ -154,6 +197,7 @@ class AnalyticsCalculator {
       dayOfWeek: dayOfWeek(inRange),
       byMode: byMode(inRange),
       rangeTotal: total,
+      previousTotal: previousWindowTotal(range, now, sessions),
       isEmpty: total == Duration.zero,
     );
   }
@@ -168,7 +212,8 @@ class AnalyticsCalculator {
   }
 
   /// Builds bars and highlights the single max bucket (ties → first).
-  List<TimeBar> _bars(List<String> labels, List<Duration> totals) {
+  List<TimeBar> _bars(List<String> labels, List<Duration> totals,
+      {List<String>? details}) {
     var peak = -1;
     var peakVal = Duration.zero;
     for (var i = 0; i < totals.length; i++) {
@@ -180,7 +225,8 @@ class AnalyticsCalculator {
     return [
       for (var i = 0; i < labels.length; i++)
         TimeBar(labels[i], totals[i],
-            highlight: i == peak && peakVal > Duration.zero)
+            highlight: i == peak && peakVal > Duration.zero,
+            detail: details != null ? details[i] : null)
     ];
   }
 }

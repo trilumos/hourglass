@@ -30,6 +30,20 @@ class InsightsCopy {
   static String focusTotal(String formattedTotal, String periodWord) =>
       '$formattedTotal of focus $periodWord.';
 
+  /// "+18% vs last week" / "−12% vs last month" / "about the same as last week".
+  /// Null when there's no honest comparison (all-time, or no prior baseline).
+  static String? comparison(
+      Duration current, Duration? previous, String previousNoun) {
+    if (previous == null || previous == Duration.zero) return null;
+    final pct = ((current.inSeconds - previous.inSeconds) /
+            previous.inSeconds *
+            100)
+        .round();
+    if (pct.abs() < 3) return 'about the same as $previousNoun';
+    if (pct > 0) return '+$pct% vs $previousNoun';
+    return '−${pct.abs()}% vs $previousNoun'; // proper minus sign
+  }
+
   /// "You go deepest in the mornings." from the peak time-of-day bar.
   static String? timeOfDayInsight(List<TimeBar> bars) {
     final peak = _peak(bars);

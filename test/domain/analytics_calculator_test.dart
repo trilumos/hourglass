@@ -101,6 +101,31 @@ void main() {
           ['M', 'T', 'W', 'T', 'F', 'S', 'S']);
       expect(bars[3].focus, const Duration(minutes: 40)); // Thu
       expect(bars[3].highlight, isTrue);
+      expect(bars[3].readout, 'Thursday'); // full-name detail for the readout
+    });
+  });
+
+  group('previousWindowTotal', () {
+    test('week sums the prior 7-day window only', () {
+      final s = [
+        rec(DateTime(2026, 6, 18), const Duration(minutes: 10)), // this week
+        rec(DateTime(2026, 6, 13), const Duration(minutes: 20)), // 5 days ago: this week
+        rec(DateTime(2026, 6, 12), const Duration(minutes: 30)), // 6 days ago: this week
+        rec(DateTime(2026, 6, 11), const Duration(minutes: 40)), // 7 days ago: prev week
+        rec(DateTime(2026, 6, 5), const Duration(minutes: 50)), // 13 days ago: prev week
+        rec(DateTime(2026, 6, 4), const Duration(minutes: 99)), // 14 days ago: out
+      ];
+      expect(calc.previousWindowTotal(AnalyticsRange.week, now, s),
+          const Duration(minutes: 90)); // 40 + 50
+    });
+    test('all-time has no previous window', () {
+      expect(calc.previousWindowTotal(AnalyticsRange.all, now, []), isNull);
+    });
+    test('compute carries previousTotal', () {
+      final data = calc.compute(AnalyticsRange.week, now, [
+        rec(DateTime(2026, 6, 11), const Duration(minutes: 25)),
+      ]);
+      expect(data.previousTotal, const Duration(minutes: 25));
     });
   });
 

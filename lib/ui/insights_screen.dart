@@ -7,10 +7,9 @@ import '../app/tokens.dart';
 import '../domain/analytics_calculator.dart';
 import 'insights_copy.dart';
 import 'session_format.dart';
+import 'widgets/bar_readout_chart.dart';
 import 'widgets/contribution_graph.dart';
-import 'widgets/focus_trend_chart.dart';
 import 'widgets/mode_donut.dart';
-import 'widgets/rhythm_bars.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
 import 'widgets/stat_tile.dart';
@@ -55,8 +54,12 @@ class InsightsScreen extends ConsumerWidget {
                   _row(
                     StatTile(
                         label: 'Total focus',
-                        value: formatFocusDuration(stats.totalFocus)),
-                    StatTile(label: 'Current streak', value: '${stats.streak}'),
+                        value: formatFocusDuration(stats.totalFocus),
+                        large: true),
+                    StatTile(
+                        label: 'Current streak',
+                        value: '${stats.streak}',
+                        large: true),
                   ),
                   const SizedBox(height: 12),
                   _row(
@@ -118,15 +121,19 @@ class InsightsScreen extends ConsumerWidget {
                     const _Descriptor(InsightsCopy.focusOverTime),
                     const SizedBox(height: HgSpacing.md),
                     SurfaceTile(
-                      padding: const EdgeInsets.fromLTRB(
-                          HgSpacing.sm, HgSpacing.lg, HgSpacing.sm, HgSpacing.sm),
-                      child: FocusTrendChart(
+                      padding: const EdgeInsets.all(HgSpacing.md),
+                      child: BarReadoutChart(
                         bars: data.focusOverTime,
+                        height: 168,
+                        barWidth: range == AnalyticsRange.month ? 5 : 13,
+                        restAlpha: 0.55,
                         sparseLabels: range == AnalyticsRange.month,
                       ),
                     ),
                     _Insight(InsightsCopy.focusTotal(
                         formatFocusDuration(data.rangeTotal), _periodWord(range))),
+                    _Subtle(InsightsCopy.comparison(
+                        data.rangeTotal, data.previousTotal, _periodNoun(range))),
                     const SizedBox(height: HgSpacing.xl),
 
                     // ── When you focus ────────────────────────────────────
@@ -141,12 +148,12 @@ class InsightsScreen extends ConsumerWidget {
                         children: [
                           _SubLabel('Time of day'),
                           const SizedBox(height: HgSpacing.sm),
-                          RhythmBars(bars: data.timeOfDay),
+                          BarReadoutChart(bars: data.timeOfDay),
                           _Insight(InsightsCopy.timeOfDayInsight(data.timeOfDay)),
                           const SizedBox(height: HgSpacing.lg),
                           _SubLabel('Day of week'),
                           const SizedBox(height: HgSpacing.sm),
-                          RhythmBars(bars: data.dayOfWeek),
+                          BarReadoutChart(bars: data.dayOfWeek),
                           _Insight(InsightsCopy.dayOfWeekInsight(data.dayOfWeek)),
                         ],
                       ),
@@ -178,6 +185,12 @@ class InsightsScreen extends ConsumerWidget {
         AnalyticsRange.week => 'this week',
         AnalyticsRange.month => 'this month',
         AnalyticsRange.all => 'in total',
+      };
+
+  static String _periodNoun(AnalyticsRange r) => switch (r) {
+        AnalyticsRange.week => 'last week',
+        AnalyticsRange.month => 'last month',
+        AnalyticsRange.all => '',
       };
 
   Widget _row(Widget a, Widget b) => Row(
@@ -370,6 +383,28 @@ class _Insight extends StatelessWidget {
           fontWeight: FontWeight.w600,
           height: 1.3,
           color: context.hg.accent,
+        ),
+      ),
+    );
+  }
+}
+
+/// A quiet secondary line (e.g. the period comparison). Hidden when null.
+class _Subtle extends StatelessWidget {
+  final String? text;
+  const _Subtle(this.text);
+  @override
+  Widget build(BuildContext context) {
+    final t = text;
+    if (t == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Text(
+        t,
+        style: TextStyle(
+          fontFamily: HgFont.sans,
+          fontSize: 13,
+          color: context.hg.textMuted,
         ),
       ),
     );

@@ -77,4 +77,37 @@ void main() {
           '4h 20m of focus this week.');
     });
   });
+
+  group('comparison', () {
+    test('reports an increase', () {
+      expect(
+        InsightsCopy.comparison(
+            const Duration(minutes: 118), const Duration(minutes: 100), 'last week'),
+        '+18% vs last week',
+      );
+    });
+    test('reports a decrease with a real minus sign', () {
+      expect(
+        InsightsCopy.comparison(
+            const Duration(minutes: 80), const Duration(minutes: 100), 'last week'),
+        '−20% vs last week',
+      );
+    });
+    test('calls small changes about the same', () {
+      expect(
+        InsightsCopy.comparison(
+            const Duration(minutes: 101), const Duration(minutes: 100), 'last month'),
+        'about the same as last month',
+      );
+    });
+    test('null when no prior baseline or all-time', () {
+      expect(
+          InsightsCopy.comparison(
+              const Duration(minutes: 50), Duration.zero, 'last week'),
+          isNull);
+      expect(
+          InsightsCopy.comparison(const Duration(minutes: 50), null, 'last week'),
+          isNull);
+    });
+  });
 }
