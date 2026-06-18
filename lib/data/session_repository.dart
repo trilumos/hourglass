@@ -56,6 +56,9 @@ class SessionRepository {
     );
   }
 
+  /// Deletes every session (used by "Clear all data").
+  Future<void> deleteAll() => _db.delete(_db.sessions).go();
+
   Future<List<SessionRecord>> allSessions() async {
     final query = _db.select(_db.sessions)
       ..orderBy([(t) => OrderingTerm(expression: t.startedAt)]);

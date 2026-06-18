@@ -6,6 +6,7 @@ import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/theme_controller.dart';
 import '../app/tokens.dart';
+import 'guide_screen.dart';
 import 'profile_screen.dart';
 import 'widgets/screen_background.dart';
 
@@ -121,9 +122,156 @@ class SettingsScreen extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: HgSpacing.xl),
+
+                // ── Data ─────────────────────────────────────────────────────
+                _SectionLabel('DATA'),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Clear all data',
+                  subtitle:
+                      'Delete every session, your stats, and profile. Can’t be undone.',
+                  danger: true,
+                  onTap: () => _confirmClear(context, ref),
+                ),
+                const SizedBox(height: HgSpacing.xl),
+
+                // ── About ────────────────────────────────────────────────────
+                _SectionLabel('ABOUT'),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'How Hourglass works',
+                  subtitle: 'Modes, the Flow Block method, and your numbers',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const GuideScreen()),
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Open-source licenses',
+                  onTap: () => showLicensePage(
+                    context: context,
+                    applicationName: 'Hourglass',
+                    applicationVersion: '1.0.0',
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.lg),
+                Center(
+                  child: Text(
+                    'Hourglass 1.0.0',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 12,
+                      color: hg.textMuted,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.xl),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
+  final hg = context.hg;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: hg.surfaceRaised,
+      title: const Text('Clear all data?'),
+      content: const Text(
+          'This permanently deletes every session, your stats, and your '
+          'profile. This can’t be undone.'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: TextButton.styleFrom(foregroundColor: hg.danger),
+          child: const Text('Delete everything'),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  await _clearAll(ref);
+  if (context.mounted) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('All data cleared.')));
+  }
+}
+
+Future<void> _clearAll(WidgetRef ref) async {
+  final profile = await ref.read(profileProvider.future);
+  if (profile.imagePath != null) {
+    await ref.read(imageStorageProvider).deleteAvatar(profile.imagePath!);
+  }
+  await ref.read(sessionRepositoryProvider).deleteAll();
+  await ref.read(profileRepositoryProvider).reset();
+  ref.invalidate(profileProvider);
+  ref.invalidate(homeStatsProvider);
+  ref.invalidate(focusScoreProvider);
+  ref.invalidate(profileStatsProvider);
+  ref.invalidate(sessionHistoryProvider);
+}
+
+class _ActionRow extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final bool danger;
+  final VoidCallback onTap;
+  const _ActionRow({
+    required this.title,
+    this.subtitle,
+    this.danger = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(HgRadius.md),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: HgSpacing.md),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 16,
+                      color: danger ? hg.danger : hg.textPrimary,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 13,
+                        height: 1.3,
+                        color: hg.textMuted,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: hg.textMuted, size: HgSize.iconMd),
+          ],
         ),
       ),
     );

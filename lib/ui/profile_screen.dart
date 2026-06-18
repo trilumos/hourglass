@@ -6,12 +6,14 @@ import '../app/theme.dart';
 import '../app/tokens.dart';
 import 'edit_profile_screen.dart';
 import 'focus_score_screen.dart';
+import 'guide_screen.dart';
 import 'session_format.dart';
 import 'session_history_screen.dart';
 import 'widgets/profile_avatar.dart';
 import 'widgets/score_ring.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
+import 'widgets/surface_tile.dart';
 
 /// The "you" hub: identity, a warm stats bento led by the Focus Score, and
 /// entry points to history. (Level + Collection arrive with the V2 Levels
@@ -109,12 +111,65 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: HgSpacing.xl),
 
+                // ── Records ─────────────────────────────────────────────────
+                _SectionLabel('RECORDS'),
+                const SizedBox(height: HgSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatTile(
+                          label: 'This week',
+                          value: formatFocusDuration(stats.weekFocus)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatTile(
+                          label: 'Best streak', value: '${stats.bestStreak}'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatTile(
+                          label: 'Avg session',
+                          value: formatFocusDuration(stats.avgSession)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatTile(
+                          label: 'Longest',
+                          value: formatFocusDuration(stats.longestSession)),
+                    ),
+                  ],
+                ),
+                if (stats.firstDate != null) ...[
+                  const SizedBox(height: HgSpacing.md),
+                  Center(
+                    child: Text(
+                      'Focusing since ${formatDate(stats.firstDate!)}',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 13,
+                        color: hg.textMuted,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: HgSpacing.xl),
+
                 // ── More ────────────────────────────────────────────────────
                 _SectionLabel('MORE'),
                 const SizedBox(height: HgSpacing.xs),
                 _NavRow(
                   title: 'Session history',
                   onTap: () => _push(context, const SessionHistoryScreen()),
+                ),
+                Divider(height: 1, color: hg.hairline),
+                _NavRow(
+                  title: 'How Hourglass works',
+                  onTap: () => _push(context, const GuideScreen()),
                 ),
                 Divider(height: 1, color: hg.hairline),
                 const _NavRow(
@@ -132,40 +187,6 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-/// Soft-rect tile: lighter warm surface in dark, white + soft shadow in light.
-class _Tile extends StatelessWidget {
-  final Widget child;
-  final EdgeInsets padding;
-  final VoidCallback? onTap;
-  const _Tile({
-    required this.child,
-    this.padding = const EdgeInsets.all(HgSpacing.md),
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final hg = context.hg;
-    final light = Theme.of(context).brightness == Brightness.light;
-    return Material(
-      color: hg.surfaceRaised,
-      borderRadius: BorderRadius.circular(HgRadius.lg),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(HgRadius.lg),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(HgRadius.lg),
-            border: Border.all(color: hg.hairline),
-            boxShadow: light ? hgShadowSoft : null,
-          ),
-          child: Padding(padding: padding, child: child),
-        ),
-      ),
-    );
-  }
-}
-
 class _FocusTile extends StatelessWidget {
   final int score;
   final VoidCallback onTap;
@@ -174,7 +195,7 @@ class _FocusTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return _Tile(
+    return SurfaceTile(
       onTap: onTap,
       padding: const EdgeInsets.symmetric(
           horizontal: HgSpacing.lg, vertical: HgSpacing.lg),
@@ -239,7 +260,7 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return _Tile(
+    return SurfaceTile(
       padding: const EdgeInsets.symmetric(
           horizontal: HgSpacing.sm, vertical: HgSpacing.md),
       child: Column(

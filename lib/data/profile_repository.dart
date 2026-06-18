@@ -57,6 +57,9 @@ class ProfileRepository {
     return load();
   }
 
+  /// Deletes the profile row; a fresh empty one self-creates on next [load].
+  Future<void> reset() => _db.delete(_db.profile).go();
+
   UserProfile _toDomain(ProfileData row) => UserProfile(
         id: row.id,
         uuid: row.uuid,

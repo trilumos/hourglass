@@ -141,18 +141,39 @@ final sessionHistoryProvider = FutureProvider<List<SessionRecord>>((ref) async {
       .toList();
 });
 
-/// Lifetime stats shown on the Profile hub.
+/// Stats shown on the Profile hub (headline + records).
 class ProfileStats {
   final Duration totalFocus;
   final int streak;
   final int sessionsCompleted;
+  final Duration weekFocus;
+  final int bestStreak;
+  final Duration avgSession;
+  final Duration longestSession;
+  final int totalSessions;
+  final DateTime? firstDate;
   const ProfileStats({
     required this.totalFocus,
     required this.streak,
     required this.sessionsCompleted,
+    required this.weekFocus,
+    required this.bestStreak,
+    required this.avgSession,
+    required this.longestSession,
+    required this.totalSessions,
+    required this.firstDate,
   });
-  static const empty =
-      ProfileStats(totalFocus: Duration.zero, streak: 0, sessionsCompleted: 0);
+  static const empty = ProfileStats(
+    totalFocus: Duration.zero,
+    streak: 0,
+    sessionsCompleted: 0,
+    weekFocus: Duration.zero,
+    bestStreak: 0,
+    avgSession: Duration.zero,
+    longestSession: Duration.zero,
+    totalSessions: 0,
+    firstDate: null,
+  );
 }
 
 final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
@@ -163,5 +184,11 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
     totalFocus: stats.totalFocus(sessions),
     streak: stats.currentStreak(now, sessions),
     sessionsCompleted: stats.sessionsCompleted(sessions),
+    weekFocus: stats.focusInWeekEnding(now, sessions),
+    bestStreak: stats.bestStreak(sessions),
+    avgSession: stats.averageSession(sessions),
+    longestSession: stats.longestSession(sessions),
+    totalSessions: stats.totalSessions(sessions),
+    firstDate: stats.firstSessionDate(sessions),
   );
 });

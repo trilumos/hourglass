@@ -106,6 +106,45 @@ void main() {
     expect(calc.totalFocus(const []), Duration.zero);
   });
 
+  test('bestStreak finds the longest consecutive run ever', () {
+    final sessions = [
+      _session(startedAt: DateTime(2026, 6, 1)),
+      _session(startedAt: DateTime(2026, 6, 2)),
+      _session(startedAt: DateTime(2026, 6, 3)), // run of 3
+      _session(startedAt: DateTime(2026, 6, 10)),
+      _session(startedAt: DateTime(2026, 6, 11)), // run of 2
+    ];
+    expect(calc.bestStreak(sessions), 3);
+  });
+
+  test('averageSession, longestSession, totalSessions ignore zero-focus', () {
+    final sessions = [
+      _session(
+          startedAt: DateTime(2026, 6, 1),
+          recorded: const Duration(minutes: 10)),
+      _session(
+          startedAt: DateTime(2026, 6, 2),
+          recorded: const Duration(minutes: 30)),
+      _session(
+          startedAt: DateTime(2026, 6, 3),
+          recorded: Duration.zero,
+          completed: false,
+          abandoned: true),
+    ];
+    expect(calc.averageSession(sessions), const Duration(minutes: 20));
+    expect(calc.longestSession(sessions), const Duration(minutes: 30));
+    expect(calc.totalSessions(sessions), 2);
+  });
+
+  test('firstSessionDate returns the earliest focused date', () {
+    final sessions = [
+      _session(startedAt: DateTime(2026, 6, 5)),
+      _session(startedAt: DateTime(2026, 6, 1, 9)),
+    ];
+    expect(calc.firstSessionDate(sessions), DateTime(2026, 6, 1, 9));
+    expect(calc.firstSessionDate(const []), isNull);
+  });
+
   test('abandoned session counts toward focus & streak, not sessionsCompleted',
       () {
     final day = DateTime(2026, 6, 11);

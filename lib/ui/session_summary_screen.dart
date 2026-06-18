@@ -9,6 +9,7 @@ import 'session_format.dart';
 import 'widgets/score_ring.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
+import 'widgets/surface_tile.dart';
 
 /// Read-only detail for a single past session (tapped from the history list).
 class SessionSummaryScreen extends StatelessWidget {
@@ -30,6 +31,9 @@ class SessionSummaryScreen extends StatelessWidget {
         ? const FocusScoreCalculator().sessionScore(
             chosen: session.plannedDuration, actual: session.recordedFocus)
         : null;
+    final planned = session.plannedDuration.inSeconds;
+    final completion =
+        planned <= 0 ? 1.0 : (session.recordedFocus.inSeconds / planned).clamp(0.0, 1.0);
 
     return Scaffold(
       body: ScreenBackground(
@@ -54,27 +58,123 @@ class SessionSummaryScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: HgSpacing.xl),
 
-                // Focused-vs-planned, the headline of the session.
+                // Headline: focused vs planned + a completion bar.
                 Text(
-                  'Focused ${formatFocusDuration(session.recordedFocus)} '
-                  'of ${formatFocusDuration(session.plannedDuration)}',
+                  'Focused ${formatFocusDuration(session.recordedFocus)}',
                   style: TextStyle(
                     fontFamily: HgFont.sans,
-                    fontSize: 24,
+                    fontSize: 30,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: -0.5,
                     color: hg.textPrimary,
                   ),
                 ),
-                const SizedBox(height: HgSpacing.lg),
+                const SizedBox(height: HgSpacing.xs),
+                Text(
+                  'of ${formatFocusDuration(session.plannedDuration)} planned',
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 15,
+                    color: hg.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.md),
+                _CompletionBar(fraction: completion),
+                const SizedBox(height: HgSpacing.xl),
 
-                _Row(label: 'Mode', value: modeLabel(session.mode)),
-                if (session.intention.trim().isNotEmpty)
-                  _Row(label: 'Intention', value: session.intention.trim()),
-                _Row(label: 'Outcome', value: _outcome),
+                // Fact bento.
+                Row(
+                  children: [
+                    Expanded(
+                        child: _Fact(label: 'Mode', value: modeLabel(session.mode))),
+                    const SizedBox(width: 12),
+                    Expanded(child: _Fact(label: 'Outcome', value: _outcome)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _Fact(
+                            label: 'Started',
+                            value: formatClock(session.startedAt))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _Fact(
+                            label: 'Soundscape',
+                            value: _titleCase(session.soundscape))),
+                  ],
+                ),
+
+                if (session.intention.trim().isNotEmpty) ...[
+                  const SizedBox(height: HgSpacing.xl),
+                  Text(
+                    'INTENTION',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 11,
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.w600,
+                      color: hg.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: HgSpacing.sm),
+                  Text(
+                    session.intention.trim(),
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 16,
+                      height: 1.4,
+                      color: hg.textPrimary,
+                    ),
+                  ),
+                ],
 
                 if (isFlow) ...[
-                  const SizedBox(height: HgSpacing.lg),
-                  _ScoreCard(score: score),
+                  const SizedBox(height: HgSpacing.xl),
+                  SurfaceTile(
+                    child: score == null
+                        ? Text(
+                            'Not scored — Flow Blocks under 2 minutes don’t count.',
+                            style: TextStyle(
+                              fontFamily: HgFont.sans,
+                              fontSize: 14,
+                              height: 1.4,
+                              color: hg.textSecondary,
+                            ),
+                          )
+                        : Row(
+                            children: [
+                              ScoreRing(
+                                value: score,
+                                size: 56,
+                                stroke: 5,
+                                child: Text(
+                                  '$score',
+                                  style: TextStyle(
+                                    fontFamily: HgFont.sans,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: hg.textPrimary,
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: HgSpacing.md),
+                              Expanded(
+                                child: Text(
+                                  'This session scored $score / 100 toward your Focus Score.',
+                                  style: TextStyle(
+                                    fontFamily: HgFont.sans,
+                                    fontSize: 14,
+                                    height: 1.4,
+                                    color: hg.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
                 ],
                 const SizedBox(height: HgSpacing.xl),
               ],
@@ -84,43 +184,30 @@ class SessionSummaryScreen extends StatelessWidget {
       ),
     );
   }
+
+  static String _titleCase(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
 
-class _Row extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Row({required this.label, required this.value});
+class _CompletionBar extends StatelessWidget {
+  final double fraction;
+  const _CompletionBar({required this.fraction});
 
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: HgSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(HgRadius.pill),
+      child: Stack(
         children: [
-          SizedBox(
-            width: 96,
-            child: Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 11,
-                letterSpacing: 1.5,
-                color: hg.textMuted,
-              ),
-            ),
-          ),
-          const SizedBox(width: HgSpacing.md),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 15,
-                height: 1.35,
-                color: hg.textPrimary,
-              ),
+          Container(height: 8, color: hg.hairline),
+          TweenAnimationBuilder<double>(
+            tween: Tween(end: fraction),
+            duration: HgMotion.slow,
+            curve: HgMotion.calm,
+            builder: (context, f, _) => FractionallySizedBox(
+              widthFactor: f,
+              child: Container(height: 8, color: hg.accent),
             ),
           ),
         ],
@@ -129,64 +216,44 @@ class _Row extends StatelessWidget {
   }
 }
 
-class _ScoreCard extends StatelessWidget {
-  /// null = a Flow Block under 2 minutes (not scored).
-  final int? score;
-  const _ScoreCard({required this.score});
+class _Fact extends StatelessWidget {
+  final String label;
+  final String value;
+  const _Fact({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    final s = score;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(HgSpacing.md),
-      decoration: BoxDecoration(
-        color: hg.surfaceRaised,
-        borderRadius: BorderRadius.circular(HgRadius.md),
-        border: Border.all(color: hg.hairline),
-      ),
-      child: s == null
-          ? Text(
-              'Not scored — Flow Blocks under 2 minutes don’t count.',
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 14,
-                height: 1.4,
-                color: hg.textSecondary,
-              ),
-            )
-          : Row(
-              children: [
-                ScoreRing(
-                  value: s,
-                  size: 56,
-                  stroke: 5,
-                  child: Text(
-                    '$s',
-                    style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: hg.textPrimary,
-                      height: 1,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: HgSpacing.md),
-                Expanded(
-                  child: Text(
-                    'This session scored $s / 100 toward your Focus Score.',
-                    style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 14,
-                      height: 1.4,
-                      color: hg.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
+    return SurfaceTile(
+      padding: const EdgeInsets.symmetric(
+          horizontal: HgSpacing.md, vertical: HgSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 10,
+              letterSpacing: 1.5,
+              color: hg.textMuted,
             ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: hg.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
