@@ -142,18 +142,7 @@ class SettingsScreen extends ConsumerWidget {
                     applicationVersion: '1.0.0',
                   ),
                 ),
-                const SizedBox(height: HgSpacing.lg),
-                Center(
-                  child: Text(
-                    'Hourglass 1.0.0',
-                    style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 12,
-                      color: hg.textMuted,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: HgSpacing.xxl),
+                const SizedBox(height: HgSpacing.xl),
 
                 // ── Data (last, so it's out of the way of accidental taps) ───
                 _SectionLabel('DATA'),
@@ -164,6 +153,19 @@ class SettingsScreen extends ConsumerWidget {
                       'Delete every session, your stats, and profile. Can’t be undone.',
                   danger: true,
                   onTap: () => _confirmClear(context, ref),
+                ),
+                const SizedBox(height: HgSpacing.xxl),
+
+                // ── Version (absolute bottom) ────────────────────────────────
+                Center(
+                  child: Text(
+                    'Hourglass 1.0.0',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 12,
+                      color: hg.textMuted,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: HgSpacing.xl),
               ],

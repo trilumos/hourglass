@@ -43,8 +43,13 @@ class ProfileScreen extends ConsumerWidget {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
-            child: ListView(
-              children: [
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                 const SizedBox(height: HgSpacing.sm),
                 const ScreenHeader(title: 'Profile'),
                 const SizedBox(height: HgSpacing.xl),
@@ -158,7 +163,10 @@ class ProfileScreen extends ConsumerWidget {
                   onTap: () => _push(context, const GuideScreen()),
                 ),
                 const SizedBox(height: HgSpacing.xl),
-              ],
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
