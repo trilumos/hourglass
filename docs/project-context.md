@@ -72,8 +72,8 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 > Founder confirmed this sequence 2026-06-17. Supersedes the older roadmap ordering in handoffs.
 
 **V1 (ship to Play Store):**
-1. **Profile / Account + DB** (foundation) — spec: `docs/superpowers/specs/2026-06-17-hourglass-profile-account-db-design.md`.
-2. **Analytics** (charts page — its own spec).
+1. **Profile / Account + DB** (foundation) ✅ — spec: `docs/superpowers/specs/2026-06-17-hourglass-profile-account-db-design.md`.
+2. **Analytics** ✅ **(2026-06-18, shipped as the "Insights" page)** — spec `docs/superpowers/specs/2026-06-18-hourglass-insights-analytics-design.md`, plan `docs/superpowers/plans/2026-06-18-hourglass-insights-analytics.md`. **DECISION (founder, locked):** Activity + Analytics were **merged into ONE page** ("Insights") — same data, one destination. Order: lifetime Records → Consistency heatmap → Week/Month/All toggle → Focus-over-time → When-you-focus (time-of-day + day-of-week) → By-mode donut. Pure `AnalyticsCalculator` (TDD) + `analyticsProvider`/`analyticsRangeProvider`; charts via **fl_chart** (token-driven). `ActivityScreen` deleted; Profile shows one "Insights" row. 132 tests green, analyze clean, pushed (068fb55). **Founder still to review on-device** (responsiveness/large-font of the new charts is part of the pending P0 audit).
 3. **Onboarding** (branded first-run; captures the name → kills hardcoded "Deep").
 4. **Some Themes** (theme system + a few themes).
 5. **Monetization** — brainstorm + decide what's paid (calm / no dark patterns).
@@ -89,6 +89,8 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
+
+- **Device/mobile verification is the FOUNDER's job (founder, 2026-06-18, CONFIRMED).** Do NOT take screenshots, drive the app over adb (`input tap`/`screencap`), or otherwise navigate the phone to "verify" the UI — the founder checks on-device himself and reports back. **Why:** it wastes turns/tokens and he prefers to see and feel the UI personally. **How to apply:** my loop ends at code written + `flutter analyze` clean + `flutter test` green + committed/pushed (+ APK built/installed only if/when he asks). Then hand off and let him review on the device.
 
 - **Pomodoro has TWO entry modes with opposite fixed/flex behavior (founder, 2026-06-16, RESOLVED).**
   - **By blocks** = classic Pomodoro: **block length is fixed** (ratio chips 25/5, 50/10, 52/17, 90/15), the user picks the **count**, and the **total flexes**. Long break every 4th.
