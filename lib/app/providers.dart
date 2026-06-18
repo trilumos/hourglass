@@ -44,6 +44,9 @@ class SettingsKeys {
   /// session manually — instead of auto-stopping at their length. Default: off
   /// (the block auto-ends, offering a "don't stop" nudge near the end).
   static const flowRunUntilEnded = 'flowRunUntilEnded';
+
+  /// Whether first-run onboarding has been completed. Default: false (show it).
+  static const onboardingComplete = 'onboardingComplete';
 }
 
 /// User preference: auto-advance into the next focus block after a break.
@@ -59,6 +62,25 @@ final flowRunUntilEndedProvider = FutureProvider<bool>(
       .watch(settingsRepositoryProvider)
       .getBool(SettingsKeys.flowRunUntilEnded, defaultValue: false),
 );
+
+/// True when first-run onboarding should be SKIPPED — either it was completed,
+/// or the migration guard found existing data (so an updating user is never
+/// shown onboarding again). False means a fresh install: show onboarding.
+final onboardingCompleteProvider = FutureProvider<bool>((ref) async {
+  final settings = ref.watch(settingsRepositoryProvider);
+  if (await settings.getBool(SettingsKeys.onboardingComplete,
+      defaultValue: false)) {
+    return true;
+  }
+  // Migration guard: any prior sessions or a saved profile name = existing user.
+  final sessions = await ref.watch(sessionRepositoryProvider).allSessions();
+  final profile = await ref.watch(profileRepositoryProvider).load();
+  if (sessions.isNotEmpty || profile.name.trim().isNotEmpty) {
+    await settings.setBool(SettingsKeys.onboardingComplete, true);
+    return true;
+  }
+  return false;
+});
 
 /// The calm numbers shown on the home screen.
 class HomeStats {
