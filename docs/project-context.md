@@ -109,6 +109,14 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
     apparent choppiness is debug-APK frame drops, not the design (smooth in release). Don't change the
     particle style without founder confirmation. (`lib/hourglass/hourglass_painter.dart`.)
 
+- **Division of responsibility (founder, 2026-06-19, CONFIRMED).** The founder's job is to verify the app
+  works **seamlessly** on-device and confirm UX/feel. **I own ALL internal correctness:** code, structure,
+  workflows, logic, consistency, edge cases, bugs, glitches, errors — nothing internal is "the founder's to
+  catch." Ship only work that is genuinely correct and self-verified (analyze clean + tests green + reasoned
+  through edge cases), so his verification finds a working app, not my mistakes. **Quality bar is MAXIMUM** —
+  especially anything users see or pay for (e.g. the color themes must be **THE BEST possible**: research-
+  backed, premium, tuned on-device; no half-effort). Use the `impeccable` skill for user-facing UI.
+
 - **Device/mobile verification is the FOUNDER's job (founder, 2026-06-18, CONFIRMED).** Do NOT take screenshots, drive the app over adb (`input tap`/`screencap`), or otherwise navigate the phone to "verify" the UI — the founder checks on-device himself and reports back. **Why:** it wastes turns/tokens and he prefers to see and feel the UI personally. **How to apply:** my loop ends at code written + `flutter analyze` clean + `flutter test` green + committed/pushed (+ APK built/installed only if/when he asks). Then hand off and let him review on the device.
 
 - **Pomodoro has TWO entry modes with opposite fixed/flex behavior (founder, 2026-06-16, RESOLVED).**
