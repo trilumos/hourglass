@@ -24,6 +24,20 @@ class InsightsCopy {
   static const personalBests = 'Your records so far. Each one really happened.';
   static const dataExport = 'Your history is yours. Take a copy with you.';
 
+  // ── What feeds each section (the Flow-only vs all-modes distinction) ────────
+  /// One-line legend at the top of the depth band.
+  static const sourceLegend =
+      'Focus Score, Stamina and Follow-through follow your Flow sessions only. '
+      'Everything else counts Flow, Pomodoro and Custom.';
+
+  /// The small tag shown on Flow-only sections.
+  static const flowOnlyTag = 'FLOW ONLY';
+
+  /// Precise per-section data rules (shown under the descriptor).
+  static const focusScoreSource = 'Counts Flow sessions of 2 minutes or more.';
+  static const staminaSource =
+      'Counts Flow blocks you finish, plus any you push past your current stamina.';
+
   // Honest empty lines — shown in place of a chart when there's no real series.
   static const scoreEmpty =
       'Your Focus Score trend appears once you finish a few Flow sessions.';
@@ -35,7 +49,8 @@ class InsightsCopy {
       "Focus Score is a rolling average of your recent Flow sessions, so it "
       "moves gently over a short window. Switch to All for the full arc.";
   static const staminaEmpty =
-      'Your stamina line appears once you complete a Flow block.';
+      'Your stamina line appears once you finish a Flow block, or push a long '
+      'one past your current stamina.';
 
   // ── Personalized insight lines (null = not enough signal) ──────────────────
 
@@ -79,14 +94,11 @@ class InsightsCopy {
     return 'You go deepest in $phrase.';
   }
 
-  /// "Tuesdays are your strongest day." from the peak weekday (bars are Mon→Sun).
+  /// "Tuesdays are your strongest day." from the highlighted weekday bar, using
+  /// its full-name detail so it's independent of the bars' order.
   static String? dayOfWeekInsight(List<TimeBar> bars) {
-    const days = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday', //
-      'Friday', 'Saturday', 'Sunday'
-    ];
-    for (var i = 0; i < bars.length && i < days.length; i++) {
-      if (bars[i].highlight) return '${days[i]}s are your strongest day.';
+    for (final b in bars) {
+      if (b.highlight) return '${b.readout}s are your strongest day.';
     }
     return null;
   }

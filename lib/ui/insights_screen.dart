@@ -151,6 +151,8 @@ class _DepthBand extends ConsumerWidget {
           value: range,
           onChanged: (r) => ref.read(analyticsRangeProvider.notifier).set(r),
         ),
+        const SizedBox(height: HgSpacing.md),
+        const _Descriptor(InsightsCopy.sourceLegend),
         const SizedBox(height: HgSpacing.lg),
         if (data == null || extras == null)
           const SizedBox(height: 200)
@@ -192,6 +194,8 @@ class _DepthBand extends ConsumerWidget {
       _LineSection(
         label: 'FOCUS SCORE',
         descriptor: InsightsCopy.focusScore,
+        flowOnly: true,
+        source: InsightsCopy.focusScoreSource,
         points: extras.scoreTrend,
         minY: 0,
         maxY: 100,
@@ -206,6 +210,8 @@ class _DepthBand extends ConsumerWidget {
       _LineSection(
         label: 'FOCUS STAMINA',
         descriptor: InsightsCopy.stamina,
+        flowOnly: true,
+        source: InsightsCopy.staminaSource,
         points: extras.staminaGrowth,
         minY: 0,
         maxY: 95,
@@ -265,7 +271,7 @@ class _DepthBand extends ConsumerWidget {
 
       // Follow-through (only when there are Flow sessions to speak for it)
       if (ft.sample > 0) ...[
-        _Label('FOLLOW-THROUGH'),
+        _Label('FOLLOW-THROUGH', tag: InsightsCopy.flowOnlyTag),
         const SizedBox(height: HgSpacing.xs),
         const _Descriptor(InsightsCopy.followThrough),
         const SizedBox(height: HgSpacing.md),
@@ -352,6 +358,10 @@ class _LineSection extends StatelessWidget {
   /// A quiet caveat under the insight (e.g. why a rolling average moves slowly).
   final String? note;
 
+  /// Marks the section "FLOW ONLY" and shows the precise data rule [source].
+  final bool flowOnly;
+  final String? source;
+
   const _LineSection({
     required this.label,
     required this.descriptor,
@@ -364,6 +374,8 @@ class _LineSection extends StatelessWidget {
     this.guideY,
     this.guideLabel,
     this.note,
+    this.flowOnly = false,
+    this.source,
   });
 
   @override
@@ -372,9 +384,10 @@ class _LineSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Label(label),
+        _Label(label, tag: flowOnly ? InsightsCopy.flowOnlyTag : null),
         const SizedBox(height: HgSpacing.xs),
         _Descriptor(descriptor),
+        if (source != null) _Subtle(source),
         const SizedBox(height: HgSpacing.md),
         if (!hasSeries)
           _EmptyLine(emptyCopy)
@@ -762,10 +775,13 @@ class _EmptyLine extends StatelessWidget {
 
 class _Label extends StatelessWidget {
   final String text;
-  const _Label(this.text);
+
+  /// Optional scope chip beside the label (e.g. "FLOW ONLY").
+  final String? tag;
+  const _Label(this.text, {this.tag});
   @override
   Widget build(BuildContext context) {
-    return Text(
+    final label = Text(
       text,
       style: TextStyle(
         fontFamily: HgFont.sans,
@@ -773,6 +789,41 @@ class _Label extends StatelessWidget {
         letterSpacing: 2,
         fontWeight: FontWeight.w600,
         color: context.hg.textMuted,
+      ),
+    );
+    if (tag == null) return label;
+    return Row(
+      children: [
+        label,
+        const SizedBox(width: HgSpacing.sm),
+        _Tag(tag!),
+      ],
+    );
+  }
+}
+
+/// A small accent-muted scope chip — marks which sections track Flow only.
+class _Tag extends StatelessWidget {
+  final String text;
+  const _Tag(this.text);
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: hg.accentMuted,
+        borderRadius: BorderRadius.circular(HgRadius.sm),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: HgFont.sans,
+          fontSize: 9,
+          letterSpacing: 1,
+          fontWeight: FontWeight.w600,
+          color: hg.accent,
+        ),
       ),
     );
   }

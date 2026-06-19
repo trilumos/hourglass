@@ -82,8 +82,11 @@ class AnalyticsCalculator {
   static const _weekdayAbbr = [
     'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
   ];
-  static const _weekdayFull = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+
+  // Day-of-week distribution is laid out Sunday -> Saturday (week starts Sunday).
+  static const _weekdayInitialsSun = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  static const _weekdayFullSun = [
+    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
   ];
   static const _monthAbbr = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
@@ -163,13 +166,14 @@ class AnalyticsCalculator {
     return _bars(labels, totals);
   }
 
-  /// Focus by weekday (Mon→Sun). Peak day highlighted.
+  /// Focus by weekday (Sun→Sat — the week starts Sunday). Peak day highlighted.
   List<TimeBar> dayOfWeek(List<SessionRecord> inRange) {
     final totals = List.filled(7, Duration.zero);
     for (final s in inRange) {
-      totals[s.startedAt.weekday - 1] += s.recordedFocus;
+      // DateTime.weekday is Mon=1..Sun=7; % 7 maps Sun→0, Mon→1, …, Sat→6.
+      totals[s.startedAt.weekday % 7] += s.recordedFocus;
     }
-    return _bars(_weekdayInitials, totals, details: _weekdayFull);
+    return _bars(_weekdayInitialsSun, totals, details: _weekdayFullSun);
   }
 
   /// Focus in the window immediately before the current one (same length).
@@ -274,19 +278,19 @@ class AnalyticsCalculator {
   }
 
   /// Focus Stamina (minutes) as of the end of each bucket (cumulative; null
-  /// before the first completed Flow block). Climbs toward the 90-min ceiling.
+  /// before the first qualifying Flow block). Climbs toward the 90-min ceiling.
+  /// Counts blocks you finish, plus any you abandon after sustaining longer than
+  /// your stamina at the time (see [StaminaCalculator.qualifyingFlowBlocks]).
   List<TrendPoint> staminaGrowth(
       AnalyticsRange range, DateTime now, List<SessionRecord> sessions) {
     const calc = StaminaCalculator();
-    final blocks = sessions
-        .where((s) =>
-            s.mode == SessionMode.flowBlock && s.completed && !s.abandoned)
-        .toList()
+    final ordered = sessions.toList()
       ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    final qualifying = calc.qualifyingFlowBlocks(ordered);
     return [
       for (final b in _trendBuckets(range, now, sessions))
         () {
-          final upto = blocks
+          final upto = qualifying
               .where((s) => s.startedAt.isBefore(b.endExclusive))
               .map((s) => s.recordedFocus)
               .toList();

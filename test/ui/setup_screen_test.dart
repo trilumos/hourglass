@@ -16,8 +16,9 @@ void main() {
 
   Widget harness(SessionMode mode) => ProviderScope(
         overrides: [
+          staminaProvider.overrideWith((ref) async => const Duration(minutes: 30)),
           suggestedFlowLengthProvider
-              .overrideWith((ref) async => const Duration(minutes: 30)),
+              .overrideWith((ref) async => const Duration(minutes: 35)),
           breakAutoAdvanceProvider.overrideWith((ref) async => true),
           flowRunUntilEndedProvider.overrideWith((ref) async => false),
         ],
@@ -27,7 +28,7 @@ void main() {
         ),
       );
 
-  testWidgets('Flow: intention, stamina-suggested length, endless, begin',
+  testWidgets('Flow: intention, stamina-matched length, endless, begin',
       (tester) async {
     await phoneSurface(tester);
     await tester.pumpWidget(harness(SessionMode.flowBlock));
@@ -36,7 +37,8 @@ void main() {
     expect(find.text('INTENTION'), findsOneWidget);
     expect(find.text('Length'), findsOneWidget);
     expect(find.text('Endless flow'), findsOneWidget);
-    expect(find.text('30 min'), findsOneWidget); // stamina-suggested chip
+    expect(find.text('Stamina · 30m'), findsOneWidget); // stamina-matched chip
+    expect(find.text('30 min'), findsNothing); // replaced by the stamina anchor
 
     await tester.enterText(find.byType(TextField), 'Read chapter 4');
     await tester.tap(find.text('Begin'));

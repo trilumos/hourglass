@@ -37,18 +37,25 @@ void main() {
   });
 
   group('dayOfWeekInsight', () {
-    test('names the strongest weekday (bars Mon..Sun)', () {
+    test('names the strongest weekday from the highlighted bar (Sun..Sat)', () {
       final bars = [
-        const TimeBar('M', Duration.zero),
-        const TimeBar('T', Duration(minutes: 50), highlight: true), // Tuesday
-        const TimeBar('W', Duration.zero),
-        const TimeBar('T', Duration.zero),
-        const TimeBar('F', Duration.zero),
-        const TimeBar('S', Duration.zero),
-        const TimeBar('S', Duration.zero),
+        const TimeBar('S', Duration.zero, detail: 'Sunday'),
+        const TimeBar('M', Duration.zero, detail: 'Monday'),
+        const TimeBar('T', Duration(minutes: 50),
+            highlight: true, detail: 'Tuesday'),
+        const TimeBar('W', Duration.zero, detail: 'Wednesday'),
+        const TimeBar('T', Duration.zero, detail: 'Thursday'),
+        const TimeBar('F', Duration.zero, detail: 'Friday'),
+        const TimeBar('S', Duration.zero, detail: 'Saturday'),
       ];
       expect(InsightsCopy.dayOfWeekInsight(bars),
           'Tuesdays are your strongest day.');
+    });
+    test('null when no peak', () {
+      expect(
+          InsightsCopy.dayOfWeekInsight(
+              const [TimeBar('S', Duration.zero, detail: 'Sunday')]),
+          isNull);
     });
   });
 

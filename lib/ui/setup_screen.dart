@@ -6,6 +6,7 @@ import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
+import '../domain/stamina_calculator.dart';
 import '../session/session_config.dart';
 import '../session/session_plan.dart';
 import 'session_screen.dart';
@@ -62,6 +63,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   // Flow
   int? _flowMinutes;
 
+  /// Current Focus Stamina in minutes (the stamina-matched length anchor).
+  /// Refreshed from [staminaProvider] each build.
+  int _stamina = StaminaCalculator.defaultStart.inMinutes;
+
   // Pomodoro
   _PomoEntry _pomoEntry = _PomoEntry.duration;
   int _ratioIndex = 0;
@@ -89,9 +94,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     setState(f);
   }
 
-  int _suggestedFlow() =>
-      ref.read(suggestedFlowLengthProvider).asData?.value.inMinutes ?? 25;
-
   /// One-line "what is this mode" under the title.
   String _modeDescription() => switch (_mode) {
         SessionMode.flowBlock =>
@@ -113,7 +115,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   SessionPlan _buildPlan() {
     switch (_mode) {
       case SessionMode.flowBlock:
-        return SessionPlan.flowBlock(_m(_flowMinutes ?? _suggestedFlow()));
+        return SessionPlan.flowBlock(_m(_flowMinutes ?? _stamina));
       case SessionMode.pomodoro:
         if (_pomoEntry == _PomoEntry.duration) {
           // Flowmodoro: exact focus time split into variable-length blocks.
@@ -176,6 +178,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
+    _stamina = ref.watch(staminaProvider).asData?.value.inMinutes ??
+        StaminaCalculator.defaultStart.inMinutes;
     final plan = _buildPlan();
     final topLabel = _mode == SessionMode.flowBlock ? 'BLOCK LENGTH' : 'TOTAL TIME';
     // Custom has the most controls — tighten its section gaps so it fits without
@@ -308,20 +312,30 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   List<Widget> _flowControls(HgTokens hg) {
-    final suggested = _suggestedFlow();
-    final minutes = _flowMinutes ?? suggested;
-    final presets = ({15, 25, 30, 45, 60, 90, suggested}
-        .where((m) => m <= _flowSoftCap)
+    final stamina = _stamina;
+    final minutes = _flowMinutes ?? stamina;
+    // Fixed presets, minus any that coincide with the stamina anchor (which has
+    // its own chip).
+    final fixed = ({15, 25, 30, 45, 60, 90}
+          ..removeWhere((m) => m > _flowSoftCap || m == stamina))
         .toList()
-      ..sort());
+      ..sort();
     return [
       const _SectionHeading('Length'),
+      const SizedBox(height: HgSpacing.sm),
+      _Hint('Your stamina is ${stamina}m. Finish a block to hold it; '
+          'go past it (Endless, or +5 near the end) to grow it.'),
       const SizedBox(height: HgSpacing.md),
       Wrap(
         spacing: HgSpacing.sm,
         runSpacing: HgSpacing.sm,
         children: [
-          for (final mm in presets)
+          _Chip(
+            label: 'Stamina · ${stamina}m',
+            active: minutes == stamina,
+            onTap: () => _tap(() => _flowMinutes = stamina),
+          ),
+          for (final mm in fixed)
             _Chip(
               label: '$mm min',
               active: mm == minutes,
@@ -331,8 +345,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             label: '+5',
             active: false,
             outline: true,
-            onTap: () =>
-                _tap(() => _flowMinutes = (minutes + 5).clamp(5, 240)),
+            onTap: () => _tap(() => _flowMinutes = (minutes + 5).clamp(5, 240)),
           ),
         ],
       ),
@@ -448,13 +461,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     Color color = hg.accent;
     switch (_mode) {
       case SessionMode.flowBlock:
-        final minutes = _flowMinutes ?? _suggestedFlow();
+        final minutes = _flowMinutes ?? _stamina;
         if (minutes > _flowSoftCap) {
-          text = 'Past ~90 min, focus tends to fade — a fresh block after a '
+          text = 'Past ~90 min, focus tends to fade. A fresh block after a '
               'break often serves you better.';
           color = hg.warning;
         } else {
-          text = 'Grows with your stamina · one unbroken block, recovery after.';
+          text = 'One unbroken block, recovery after · finish it to hold your '
+              'stamina, pass it to grow.';
           color = hg.textMuted;
         }
       case SessionMode.pomodoro:

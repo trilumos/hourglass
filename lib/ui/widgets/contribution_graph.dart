@@ -29,11 +29,12 @@ class _ContributionGraphState extends State<ContributionGraph> {
   DateTime get _todayDate =>
       DateTime(widget.today.year, widget.today.month, widget.today.day);
 
-  // Monday of the earliest visible week.
+  // Sunday of the earliest visible week (weeks start Sunday). DateTime.weekday
+  // is Mon=1..Sun=7, so `weekday % 7` is days since the most recent Sunday.
   DateTime get _start {
-    final mondayThisWeek =
-        _todayDate.subtract(Duration(days: _todayDate.weekday - 1));
-    return mondayThisWeek.subtract(Duration(days: (widget.weeks - 1) * 7));
+    final sundayThisWeek =
+        _todayDate.subtract(Duration(days: _todayDate.weekday % 7));
+    return sundayThisWeek.subtract(Duration(days: (widget.weeks - 1) * 7));
   }
 
   Color _cellColor(BuildContext context, Duration focus) {

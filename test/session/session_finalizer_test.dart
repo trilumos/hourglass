@@ -68,6 +68,18 @@ void main() {
     expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1500);
   });
 
+  test('an abandoned over-reach raises stamina', () async {
+    // A finished 20-min block sets stamina to 20; abandoning a longer 40-min
+    // block (an over-reach past current stamina) then lifts it to the average.
+    await finalizer.persist(_record(recorded: const Duration(minutes: 20)));
+    await finalizer.persist(_record(
+        recorded: const Duration(minutes: 40),
+        completed: false,
+        abandoned: true));
+    // qualifying = [20, 40] → currentStamina = 30 min = 1800 s
+    expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1800);
+  });
+
   test('records nothing for a sub-2-min Flow end (returns null)', () async {
     final id = await finalizer.persist(
       _record(

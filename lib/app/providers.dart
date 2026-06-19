@@ -140,6 +140,17 @@ final suggestedFlowLengthProvider = FutureProvider<Duration>((ref) async {
   return calc.suggestedNextLength(Duration(seconds: seconds));
 });
 
+/// The user's current Focus Stamina (the sustainable block length itself, not
+/// the +5 suggestion). Backs the Flow setup's stamina-matched length option.
+final staminaProvider = FutureProvider<Duration>((ref) async {
+  final settings = ref.watch(settingsRepositoryProvider);
+  final seconds = await settings.getInt(
+    SessionFinalizer.staminaKey,
+    defaultValue: StaminaCalculator.defaultStart.inSeconds,
+  );
+  return Duration(seconds: seconds);
+});
+
 /// Loads all sessions and derives the home stats via [StatsCalculator].
 final homeStatsProvider = FutureProvider<HomeStats>((ref) async {
   final sessions = await ref.watch(sessionRepositoryProvider).allSessions();

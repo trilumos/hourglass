@@ -54,12 +54,11 @@ class SessionFinalizer {
 
   Future<void> _recomputeStamina() async {
     final all = await _sessions.allSessions(); // oldest -> newest
-    final recentBlocks = all
-        .where((s) =>
-            s.completed && !s.abandoned && s.mode == SessionMode.flowBlock)
+    final blocks = _stamina
+        .qualifyingFlowBlocks(all)
         .map((s) => s.recordedFocus)
         .toList();
-    final current = _stamina.currentStamina(recentBlocks);
+    final current = _stamina.currentStamina(blocks);
     await _settings.setInt(staminaKey, current.inSeconds);
   }
 }

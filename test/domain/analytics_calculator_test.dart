@@ -92,16 +92,17 @@ void main() {
   });
 
   group('dayOfWeek', () {
-    test('always 7 Mon..Sun; peak highlighted', () {
+    test('always 7 Sun..Sat (week starts Sunday); peak highlighted', () {
       final bars = calc.dayOfWeek([
         rec(DateTime(2026, 6, 18), const Duration(minutes: 40)), // Thu
         rec(DateTime(2026, 6, 15), const Duration(minutes: 10)), // Mon
       ]);
       expect(bars.map((b) => b.label).toList(),
-          ['M', 'T', 'W', 'T', 'F', 'S', 'S']);
-      expect(bars[3].focus, const Duration(minutes: 40)); // Thu
-      expect(bars[3].highlight, isTrue);
-      expect(bars[3].readout, 'Thursday'); // full-name detail for the readout
+          ['S', 'M', 'T', 'W', 'T', 'F', 'S']);
+      expect(bars[4].focus, const Duration(minutes: 40)); // Thu = index 4
+      expect(bars[4].highlight, isTrue);
+      expect(bars[4].readout, 'Thursday'); // full-name detail for the readout
+      expect(bars[1].focus, const Duration(minutes: 10)); // Mon = index 1
     });
   });
 
