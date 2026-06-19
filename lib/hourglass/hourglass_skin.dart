@@ -8,9 +8,11 @@ class HourglassSkin {
   final Color glassTint;
   final Color glassOutline;
 
-  /// Colour of the falling-sand grains. Tuned per skin for contrast against the
-  /// background (bright on the dark theme, darker on light paper).
-  final Color grainColor;
+  /// Colour of the falling-sand grains. RULE: the falling sand must ALWAYS match
+  /// the sand in the bulbs, so this is the sand colour itself, never a separate
+  /// value. (A faint highlight is applied where the pile catches light, but the
+  /// grains and the pile are the same material.)
+  Color get grainColor => sandColor;
 
   /// Neck half-width as a fraction of the widget width (smaller = finer neck).
   final double neckWidth;
@@ -20,7 +22,6 @@ class HourglassSkin {
     required this.sandColor,
     required this.glassTint,
     required this.glassOutline,
-    required this.grainColor,
     required this.neckWidth,
   });
 
@@ -29,7 +30,6 @@ class HourglassSkin {
     sandColor: Color(0xFFE8C9A0),
     glassTint: Color(0x14FFFFFF),
     glassOutline: Color(0x33FFFFFF),
-    grainColor: Color(0xFFF6E4C8), // warm near-white, reads on dark glass
     neckWidth: 0.012,
   );
 
@@ -41,7 +41,6 @@ class HourglassSkin {
     sandColor: Color(0xFFC69A5E),
     glassTint: Color(0xFF1F1B14),
     glassOutline: Color(0x331F1B14),
-    grainColor: Color(0xFF7A5328), // deep caramel, contrasts on pale paper
     neckWidth: 0.012,
   );
 }

@@ -171,7 +171,10 @@ elastic, no decorative animation.
   `cubic(0.2,0,0,1)`.
 - UI transitions/feedback: 150–350ms. Cross-fades, never slides, for text swaps.
 - The **one slow signature** is the falling sand in the hero — continuous,
-  gravity-true, buttery. It is the brand's pulse, never flashy.
+  gravity-true, buttery. It is the brand's pulse, never flashy. **The falling
+  sand always uses the same colour as the sand piled in the bulbs** (same
+  material) — never a separate grain colour, in any theme (enforced in
+  `HourglassSkin.grainColor`).
 - Reduce Motion → cross-fade or instant; never lose information a transition
   carried.
 
