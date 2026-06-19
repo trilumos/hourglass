@@ -97,6 +97,7 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 - **Cloud auth + sync** (Google Sign-In + backup/sync; `uuid`/`updatedAt` schema already sync-ready; free tier confirmed sufficient at launch scale — see the Profile/DB spec's cost review).
 - **More monetization**, **home-screen widgets**, and **break-time activities** (sudoku, meditation, exercise, breathing exercises).
 - **Spotify connect** (focus music during sessions) and a **notes / journal** feature (in-app journaling, e.g. per-session reflections) — both V2 (founder, 2026-06-19; tiers TBD, lean Plus for Spotify / Pro for journal). Full monetization model + feature→tier→release map lives in `docs/superpowers/specs/2026-06-19-monetization-and-v1-paid-tier-design.md`.
+- **Picture-in-Picture mini-session (V2; founder, 2026-06-19):** pressing the phone's Home button during a live session keeps the session running and shows the falling hourglass in a floating mini-window (PiP) so the user sees progress while in another app. Feasibility: Android supports a custom PiP view (PiP Activity + platform channel, or a plugin) — straightforward on Android; iOS PiP is video-only so it needs a workaround (e.g. render the hourglass to a video layer) or may be Android-first. Tier TBD (lean free, it's core-loop UX). Must keep the wakelock + session-state persistence already in place.
 - Keep adding features; ship V2 when traction is good.
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
