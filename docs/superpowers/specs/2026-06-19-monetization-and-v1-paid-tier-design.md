@@ -34,10 +34,9 @@
 - **Free (always):** core loop; Focus Score, streak, Today/Total/Average; **basic
   Insights** (Records + consistency heatmap); default **Sand** look; **Sand
   soundscape + session/break sound cues**; profile, guide, onboarding.
-- **Pro** — on-device premium, sold **monthly / yearly / lifetime**. **v1 ships
-  the lifetime option only**; monthly/yearly arrive in v1.2. Lifetime is the
-  honest anchor (you can always *own* the finite on-device features rather than
-  rent them).
+- **Pro** — on-device premium, sold **monthly / yearly / lifetime — all three
+  from v1.** (Monthly lets users *try* Pro cheaply instead of facing a
+  lifetime-only barrier; lifetime stays the honest "own it" anchor.)
 - **Plus** — connected/ongoing premium, **monthly / yearly only (no lifetime;
   launches v1.2)**. Unlocks **everything** (Pro + connected/ongoing features). A
   one-time price can't fund forever-running services (sync, blocking, training
@@ -59,7 +58,7 @@
 | Todo/task library, widgets, share cards, break activities, +more themes/soundscapes | Pro | v1.2 |
 | Daily/weekly **goal + progress** (pairs with reminders) | Pro | v1.2 |
 | **Achievements / badges** (see §3.6 — some Free, some Pro) | Free + Pro | v1.2 (with Levels in v2) |
-| Pro **monthly/yearly** options (lifetime still offered) | Pro | v1.2 |
+| Pro billing: **monthly + yearly + lifetime** (all three) | Pro | v1 |
 | Full categorized **Store** (shapes · elements · app themes · packs · soundscapes) | à la carte + Plus | v1.2 |
 | Cloud **sync** + cross-device | Plus | v1.2 |
 | Seasonal/festival drops, "whole store included" | Plus | v1.2 |
@@ -72,9 +71,9 @@
 The paywall must present them as two clear tiers (a simple comparison), and
 **Plus must price above Pro at every interval** (Plus ⊇ Pro):
 - À la carte themes **$1.99–2.99** (complete packs ~$3.99–4.99)
-- **Pro:** monthly ~**$1.99** · yearly ~**$9.99** · lifetime ~**$24.99** (v1 ships
-  lifetime only; monthly/yearly in v1.2). Lifetime ≈ **3× yearly** (market-normal
-  is 3–5×; the earlier 2× was too cheap).
+- **Pro:** monthly ~**$1.99** · yearly ~**$9.99** · lifetime ~**$24.99** — **all
+  three ship in v1.** Lifetime ≈ **3× yearly** (market-normal is 3–5×; the earlier
+  2× was too cheap).
 - **Plus:** monthly ~**$4.99** · yearly ~**$29.99** (v1.2)
 - The ladder keeps each Plus interval clearly above the matching Pro interval, and
   yearly ≈ 40–50% off monthly. **Show monthly prominently** — productivity buyers
@@ -93,30 +92,35 @@ and `…/insights-analytics-research-2026-06-19.md`:
   Freemium is correct for LTV here.
 - **No-ads / easy-cancel / privacy-first is a marketed differentiator** (~76% of
   subscription apps use ≥1 dark pattern — FTC 2024).
-- **Trial** (subscriptions only, v1.2+): a **3-day or reverse trial on Plus**
-  (daily-use cadence). v1 Pro is one-time → no trial. Keep cosmetics
+- **Trial:** optional even in v1 now that Pro has subscriptions — but the **$1.99
+  monthly is itself the low-barrier "try it,"** so a trial isn't required. If
+  added, use a **3-day / reverse trial** (daily-use cadence), no-card to stay
+  respectful. Plus (v1.2) is the more natural place for a trial. Keep cosmetics
   **earned-or-bought; no loot-box/gacha.**
 
 ---
 
 ## 3. v1 scope — what we build & ship
 
-v1 monetization is intentionally lean: **one-time purchases only** (no
-subscriptions yet), no full store UI, no gating of anything except the new
-detailed-Insights split.
+v1 monetization is intentionally lean: **Pro (monthly/yearly/lifetime) + à la
+carte themes**, no full store UI, no Plus yet, no gating of anything except the
+new detailed-Insights split.
 
 ### 3.1 Billing & entitlements (RevenueCat over Play Billing)
-- Use **RevenueCat** even for one-time products — it gives clean **purchase +
-  restore + entitlement** handling and **zero rework** when subscriptions land in
-  v1.2. (Leaner alternative `in_app_purchase` was considered; RevenueCat is the
-  pre-chosen tool and wins on restore + future subs.)
-- **Products (v1, all one-time / non-consumable):**
-  - `pro.lifetime` → grants the **`pro`** entitlement (enhanced Insights + all
-    current bundled themes).
-  - one product **per à la carte theme**, e.g. `theme.obsidian`, `theme.sage`,
-    `theme.rose` → grants ownership of that theme.
+- Use **RevenueCat** over Play Billing — clean **purchase + restore +
+  entitlement** handling across subscriptions *and* one-time products, and zero
+  rework when Plus lands in v1.2.
+- **Products (v1):**
+  - **Pro subscriptions:** `pro.monthly`, `pro.yearly` (auto-renewing) →
+    grant the **`pro`** entitlement while active.
+  - **Pro lifetime:** `pro.lifetime` (non-consumable) → grants `pro` permanently.
+  - one **per à la carte theme** (non-consumable), e.g. `theme.obsidian`,
+    `theme.sage`, `theme.rose` → grants ownership of that theme.
+  - Configure as a RevenueCat **offering** with the three Pro packages so the
+    paywall shows monthly/yearly/lifetime side by side (monthly visible, yearly
+    as the discounted anchor, lifetime as "own it").
 - **Entitlement model (on-device, from RevenueCat customer info, cached offline):**
-  - `pro` = owns `pro.lifetime`.
+  - `pro` = an active `pro.monthly`/`pro.yearly` subscription **OR** `pro.lifetime`.
   - A theme is **owned** if `pro` is active **OR** its `theme.<id>` is purchased.
   - `Sand` (default) is always owned/free.
 - **Restore purchases** — explicit button (Settings + paywall). Required by stores.
