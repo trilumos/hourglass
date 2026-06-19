@@ -9,7 +9,7 @@ import '../app/root_gate.dart';
 import '../app/theme.dart';
 import '../app/theme_controller.dart';
 import '../app/tokens.dart';
-import '../billing/billing_service.dart';
+import 'faq_screen.dart';
 import 'guide_screen.dart';
 import 'paywall_screen.dart';
 import 'profile_screen.dart';
@@ -88,23 +88,6 @@ class SettingsScreen extends ConsumerWidget {
                     MaterialPageRoute(builder: (_) => const PaywallScreen()),
                   ),
                 ),
-                _ActionRow(
-                  title: 'Restore purchases',
-                  onTap: () async {
-                    final outcome =
-                        await ref.read(billingServiceProvider).restore();
-                    if (!context.mounted) return;
-                    final msg = switch (outcome) {
-                      RestoreOutcome.restoredPro => 'Pro restored.',
-                      RestoreOutcome.nothingToRestore =>
-                        'No previous purchases found on this Google account.',
-                      RestoreOutcome.error =>
-                        'Could not restore right now. Please try again.',
-                    };
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text(msg)));
-                  },
-                ),
                 if (kDebugMode)
                   _ActionRow(
                     title: 'Dev: unlock Pro',
@@ -179,6 +162,14 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle: 'Modes, the Flow method, and your numbers',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const GuideScreen()),
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'FAQ',
+                  subtitle: 'Common questions, answered plainly',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const FaqScreen()),
                   ),
                 ),
                 const SizedBox(height: HgSpacing.sm),
