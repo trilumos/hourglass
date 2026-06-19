@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
+import '../app/root_gate.dart';
 import '../app/theme.dart';
 import '../app/theme_controller.dart';
 import '../app/tokens.dart';
@@ -185,8 +186,11 @@ Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
   if (ok != true) return;
   await _clearAll(ref);
   if (context.mounted) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('All data cleared.')));
+    // Factory reset → re-run onboarding (the clean way to recreate a profile).
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const RootGate()),
+      (route) => false,
+    );
   }
 }
 
@@ -252,11 +256,16 @@ Future<void> _clearAll(WidgetRef ref) async {
   }
   await ref.read(sessionRepositoryProvider).deleteAll();
   await ref.read(profileRepositoryProvider).reset();
+  // Factory reset: re-run first-run onboarding next.
+  await ref
+      .read(settingsRepositoryProvider)
+      .setBool(SettingsKeys.onboardingComplete, false);
   ref.invalidate(profileProvider);
   ref.invalidate(homeStatsProvider);
   ref.invalidate(focusScoreProvider);
   ref.invalidate(profileStatsProvider);
   ref.invalidate(sessionHistoryProvider);
+  ref.invalidate(onboardingCompleteProvider);
 }
 
 class _ActionRow extends StatelessWidget {

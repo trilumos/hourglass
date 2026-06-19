@@ -6,6 +6,8 @@ import '../domain/focus_score_calculator.dart';
 import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
 import 'session_format.dart';
+import 'start_again.dart';
+import 'widgets/primary_button.dart';
 import 'widgets/score_ring.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
@@ -162,6 +164,25 @@ class SessionSummaryScreen extends StatelessWidget {
                           ),
                   ),
                 ],
+
+                if (canReuse(session)) ...[
+                  const SizedBox(height: HgSpacing.xl),
+                  PrimaryButton(
+                    label: 'Start again',
+                    onPressed: () => startAgain(context, session),
+                  ),
+                  const SizedBox(height: HgSpacing.xs),
+                  Center(
+                    child: Text(
+                      'Repeat this exact ${modeLabel(session.mode).toLowerCase()} setup.',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 13,
+                        color: hg.textMuted,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: HgSpacing.xl),
               ],
             ),
@@ -170,7 +191,6 @@ class SessionSummaryScreen extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _CompletionBar extends StatelessWidget {
