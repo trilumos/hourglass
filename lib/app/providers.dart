@@ -7,6 +7,7 @@ import '../data/session_repository.dart';
 import '../data/settings_repository.dart';
 import '../domain/analytics_calculator.dart';
 import '../domain/focus_score_calculator.dart';
+import '../domain/personal_bests.dart';
 import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
 import '../domain/stamina_calculator.dart';
@@ -265,4 +266,43 @@ final analyticsProvider = FutureProvider<AnalyticsData>((ref) async {
   final now = ref.watch(clockProvider)();
   final range = ref.watch(analyticsRangeProvider);
   return const AnalyticsCalculator().compute(range, now, sessions);
+});
+
+/// The enhanced (Pro) Insights series for the selected range — Focus Score
+/// trend, Focus Stamina growth, peak-window caption, follow-through rate, and
+/// lifetime personal bests. Computed in one pass.
+class InsightsExtras {
+  final List<TrendPoint> scoreTrend;
+  final List<TrendPoint> staminaGrowth;
+  final String? peakWindow;
+  final FollowThrough followThrough;
+  final PersonalBests bests;
+  const InsightsExtras({
+    required this.scoreTrend,
+    required this.staminaGrowth,
+    required this.peakWindow,
+    required this.followThrough,
+    required this.bests,
+  });
+}
+
+final insightsExtrasProvider = FutureProvider<InsightsExtras>((ref) async {
+  final sessions = await ref.watch(sessionRepositoryProvider).allSessions();
+  final now = ref.watch(clockProvider)();
+  final range = ref.watch(analyticsRangeProvider);
+  const calc = AnalyticsCalculator();
+  final inRange = calc.sessionsInRange(range, now, sessions);
+  return InsightsExtras(
+    scoreTrend: calc.focusScoreTrend(range, now, sessions),
+    staminaGrowth: calc.staminaGrowth(range, now, sessions),
+    peakWindow: calc.peakWindowCaption(inRange),
+    followThrough: calc.followThrough(range, now, sessions),
+    bests: const PersonalBestsCalculator().compute(sessions),
+  );
+});
+
+/// All sessions (newest first) for the CSV export — Pro.
+final allSessionsProvider = FutureProvider<List<SessionRecord>>((ref) async {
+  final all = await ref.watch(sessionRepositoryProvider).allSessions();
+  return all.reversed.toList();
 });
