@@ -19,7 +19,7 @@ class InsightsCopy {
   static const byMode = 'How your focus splits across the three modes.';
   static const focusScore = 'The depth of your focus, traced over time (0 to 100).';
   static const stamina =
-      'The block length you can hold, climbing toward 90 minutes.';
+      'The length of deep focus you can hold in one unbroken block.';
   static const followThrough = 'How often your Flow sessions reach their mark.';
   static const personalBests = 'Your records so far. Each one really happened.';
   static const dataExport = 'Your history is yours. Take a copy with you.';
@@ -36,7 +36,8 @@ class InsightsCopy {
   /// Precise per-section data rules (shown under the descriptor).
   static const focusScoreSource = 'Counts Flow sessions of 2 minutes or more.';
   static const staminaSource =
-      'Counts Flow blocks you finish, plus any you push past your current stamina.';
+      'Starts at your first recorded Flow session, then rises when you finish a '
+      'block or beat your current stamina.';
 
   // Honest empty lines — shown in place of a chart when there's no real series.
   static const scoreEmpty =
@@ -49,8 +50,8 @@ class InsightsCopy {
       "Focus Score is a rolling average of your recent Flow sessions, so it "
       "moves gently over a short window. Switch to All for the full arc.";
   static const staminaEmpty =
-      'Your stamina line appears once you finish a Flow block, or push a long '
-      'one past your current stamina.';
+      'Your stamina line appears after your first recorded Flow session, then '
+      'grows with you.';
 
   // ── Personalized insight lines (null = not enough signal) ──────────────────
 
@@ -144,18 +145,23 @@ class InsightsCopy {
     ];
     if (vals.isEmpty) return null;
     final last = vals.last;
-    final ceiling = last >= 80 ? ' — nearing the 90-minute ceiling' : '';
+    // 90 min is a reference, not a cap — note approaching it, and surpassing it.
+    final mark = last >= 90
+        ? ' (past the 90-minute deep-work mark)'
+        : last >= 75
+            ? ' (nearing the 90-minute mark)'
+            : '';
     if (vals.length == 1) {
-      return 'You can hold about $last minutes of unbroken focus$ceiling.';
+      return 'You can hold about $last minutes of unbroken focus$mark.';
     }
     final delta = last - vals.first;
     if (delta >= 2) {
-      return 'Your sustainable block grew from ${vals.first} to $last minutes$ceiling.';
+      return 'Your sustainable block grew from ${vals.first} to $last minutes$mark.';
     }
     if (delta <= -2) {
       return 'Your sustainable block eased from ${vals.first} to $last minutes.';
     }
-    return "You're holding around $last minutes of unbroken focus$ceiling.";
+    return "You're holding around $last minutes of unbroken focus$mark.";
   }
 
   /// "82% of your Flow sessions reached their mark." Null when no Flow sample.

@@ -34,4 +34,8 @@ class SettingsRepository {
   }
 
   Future<void> setInt(String key, int value) => _write(key, '$value');
+
+  /// Wipes every stored setting (e.g. Focus Stamina, break/flow prefs) — used by
+  /// "Clear all data" so a factory reset returns prefs to their defaults.
+  Future<void> clear() => _db.delete(_db.settings).go();
 }

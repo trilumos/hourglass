@@ -11,6 +11,7 @@ import '../app/tokens.dart';
 import '../domain/analytics_calculator.dart';
 import '../domain/personal_bests.dart';
 import '../domain/session_csv.dart';
+import '../domain/stamina_calculator.dart';
 import 'insights_copy.dart';
 import 'session_format.dart';
 import 'widgets/bar_readout_chart.dart';
@@ -214,9 +215,9 @@ class _DepthBand extends ConsumerWidget {
         source: InsightsCopy.staminaSource,
         points: extras.staminaGrowth,
         minY: 0,
-        maxY: 95,
-        guideY: 90,
-        guideLabel: '90 min',
+        maxY: _staminaAxisMax(extras.staminaGrowth),
+        guideY: StaminaCalculator.referenceBlock.inMinutes.toDouble(),
+        guideLabel: '${StaminaCalculator.referenceBlock.inMinutes} min',
         formatValue: (v) => '${v.round()} min',
         emptyCopy: InsightsCopy.staminaEmpty,
         insight: InsightsCopy.staminaInsight(extras.staminaGrowth),
@@ -315,6 +316,18 @@ class _DepthBand extends ConsumerWidget {
           const SnackBar(content: Text("Couldn't export right now.")));
     }
   }
+}
+
+/// The stamina chart's y-max. Always keeps the 90-min reference in view, and
+/// expands past it (with headroom, rounded to 10) when the user's stamina
+/// exceeds it — stamina has no cap, so the axis shows whatever they reach.
+double _staminaAxisMax(List<TrendPoint> points) {
+  var peak = StaminaCalculator.referenceBlock.inMinutes.toDouble();
+  for (final p in points) {
+    final v = p.value;
+    if (v != null && v > peak) peak = v;
+  }
+  return (peak * 1.1 / 10).ceilToDouble() * 10;
 }
 
 String _periodWord(AnalyticsRange r) => switch (r) {

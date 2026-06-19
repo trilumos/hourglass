@@ -63,23 +63,40 @@ void main() {
           const [Duration(minutes: 20), Duration(minutes: 30)]);
     });
 
-    test('an abandoned block below current stamina is ignored', () {
-      // Default stamina is 25 min; a 10-min give-up is no evidence of capacity.
+    test('the first eligible session sets the baseline even if abandoned', () {
+      // No prior stamina → the first recorded Flow block is the baseline,
+      // whatever its length (here a 12-min early stop).
       final blocks = calc.qualifyingFlowBlocks([
-        _flow(DateTime(2026, 6, 1), const Duration(minutes: 10),
+        _flow(DateTime(2026, 6, 1), const Duration(minutes: 12),
+            completed: false, abandoned: true),
+      ]);
+      expect(blocks.map((s) => s.recordedFocus.inMinutes).toList(), [12]);
+    });
+
+    test('a sub-2-min Flow block is never eligible', () {
+      final blocks = calc.qualifyingFlowBlocks([
+        _flow(DateTime(2026, 6, 1), const Duration(seconds: 90),
             completed: false, abandoned: true),
       ]);
       expect(blocks, isEmpty);
     });
 
-    test('an abandoned over-reach (longer than current stamina) qualifies', () {
-      // 40 > 25 default → it demonstrates more capacity, so it counts.
+    test('a later early stop below current stamina is ignored', () {
       final blocks = calc.qualifyingFlowBlocks([
-        _flow(DateTime(2026, 6, 1), const Duration(minutes: 40),
-            completed: false, abandoned: true),
+        _flow(DateTime(2026, 6, 1), const Duration(minutes: 30)), // baseline 30
+        _flow(DateTime(2026, 6, 2), const Duration(minutes: 10),
+            completed: false, abandoned: true), // 10 < 30 → ignored
       ]);
-      expect(blocks.map((s) => s.recordedFocus).toList(),
-          const [Duration(minutes: 40)]);
+      expect(blocks.map((s) => s.recordedFocus.inMinutes).toList(), [30]);
+    });
+
+    test('a later abandoned over-reach (beyond current stamina) qualifies', () {
+      final blocks = calc.qualifyingFlowBlocks([
+        _flow(DateTime(2026, 6, 1), const Duration(minutes: 20)), // baseline 20
+        _flow(DateTime(2026, 6, 2), const Duration(minutes: 40),
+            completed: false, abandoned: true), // 40 > 20 → counts
+      ]);
+      expect(blocks.map((s) => s.recordedFocus.inMinutes).toList(), [20, 40]);
     });
 
     test('the over-reach bar rises as stamina grows', () {
@@ -102,15 +119,4 @@ void main() {
     });
   });
 
-  group('suggestedNextLength', () {
-    test('adds a 5-minute progressive-overload increment', () {
-      expect(calc.suggestedNextLength(const Duration(minutes: 25)),
-          const Duration(minutes: 30));
-    });
-
-    test('caps the suggestion at 90 minutes', () {
-      expect(calc.suggestedNextLength(const Duration(minutes: 88)),
-          const Duration(minutes: 90));
-    });
-  });
 }

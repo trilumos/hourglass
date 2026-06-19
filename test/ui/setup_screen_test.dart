@@ -14,11 +14,13 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
   }
 
-  Widget harness(SessionMode mode) => ProviderScope(
+  Widget harness(
+    SessionMode mode, {
+    StaminaInfo stamina = const StaminaInfo(true, Duration(minutes: 30)),
+  }) =>
+      ProviderScope(
         overrides: [
-          staminaProvider.overrideWith((ref) async => const Duration(minutes: 30)),
-          suggestedFlowLengthProvider
-              .overrideWith((ref) async => const Duration(minutes: 35)),
+          staminaProvider.overrideWith((ref) async => stamina),
           breakAutoAdvanceProvider.overrideWith((ref) async => true),
           flowRunUntilEndedProvider.overrideWith((ref) async => false),
         ],
@@ -46,6 +48,22 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(SessionScreen), findsOneWidget);
+  });
+
+  testWidgets('Flow: the stamina chip is shown but locked until earned',
+      (tester) async {
+    await phoneSurface(tester);
+    await tester.pumpWidget(harness(SessionMode.flowBlock,
+        stamina: const StaminaInfo(false, Duration(minutes: 25))));
+    await tester.pump();
+
+    // Shown but inaccessible: bare "Stamina" label (no "· Nm"), with a note.
+    expect(find.text('Stamina'), findsOneWidget);
+    expect(find.text('Stamina · 25m'), findsNothing);
+    expect(find.textContaining('stamina sets after your first'),
+        findsOneWidget);
+    // A plain 25-min starting block is offered instead.
+    expect(find.text('25 min'), findsOneWidget);
   });
 
   testWidgets('Pomodoro: total → focus time → block length, no endless',

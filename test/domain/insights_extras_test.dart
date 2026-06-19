@@ -80,26 +80,28 @@ void main() {
       expect(trend.last.value, expected);
     });
 
-    test('an abandoned block below current stamina is ignored', () {
-      final sessions = [
-        rec(DateTime(2026, 6, 17),
-            focus: const Duration(minutes: 10),
-            completed: false,
-            abandoned: true), // 10 < 25 default → no evidence
-      ];
-      final trend = calc.staminaGrowth(AnalyticsRange.week, now, sessions);
-      expect(trend.every((p) => p.value == null), isTrue);
-    });
-
-    test('an abandoned over-reach counts toward stamina', () {
+    test('the first recorded Flow session sets the baseline (even abandoned)',
+        () {
       final sessions = [
         rec(DateTime(2026, 6, 17),
             focus: const Duration(minutes: 40),
             completed: false,
-            abandoned: true), // 40 > 25 default → counts
+            abandoned: true), // first eligible → baseline 40
       ];
       final trend = calc.staminaGrowth(AnalyticsRange.week, now, sessions);
       expect(trend.last.value, 40.0);
+    });
+
+    test('a later early stop below current stamina does not lower it', () {
+      final sessions = [
+        rec(DateTime(2026, 6, 16), focus: const Duration(minutes: 30)),
+        rec(DateTime(2026, 6, 17),
+            focus: const Duration(minutes: 10),
+            completed: false,
+            abandoned: true), // 10 < 30 → ignored
+      ];
+      final trend = calc.staminaGrowth(AnalyticsRange.week, now, sessions);
+      expect(trend.last.value, 30.0);
     });
   });
 

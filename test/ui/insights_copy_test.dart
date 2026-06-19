@@ -115,9 +115,13 @@ void main() {
       expect(InsightsCopy.staminaInsight([p(24), p(32)]),
           'Your sustainable block grew from 24 to 32 minutes.');
     });
-    test('notes nearing the ceiling', () {
+    test('notes nearing the 90-minute mark', () {
       expect(InsightsCopy.staminaInsight([p(82)]),
-          'You can hold about 82 minutes of unbroken focus — nearing the 90-minute ceiling.');
+          'You can hold about 82 minutes of unbroken focus (nearing the 90-minute mark).');
+    });
+    test('notes surpassing the 90-minute mark (no cap)', () {
+      expect(InsightsCopy.staminaInsight([p(105)]),
+          'You can hold about 105 minutes of unbroken focus (past the 90-minute deep-work mark).');
     });
     test('null before any block', () {
       expect(InsightsCopy.staminaInsight([p(null)]), isNull);

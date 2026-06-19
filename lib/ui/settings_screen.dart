@@ -256,15 +256,23 @@ Future<void> _clearAll(WidgetRef ref) async {
   }
   await ref.read(sessionRepositoryProvider).deleteAll();
   await ref.read(profileRepositoryProvider).reset();
-  // Factory reset: re-run first-run onboarding next.
-  await ref
-      .read(settingsRepositoryProvider)
-      .setBool(SettingsKeys.onboardingComplete, false);
+  // Factory reset: wipe all prefs (Focus Stamina included), then re-arm
+  // first-run onboarding so the next launch starts clean.
+  final settings = ref.read(settingsRepositoryProvider);
+  await settings.clear();
+  await settings.setBool(SettingsKeys.onboardingComplete, false);
+  // Theme prefs live in SharedPreferences, not the Settings table — reset them
+  // too so the wipe is a true factory reset.
+  await ref.read(themeControllerProvider.notifier).reset();
   ref.invalidate(profileProvider);
   ref.invalidate(homeStatsProvider);
   ref.invalidate(focusScoreProvider);
   ref.invalidate(profileStatsProvider);
   ref.invalidate(sessionHistoryProvider);
+  ref.invalidate(dailyFocusProvider);
+  ref.invalidate(staminaProvider);
+  ref.invalidate(breakAutoAdvanceProvider);
+  ref.invalidate(flowRunUntilEndedProvider);
   ref.invalidate(onboardingCompleteProvider);
 }
 

@@ -45,6 +45,14 @@ class ThemeController extends Notifier<ThemePrefs> {
     _prefs.setString(_kTheme, themeId);
     state = state.copyWith(themeId: themeId);
   }
+
+  /// Clears the persisted theme choice back to the default (Sand, follow
+  /// system) — used by "Clear all data" so a factory reset is complete.
+  Future<void> reset() async {
+    await _prefs.remove(_kTheme);
+    await _prefs.remove(_kMode);
+    state = const ThemePrefs(themeId: 'sand', mode: ThemeMode.system);
+  }
 }
 
 final themeControllerProvider =

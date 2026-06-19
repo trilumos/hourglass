@@ -31,4 +31,15 @@ void main() {
     await repo.setBool('weird', false); // stores the string 'false', not a number
     expect(await repo.getInt('weird', defaultValue: 7), 7);
   });
+
+  test('clear() wipes stored settings back to their defaults', () async {
+    await repo.setInt('staminaSeconds', 2400); // a built-up 40-min stamina
+    await repo.setBool('flowRunUntilEnded', true);
+    expect(await repo.getInt('staminaSeconds', defaultValue: 1500), 2400);
+
+    await repo.clear();
+
+    expect(await repo.getInt('staminaSeconds', defaultValue: 1500), 1500);
+    expect(await repo.getBool('flowRunUntilEnded', defaultValue: false), isFalse);
+  });
 }

@@ -174,7 +174,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     if (!mounted) return;
     ref.invalidate(focusScoreProvider);
     ref.invalidate(homeStatsProvider);
-    ref.invalidate(suggestedFlowLengthProvider);
     ref.invalidate(staminaProvider);
     ref.invalidate(profileStatsProvider);
     ref.invalidate(sessionHistoryProvider);

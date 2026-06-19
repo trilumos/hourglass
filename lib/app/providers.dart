@@ -108,13 +108,10 @@ class HomeStats {
   );
 }
 
-/// Builds and persists finished sessions (and updates Focus Stamina).
+/// Builds and persists finished sessions. (Focus Stamina is derived from the
+/// sessions on read — see [staminaProvider] — not stored here.)
 final sessionFinalizerProvider = Provider<SessionFinalizer>(
-  (ref) => SessionFinalizer(
-    ref.watch(sessionRepositoryProvider),
-    ref.watch(settingsRepositoryProvider),
-    const StaminaCalculator(),
-  ),
+  (ref) => SessionFinalizer(ref.watch(sessionRepositoryProvider)),
 );
 
 /// The Flow Block Focus Score (0–100) — average of the last 10 Flow Block
@@ -129,26 +126,26 @@ final focusScoreProvider = FutureProvider<int>((ref) async {
   return const FocusScoreCalculator().score(flow);
 });
 
-/// The stamina-suggested next Flow Block length, derived from stored stamina.
-final suggestedFlowLengthProvider = FutureProvider<Duration>((ref) async {
-  final settings = ref.watch(settingsRepositoryProvider);
-  final seconds = await settings.getInt(
-    SessionFinalizer.staminaKey,
-    defaultValue: StaminaCalculator.defaultStart.inSeconds,
-  );
-  const calc = StaminaCalculator();
-  return calc.suggestedNextLength(Duration(seconds: seconds));
-});
+/// The user's Focus Stamina, derived from sessions via the single stamina rule
+/// ([StaminaCalculator.qualifyingFlowBlocks]). [established] is false until the
+/// first eligible Flow session; [value] is meaningful only once established
+/// (the Flow setup shows a locked chip until then).
+class StaminaInfo {
+  final bool established;
+  final Duration value;
+  const StaminaInfo(this.established, this.value);
+}
 
-/// The user's current Focus Stamina (the sustainable block length itself, not
-/// the +5 suggestion). Backs the Flow setup's stamina-matched length option.
-final staminaProvider = FutureProvider<Duration>((ref) async {
-  final settings = ref.watch(settingsRepositoryProvider);
-  final seconds = await settings.getInt(
-    SessionFinalizer.staminaKey,
-    defaultValue: StaminaCalculator.defaultStart.inSeconds,
+/// Backs the Flow setup's stamina-matched length. Recomputed from sessions so
+/// it always agrees with the stored stamina (both use the same rule).
+final staminaProvider = FutureProvider<StaminaInfo>((ref) async {
+  final sessions = await ref.watch(sessionRepositoryProvider).allSessions();
+  const calc = StaminaCalculator();
+  final blocks = calc.qualifyingFlowBlocks(sessions);
+  return StaminaInfo(
+    blocks.isNotEmpty,
+    calc.currentStamina(blocks.map((s) => s.recordedFocus).toList()),
   );
-  return Duration(seconds: seconds);
 });
 
 /// Loads all sessions and derives the home stats via [StatsCalculator].

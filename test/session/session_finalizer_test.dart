@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hourglass/data/app_database.dart';
 import 'package:hourglass/data/session_repository.dart';
-import 'package:hourglass/data/settings_repository.dart';
 import 'package:hourglass/domain/session_mode.dart';
 import 'package:hourglass/domain/session_record.dart';
-import 'package:hourglass/domain/stamina_calculator.dart';
 import 'package:hourglass/session/session_finalizer.dart';
 
 SessionRecord _record({
@@ -31,53 +29,25 @@ SessionRecord _record({
 void main() {
   late AppDatabase db;
   late SessionRepository sessions;
-  late SettingsRepository settings;
   late SessionFinalizer finalizer;
 
   setUp(() {
     db = AppDatabase.memory();
     sessions = SessionRepository(db);
-    settings = SettingsRepository(db);
-    finalizer = SessionFinalizer(sessions, settings, const StaminaCalculator());
+    finalizer = SessionFinalizer(sessions);
   });
   tearDown(() async => db.close());
 
-  test('persists a completed flow block and updates stamina', () async {
-    await finalizer.persist(_record(recorded: const Duration(minutes: 30)));
+  // The finalizer only persists; Focus Stamina is derived from the stored
+  // sessions on read (covered by stamina_calculator_test / insights_extras_test).
 
+  test('persists a completed flow block', () async {
+    final id =
+        await finalizer.persist(_record(recorded: const Duration(minutes: 30)));
+    expect(id, isNotNull);
     final all = await sessions.allSessions();
     expect(all, hasLength(1));
     expect(all.single.completed, isTrue);
-    // currentStamina over [30 min] == 30 min == 1800 s
-    expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1800);
-  });
-
-  test('persists an abandoned (but kept) session without changing stamina',
-      () async {
-    await settings.setInt('staminaSeconds', 1500);
-    await finalizer.persist(
-      _record(
-          recorded: const Duration(minutes: 5),
-          completed: false,
-          abandoned: true),
-    );
-
-    final all = await sessions.allSessions();
-    expect(all, hasLength(1));
-    expect(all.single.abandoned, isTrue);
-    expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1500);
-  });
-
-  test('an abandoned over-reach raises stamina', () async {
-    // A finished 20-min block sets stamina to 20; abandoning a longer 40-min
-    // block (an over-reach past current stamina) then lifts it to the average.
-    await finalizer.persist(_record(recorded: const Duration(minutes: 20)));
-    await finalizer.persist(_record(
-        recorded: const Duration(minutes: 40),
-        completed: false,
-        abandoned: true));
-    // qualifying = [20, 40] → currentStamina = 30 min = 1800 s
-    expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1800);
   });
 
   test('records nothing for a sub-2-min Flow end (returns null)', () async {
@@ -99,11 +69,15 @@ void main() {
     expect(await sessions.allSessions(), hasLength(1));
   });
 
-  test('does not update stamina for a completed non-flow-block session', () async {
-    await settings.setInt('staminaSeconds', 1500);
-    await finalizer.persist(
-      _record(recorded: const Duration(minutes: 25), mode: SessionMode.pomodoro),
-    );
-    expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1500);
+  test('persists an abandoned-but-recorded Flow block (it still counts)',
+      () async {
+    final id = await finalizer.persist(_record(
+        recorded: const Duration(minutes: 5),
+        completed: false,
+        abandoned: true));
+    expect(id, isNotNull);
+    final all = await sessions.allSessions();
+    expect(all.single.abandoned, isTrue);
+    expect(all.single.recordedFocus, const Duration(minutes: 5));
   });
 }

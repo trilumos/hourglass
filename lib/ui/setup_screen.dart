@@ -54,7 +54,9 @@ class SetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupScreenState extends ConsumerState<SetupScreen> {
-  static const _flowSoftCap = 90;
+  // The ~90-min deep-work reference (shared with stamina). A soft guide, not a
+  // hard limit — longer blocks are allowed (+5 / endless).
+  static final _flowSoftCap = StaminaCalculator.referenceBlock.inMinutes;
   static const _longEvery = 4;
 
   final _intention = TextEditingController();
@@ -63,9 +65,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   // Flow
   int? _flowMinutes;
 
-  /// Current Focus Stamina in minutes (the stamina-matched length anchor).
-  /// Refreshed from [staminaProvider] each build.
-  int _stamina = StaminaCalculator.defaultStart.inMinutes;
+  /// Focus Stamina, refreshed from [staminaProvider] each build. [_staminaMin]
+  /// is meaningful only once [_staminaEstablished]; until the first eligible
+  /// Flow session the stamina chip is shown locked.
+  bool _staminaEstablished = false;
+  int _staminaMin = StaminaCalculator.defaultStart.inMinutes;
+
+  /// The Flow length used before stamina is established (a plain starting block,
+  /// not labelled as stamina).
+  static const _defaultFlowMin = 25;
+
+  /// The pre-selected Flow length: your stamina once earned, else the default.
+  int get _flowDefault => _staminaEstablished ? _staminaMin : _defaultFlowMin;
 
   // Pomodoro
   _PomoEntry _pomoEntry = _PomoEntry.duration;
@@ -115,7 +126,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   SessionPlan _buildPlan() {
     switch (_mode) {
       case SessionMode.flowBlock:
-        return SessionPlan.flowBlock(_m(_flowMinutes ?? _stamina));
+        return SessionPlan.flowBlock(_m(_flowMinutes ?? _flowDefault));
       case SessionMode.pomodoro:
         if (_pomoEntry == _PomoEntry.duration) {
           // Flowmodoro: exact focus time split into variable-length blocks.
@@ -178,8 +189,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    _stamina = ref.watch(staminaProvider).asData?.value.inMinutes ??
-        StaminaCalculator.defaultStart.inMinutes;
+    final info = ref.watch(staminaProvider).asData?.value;
+    _staminaEstablished = info?.established ?? false;
+    _staminaMin =
+        info?.value.inMinutes ?? StaminaCalculator.defaultStart.inMinutes;
     final plan = _buildPlan();
     final topLabel = _mode == SessionMode.flowBlock ? 'BLOCK LENGTH' : 'TOTAL TIME';
     // Custom has the most controls — tighten its section gaps so it fits without
@@ -312,28 +325,33 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   List<Widget> _flowControls(HgTokens hg) {
-    final stamina = _stamina;
-    final minutes = _flowMinutes ?? stamina;
-    // Fixed presets, minus any that coincide with the stamina anchor (which has
-    // its own chip).
+    final minutes = _flowMinutes ?? _flowDefault;
+    // Fixed presets, minus any that coincide with the (earned) stamina anchor.
     final fixed = ({15, 25, 30, 45, 60, 90}
-          ..removeWhere((m) => m > _flowSoftCap || m == stamina))
+          ..removeWhere((m) =>
+              m > _flowSoftCap || (_staminaEstablished && m == _staminaMin)))
         .toList()
       ..sort();
     return [
       const _SectionHeading('Length'),
       const SizedBox(height: HgSpacing.sm),
-      _Hint('Your stamina is ${stamina}m. Finish a block to hold it; '
-          'go past it (Endless, or +5 near the end) to grow it.'),
+      _Hint(_staminaEstablished
+          ? 'Your stamina is ${_staminaMin}m. Finish a block to hold it; '
+              'go past it (Endless, or +5 near the end) to grow it.'
+          : 'Your stamina sets after your first recorded Flow session, '
+              'then grows with you.'),
       const SizedBox(height: HgSpacing.md),
       Wrap(
         spacing: HgSpacing.sm,
         runSpacing: HgSpacing.sm,
         children: [
+          // Shown always; locked (inaccessible) until stamina is established.
           _Chip(
-            label: 'Stamina · ${stamina}m',
-            active: minutes == stamina,
-            onTap: () => _tap(() => _flowMinutes = stamina),
+            label: _staminaEstablished ? 'Stamina · ${_staminaMin}m' : 'Stamina',
+            active: _staminaEstablished && minutes == _staminaMin,
+            enabled: _staminaEstablished,
+            icon: _staminaEstablished ? null : Icons.lock_outline_rounded,
+            onTap: () => _tap(() => _flowMinutes = _staminaMin),
           ),
           for (final mm in fixed)
             _Chip(
@@ -461,8 +479,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     Color color = hg.accent;
     switch (_mode) {
       case SessionMode.flowBlock:
-        final minutes = _flowMinutes ?? _stamina;
-        if (minutes > _flowSoftCap) {
+        final minutes = _flowMinutes ?? _flowDefault;
+        // Only caution past ~90 when reaching BEYOND proven stamina — if a long
+        // block is the user's own demonstrated stamina, it isn't a stretch.
+        final beyondProven = minutes > _flowSoftCap &&
+            !(_staminaEstablished && minutes == _staminaMin);
+        if (beyondProven) {
           text = 'Past ~90 min, focus tends to fade. A fresh block after a '
               'break often serves you better.';
           color = hg.warning;
@@ -773,19 +795,32 @@ class _Chip extends StatelessWidget {
   final String label;
   final bool active;
   final bool outline;
+
+  /// When false the chip is shown but inaccessible (greyed, ignores taps).
+  final bool enabled;
+
+  /// Optional leading glyph (e.g. a lock on the not-yet-earned stamina chip).
+  final IconData? icon;
   final VoidCallback onTap;
   const _Chip({
     required this.label,
     required this.active,
     required this.onTap,
     this.outline = false,
+    this.enabled = true,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
+    final Color fg = !enabled
+        ? hg.textMuted
+        : active
+            ? hg.onAccent
+            : (outline ? hg.textMuted : hg.textSecondary);
     return GestureDetector(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: HgMotion.fast,
@@ -793,20 +828,29 @@ class _Chip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(
             horizontal: HgSpacing.md, vertical: HgSpacing.sm + 2),
         decoration: BoxDecoration(
-          color: active ? hg.accent : Colors.transparent,
+          color: active && enabled ? hg.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(HgRadius.pill),
-          border: Border.all(color: active ? hg.accent : hg.hairline),
+          border: Border.all(color: active && enabled ? hg.accent : hg.hairline),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: HgFont.sans,
-            fontSize: 14,
-            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-            color: active
-                ? hg.onAccent
-                : (outline ? hg.textMuted : hg.textSecondary),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 13, color: fg),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 14,
+                fontWeight: active && enabled
+                    ? FontWeight.w600
+                    : FontWeight.w400,
+                color: fg,
+              ),
+            ),
+          ],
         ),
       ),
     );
