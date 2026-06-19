@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/theme.dart';
 import '../app/tokens.dart';
@@ -14,7 +15,7 @@ import 'widgets/screen_header.dart';
 import 'widgets/surface_tile.dart';
 
 /// Read-only detail for a single past session (tapped from the history list).
-class SessionSummaryScreen extends StatelessWidget {
+class SessionSummaryScreen extends ConsumerWidget {
   final SessionRecord session;
   const SessionSummaryScreen({super.key, required this.session});
 
@@ -25,7 +26,7 @@ class SessionSummaryScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hg = context.hg;
     final isFlow = session.mode == SessionMode.flowBlock;
     final scored = isFlow && session.recordedFocus.inSeconds >= 120;
@@ -169,7 +170,7 @@ class SessionSummaryScreen extends StatelessWidget {
                   const SizedBox(height: HgSpacing.xl),
                   PrimaryButton(
                     label: 'Start again',
-                    onPressed: () => startAgain(context, session),
+                    onPressed: () => startAgain(context, ref, session),
                   ),
                   const SizedBox(height: HgSpacing.xs),
                   Center(

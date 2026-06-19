@@ -18,6 +18,7 @@ import 'widgets/bar_readout_chart.dart';
 import 'widgets/contribution_graph.dart';
 import 'widgets/line_readout_chart.dart';
 import 'widgets/mode_donut.dart';
+import 'widgets/pro_gate.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
 import 'widgets/stat_tile.dart';
@@ -111,8 +112,16 @@ class InsightsScreen extends ConsumerWidget {
                   _Insight(InsightsCopy.consistencyInsight(activeDays)),
                   const SizedBox(height: HgSpacing.xl),
 
-                  // ── Pro depth band (one wrappable subtree) ───────────────
-                  const _DepthBand(),
+                  // ── Pro depth band (gated) ───────────────────────────────
+                  const ProGate(
+                    upsell: ProUpsell(
+                      headline: 'See your full focus story with Pro',
+                      body:
+                          'Your Focus Score and Stamina over time, when you focus '
+                          'best, follow-through, personal bests, and CSV export.',
+                    ),
+                    child: _DepthBand(),
+                  ),
                   const SizedBox(height: HgSpacing.xl),
                 ],
               ],

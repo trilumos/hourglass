@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hourglass/app/billing_providers.dart';
 import 'package:hourglass/app/providers.dart';
 import 'package:hourglass/app/theme.dart';
 import 'package:hourglass/app/tokens.dart';
+import 'package:hourglass/billing/fake_billing_service.dart';
 import 'package:hourglass/data/app_database.dart';
 import 'package:hourglass/domain/analytics_calculator.dart';
+import 'package:hourglass/domain/entitlements.dart';
 import 'package:hourglass/domain/personal_bests.dart';
 import 'package:hourglass/domain/session_mode.dart';
 import 'package:hourglass/domain/session_record.dart';
@@ -95,6 +98,8 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         clockProvider.overrideWithValue(() => now),
+        billingServiceProvider.overrideWithValue(FakeBillingService(
+            initial: const Entitlements(pro: true, ownedThemeIds: {'sand'}))),
         profileStatsProvider.overrideWith((ref) async => populatedStats()),
         dailyFocusProvider.overrideWith((ref) async => {
               DateTime(2026, 6, 18): const DayStat(Duration(minutes: 50), 1),
@@ -133,6 +138,8 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         clockProvider.overrideWithValue(() => now),
+        billingServiceProvider.overrideWithValue(FakeBillingService(
+            initial: const Entitlements(pro: true, ownedThemeIds: {'sand'}))),
         profileStatsProvider.overrideWith((ref) async => populatedStats()),
         dailyFocusProvider.overrideWith((ref) async => const {}),
         analyticsProvider.overrideWith((ref) async {
@@ -163,6 +170,8 @@ void main() {
     tallView(tester);
     final container = ProviderContainer(overrides: [
       clockProvider.overrideWithValue(() => now),
+      billingServiceProvider.overrideWithValue(FakeBillingService(
+          initial: const Entitlements(pro: true, ownedThemeIds: {'sand'}))),
       profileStatsProvider.overrideWith((ref) async => populatedStats()),
       dailyFocusProvider.overrideWith((ref) async => const <DateTime, DayStat>{}),
       analyticsProvider.overrideWith((ref) async {
