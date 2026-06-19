@@ -70,11 +70,30 @@
 The paywall must present them as two clear tiers (a simple comparison), and
 **Plus must price above Pro at every interval** (Plus ⊇ Pro):
 - À la carte themes **$1.99–2.99** (complete packs ~$3.99–4.99)
-- **Pro:** monthly ~**$1.99** · yearly ~**$9.99** · lifetime ~**$19.99** (v1 ships
-  lifetime only; monthly/yearly in v1.2)
+- **Pro:** monthly ~**$1.99** · yearly ~**$9.99** · lifetime ~**$24.99** (v1 ships
+  lifetime only; monthly/yearly in v1.2). Lifetime ≈ **3× yearly** (market-normal
+  is 3–5×; the earlier 2× was too cheap).
 - **Plus:** monthly ~**$4.99** · yearly ~**$29.99** (v1.2)
 - The ladder keeps each Plus interval clearly above the matching Pro interval, and
-  yearly ≈ 40–50% off monthly. Lifetime ≈ ~2–2.5× Pro yearly.
+  yearly ≈ 40–50% off monthly. **Show monthly prominently** — productivity buyers
+  skew monthly (77% of category revenue), unlike fitness/wellness.
+- **India ₹ tiers:** set empirically in Play Console (no reliable PPP data — open).
+
+### Research-validated refinements (2026-06-19)
+Backed by the two research docs — `docs/references/monetization-research-2026-06-19.md`
+and `…/insights-analytics-research-2026-06-19.md`:
+- **Plus is a strict superset of Pro** (includes all Pro features). The paywall
+  must present two clear doors — *"own Pro"* (one-time-able) vs *"Plus membership"*
+  (ongoing services) — so two subscriptions never read as "buy twice." This is the
+  single most important clarity fix.
+- **Never hard-paywall the free core loop.** Hard paywalls convert ~5× early but
+  one-year retention converges (one case: +75% LTV after removing the paywall).
+  Freemium is correct for LTV here.
+- **No-ads / easy-cancel / privacy-first is a marketed differentiator** (~76% of
+  subscription apps use ≥1 dark pattern — FTC 2024).
+- **Trial** (subscriptions only, v1.2+): a **3-day or reverse trial on Plus**
+  (daily-use cadence). v1 Pro is one-time → no trial. Keep cosmetics
+  **earned-or-bought; no loot-box/gacha.**
 
 ---
 
