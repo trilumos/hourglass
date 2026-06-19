@@ -4,6 +4,7 @@ import '../../app/providers.dart';
 import '../../app/theme.dart';
 import '../../app/tokens.dart';
 import '../session_format.dart';
+import 'animated_readout.dart';
 
 /// A GitHub-style daily activity grid: one square per day over the last
 /// [weeks] weeks, shaded by how much focus that day held. Tap a square to see
@@ -146,13 +147,16 @@ class _DetailBar extends StatelessWidget {
             '$when · ${formatFocusDuration(stat.focus)} · $n session${n == 1 ? '' : 's'}';
       }
     }
-    return Text(
-      text,
-      style: TextStyle(
-        fontFamily: HgFont.sans,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: selected == null ? hg.textMuted : hg.textPrimary,
+    return AnimatedReadout(
+      child: Text(
+        text,
+        key: ValueKey(text),
+        style: TextStyle(
+          fontFamily: HgFont.sans,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: selected == null ? hg.textMuted : hg.textPrimary,
+        ),
       ),
     );
   }

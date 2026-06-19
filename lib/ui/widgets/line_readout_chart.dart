@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme.dart';
 import '../../app/tokens.dart';
 import '../../domain/analytics_calculator.dart';
+import 'animated_readout.dart';
 
 /// A smooth value-over-time line (Focus Score trend, Stamina growth) with the
 /// same tap-to-read affordance as [BarReadoutChart]: one always-present readout
@@ -82,9 +83,7 @@ class _LineReadoutChartState extends State<LineReadoutChart> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AnimatedSwitcher(
-          duration: HgMotion.fast,
-          switchInCurve: HgMotion.enter,
+        AnimatedReadout(
           child: Text(
             readout,
             key: ValueKey(readout),

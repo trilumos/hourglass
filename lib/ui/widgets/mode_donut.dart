@@ -6,6 +6,7 @@ import '../../app/tokens.dart';
 import '../../domain/analytics_calculator.dart';
 import '../../domain/session_mode.dart';
 import '../session_format.dart';
+import 'animated_readout.dart';
 
 /// Share of focus across the three modes as a donut + legend. The center reads
 /// the period total by default; tapping a mode (donut segment or legend row)
@@ -80,29 +81,33 @@ class _ModeDonutState extends State<ModeDonut> {
                   ],
                 ),
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    centerTop,
-                    style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: hg.textPrimary,
-                      height: 1.1,
+              AnimatedReadout(
+                alignment: Alignment.center,
+                child: Column(
+                  key: ValueKey('$centerTop|$centerBottom'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      centerTop,
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: hg.textPrimary,
+                        height: 1.1,
+                      ),
                     ),
-                  ),
-                  Text(
-                    centerBottom,
-                    style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 10.5,
-                      letterSpacing: 0.5,
-                      color: hg.textMuted,
+                    Text(
+                      centerBottom,
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 10.5,
+                        letterSpacing: 0.5,
+                        color: hg.textMuted,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

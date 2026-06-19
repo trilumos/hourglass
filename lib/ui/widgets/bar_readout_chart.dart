@@ -5,6 +5,7 @@ import '../../app/theme.dart';
 import '../../app/tokens.dart';
 import '../../domain/analytics_calculator.dart';
 import '../session_format.dart';
+import 'animated_readout.dart';
 
 /// A bar chart with a tap-to-read detail line. The peak / current bar reads in
 /// full accent by default; tapping any bar moves the accent there and the line
@@ -66,9 +67,7 @@ class _BarReadoutChartState extends State<BarReadoutChart> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AnimatedSwitcher(
-          duration: HgMotion.fast,
-          switchInCurve: HgMotion.enter,
+        AnimatedReadout(
           child: Text(
             readout,
             key: ValueKey(readout),
