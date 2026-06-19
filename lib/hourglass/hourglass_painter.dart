@@ -151,14 +151,17 @@ class HourglassPainter extends CustomPainter {
           final Offset c2 = p2 - (p3 - p1) / 6.0;
           p.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, p2.dx, p2.dy);
         }
-        // Funnel the sand into the central aperture instead of a flat cap at the
-        // neck (which read as a rigid horizontal line). A smooth arc dips toward
-        // the hole; it eases to flat as the top empties (waveFade → 0).
-        final double apexY = neckPx + usableH * 0.06 * waveFade;
-        final double mouth = neckHalf * 2.4;
+        // Taper the sand to the central aperture instead of a flat cap at the
+        // neck (which read as a rigid horizontal line). It converges DOWN to the
+        // hole and never spills below the neck into the lower chamber; the
+        // shoulders lift slightly into the top bulb. Eases flat as the top
+        // empties (waveFade → 0).
+        final double rise = usableH * 0.028 * waveFade;
+        final double mouth = neckHalf * 1.8;
         p.lineTo(w, neckPx);
-        p.lineTo(cx + mouth, neckPx);
-        p.quadraticBezierTo(cx, apexY, cx - mouth, neckPx);
+        p.lineTo(cx + mouth, neckPx - rise);
+        p.quadraticBezierTo(cx + mouth * 0.5, neckPx, cx, neckPx);
+        p.quadraticBezierTo(cx - mouth * 0.5, neckPx, cx - mouth, neckPx - rise);
         p.lineTo(0, neckPx);
         p.close();
         canvas.drawPath(p, paint);
@@ -205,7 +208,8 @@ class HourglassPainter extends CustomPainter {
       if (gate > 0.01 && gapNow > 1) {
         final Color grain = skin.grainColor;
         const int grainCount = 36;
-        const double fallPeriod = 0.5;
+        // Ambient (Home) falls a little slower — calmer, less timer-like.
+        final double fallPeriod = ambient ? 0.78 : 0.5;
         const double v0Frac = 0.10; // small exit speed; rest is gravity (phase^2)
         final double colHalf = neckHalf * 1.3; // thin column ~ the hole width
         final math.Random rng = math.Random(7); // seeded -> stable per grain
@@ -229,14 +233,12 @@ class HourglassPainter extends CustomPainter {
           final double a = ((1.0 - 0.16 * fall) * (0.82 + 0.18 * laneR) * gate)
               .clamp(0.0, 1.0)
               .toDouble();
-          // Ambient has no pile to land on → fade grains out before the floor.
-          final double aFade = ambient
-              ? (1.0 -
-                  _smooth(
-                      ((((py - holeY) / (floorY - holeY)).clamp(0.0, 1.0)) -
-                              0.65) /
-                          0.35))
-              : 1.0;
+          // Ambient has no pile to land on → fade grains out earlier and softer
+          // (no hard floor, calmer look).
+          final double drop =
+              ((py - holeY) / (floorY - holeY)).clamp(0.0, 1.0);
+          final double aFade =
+              ambient ? 0.78 * (1.0 - _smooth((drop - 0.42) / 0.58)) : 1.0;
           canvas.drawCircle(
             Offset(px, py),
             r,
