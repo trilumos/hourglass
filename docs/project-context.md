@@ -96,6 +96,7 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 - **Level / Progression system** (+ themes; score→100 = collectible + share card + theme unlock + reset + harder; resolve ramp-vs-reset math).
 - **Cloud auth + sync** (Google Sign-In + backup/sync; `uuid`/`updatedAt` schema already sync-ready; free tier confirmed sufficient at launch scale — see the Profile/DB spec's cost review).
 - **More monetization**, **home-screen widgets**, and **break-time activities** (sudoku, meditation, exercise, breathing exercises).
+- **Spotify connect** (focus music during sessions) and a **notes / journal** feature (in-app journaling, e.g. per-session reflections) — both V2 (founder, 2026-06-19; tiers TBD, lean Plus for Spotify / Pro for journal). Full monetization model + feature→tier→release map lives in `docs/superpowers/specs/2026-06-19-monetization-and-v1-paid-tier-design.md`.
 - Keep adding features; ship V2 when traction is good.
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)

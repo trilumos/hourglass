@@ -55,14 +55,18 @@
 | Default **Sand** look + Sand soundscape | Free | v1 |
 | **Detailed + enhanced Insights** | **Pro** | **v1** |
 | **Color themes** (app palette + hourglass colors) | **Pro (bundled) + à la carte** | **v1** |
+| **Reuse session config** ("Start again" from history/completion) | **Pro** | **v1** |
 | Todo/task library, widgets, share cards, break activities, +more themes/soundscapes | Pro | v1.2 |
 | Daily/weekly **goal + progress** (pairs with reminders) | Pro | v1.2 |
+| **Save up to 3 config presets** in Setup | Pro | v1.2 |
 | **Achievements / badges** (see §3.6 — some Free, some Pro) | Free + Pro | v1.2 (with Levels in v2) |
 | Pro billing: **monthly + yearly + lifetime** (all three) | Pro | v1 |
 | Full categorized **Store** (shapes · elements · app themes · packs · soundscapes) | à la carte + Plus | v1.2 |
 | Cloud **sync** + cross-device | Plus | v1.2 |
 | Seasonal/festival drops, "whole store included" | Plus | v1.2 |
 | **Training modules**, **PC/Web blocking**, PC/Web apps | Plus | v2 |
+| **Spotify connect** (focus music during sessions) | Plus (tier TBD) | v2 |
+| **Notes / journal** (in-app journaling, e.g. per-session reflections) | Pro (tier TBD) | v2 |
 | Daily tips/quotes (bundled, in-app; no "come back" nudges) | Pro | v1.2 |
 | Reminders/scheduling (local notifications) | Pro | v1.2 |
 
