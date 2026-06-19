@@ -34,12 +34,15 @@
 - **Free (always):** core loop; Focus Score, streak, Today/Total/Average; **basic
   Insights** (Records + consistency heatmap); default **Sand** look; **Sand
   soundscape + session/break sound cues**; profile, guide, onboarding.
-- **Pro** — on-device premium. **v1: one-time lifetime only.** v1.2 adds
-  **monthly / yearly** options (same Pro). The lifetime option is what keeps the
-  subscription honest (no one is forced to rent finite on-device features).
-- **Plus** — subscription-**only** (launches **v1.2**). Unlocks **everything**
-  (Pro + connected/ongoing features). Recurring is fair here because the value is
-  ongoing (servers + continuously-delivered content).
+- **Pro** — on-device premium, sold **monthly / yearly / lifetime**. **v1 ships
+  the lifetime option only**; monthly/yearly arrive in v1.2. Lifetime is the
+  honest anchor (you can always *own* the finite on-device features rather than
+  rent them).
+- **Plus** — connected/ongoing premium, **monthly / yearly only (no lifetime;
+  launches v1.2)**. Unlocks **everything** (Pro + connected/ongoing features). A
+  one-time price can't fund forever-running services (sync, blocking, training
+  content), and recurring is *fair* here because the value is ongoing. **Plus
+  prices above Pro at every interval** (Plus ⊇ Pro).
 - **À la carte** — buy individual cosmetics one-time (v1: complete color themes;
   v1.2: the full categorized store).
 
@@ -54,7 +57,7 @@
 | **Detailed + enhanced Insights** | **Pro** | **v1** |
 | **Color themes** (app palette + hourglass colors) | **Pro (bundled) + à la carte** | **v1** |
 | Todo/task library, widgets, share cards, break activities, +more themes/soundscapes | Pro | v1.2 |
-| Pro **monthly/yearly** options | Pro | v1.2 |
+| Pro **monthly/yearly** options (lifetime still offered) | Pro | v1.2 |
 | Full categorized **Store** (shapes · elements · app themes · packs · soundscapes) | à la carte + Plus | v1.2 |
 | Cloud **sync** + cross-device | Plus | v1.2 |
 | Seasonal/festival drops, "whole store included" | Plus | v1.2 |
@@ -62,9 +65,16 @@
 | Daily tips/quotes (bundled, in-app; no "come back" nudges) | Pro | v1.2 |
 | Reminders/scheduling (local notifications) | Pro | v1.2 |
 
-(Pricing finalized later, incl. India ₹ tiers. Rough: à la carte themes
-**$1.99–2.99**, Pro lifetime **~$19.99**; v1.2 Pro yearly **~$14.99** / monthly
-**~$2.99**; Plus **~$2.99/mo**.)
+**Pricing (rough — finalize with market research + India ₹ tiers).**
+**Pro** = monthly / yearly / lifetime. **Plus** = monthly / yearly (no lifetime).
+The paywall must present them as two clear tiers (a simple comparison), and
+**Plus must price above Pro at every interval** (Plus ⊇ Pro):
+- À la carte themes **$1.99–2.99** (complete packs ~$3.99–4.99)
+- **Pro:** monthly ~**$1.99** · yearly ~**$9.99** · lifetime ~**$19.99** (v1 ships
+  lifetime only; monthly/yearly in v1.2)
+- **Plus:** monthly ~**$4.99** · yearly ~**$29.99** (v1.2)
+- The ladder keeps each Plus interval clearly above the matching Pro interval, and
+  yearly ≈ 40–50% off monthly. Lifetime ≈ ~2–2.5× Pro yearly.
 
 ---
 
