@@ -69,8 +69,11 @@ void main() {
     await _skipToProfile(tester);
     await tester.enterText(find.byType(TextField), 'Maya');
     await tester.tap(find.text('Begin'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
+    // Finish = drain (~750ms) + flip (~600ms) + route. The hourglass animates
+    // forever, so we step the clock instead of pumpAndSettle.
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
 
     final profile = await container.read(profileRepositoryProvider).load();
     expect(profile.name, 'Maya');

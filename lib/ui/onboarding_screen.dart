@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -16,8 +17,9 @@ import 'widgets/primary_button.dart';
 import 'widgets/screen_background.dart';
 
 /// First-run onboarding: a persistent hourglass hero above a 5-page PageView
-/// (4 teaching beats + a name/photo profile page). Skippable; finishing saves
-/// the profile, marks onboarding done, and flies the hero into Home.
+/// (4 teaching beats + a name/photo profile page). The hero drains 10% deeper
+/// per page (10%→50%). Skippable; finishing saves the profile, drains the
+/// hourglass fully, flips it upright (sand back on top), then lands on Home.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -57,25 +59,40 @@ const _teach = <_TeachPage>[
 const _profileIndex = 4; // 0..3 teach, 4 profile
 const _pageCount = 5;
 
-class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
+    with SingleTickerProviderStateMixin {
   final _pageCtrl = PageController();
   final _nameCtrl = TextEditingController();
+  // Flips the hero upright on finish (rotateX π→0), same mechanic as a session
+  // start. Rests at 1.0 (= upright) so onboarding pages aren't rotated.
+  late final AnimationController _flip = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+    value: 1.0,
+  );
   int _index = 0;
   String? _pendingPath;
   File? _pendingFile;
   bool _saving = false;
+  bool _finishing = false; // draining the hero to 100%
+  bool _flipping = false; // hero snapped to full (0), flipping upright
 
   @override
   void dispose() {
     _pageCtrl.dispose();
     _nameCtrl.dispose();
+    _flip.dispose();
     super.dispose();
   }
 
-  // Drain deepens 10% per page (page 1 = 10% … profile page = 50%); the sand
+  // Per page the drain deepens 10% (page 1 = 10% … profile page = 50%); the sand
   // keeps falling the whole time (the stream animates whenever 0 < drain < 1).
-  // Home then shows its own filled, no-fall hourglass.
-  double get _heroProgress => 0.1 * (_index + 1);
+  // On finish: drain fully (1.0), then snap to full (0.0) hidden by the flip.
+  double get _heroProgress {
+    if (_flipping) return 0.0;
+    if (_finishing) return 1.0;
+    return 0.1 * (_index + 1);
+  }
 
   void _onCta() {
     if (_index < _profileIndex) {
@@ -124,7 +141,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _finish({required bool save}) async {
     if (_saving) return;
-    setState(() => _saving = true);
+    // Begin draining the hero fully (50% → 100%).
+    setState(() {
+      _saving = true;
+      _finishing = true;
+    });
+    // Persist while the sand drains.
     final name = _nameCtrl.text.trim();
     if (save && (name.isNotEmpty || _pendingPath != null)) {
       await ref.read(profileRepositoryProvider).update(
@@ -135,9 +157,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await ref
         .read(settingsRepositoryProvider)
         .setBool(SettingsKeys.onboardingComplete, true);
+    // Let the sand fall to the bottom.
+    await Future<void>.delayed(const Duration(milliseconds: 750));
+    if (!mounted) return;
+    // Flip: snap to a full hourglass (hidden by the upside-down flip start),
+    // then rotate it upright so the filled part lands on top — like Home.
+    setState(() => _flipping = true);
+    await _flip.forward(from: 0);
+    if (!mounted) return;
     ref.invalidate(profileProvider);
     ref.invalidate(onboardingCompleteProvider);
-    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
@@ -172,12 +201,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ),
                 ),
-                // Persistent hero (does not page).
+                // Persistent hero (does not page). Flips upright on finish.
                 Expanded(
                   flex: 5,
                   child: Center(
-                    child: HourglassView(
-                      progress: _heroProgress,
+                    child: AnimatedBuilder(
+                      animation: _flip,
+                      builder: (context, child) {
+                        final t = Curves.easeOutCubic.transform(_flip.value);
+                        return Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.0012) // perspective
+                            ..rotateX((1 - t) * math.pi),
+                          child: child,
+                        );
+                      },
+                      child: HourglassView(progress: _heroProgress),
                     ),
                   ),
                 ),
