@@ -104,6 +104,10 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
 - **Hourglass falling sand MUST match the bulb sand colour (founder, 2026-06-19, CONFIRMED).** The falling-sand grains and the sand piled in the bulbs are the same material and must **never** look like different colours, in any theme/skin. **Why:** in light theme the grains were a separate deep-caramel value while the pile was a lighter tan, which looked wrong. **How to apply:** `HourglassSkin.grainColor` is a computed getter that returns `sandColor` (not a separate field) so the two can't diverge; any new skin only sets `sandColor`. Don't reintroduce a standalone grain colour. (`lib/hourglass/hourglass_skin.dart`.)
+  - **Falling-sand particle look LOCKED (founder, 2026-06-19, APPROVED):** fine, dense spray of small round
+    grains (`grainCount = 80`, radius ~0.4–1.0px tapering as they fall) — NOT thick streaks/threads. Any
+    apparent choppiness is debug-APK frame drops, not the design (smooth in release). Don't change the
+    particle style without founder confirmation. (`lib/hourglass/hourglass_painter.dart`.)
 
 - **Device/mobile verification is the FOUNDER's job (founder, 2026-06-18, CONFIRMED).** Do NOT take screenshots, drive the app over adb (`input tap`/`screencap`), or otherwise navigate the phone to "verify" the UI — the founder checks on-device himself and reports back. **Why:** it wastes turns/tokens and he prefers to see and feel the UI personally. **How to apply:** my loop ends at code written + `flutter analyze` clean + `flutter test` green + committed/pushed (+ APK built/installed only if/when he asks). Then hand off and let him review on the device.
 
