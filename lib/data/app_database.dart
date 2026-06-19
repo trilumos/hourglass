@@ -23,6 +23,10 @@ class Sessions extends Table {
   TextColumn get skinId => text().withDefault(const Constant('classic'))();
   TextColumn get uuid => text().nullable()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
+
+  /// Serialized [SessionConfig] (segments + flags) so a session can be replayed
+  /// exactly ("Start again"). Null for rows created before schema v3.
+  TextColumn get planJson => text().nullable()();
 }
 
 class Settings extends Table {
@@ -63,7 +67,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -109,6 +113,15 @@ class AppDatabase extends _$AppDatabase {
                 }
               }
             });
+          }
+          if (from < 3) {
+            // Add the nullable planJson column (idempotent; re-run safe).
+            final cols = await customSelect("PRAGMA table_info('sessions')")
+                .get()
+                .then((rows) => rows.map((r) => r.read<String>('name')).toSet());
+            if (!cols.contains('plan_json')) {
+              await m.addColumn(sessions, sessions.planJson);
+            }
           }
         },
       );

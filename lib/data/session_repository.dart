@@ -32,6 +32,7 @@ class SessionRepository {
             autoContinue: Value(r.autoContinue),
             soundscape: Value(r.soundscape),
             skinId: Value(r.skinId),
+            planJson: Value(r.planJson),
             uuid: Value(_uuidGen()),
             updatedAt: Value(_now()),
           ),
@@ -78,5 +79,6 @@ class SessionRepository {
         autoContinue: row.autoContinue,
         soundscape: row.soundscape,
         skinId: row.skinId,
+        planJson: row.planJson,
       );
 }

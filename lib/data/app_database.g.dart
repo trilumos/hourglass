@@ -162,6 +162,17 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _planJsonMeta = const VerificationMeta(
+    'planJson',
+  );
+  @override
+  late final GeneratedColumn<String> planJson = GeneratedColumn<String>(
+    'plan_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -177,6 +188,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     skinId,
     uuid,
     updatedAt,
+    planJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -274,6 +286,12 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('plan_json')) {
+      context.handle(
+        _planJsonMeta,
+        planJson.isAcceptableOrUnknown(data['plan_json']!, _planJsonMeta),
+      );
+    }
     return context;
   }
 
@@ -337,6 +355,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       ),
+      planJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_json'],
+      ),
     );
   }
 
@@ -363,6 +385,10 @@ class Session extends DataClass implements Insertable<Session> {
   final String skinId;
   final String? uuid;
   final DateTime? updatedAt;
+
+  /// Serialized [SessionConfig] (segments + flags) so a session can be replayed
+  /// exactly ("Start again"). Null for rows created before schema v3.
+  final String? planJson;
   const Session({
     required this.id,
     required this.startedAt,
@@ -377,6 +403,7 @@ class Session extends DataClass implements Insertable<Session> {
     required this.skinId,
     this.uuid,
     this.updatedAt,
+    this.planJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -400,6 +427,9 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<DateTime>(updatedAt);
     }
+    if (!nullToAbsent || planJson != null) {
+      map['plan_json'] = Variable<String>(planJson);
+    }
     return map;
   }
 
@@ -420,6 +450,9 @@ class Session extends DataClass implements Insertable<Session> {
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(updatedAt),
+      planJson: planJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(planJson),
     );
   }
 
@@ -444,6 +477,7 @@ class Session extends DataClass implements Insertable<Session> {
       skinId: serializer.fromJson<String>(json['skinId']),
       uuid: serializer.fromJson<String?>(json['uuid']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      planJson: serializer.fromJson<String?>(json['planJson']),
     );
   }
   @override
@@ -465,6 +499,7 @@ class Session extends DataClass implements Insertable<Session> {
       'skinId': serializer.toJson<String>(skinId),
       'uuid': serializer.toJson<String?>(uuid),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'planJson': serializer.toJson<String?>(planJson),
     };
   }
 
@@ -482,6 +517,7 @@ class Session extends DataClass implements Insertable<Session> {
     String? skinId,
     Value<String?> uuid = const Value.absent(),
     Value<DateTime?> updatedAt = const Value.absent(),
+    Value<String?> planJson = const Value.absent(),
   }) => Session(
     id: id ?? this.id,
     startedAt: startedAt ?? this.startedAt,
@@ -496,6 +532,7 @@ class Session extends DataClass implements Insertable<Session> {
     skinId: skinId ?? this.skinId,
     uuid: uuid.present ? uuid.value : this.uuid,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    planJson: planJson.present ? planJson.value : this.planJson,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -520,6 +557,7 @@ class Session extends DataClass implements Insertable<Session> {
       skinId: data.skinId.present ? data.skinId.value : this.skinId,
       uuid: data.uuid.present ? data.uuid.value : this.uuid,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      planJson: data.planJson.present ? data.planJson.value : this.planJson,
     );
   }
 
@@ -538,7 +576,8 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('soundscape: $soundscape, ')
           ..write('skinId: $skinId, ')
           ..write('uuid: $uuid, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('planJson: $planJson')
           ..write(')'))
         .toString();
   }
@@ -558,6 +597,7 @@ class Session extends DataClass implements Insertable<Session> {
     skinId,
     uuid,
     updatedAt,
+    planJson,
   );
   @override
   bool operator ==(Object other) =>
@@ -575,7 +615,8 @@ class Session extends DataClass implements Insertable<Session> {
           other.soundscape == this.soundscape &&
           other.skinId == this.skinId &&
           other.uuid == this.uuid &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.planJson == this.planJson);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -592,6 +633,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<String> skinId;
   final Value<String?> uuid;
   final Value<DateTime?> updatedAt;
+  final Value<String?> planJson;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.startedAt = const Value.absent(),
@@ -606,6 +648,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.skinId = const Value.absent(),
     this.uuid = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.planJson = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -621,6 +664,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.skinId = const Value.absent(),
     this.uuid = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.planJson = const Value.absent(),
   }) : startedAt = Value(startedAt),
        mode = Value(mode),
        plannedSeconds = Value(plannedSeconds),
@@ -639,6 +683,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<String>? skinId,
     Expression<String>? uuid,
     Expression<DateTime>? updatedAt,
+    Expression<String>? planJson,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -654,6 +699,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (skinId != null) 'skin_id': skinId,
       if (uuid != null) 'uuid': uuid,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (planJson != null) 'plan_json': planJson,
     });
   }
 
@@ -671,6 +717,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<String>? skinId,
     Value<String?>? uuid,
     Value<DateTime?>? updatedAt,
+    Value<String?>? planJson,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -686,6 +733,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       skinId: skinId ?? this.skinId,
       uuid: uuid ?? this.uuid,
       updatedAt: updatedAt ?? this.updatedAt,
+      planJson: planJson ?? this.planJson,
     );
   }
 
@@ -733,6 +781,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (planJson.present) {
+      map['plan_json'] = Variable<String>(planJson.value);
+    }
     return map;
   }
 
@@ -751,7 +802,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('soundscape: $soundscape, ')
           ..write('skinId: $skinId, ')
           ..write('uuid: $uuid, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('planJson: $planJson')
           ..write(')'))
         .toString();
   }
@@ -1388,6 +1440,7 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<String> skinId,
       Value<String?> uuid,
       Value<DateTime?> updatedAt,
+      Value<String?> planJson,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
@@ -1404,6 +1457,7 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<String> skinId,
       Value<String?> uuid,
       Value<DateTime?> updatedAt,
+      Value<String?> planJson,
     });
 
 class $$SessionsTableFilterComposer
@@ -1478,6 +1532,11 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planJson => $composableBuilder(
+    column: $table.planJson,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1555,6 +1614,11 @@ class $$SessionsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get planJson => $composableBuilder(
+    column: $table.planJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -1612,6 +1676,9 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get planJson =>
+      $composableBuilder(column: $table.planJson, builder: (column) => column);
 }
 
 class $$SessionsTableTableManager
@@ -1655,6 +1722,7 @@ class $$SessionsTableTableManager
                 Value<String> skinId = const Value.absent(),
                 Value<String?> uuid = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String?> planJson = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 startedAt: startedAt,
@@ -1669,6 +1737,7 @@ class $$SessionsTableTableManager
                 skinId: skinId,
                 uuid: uuid,
                 updatedAt: updatedAt,
+                planJson: planJson,
               ),
           createCompanionCallback:
               ({
@@ -1685,6 +1754,7 @@ class $$SessionsTableTableManager
                 Value<String> skinId = const Value.absent(),
                 Value<String?> uuid = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String?> planJson = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 startedAt: startedAt,
@@ -1699,6 +1769,7 @@ class $$SessionsTableTableManager
                 skinId: skinId,
                 uuid: uuid,
                 updatedAt: updatedAt,
+                planJson: planJson,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

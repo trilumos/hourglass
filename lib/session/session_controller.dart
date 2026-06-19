@@ -4,6 +4,7 @@ import '../domain/focus_phase.dart';
 import '../domain/phase_engine.dart';
 import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
+import 'config_codec.dart';
 import 'session_config.dart';
 import 'session_plan.dart';
 import 'session_state.dart';
@@ -269,6 +270,7 @@ class SessionController extends ChangeNotifier {
       autoContinue: _endless,
       soundscape: config.soundscape,
       skinId: config.skinId,
+      planJson: encodeConfig(config),
     );
   }
 

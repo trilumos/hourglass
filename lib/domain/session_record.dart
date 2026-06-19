@@ -14,6 +14,10 @@ class SessionRecord {
   final String soundscape;
   final String skinId;
 
+  /// Serialized config (segments + flags) to replay this session exactly via
+  /// "Start again". Null for sessions recorded before this shipped.
+  final String? planJson;
+
   const SessionRecord({
     required this.id,
     required this.startedAt,
@@ -26,5 +30,6 @@ class SessionRecord {
     required this.autoContinue,
     required this.soundscape,
     required this.skinId,
+    this.planJson,
   });
 }
