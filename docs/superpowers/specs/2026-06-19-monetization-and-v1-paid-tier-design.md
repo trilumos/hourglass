@@ -57,6 +57,8 @@
 | **Detailed + enhanced Insights** | **Pro** | **v1** |
 | **Color themes** (app palette + hourglass colors) | **Pro (bundled) + à la carte** | **v1** |
 | Todo/task library, widgets, share cards, break activities, +more themes/soundscapes | Pro | v1.2 |
+| Daily/weekly **goal + progress** (pairs with reminders) | Pro | v1.2 |
+| **Achievements / badges** (see §3.6 — some Free, some Pro) | Free + Pro | v1.2 (with Levels in v2) |
 | Pro **monthly/yearly** options (lifetime still offered) | Pro | v1.2 |
 | Full categorized **Store** (shapes · elements · app themes · packs · soundscapes) | à la carte + Plus | v1.2 |
 | Cloud **sync** + cross-device | Plus | v1.2 |
@@ -153,16 +155,23 @@ A simple, calm **Themes** screen (not the full categorized store):
 - **Entry point:** a "Themes" row in Settings (and/or Profile) — decide during
   build; Settings is the natural home.
 
-### 3.4 Detailed + enhanced Insights (the Pro anchor)
+### 3.4 Detailed + enhanced Insights (the Pro anchor) — LOCKED 2026-06-19
+Informed by `docs/references/insights-analytics-research-2026-06-19.md`.
 - **Free Insights** = Records + consistency heatmap.
-- **Pro Insights** = the **current** depth (Week/Month/All toggle, focus-over-time
-  `BarReadoutChart`, when-you-focus time-of-day + day-of-week, by-mode donut,
-  period comparison, personalized copy) **+ a starter set of new analytics** to
-  make Pro clearly worth it. **Candidate enhancements** (final selection +
-  detailed design in a short follow-on Insights pass, see §5): Focus Score trend
-  over time; Focus Stamina growth; a daily/weekly **focus goal + progress**;
-  completion/consistency stats + best-focus-window recommendation;
-  what-you-focused-on (intention) breakdown; **CSV export**.
+- **Pro Insights (v1)** = the **current** depth (Week/Month/All toggle,
+  focus-over-time `BarReadoutChart`, when-you-focus time-of-day + day-of-week,
+  by-mode donut, period comparison, personalized copy) **+ these locked additions:**
+  1. **Focus Score trend** over time (the hero number's trajectory).
+  2. **Focus Stamina growth** (sustainable block length climbing) — *unique to Sustain*.
+  3. **Peak focus window** recommendation ("you focus best 9–11am").
+  4. **Completion / follow-through rate** (+ trend) — controllable, honest.
+  5. **Personal-bests timeline** (records over time).
+  6. **CSV / data export.**
+  All six run on data we already record (mode, planned vs actual duration, start
+  time, completion/give-up). The detailed-Insights design lives in its own short
+  spec (see §5).
+- **Deferred to v1.2:** daily/weekly **goal + progress** (pairs with reminders) —
+  needs a goal setting; **intention breakdown** — needs intention tagging.
 - **Gating UX:** the free user sees Records + heatmap, then a calm, honest
   upsell panel where the depth would be ("See your full focus story with Pro"),
   never a nag. No data is hidden that the free tier ever had.
@@ -174,6 +183,18 @@ A simple, calm **Themes** screen (not the full categorized store):
 - A **Settings toggle** (sounds on/off). Respect silent mode sensibly.
 - These are *ritual feedback*, free — distinct from premium **soundscapes**
   (ambient focus audio), which are v1.2 Pro.
+
+### 3.6 Achievements / badges (NOT v1 — v1.2, design with Levels) — recorded
+A milestone/badge layer (research-backed: Insight Timer stars, Headspace medals).
+**Own design pass — build with the V2 Levels/progression so they don't duplicate
+the Focus-Score-100 "level up."** Seed ideas from founder (2026-06-19):
+- **Firsts:** complete one full session in *each* mode (Flow, Pomodoro, Custom).
+- **Score/ability:** reach a Focus Score / average milestone.
+- **Consistency:** hit daily-streak milestones (7, 30, 100…).
+- "More and more" achievements over time; an achievements grid in Profile.
+- **Some Free, some Pro** (where relevant/possible) — exact split decided in its
+  own design. Honesty rule: celebrate real accomplishment; **no manufactured
+  streak guilt / loss-aversion pressure** (per the insights research anti-patterns).
 
 ---
 
