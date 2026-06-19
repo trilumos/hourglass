@@ -78,25 +78,52 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   bool _flipping = false; // hero snapped to full (0), flipping upright
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild as the pages scroll so the hero drain + content fade track the
+    // swipe in real time (buttery, not stepped only on settle).
+    _pageCtrl.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    _pageCtrl.removeListener(_onScroll);
     _pageCtrl.dispose();
     _nameCtrl.dispose();
     _flip.dispose();
     super.dispose();
   }
 
-  // Per page the drain deepens 10% (page 1 = 10% … profile page = 50%); the sand
-  // keeps falling the whole time (the stream animates whenever 0 < drain < 1).
-  // On finish: drain fully (1.0), then snap to full (0.0) hidden by the flip.
+  /// Live fractional page (tracks the swipe), falling back to the settled index.
+  double get _page {
+    try {
+      if (_pageCtrl.hasClients) {
+        final p = _pageCtrl.page;
+        if (p != null) return p;
+      }
+    } catch (_) {}
+    return _index.toDouble();
+  }
+
+  // Per page the drain deepens 10% (page 1 = 10% … profile page = 50%), tracking
+  // the swipe live; the sand keeps falling the whole time (the stream animates
+  // whenever 0 < drain < 1). On finish: drain fully (1.0), then snap to full
+  // (0.0) hidden by the flip.
   double get _heroProgress {
     if (_flipping) return 0.0;
     if (_finishing) return 1.0;
-    return 0.1 * (_index + 1);
+    return (0.1 * (_page + 1)).clamp(0.1, 0.5);
   }
+
+  static const _pageTurn = Duration(milliseconds: 500);
 
   void _onCta() {
     if (_index < _profileIndex) {
-      _pageCtrl.nextPage(duration: HgMotion.medium, curve: HgMotion.calm);
+      _pageCtrl.nextPage(duration: _pageTurn, curve: HgMotion.calm);
     } else {
       _finish(save: true);
     }
@@ -105,7 +132,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   void _onSkip() {
     if (_index < _profileIndex) {
       _pageCtrl.animateToPage(_profileIndex,
-          duration: HgMotion.medium, curve: HgMotion.calm);
+          duration: _pageTurn, curve: HgMotion.calm);
     } else {
       _finish(save: false);
     }
@@ -167,8 +194,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     if (!mounted) return;
     ref.invalidate(profileProvider);
     ref.invalidate(onboardingCompleteProvider);
+    // Cross-fade to Home while the (now full, upright) hourglass Hero-flies to
+    // its Home position — no cut, no fill pop.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 550),
+        pageBuilder: (_, _, _) => const HomeScreen(),
+        transitionsBuilder: (_, anim, _, child) => FadeTransition(
+          opacity: CurvedAnimation(parent: anim, curve: HgMotion.calm),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  /// Cross-fades + lifts page content as it scrolls past centre (buttery, vs a
+  /// rigid horizontal slide).
+  Widget _paged(int i, Widget child) {
+    final d = (_page - i).abs().clamp(0.0, 1.0);
+    return Opacity(
+      opacity: 1 - d,
+      child: Transform.translate(offset: Offset(0, d * 16), child: child),
     );
   }
 
@@ -217,7 +263,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           child: child,
                         );
                       },
-                      child: HourglassView(progress: _heroProgress),
+                      child: HourglassView(
+                        progress: _heroProgress,
+                        heroTag: kHourglassHeroTag,
+                      ),
                     ),
                   ),
                 ),
@@ -228,11 +277,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     controller: _pageCtrl,
                     onPageChanged: (i) => setState(() => _index = i),
                     children: [
-                      for (final p in _teach) _TeachView(page: p),
-                      _ProfileView(
-                        controller: _nameCtrl,
-                        pendingFile: _pendingFile,
-                        onPickPhoto: _saving ? null : _pickPhoto,
+                      for (var i = 0; i < _teach.length; i++)
+                        _paged(i, _TeachView(page: _teach[i])),
+                      _paged(
+                        _profileIndex,
+                        _ProfileView(
+                          controller: _nameCtrl,
+                          pendingFile: _pendingFile,
+                          onPickPhoto: _saving ? null : _pickPhoto,
+                        ),
                       ),
                     ],
                   ),
