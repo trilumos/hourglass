@@ -172,6 +172,21 @@ motif, calm/warm/exact, accent as punctuation, no fake claims).
 - **alreadyOwned** → treated as restore → success path.
 - **error / declined / network** → a kind, plain message + retry; nothing granted.
 
+**Regional pricing, currency & payment (all Google Play, no app code):**
+- The region is the user's **Google Play account country**. In Play Console the
+  founder sets prices (Google auto-converts to ~150 currencies, or set explicit
+  per-country prices — e.g. ₹ tiers tuned for India).
+- At runtime RevenueCat returns the product **for the user's region** with a
+  pre-formatted, localized `priceString` (correct currency symbol, amount,
+  decimals) — the app renders it verbatim, **never hardcodes** prices. The
+  "save N%" badge uses raw `priceAmountMicros`/`currencyCode` (same currency),
+  computed live.
+- **Google is the merchant of record:** it processes the payment with each
+  region's local methods (cards, **UPI**, carrier billing, wallets, Play
+  balance), and **collects/remits tax** (VAT/GST/sales tax), showing tax-
+  inclusive prices where required. We and RevenueCat never touch money, currency
+  conversion, or tax; RevenueCat only relays the verified entitlement.
+
 **Manage/cancel** = deep link to the Play subscriptions page
 (`https://play.google.com/store/account/subscriptions?...`). Required by Play +
 consumer law and by our "easy cancel" promise.
