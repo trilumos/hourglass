@@ -52,16 +52,39 @@ void main() {
     expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1800);
   });
 
-  test('persists an abandoned session without changing stamina', () async {
+  test('persists an abandoned (but kept) session without changing stamina',
+      () async {
     await settings.setInt('staminaSeconds', 1500);
     await finalizer.persist(
-      _record(recorded: Duration.zero, completed: false, abandoned: true),
+      _record(
+          recorded: const Duration(minutes: 5),
+          completed: false,
+          abandoned: true),
     );
 
     final all = await sessions.allSessions();
     expect(all, hasLength(1));
     expect(all.single.abandoned, isTrue);
     expect(await settings.getInt('staminaSeconds', defaultValue: 0), 1500);
+  });
+
+  test('records nothing for a sub-2-min Flow end (returns null)', () async {
+    final id = await finalizer.persist(
+      _record(
+          recorded: const Duration(seconds: 21),
+          completed: false,
+          abandoned: true),
+    );
+    expect(id, isNull);
+    expect(await sessions.allSessions(), isEmpty);
+  });
+
+  test('keeps a sub-2-min Pomodoro/Custom session', () async {
+    final id = await finalizer.persist(
+      _record(recorded: const Duration(seconds: 21), mode: SessionMode.pomodoro),
+    );
+    expect(id, isNotNull);
+    expect(await sessions.allSessions(), hasLength(1));
   });
 
   test('does not update stamina for a completed non-flow-block session', () async {

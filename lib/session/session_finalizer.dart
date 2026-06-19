@@ -16,9 +16,20 @@ class SessionFinalizer {
   /// Settings key holding the user's current Focus Stamina, in seconds.
   static const staminaKey = 'staminaSeconds';
 
+  /// Minimum focused seconds a Flow Block must reach to be recorded at all.
+  /// Sub-2-min Flow ends are uncounted (no streak, Today, history, or score).
+  static const flowMinSeconds = 120;
+
   /// Records [record] and returns its new row id, then recomputes Focus Stamina.
   /// The id lets the caller revise the same record if a Flow Block is extended.
-  Future<int> persist(SessionRecord record) async {
+  ///
+  /// Returns `null` (records nothing) when the focus is below the keep
+  /// threshold: a **Flow** block needs ≥ [flowMinSeconds]; **Pomodoro/Custom**
+  /// keep any real focus (> 0s).
+  Future<int?> persist(SessionRecord record) async {
+    final minSeconds =
+        record.mode == SessionMode.flowBlock ? flowMinSeconds : 1;
+    if (record.recordedFocus.inSeconds < minSeconds) return null;
     final id = await _sessions.insertSession(record);
     await _recomputeStamina();
     return id;

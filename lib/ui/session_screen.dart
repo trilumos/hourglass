@@ -150,13 +150,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   /// extended — one record per block. Refresh derived providers only after the
   /// write lands (invalidating early recomputes from stale data).
   Future<void> _saveCheckpoint(SessionRecord record) async {
-    // Nothing focused worth keeping (e.g. a sub-2-min give-up) → don't store a
-    // 0-minute row.
-    if (record.recordedFocus.inSeconds == 0) return;
     final finalizer = ref.read(sessionFinalizerProvider);
     if (!_persisted) {
-      _persisted = true;
-      _recordId = await finalizer.persist(record);
+      _persisted = true; // claim synchronously so concurrent checkpoints don't double-insert
+      final id = await finalizer.persist(record);
+      if (id == null) {
+        // Below the keep threshold (e.g. a sub-2-min Flow end) → nothing stored;
+        // allow a later checkpoint to persist once there's real focus.
+        _persisted = false;
+        return;
+      }
+      _recordId = id;
     } else if (_recordId != null) {
       await finalizer.reviseRecordedFocus(
         _recordId!,
@@ -164,6 +168,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         completed: record.completed,
         abandoned: record.abandoned,
       );
+    } else {
+      return; // a persist is in flight; this checkpoint can be skipped
     }
     if (!mounted) return;
     ref.invalidate(focusScoreProvider);
@@ -994,6 +1000,9 @@ class _Completion extends ConsumerWidget {
     final focused = record?.recordedFocus ?? Duration.zero;
     final hasFocus = focused.inSeconds > 0;
     final isFlow = config.mode == SessionMode.flowBlock;
+    // A Flow block only counts (score, streak, average) once it reaches 2 min.
+    final flowCounts = isFlow && focused.inSeconds >= 120;
+    final subTwoMinFlow = isFlow && hasFocus && focused.inSeconds < 120;
     final score = ref.watch(focusScoreProvider).asData?.value;
 
     final sessionPoints = (isFlow && record != null)
@@ -1022,7 +1031,7 @@ class _Completion extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: HgSpacing.xl),
-          if (isFlow && hasFocus) ...[
+          if (flowCounts) ...[
             // Hero = THIS session's score (it visibly changes block to block).
             Text(
               'SESSION SCORE',
@@ -1070,7 +1079,7 @@ class _Completion extends ConsumerWidget {
                 color: hg.textMuted,
               ),
             ),
-          ] else
+          ] else ...[
             Text(
               hasFocus
                   ? '${_focusedLabel(focused)} focused'
@@ -1083,6 +1092,21 @@ class _Completion extends ConsumerWidget {
                 color: hg.textPrimary,
               ),
             ),
+            if (subTwoMinFlow) ...[
+              const SizedBox(height: HgSpacing.md),
+              Text(
+                "Under 2 minutes, so this one won't count toward your Focus "
+                'Score or average focus. A few more next time and it will.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 13,
+                  height: 1.45,
+                  color: hg.textMuted,
+                ),
+              ),
+            ],
+          ],
           const SizedBox(height: HgSpacing.xxl),
           if (canKeepGoing) ...[
             PrimaryButton(label: 'Keep going', onPressed: onKeepGoing),
