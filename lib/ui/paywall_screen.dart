@@ -77,10 +77,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
   }
 
-  Future<void> _manage() => launchUrl(
+  Future<void> _manage() async {
+    try {
+      final ok = await launchUrl(
         Uri.parse('https://play.google.com/store/account/subscriptions'),
         mode: LaunchMode.externalApplication,
       );
+      if (!ok && mounted) _snack('Could not open Google Play subscriptions.');
+    } catch (_) {
+      if (mounted) _snack('Could not open Google Play subscriptions.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

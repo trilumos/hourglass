@@ -23,19 +23,27 @@ class RevenueCatBillingService implements BillingService {
         catalogThemeIds: kCatalogThemeIds,
       );
 
+  void _update(CustomerInfo info) {
+    _current = _map(info);
+    _controller.add(_current);
+  }
+
   @override
   Future<void> init() async {
     try {
       await Purchases.configure(PurchasesConfiguration(apiKey));
-      _current = _map(await Purchases.getCustomerInfo());
-      _controller.add(_current);
-      _listener = (info) {
-        _current = _map(info);
-        _controller.add(_current);
-      };
+      // Register the listener FIRST so that even if the initial fetch fails
+      // (transient/offline), a later push still updates entitlements without an
+      // app restart. The SDK delivers the last-known info to a new listener.
+      _listener = _update;
       Purchases.addCustomerInfoUpdateListener(_listener!);
+      try {
+        _update(await Purchases.getCustomerInfo());
+      } catch (_) {
+        // Initial fetch failed; the listener above will deliver when able.
+      }
     } catch (_) {
-      // Billing unavailable: stay free, never block the app.
+      // Billing unavailable (e.g. configure failed): stay free, never block.
       _current = Entitlements.free;
     }
   }
@@ -79,35 +87,34 @@ class RevenueCatBillingService implements BillingService {
     try {
       final result =
           await Purchases.purchase(PurchaseParams.package(package.raw as Package));
-      _current = _map(result.customerInfo);
-      _controller.add(_current);
+      _update(result.customerInfo);
       return _current.pro ? PurchaseOutcome.success : PurchaseOutcome.pending;
     } on PlatformException catch (e) {
-      return _outcomeFor(PurchasesErrorHelper.getErrorCode(e));
+      final code = PurchasesErrorHelper.getErrorCode(e);
+      if (code == PurchasesErrorCode.purchaseCancelledError) {
+        return PurchaseOutcome.cancelled;
+      }
+      if (code == PurchasesErrorCode.paymentPendingError) {
+        return PurchaseOutcome.pending;
+      }
+      if (code == PurchasesErrorCode.productAlreadyPurchasedError) {
+        // Re-sync from verified state and only treat as owned if Pro is really
+        // active for this account — never celebrate on the error alone.
+        try {
+          _update(await Purchases.getCustomerInfo());
+        } catch (_) {/* leave _current as-is */}
+        return _current.pro ? PurchaseOutcome.alreadyOwned : PurchaseOutcome.error;
+      }
+      return PurchaseOutcome.error;
     } catch (_) {
       return PurchaseOutcome.error;
-    }
-  }
-
-  PurchaseOutcome _outcomeFor(PurchasesErrorCode code) {
-    switch (code) {
-      case PurchasesErrorCode.purchaseCancelledError:
-        return PurchaseOutcome.cancelled;
-      case PurchasesErrorCode.paymentPendingError:
-        return PurchaseOutcome.pending;
-      case PurchasesErrorCode.productAlreadyPurchasedError:
-        return PurchaseOutcome.alreadyOwned;
-      default:
-        return PurchaseOutcome.error;
     }
   }
 
   @override
   Future<RestoreOutcome> restore() async {
     try {
-      final info = await Purchases.restorePurchases();
-      _current = _map(info);
-      _controller.add(_current);
+      _update(await Purchases.restorePurchases());
       return _current.pro
           ? RestoreOutcome.restoredPro
           : RestoreOutcome.nothingToRestore;
