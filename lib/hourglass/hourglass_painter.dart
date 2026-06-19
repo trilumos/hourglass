@@ -207,7 +207,7 @@ class HourglassPainter extends CustomPainter {
       final double gate = gapFade * supplyFade;
       if (gate > 0.01 && gapNow > 1) {
         final Color grain = skin.grainColor;
-        const int grainCount = 64;
+        const int grainCount = 80;
         // Ambient (Home) falls a little slower — calmer, less timer-like.
         final double fallPeriod = ambient ? 0.78 : 0.5;
         const double v0Frac = 0.10; // small exit speed; rest is gravity (phase^2)
@@ -226,9 +226,10 @@ class HourglassPainter extends CustomPainter {
           final double px = cx +
               lane.abs() * lane * colHalf +
               math.sin(phase * 2 * math.pi + i) * 0.5;
-          // visible grains: ~1.6px leaving the hole -> ~1.0px near the pile
-          final double r = ((1.5 - 0.55 * fall) * (0.6 + 0.45 * sizeR))
-              .clamp(0.6, 1.8)
+          // Fine grains: a touch over 1px leaving the hole, tapering finer as
+          // they fall — a delicate spray, not chunky dots.
+          final double r = ((1.05 - 0.4 * fall) * (0.55 + 0.4 * sizeR))
+              .clamp(0.4, 1.1)
               .toDouble();
           final double a = ((1.0 - 0.16 * fall) * (0.82 + 0.18 * laneR) * gate)
               .clamp(0.0, 1.0)
@@ -239,23 +240,10 @@ class HourglassPainter extends CustomPainter {
               ((py - holeY) / (floorY - holeY)).clamp(0.0, 1.0);
           final double aFade =
               ambient ? 0.78 * (1.0 - _smooth((drop - 0.42) / 0.58)) : 1.0;
-          // Motion blur: a falling grain smears into a short vertical thread,
-          // and faster grains (lower in the fall, where gravity has spread them
-          // out) draw longer — so the stream reads as one continuous flow
-          // instead of separate dots. speedLocal = d(fall)/d(phase).
-          final double speedLocal = v0Frac + 2 * (1 - v0Frac) * phase;
-          final double streak =
-              (speedLocal * gapNow * 0.05).clamp(r * 1.4, gapNow * 0.18);
-          final double half = streak / 2;
-          final double y0 = (py - half).clamp(holeY, landY).toDouble();
-          final double y1 = (py + half).clamp(holeY, landY).toDouble();
-          canvas.drawLine(
-            Offset(px, y0),
-            Offset(px, y1),
-            Paint()
-              ..color = grain.withValues(alpha: a * aFade)
-              ..strokeWidth = r * 2
-              ..strokeCap = StrokeCap.round,
+          canvas.drawCircle(
+            Offset(px, py),
+            r,
+            Paint()..color = grain.withValues(alpha: a * aFade),
           );
         }
 
