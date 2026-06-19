@@ -1,8 +1,30 @@
+import 'focus_score_calculator.dart';
 import 'session_mode.dart';
 import 'session_record.dart';
+import 'stamina_calculator.dart';
 
 /// The window analytics charts are scoped to.
 enum AnalyticsRange { week, month, all }
+
+/// One point on a value-over-time line (Focus Score trend, Stamina growth).
+/// [value] is null for buckets before the metric has any data (no fake line).
+class TrendPoint {
+  final String label; // short axis label (e.g. 'M', '14', 'Jun')
+  final String? detail; // fuller readout (e.g. 'Tue 14', 'Jun 2026')
+  final double? value;
+  const TrendPoint(this.label, this.value, {this.detail});
+
+  String get readout => detail ?? label;
+}
+
+/// Follow-through: share of Flow sessions in the range that reached their mark,
+/// with the previous window's rate for a comparison line.
+class FollowThrough {
+  final double rate; // 0..1 (0 when no sample)
+  final double? prevRate; // null for all-time or no prior sample
+  final int sample; // number of Flow sessions counted
+  const FollowThrough(this.rate, this.prevRate, this.sample);
+}
 
 /// One labeled bar — shared by focus-over-time and both rhythm charts.
 class TimeBar {
@@ -184,6 +206,149 @@ class AnalyticsCalculator {
           total > Duration.zero ? totals[m]!.inSeconds / total.inSeconds : 0.0,
         )
     ];
+  }
+
+  /// Bucket boundaries mirroring [focusOverTime] (daily for week/month, monthly
+  /// for all). Each bucket carries an exclusive upper bound for "as of" filters.
+  List<({String label, String? detail, DateTime endExclusive})> _trendBuckets(
+      AnalyticsRange range, DateTime now, List<SessionRecord> sessions) {
+    if (range == AnalyticsRange.all) {
+      final focused =
+          sessions.where((s) => s.recordedFocus > Duration.zero).toList();
+      if (focused.isEmpty) return const [];
+      final first = focused
+          .map((s) => s.startedAt)
+          .reduce((a, b) => a.isBefore(b) ? a : b);
+      final endMonth = DateTime(now.year, now.month);
+      final out = <({String label, String? detail, DateTime endExclusive})>[];
+      var cursor = DateTime(first.year, first.month);
+      while (!cursor.isAfter(endMonth)) {
+        out.add((
+          label: _monthAbbr[cursor.month - 1],
+          detail: '${_monthAbbr[cursor.month - 1]} ${cursor.year}',
+          endExclusive: DateTime(cursor.year, cursor.month + 1),
+        ));
+        cursor = DateTime(cursor.year, cursor.month + 1);
+      }
+      return out;
+    }
+    final count = range == AnalyticsRange.week ? 7 : 30;
+    final today = _dateOnly(now);
+    final out = <({String label, String? detail, DateTime endExclusive})>[];
+    for (var i = count - 1; i >= 0; i--) {
+      final day = today.subtract(Duration(days: i));
+      out.add((
+        label: range == AnalyticsRange.week
+            ? _weekdayInitials[day.weekday - 1]
+            : '${day.day}',
+        detail: range == AnalyticsRange.week
+            ? '${_weekdayAbbr[day.weekday - 1]} ${day.day}'
+            : '${day.day} ${_monthAbbr[day.month - 1]}',
+        endExclusive: day.add(const Duration(days: 1)),
+      ));
+    }
+    return out;
+  }
+
+  /// Focus Score (0–100) as of the end of each bucket (cumulative; null before
+  /// the first scored Flow session). The hero number's trajectory.
+  List<TrendPoint> focusScoreTrend(
+      AnalyticsRange range, DateTime now, List<SessionRecord> sessions) {
+    const calc = FocusScoreCalculator();
+    final flow = sessions
+        .where((s) =>
+            s.mode == SessionMode.flowBlock && s.recordedFocus.inSeconds >= 120)
+        .toList()
+      ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    return [
+      for (final b in _trendBuckets(range, now, sessions))
+        () {
+          final upto = flow
+              .where((s) => s.startedAt.isBefore(b.endExclusive))
+              .map((s) => (chosen: s.plannedDuration, actual: s.recordedFocus))
+              .toList();
+          return TrendPoint(b.label, upto.isEmpty ? null : calc.score(upto).toDouble(),
+              detail: b.detail);
+        }()
+    ];
+  }
+
+  /// Focus Stamina (minutes) as of the end of each bucket (cumulative; null
+  /// before the first completed Flow block). Climbs toward the 90-min ceiling.
+  List<TrendPoint> staminaGrowth(
+      AnalyticsRange range, DateTime now, List<SessionRecord> sessions) {
+    const calc = StaminaCalculator();
+    final blocks = sessions
+        .where((s) =>
+            s.mode == SessionMode.flowBlock && s.completed && !s.abandoned)
+        .toList()
+      ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    return [
+      for (final b in _trendBuckets(range, now, sessions))
+        () {
+          final upto = blocks
+              .where((s) => s.startedAt.isBefore(b.endExclusive))
+              .map((s) => s.recordedFocus)
+              .toList();
+          return TrendPoint(
+              b.label,
+              upto.isEmpty
+                  ? null
+                  : calc.currentStamina(upto).inMinutes.toDouble(),
+              detail: b.detail);
+        }()
+    ];
+  }
+
+  /// An honest "you focus best in the X" caption from [inRange] time-of-day, or
+  /// null when there isn't enough signal (≥3 sessions and peak ≥25% of focus).
+  String? peakWindowCaption(List<SessionRecord> inRange) {
+    if (inRange.length < 3) return null;
+    final tod = timeOfDay(inRange);
+    final total = tod.fold(Duration.zero, (a, b) => a + b.focus);
+    if (total == Duration.zero) return null;
+    var peak = -1;
+    var peakV = Duration.zero;
+    for (var i = 0; i < tod.length; i++) {
+      if (tod[i].focus > peakV) {
+        peakV = tod[i].focus;
+        peak = i;
+      }
+    }
+    if (peak < 0 || peakV.inSeconds < total.inSeconds * 0.25) return null;
+    const clocks = [
+      '5–8am', '8am–12pm', '12–2pm', '2–5pm', '5–9pm', '9pm–5am' //
+    ];
+    return 'You focus best in the ${tod[peak].label} (${clocks[peak]}).';
+  }
+
+  /// Share of Flow sessions in the range that reached their mark, with the
+  /// previous window's rate for a comparison line.
+  FollowThrough followThrough(
+      AnalyticsRange range, DateTime now, List<SessionRecord> sessions) {
+    double rateOf(List<SessionRecord> ss) => ss.isEmpty
+        ? 0
+        : ss.where((s) => s.completed && !s.abandoned).length / ss.length;
+    final inRange = sessionsInRange(range, now, sessions)
+        .where((s) => s.mode == SessionMode.flowBlock)
+        .toList();
+    double? prev;
+    if (range != AnalyticsRange.all) {
+      final span = range == AnalyticsRange.week ? 7 : 30;
+      final end = _dateOnly(now);
+      final prevEnd = end.subtract(Duration(days: span));
+      final prevStart = end.subtract(Duration(days: 2 * span - 1));
+      final prevSessions = sessions
+          .where((s) =>
+              s.mode == SessionMode.flowBlock &&
+              s.recordedFocus > Duration.zero)
+          .where((s) {
+        final d = _dateOnly(s.startedAt);
+        return !d.isBefore(prevStart) && !d.isAfter(prevEnd);
+      }).toList();
+      prev = prevSessions.isEmpty ? null : rateOf(prevSessions);
+    }
+    return FollowThrough(rateOf(inRange), prev, inRange.length);
   }
 
   /// All series for one range in a single pass over the data.
