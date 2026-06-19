@@ -50,9 +50,10 @@ const _teach = <_TeachPage>[
   ),
   _TeachPage(
     'Watch your focus grow.',
-    'Your Focus Score (0–100) tracks your focus ability as you train. Pomodoro '
-        'and Custom are training wheels — Flow is the real method. The full '
-        'guide is in Settings → How it works.',
+    'Your Focus Score (0–100) tracks your focus ability; your average shows how '
+        'long you typically focus. Pomodoro and Custom are training wheels — '
+        'Flow is the real method, and the only one scored. Full guide in '
+        'Settings → How it works.',
   ),
 ];
 

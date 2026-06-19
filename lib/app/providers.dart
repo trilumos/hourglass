@@ -88,14 +88,23 @@ class HomeStats {
   final int streak;
   final int sessionsCompleted;
 
+  /// Mean focused time per session across ALL modes — the easy-to-grasp
+  /// companion to the (Flow-only) Focus Score.
+  final Duration avgSession;
+
   const HomeStats({
     required this.todayFocus,
     required this.streak,
     required this.sessionsCompleted,
+    required this.avgSession,
   });
 
-  static const empty =
-      HomeStats(todayFocus: Duration.zero, streak: 0, sessionsCompleted: 0);
+  static const empty = HomeStats(
+    todayFocus: Duration.zero,
+    streak: 0,
+    sessionsCompleted: 0,
+    avgSession: Duration.zero,
+  );
 }
 
 /// Builds and persists finished sessions (and updates Focus Stamina).
@@ -139,6 +148,7 @@ final homeStatsProvider = FutureProvider<HomeStats>((ref) async {
     todayFocus: stats.focusOnDay(now, sessions),
     streak: stats.currentStreak(now, sessions),
     sessionsCompleted: stats.sessionsCompleted(sessions),
+    avgSession: stats.averageSession(sessions),
   );
 });
 

@@ -97,6 +97,15 @@ class GuideScreen extends StatelessWidget {
                   'page any time to see how it is calculated.',
                 ),
 
+                _Heading('YOUR AVERAGE FOCUS'),
+                _Body(
+                  'Your typical focused time per session, across every mode. '
+                  'Where the Focus Score reflects ability and counts only Flow, '
+                  'your average is the simple picture of how long you usually '
+                  'focus. Flow sessions under 2 minutes are ignored, so a quick '
+                  'false start never drags it down.',
+                ),
+
                 _Heading('YOUR NUMBERS'),
                 for (final n in _numbers) _DefRow(term: n.$1, def: n.$2),
 

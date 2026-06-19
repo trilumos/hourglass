@@ -156,29 +156,35 @@ class _StatRow extends StatelessWidget {
     Widget divider() => Container(
           width: 1,
           height: 28,
-          margin: const EdgeInsets.symmetric(horizontal: HgSpacing.lg),
+          margin: const EdgeInsets.symmetric(horizontal: HgSpacing.md),
           color: hg.hairline,
         );
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const FocusScoreScreen()),
+    // FittedBox keeps all four stats on one line on narrow screens / large fonts.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FocusScoreScreen()),
+            ),
+            child: _Stat(
+              label: 'Focus',
+              value: '${focusScore ?? 0}',
+              animatedNumber: focusScore ?? 0,
+              accent: true,
+            ),
           ),
-          child: _Stat(
-            label: 'Focus',
-            value: '${focusScore ?? 0}',
-            animatedNumber: focusScore ?? 0,
-            accent: true,
-          ),
-        ),
-        divider(),
-        _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
-        divider(),
-        _Stat(label: 'Streak', value: _formatStreak(data.streak)),
-      ],
+          divider(),
+          _Stat(label: 'Avg', value: _formatFocus(data.avgSession)),
+          divider(),
+          _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
+          divider(),
+          _Stat(label: 'Streak', value: _formatStreak(data.streak)),
+        ],
+      ),
     );
   }
 
