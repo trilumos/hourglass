@@ -198,6 +198,7 @@ class _DepthBand extends ConsumerWidget {
         formatValue: (v) => '${v.round()}',
         emptyCopy: InsightsCopy.scoreEmpty,
         insight: InsightsCopy.scoreTrendInsight(extras.scoreTrend),
+        note: range == AnalyticsRange.all ? null : InsightsCopy.scoreSlowNote,
       ),
       const SizedBox(height: HgSpacing.xl),
 
@@ -348,6 +349,9 @@ class _LineSection extends StatelessWidget {
   final String emptyCopy;
   final String? insight;
 
+  /// A quiet caveat under the insight (e.g. why a rolling average moves slowly).
+  final String? note;
+
   const _LineSection({
     required this.label,
     required this.descriptor,
@@ -359,6 +363,7 @@ class _LineSection extends StatelessWidget {
     required this.insight,
     this.guideY,
     this.guideLabel,
+    this.note,
   });
 
   @override
@@ -386,6 +391,7 @@ class _LineSection extends StatelessWidget {
             ),
           ),
           _Insight(insight),
+          _Subtle(note),
         ],
       ],
     );

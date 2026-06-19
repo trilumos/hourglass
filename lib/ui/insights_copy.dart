@@ -27,6 +27,13 @@ class InsightsCopy {
   // Honest empty lines — shown in place of a chart when there's no real series.
   static const scoreEmpty =
       'Your Focus Score trend appears once you finish a few Flow sessions.';
+
+  /// Why the Focus Score line looks nearly flat over a short window: it's a
+  /// rolling average of recent Flow sessions, so it moves gradually. Shown for
+  /// Week/Month; the All range reveals the full arc.
+  static const scoreSlowNote =
+      "Focus Score is a rolling average of your recent Flow sessions, so it "
+      "moves gently over a short window. Switch to All for the full arc.";
   static const staminaEmpty =
       'Your stamina line appears once you complete a Flow block.';
 
