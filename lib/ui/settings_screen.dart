@@ -1,13 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/billing_providers.dart';
 import '../app/providers.dart';
 import '../app/root_gate.dart';
 import '../app/theme.dart';
 import '../app/theme_controller.dart';
 import '../app/tokens.dart';
+import '../billing/billing_service.dart';
 import 'guide_screen.dart';
+import 'paywall_screen.dart';
 import 'profile_screen.dart';
 import 'widgets/screen_background.dart';
 
@@ -67,6 +71,49 @@ class SettingsScreen extends ConsumerWidget {
                         builder: (_) => const ProfileScreen()),
                   ),
                 ),
+
+                const SizedBox(height: HgSpacing.xl),
+
+                // ── Sustain Pro ──────────────────────────────────────────────
+                _SectionLabel('SUSTAIN PRO'),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: ref.watch(entitlementsProvider).pro
+                      ? 'You have Pro'
+                      : 'Get Sustain Pro',
+                  subtitle: ref.watch(entitlementsProvider).pro
+                      ? 'Thank you for supporting Sustain.'
+                      : 'Your full focus story, every theme, and more.',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                  ),
+                ),
+                _ActionRow(
+                  title: 'Restore purchases',
+                  onTap: () async {
+                    final outcome =
+                        await ref.read(billingServiceProvider).restore();
+                    if (!context.mounted) return;
+                    final msg = switch (outcome) {
+                      RestoreOutcome.restoredPro => 'Pro restored.',
+                      RestoreOutcome.nothingToRestore =>
+                        'No previous purchases found on this Google account.',
+                      RestoreOutcome.error =>
+                        'Could not restore right now. Please try again.',
+                    };
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(msg)));
+                  },
+                ),
+                if (kDebugMode)
+                  _ActionRow(
+                    title: 'Dev: unlock Pro',
+                    subtitle: ref.watch(devProUnlockProvider)
+                        ? 'On (debug only)'
+                        : 'Off (debug only)',
+                    onTap: () =>
+                        ref.read(devProUnlockProvider.notifier).toggle(),
+                  ),
 
                 const SizedBox(height: HgSpacing.xl),
 

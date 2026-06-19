@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/billing_providers.dart';
 import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
@@ -77,6 +78,27 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (ref.watch(entitlementsProvider).pro) ...[
+                  const SizedBox(height: HgSpacing.sm),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: hg.accentMuted,
+                        borderRadius: BorderRadius.circular(HgRadius.pill),
+                      ),
+                      child: Text('PRO',
+                          style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 11,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w700,
+                            color: hg.accent,
+                          )),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: HgSpacing.md),
                 Center(
                   child: Text(
