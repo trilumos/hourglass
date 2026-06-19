@@ -6,8 +6,10 @@ import 'package:hourglass/app/theme.dart';
 import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/data/app_database.dart';
 import 'package:hourglass/domain/analytics_calculator.dart';
+import 'package:hourglass/domain/personal_bests.dart';
 import 'package:hourglass/domain/session_mode.dart';
 import 'package:hourglass/domain/session_record.dart';
+import 'package:hourglass/ui/insights_copy.dart';
 import 'package:hourglass/ui/insights_screen.dart';
 
 SessionRecord rec(DateTime at, Duration focus,
@@ -51,6 +53,26 @@ void main() {
         firstDate: DateTime(2026, 6, 1),
       );
 
+  InsightsExtras extrasFor(AnalyticsRange range) {
+    const calc = AnalyticsCalculator();
+    final inRange = calc.sessionsInRange(range, now, sessions);
+    return InsightsExtras(
+      scoreTrend: calc.focusScoreTrend(range, now, sessions),
+      staminaGrowth: calc.staminaGrowth(range, now, sessions),
+      peakWindow: calc.peakWindowCaption(inRange),
+      followThrough: calc.followThrough(range, now, sessions),
+      bests: const PersonalBestsCalculator().compute(sessions),
+    );
+  }
+
+  /// A tall, narrow viewport so the whole scroll body builds for `find`.
+  void tallView(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1200, 7000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
   testWidgets('empty history shows the begin-your-first-block copy',
       (tester) async {
     await tester.pumpWidget(ProviderScope(
@@ -67,11 +89,9 @@ void main() {
     expect(find.textContaining('Begin your first block'), findsOneWidget);
   });
 
-  testWidgets('populated history renders records and charts', (tester) async {
-    tester.view.physicalSize = const Size(1200, 4000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets('populated history renders records, charts, and Pro depth band',
+      (tester) async {
+    tallView(tester);
     await tester.pumpWidget(ProviderScope(
       overrides: [
         clockProvider.overrideWithValue(() => now),
@@ -83,20 +103,64 @@ void main() {
           final range = ref.watch(analyticsRangeProvider);
           return const AnalyticsCalculator().compute(range, now, sessions);
         }),
+        insightsExtrasProvider.overrideWith((ref) async {
+          final range = ref.watch(analyticsRangeProvider);
+          return extrasFor(range);
+        }),
       ],
       child: _wrap(const InsightsScreen()),
     ));
     await tester.pumpAndSettle();
     expect(find.text('RECORDS'), findsOneWidget);
+    expect(find.text('FOCUS SCORE'), findsOneWidget);
+    expect(find.text('FOCUS STAMINA'), findsOneWidget);
     expect(find.text('FOCUS OVER TIME'), findsOneWidget);
+    expect(find.text('FOLLOW-THROUGH'), findsOneWidget);
     expect(find.text('BY MODE'), findsOneWidget);
+    expect(find.text('PERSONAL BESTS'), findsOneWidget);
+    expect(find.text('Export CSV'), findsOneWidget);
+  });
+
+  testWidgets('trend sections show honest empty copy with no scored sessions',
+      (tester) async {
+    tallView(tester);
+    // Pomodoro-only history: there are focused sessions (so we reach the depth
+    // band) but no Flow → no Focus Score / Stamina series.
+    final pomoOnly = [
+      rec(DateTime(2026, 6, 18, 9), const Duration(minutes: 25),
+          mode: SessionMode.pomodoro),
+    ];
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        clockProvider.overrideWithValue(() => now),
+        profileStatsProvider.overrideWith((ref) async => populatedStats()),
+        dailyFocusProvider.overrideWith((ref) async => const {}),
+        analyticsProvider.overrideWith((ref) async {
+          final range = ref.watch(analyticsRangeProvider);
+          return const AnalyticsCalculator().compute(range, now, pomoOnly);
+        }),
+        insightsExtrasProvider.overrideWith((ref) async {
+          final range = ref.watch(analyticsRangeProvider);
+          const calc = AnalyticsCalculator();
+          final inRange = calc.sessionsInRange(range, now, pomoOnly);
+          return InsightsExtras(
+            scoreTrend: calc.focusScoreTrend(range, now, pomoOnly),
+            staminaGrowth: calc.staminaGrowth(range, now, pomoOnly),
+            peakWindow: calc.peakWindowCaption(inRange),
+            followThrough: calc.followThrough(range, now, pomoOnly),
+            bests: const PersonalBestsCalculator().compute(pomoOnly),
+          );
+        }),
+      ],
+      child: _wrap(const InsightsScreen()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text(InsightsCopy.scoreEmpty), findsOneWidget);
+    expect(find.text(InsightsCopy.staminaEmpty), findsOneWidget);
   });
 
   testWidgets('switching the range to month does not throw', (tester) async {
-    tester.view.physicalSize = const Size(1200, 4000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+    tallView(tester);
     final container = ProviderContainer(overrides: [
       clockProvider.overrideWithValue(() => now),
       profileStatsProvider.overrideWith((ref) async => populatedStats()),
@@ -104,6 +168,10 @@ void main() {
       analyticsProvider.overrideWith((ref) async {
         final range = ref.watch(analyticsRangeProvider);
         return const AnalyticsCalculator().compute(range, now, sessions);
+      }),
+      insightsExtrasProvider.overrideWith((ref) async {
+        final range = ref.watch(analyticsRangeProvider);
+        return extrasFor(range);
       }),
     ]);
     addTearDown(container.dispose);

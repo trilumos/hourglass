@@ -78,6 +78,69 @@ void main() {
     });
   });
 
+  group('scoreTrendInsight', () {
+    TrendPoint p(double? v) => TrendPoint('x', v);
+    test('reports a climb', () {
+      expect(InsightsCopy.scoreTrendInsight([p(60), p(70), p(84)]),
+          'Your Focus Score climbed from 60 to 84.');
+    });
+    test('reports an ease back', () {
+      expect(InsightsCopy.scoreTrendInsight([p(84), p(70)]),
+          'Your Focus Score eased from 84 to 70.');
+    });
+    test('calls a flat line steady', () {
+      expect(InsightsCopy.scoreTrendInsight([p(80), p(81)]),
+          'Your Focus Score is holding steady around 81.');
+    });
+    test('a single point reads as sitting at', () {
+      expect(InsightsCopy.scoreTrendInsight([p(null), p(72)]),
+          'Your Focus Score is sitting at 72.');
+    });
+    test('null when no point has a value', () {
+      expect(InsightsCopy.scoreTrendInsight([p(null), p(null)]), isNull);
+      expect(InsightsCopy.scoreTrendInsight(const []), isNull);
+    });
+  });
+
+  group('staminaInsight', () {
+    TrendPoint p(double? v) => TrendPoint('x', v);
+    test('reports growth in minutes', () {
+      expect(InsightsCopy.staminaInsight([p(24), p(32)]),
+          'Your sustainable block grew from 24 to 32 minutes.');
+    });
+    test('notes nearing the ceiling', () {
+      expect(InsightsCopy.staminaInsight([p(82)]),
+          'You can hold about 82 minutes of unbroken focus — nearing the 90-minute ceiling.');
+    });
+    test('null before any block', () {
+      expect(InsightsCopy.staminaInsight([p(null)]), isNull);
+    });
+  });
+
+  group('followThrough copy', () {
+    test('frames the rate neutrally', () {
+      expect(
+          InsightsCopy.followThroughLine(const FollowThrough(0.82, null, 11)),
+          '82% of your Flow sessions reached their mark.');
+    });
+    test('null when no sample', () {
+      expect(InsightsCopy.followThroughLine(const FollowThrough(0, null, 0)),
+          isNull);
+    });
+    test('comparison in percentage points', () {
+      expect(
+          InsightsCopy.followThroughComparison(
+              const FollowThrough(0.82, 0.76, 11), 'last week'),
+          '+6 pts vs last week');
+    });
+    test('comparison null without a prior window', () {
+      expect(
+          InsightsCopy.followThroughComparison(
+              const FollowThrough(0.82, null, 11), ''),
+          isNull);
+    });
+  });
+
   group('comparison', () {
     test('reports an increase', () {
       expect(

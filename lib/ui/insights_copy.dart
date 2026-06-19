@@ -17,6 +17,18 @@ class InsightsCopy {
   static const focusOverTime = 'How your focus rises and dips over time.';
   static const whenYouFocus = 'The times and days you tend to go deep.';
   static const byMode = 'How your focus splits across the three modes.';
+  static const focusScore = 'The depth of your focus, traced over time (0 to 100).';
+  static const stamina =
+      'The block length you can hold, climbing toward 90 minutes.';
+  static const followThrough = 'How often your Flow sessions reach their mark.';
+  static const personalBests = 'Your records so far. Each one really happened.';
+  static const dataExport = 'Your history is yours. Take a copy with you.';
+
+  // Honest empty lines — shown in place of a chart when there's no real series.
+  static const scoreEmpty =
+      'Your Focus Score trend appears once you finish a few Flow sessions.';
+  static const staminaEmpty =
+      'Your stamina line appears once you complete a Flow block.';
 
   // ── Personalized insight lines (null = not enough signal) ──────────────────
 
@@ -86,6 +98,62 @@ class InsightsCopy {
       SessionMode.pomodoro => 'Pomodoro is your go-to.',
       SessionMode.custom => 'Custom sessions are your go-to.',
     };
+  }
+
+  /// The trajectory of the Focus Score across the visible range, in plain words.
+  /// Null when no bucket has a score yet (the chart shows [scoreEmpty] instead).
+  static String? scoreTrendInsight(List<TrendPoint> points) {
+    final vals = [
+      for (final p in points)
+        if (p.value != null) p.value!.round()
+    ];
+    if (vals.isEmpty) return null;
+    final last = vals.last;
+    if (vals.length == 1) return 'Your Focus Score is sitting at $last.';
+    final delta = last - vals.first;
+    if (delta >= 3) return 'Your Focus Score climbed from ${vals.first} to $last.';
+    if (delta <= -3) return 'Your Focus Score eased from ${vals.first} to $last.';
+    return 'Your Focus Score is holding steady around $last.';
+  }
+
+  /// The trajectory of Focus Stamina (minutes) in plain words. Null when no
+  /// bucket has a value (the chart shows [staminaEmpty] instead).
+  static String? staminaInsight(List<TrendPoint> points) {
+    final vals = [
+      for (final p in points)
+        if (p.value != null) p.value!.round()
+    ];
+    if (vals.isEmpty) return null;
+    final last = vals.last;
+    final ceiling = last >= 80 ? ' — nearing the 90-minute ceiling' : '';
+    if (vals.length == 1) {
+      return 'You can hold about $last minutes of unbroken focus$ceiling.';
+    }
+    final delta = last - vals.first;
+    if (delta >= 2) {
+      return 'Your sustainable block grew from ${vals.first} to $last minutes$ceiling.';
+    }
+    if (delta <= -2) {
+      return 'Your sustainable block eased from ${vals.first} to $last minutes.';
+    }
+    return "You're holding around $last minutes of unbroken focus$ceiling.";
+  }
+
+  /// "82% of your Flow sessions reached their mark." Null when no Flow sample.
+  static String? followThroughLine(FollowThrough ft) {
+    if (ft.sample <= 0) return null;
+    return '${(ft.rate * 100).round()}% of your Flow sessions reached their mark.';
+  }
+
+  /// The follow-through comparison sub-line, in percentage points (honest: a
+  /// rate vs a rate). Null for all-time or when there's no prior window.
+  static String? followThroughComparison(FollowThrough ft, String previousNoun) {
+    final prev = ft.prevRate;
+    if (prev == null) return null;
+    final pts = ((ft.rate - prev) * 100).round();
+    if (pts.abs() < 3) return 'about the same as $previousNoun';
+    if (pts > 0) return '+$pts pts vs $previousNoun';
+    return '−${pts.abs()} pts vs $previousNoun'; // proper minus sign
   }
 
   static TimeBar? _peak(List<TimeBar> bars) {
