@@ -30,12 +30,18 @@ class HourglassView extends StatefulWidget {
   /// mid-fall (used to make a paused session unmistakable). Default true.
   final bool animate;
 
+  /// Ambient idle mode: sand falls continuously, the top stays full, and NO
+  /// pile accumulates in the bottom (used on Home so it reads as alive, not a
+  /// running countdown).
+  final bool ambient;
+
   const HourglassView({
     super.key,
     required this.progress,
     this.skin,
     this.heroTag,
     this.animate = true,
+    this.ambient = false,
   });
 
   @override
@@ -109,7 +115,8 @@ class _HourglassViewState extends State<HourglassView>
         aspectRatio: 0.52,
         child: CustomPaint(
           size: Size.infinite,
-          painter: HourglassPainter(progress: progress, time: _time, skin: skin),
+          painter: HourglassPainter(
+              progress: progress, time: _time, skin: skin, ambient: widget.ambient),
         ),
       ),
     );
@@ -126,8 +133,11 @@ class _HourglassViewState extends State<HourglassView>
             aspectRatio: 0.52,
             child: CustomPaint(
               size: Size.infinite,
-              painter:
-                  HourglassPainter(progress: progress, time: 0, skin: skin),
+              painter: HourglassPainter(
+                  progress: progress,
+                  time: 0,
+                  skin: skin,
+                  ambient: widget.ambient),
             ),
           ),
         ),

@@ -20,10 +20,15 @@ class HourglassPainter extends CustomPainter {
   final double time;
   final HourglassSkin skin;
 
+  /// Ambient idle mode: sand falls continuously with a FULL top and NO bottom
+  /// pile accumulating — an "alive" hourglass that implies no countdown (Home).
+  final bool ambient;
+
   HourglassPainter({
     required this.progress,
     required this.time,
     required this.skin,
+    this.ambient = false,
   });
 
   @override
@@ -105,7 +110,8 @@ class HourglassPainter extends CustomPainter {
       return baseRise + bump;
     }
 
-    final double landY = floorY - pileHeightAt(cx);
+    // Ambient: nothing accumulates, so grains fall the full lower chamber.
+    final double landY = ambient ? floorY : floorY - pileHeightAt(cx);
 
     canvas.save();
     canvas.clipPath(glass);
@@ -159,8 +165,8 @@ class HourglassPainter extends CustomPainter {
       drawWaveLayer(0.0, 0.34, 4.0, Paint()..color = skin.sandColor);
     }
 
-    // BOTTOM pile.
-    if (drain > 0.0) {
+    // BOTTOM pile (never in ambient mode — nothing accumulates).
+    if (!ambient && drain > 0.0) {
       final Path pile = Path();
       const int pn = 72;
       for (int i = 0; i <= pn; i++) {
@@ -181,7 +187,7 @@ class HourglassPainter extends CustomPainter {
     // FALLING SAND: a thin, near-straight central column of matte grains that
     // ACCELERATE under gravity (slow + packed at the hole, fast + sparse at the
     // pile). No glow, no cone, no splash. Fades as the gap shrinks / top empties.
-    if (drain > 0.0 && drain < 1.0) {
+    if (ambient || (drain > 0.0 && drain < 1.0)) {
       final double holeY = yToPx(0.5);
       final double gapNow = landY - holeY;
       final double gapFade = (gapNow / (usableH * 0.06)).clamp(0.0, 1.0);
@@ -216,10 +222,18 @@ class HourglassPainter extends CustomPainter {
           final double a = ((1.0 - 0.16 * fall) * (0.82 + 0.18 * laneR) * gate)
               .clamp(0.0, 1.0)
               .toDouble();
+          // Ambient has no pile to land on → fade grains out before the floor.
+          final double aFade = ambient
+              ? (1.0 -
+                  _smooth(
+                      ((((py - holeY) / (floorY - holeY)).clamp(0.0, 1.0)) -
+                              0.65) /
+                          0.35))
+              : 1.0;
           canvas.drawCircle(
             Offset(px, py),
             r,
-            Paint()..color = grain.withValues(alpha: a),
+            Paint()..color = grain.withValues(alpha: a * aFade),
           );
         }
 
@@ -230,7 +244,7 @@ class HourglassPainter extends CustomPainter {
         // a small pile barely stirs and a tall pile visibly sprays. The grain
         // disappears the instant it meets the surface at its x — no floating.
         final double fill = drain.clamp(0.0, 1.0);
-        final int scatterN = (3 + 13 * fill).round();
+        final int scatterN = ambient ? 0 : (3 + 13 * fill).round();
         final double hScale = maxHalf * (0.10 + 0.40 * fill) * 2.2;
         final double vScale = usableH * (0.010 + 0.055 * fill) * 2.2;
         final math.Random erng = math.Random(31);
@@ -288,5 +302,8 @@ class HourglassPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant HourglassPainter old) =>
-      old.time != time || old.progress != progress || old.skin != skin;
+      old.time != time ||
+      old.progress != progress ||
+      old.skin != skin ||
+      old.ambient != ambient;
 }

@@ -112,6 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           const EdgeInsets.symmetric(vertical: HgSpacing.xs),
                       child: const HourglassView(
                         progress: 0,
+                        ambient: true, // alive idle fall, full top, no pile
                         heroTag: kHourglassHeroTag,
                       ),
                     ),
