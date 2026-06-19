@@ -11,13 +11,16 @@ class TypewriterTagline extends StatefulWidget {
   const TypewriterTagline({super.key});
 
   static const _prefix = 'Train your focus ';
+  // Each must read as a true, meaningful completion of "Train your focus …".
   static const _phrases = <String>[
     'like an athlete',
+    'and recover like an athlete',
     'one block at a time',
-    'and recover like one',
-    "until it's effortless",
-    "like it's training",
     'one rep at a time',
+    "until it's effortless",
+    'like the skill it is',
+    'and let it grow stronger',
+    'session by session',
   ];
 
   @override
