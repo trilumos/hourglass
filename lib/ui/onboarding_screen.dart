@@ -78,20 +78,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   bool _flipping = false; // hero snapped to full (0), flipping upright
 
   @override
-  void initState() {
-    super.initState();
-    // Rebuild as the pages scroll so the hero drain + content fade track the
-    // swipe in real time (buttery, not stepped only on settle).
-    _pageCtrl.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    if (mounted) setState(() {});
-  }
-
-  @override
   void dispose() {
-    _pageCtrl.removeListener(_onScroll);
     _pageCtrl.dispose();
     _nameCtrl.dispose();
     _flip.dispose();
@@ -211,10 +198,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   /// Cross-fades + lifts page content as it scrolls past centre (buttery, vs a
   /// rigid horizontal slide).
   Widget _paged(int i, Widget child) {
-    final d = (_page - i).abs().clamp(0.0, 1.0);
-    return Opacity(
-      opacity: 1 - d,
-      child: Transform.translate(offset: Offset(0, d * 16), child: child),
+    return AnimatedBuilder(
+      animation: _pageCtrl,
+      builder: (context, c) {
+        final d = (_page - i).abs().clamp(0.0, 1.0);
+        return Opacity(
+          opacity: 1 - d,
+          child: Transform.translate(offset: Offset(0, d * 16), child: c),
+        );
+      },
+      child: child,
     );
   }
 
@@ -252,21 +245,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   flex: 5,
                   child: Center(
                     child: AnimatedBuilder(
-                      animation: _flip,
-                      builder: (context, child) {
+                      // Rebuild ONLY the hero subtree on flip or page scroll —
+                      // not the whole screen — so the drain tracks the swipe
+                      // without re-rendering the gradient/text/dots every frame.
+                      animation: Listenable.merge([_flip, _pageCtrl]),
+                      builder: (context, _) {
                         final t = Curves.easeOutCubic.transform(_flip.value);
                         return Transform(
                           alignment: Alignment.center,
                           transform: Matrix4.identity()
                             ..setEntry(3, 2, 0.0012) // perspective
                             ..rotateX((1 - t) * math.pi),
-                          child: child,
+                          child: HourglassView(
+                            progress: _heroProgress,
+                            heroTag: kHourglassHeroTag,
+                          ),
                         );
                       },
-                      child: HourglassView(
-                        progress: _heroProgress,
-                        heroTag: kHourglassHeroTag,
-                      ),
                     ),
                   ),
                 ),
