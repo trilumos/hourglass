@@ -285,7 +285,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                     ),
                     const SizedBox(height: HgSpacing.md),
-                    PrimaryButton(label: 'Flip to begin', onPressed: _begin),
+                    PrimaryButton(label: 'Begin', onPressed: _begin),
                   ],
                 ),
               ),

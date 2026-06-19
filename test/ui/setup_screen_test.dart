@@ -39,7 +39,7 @@ void main() {
     expect(find.text('30 min'), findsOneWidget); // stamina-suggested chip
 
     await tester.enterText(find.byType(TextField), 'Read chapter 4');
-    await tester.tap(find.text('Flip to begin'));
+    await tester.tap(find.text('Begin'));
     // The live session animates indefinitely — push the route without settling.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
