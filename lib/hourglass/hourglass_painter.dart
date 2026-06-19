@@ -151,7 +151,14 @@ class HourglassPainter extends CustomPainter {
           final Offset c2 = p2 - (p3 - p1) / 6.0;
           p.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, p2.dx, p2.dy);
         }
+        // Funnel the sand into the central aperture instead of a flat cap at the
+        // neck (which read as a rigid horizontal line). A smooth arc dips toward
+        // the hole; it eases to flat as the top empties (waveFade → 0).
+        final double apexY = neckPx + usableH * 0.06 * waveFade;
+        final double mouth = neckHalf * 2.4;
         p.lineTo(w, neckPx);
+        p.lineTo(cx + mouth, neckPx);
+        p.quadraticBezierTo(cx, apexY, cx - mouth, neckPx);
         p.lineTo(0, neckPx);
         p.close();
         canvas.drawPath(p, paint);
