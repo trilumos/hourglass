@@ -269,3 +269,39 @@ v1 stays shippable:
 
 Each becomes its own plan; the enhanced-Insights analytics + the theme palettes
 get a quick design pass first.
+
+---
+
+## Pricing (researched + recommended 2026-06-20; founder to confirm + set in Play Console)
+
+Market-grounded (cosmetic-IAP + focus-app sub/lifetime research, India PPP-localized
+~0.2-0.3x US; charm pricing; impulse ceiling India ~Rs199 / global ~$4.99). Prices are
+NEVER hardcoded in the app (fetched live from RevenueCat/Play); this is the founder's
+Play Console / RevenueCat input.
+
+| Item | India (Rs) | Global ($) |
+|---|---|---|
+| One standard premium theme (the 8) | 89 | 1.99 |
+| Aurora flagship theme | 199 | 4.99 |
+| Pro Monthly | 149/mo | 4.99/mo |
+| Pro Yearly ("Best value") | 799/yr | 29.99/yr |
+| Pro Lifetime (hero: own every theme forever) | 1,499 | 59.99 |
+
+**Funnel math (India):** 1 theme Rs89, Aurora+2 themes = Rs377, buy-ALL a-la-carte
+(8x89 + 199) = Rs911. Pro Yearly Rs799 unlocks all 9 + analytics for ~2 themes' worth;
+Lifetime Rs1,499 = ~1.9x yearly, "own forever." Buy-all-a-la-carte is intentionally
+CHEAPER than Lifetime, so Lifetime must justify via Insights + Stamina + Average +
+every FUTURE theme (a growing value), not a repackage. (Global: buy-all = $20.91, so
+Yearly $29.99 already beats it -> globally lead with Yearly.)
+
+**Which tier to push:** INDIA -> Lifetime Rs1,499 hero (Indians distrust recurring
+charges; one-time "own forever" wins). GLOBAL -> Pro Yearly $29.99 "Best value",
+Lifetime $59.99 anchors above. Show monthly first to anchor, yearly Best value,
+lifetime as the calm finish. No dark patterns: a-la-carte themes are owned forever
+(non-consumable); subs clearly say "access while subscribed"; never frame a lapsed
+sub as losing an outright-purchased theme.
+
+**Product ids / entitlements to create:** theme.<id> (8 standard + theme.aurora)
+non-consumables -> theme_<id> entitlements; pro.monthly / pro.yearly / pro.lifetime ->
+the `pro` entitlement (grants all themes + analytics). See section 7 of the color-themes
+spec for the per-theme list.
