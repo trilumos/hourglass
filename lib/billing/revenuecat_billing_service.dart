@@ -124,6 +124,82 @@ class RevenueCatBillingService implements BillingService {
   }
 
   @override
+  Future<List<ThemeProduct>> themeProducts() async {
+    if (kCatalogThemeIds.isEmpty) return const [];
+    try {
+      final wantedIds = {for (final id in kCatalogThemeIds) kThemeProductId(id)};
+      // Themes are non-consumable in-app products, NOT subscriptions, so the
+      // non-subscription category is required or Google returns nothing.
+      final products = await Purchases.getProducts(
+        wantedIds.toList(),
+        productCategory: ProductCategory.nonSubscription,
+      );
+      final out = <ThemeProduct>[];
+      for (final p in products) {
+        // Recover the theme id from the product id (kThemeProductId == 'theme.<id>').
+        final id = _themeIdOf(p.identifier);
+        if (id == null || !kCatalogThemeIds.contains(id)) continue;
+        out.add(ThemeProduct(themeId: id, priceString: p.priceString, raw: p));
+      }
+      return out;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<PurchaseOutcome> purchaseTheme(String themeId) async {
+    try {
+      final wanted = kThemeProductId(themeId);
+      final products = await Purchases.getProducts(
+        [wanted],
+        productCategory: ProductCategory.nonSubscription,
+      );
+      StoreProduct? product;
+      for (final p in products) {
+        if (p.identifier == wanted) {
+          product = p;
+          break;
+        }
+      }
+      if (product == null) return PurchaseOutcome.error;
+      final result =
+          await Purchases.purchase(PurchaseParams.storeProduct(product));
+      _update(result.customerInfo);
+      return _current.ownsTheme(themeId)
+          ? PurchaseOutcome.success
+          : PurchaseOutcome.pending;
+    } on PlatformException catch (e) {
+      final code = PurchasesErrorHelper.getErrorCode(e);
+      if (code == PurchasesErrorCode.purchaseCancelledError) {
+        return PurchaseOutcome.cancelled;
+      }
+      if (code == PurchasesErrorCode.paymentPendingError) {
+        return PurchaseOutcome.pending;
+      }
+      if (code == PurchasesErrorCode.productAlreadyPurchasedError) {
+        // Re-sync from verified state; only treat as owned if it really is.
+        try {
+          _update(await Purchases.getCustomerInfo());
+        } catch (_) {/* leave _current as-is */}
+        return _current.ownsTheme(themeId)
+            ? PurchaseOutcome.alreadyOwned
+            : PurchaseOutcome.error;
+      }
+      return PurchaseOutcome.error;
+    } catch (_) {
+      return PurchaseOutcome.error;
+    }
+  }
+
+  /// 'theme.obsidian' -> 'obsidian'. Mirrors [kThemeProductId]. Null if no match.
+  String? _themeIdOf(String productId) {
+    const prefix = 'theme.';
+    if (!productId.startsWith(prefix)) return null;
+    return productId.substring(prefix.length);
+  }
+
+  @override
   void dispose() {
     final l = _listener;
     if (l != null) Purchases.removeCustomerInfoUpdateListener(l);

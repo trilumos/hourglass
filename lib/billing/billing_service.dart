@@ -38,6 +38,19 @@ class ProOffering {
   }
 }
 
+/// A purchasable theme (non-consumable), normalized away from RevenueCat's
+/// types. [raw] holds the underlying store product the real service purchases.
+class ThemeProduct {
+  final String themeId;
+  final String priceString; // localized, store-formatted (e.g. "₹169.00")
+  final Object raw;
+  const ThemeProduct({
+    required this.themeId,
+    required this.priceString,
+    required this.raw,
+  });
+}
+
 /// The billing contract the app depends on. The only implementations are
 /// [RevenueCatBillingService] (real) and FakeBillingService (tests + key-less).
 abstract class BillingService {
@@ -55,6 +68,14 @@ abstract class BillingService {
 
   Future<PurchaseOutcome> purchase(ProPackage package);
   Future<RestoreOutcome> restore();
+
+  /// The purchasable themes (à la carte). Empty when unavailable (offline /
+  /// key-less / no products configured). Pro grants all themes regardless.
+  Future<List<ThemeProduct>> themeProducts();
+
+  /// Purchase a single theme. On success the `theme_<id>` entitlement becomes
+  /// active and the entitlements stream emits. Reuses [PurchaseOutcome].
+  Future<PurchaseOutcome> purchaseTheme(String themeId);
 
   void dispose();
 }

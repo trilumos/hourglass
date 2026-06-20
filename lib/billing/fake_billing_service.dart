@@ -11,6 +11,8 @@ class FakeBillingService implements BillingService {
   ProOffering? offering;
   PurchaseOutcome nextPurchase;
   RestoreOutcome nextRestore;
+  List<ThemeProduct> themeProductList;
+  PurchaseOutcome nextThemePurchase;
   final _controller = StreamController<Entitlements>.broadcast();
 
   FakeBillingService({
@@ -18,6 +20,8 @@ class FakeBillingService implements BillingService {
     this.offering,
     this.nextPurchase = PurchaseOutcome.success,
     this.nextRestore = RestoreOutcome.nothingToRestore,
+    this.themeProductList = const [],
+    this.nextThemePurchase = PurchaseOutcome.success,
   }) : _current = initial;
 
   Entitlements get _pro => entitlementsFrom(
@@ -54,6 +58,21 @@ class FakeBillingService implements BillingService {
       _controller.add(_current);
     }
     return nextRestore;
+  }
+
+  @override
+  Future<List<ThemeProduct>> themeProducts() async => themeProductList;
+
+  @override
+  Future<PurchaseOutcome> purchaseTheme(String themeId) async {
+    if (nextThemePurchase == PurchaseOutcome.success ||
+        nextThemePurchase == PurchaseOutcome.alreadyOwned) {
+      _current = _current.copyWith(
+        ownedThemeIds: {..._current.ownedThemeIds, themeId},
+      );
+      _controller.add(_current);
+    }
+    return nextThemePurchase;
   }
 
   @override

@@ -46,4 +46,43 @@ void main() {
     expect(await svc.restore(), RestoreOutcome.nothingToRestore);
     expect(svc.current.pro, isFalse);
   });
+
+  test('purchaseTheme success grants theme_<id> and emits', () async {
+    final fake = FakeBillingService(nextThemePurchase: PurchaseOutcome.success);
+    addTearDown(fake.dispose);
+    final emits = <Entitlements>[];
+    final sub = fake.entitlements().listen(emits.add);
+    addTearDown(sub.cancel);
+
+    final outcome = await fake.purchaseTheme('obsidian');
+    await Future<void>.delayed(Duration.zero);
+
+    expect(outcome, PurchaseOutcome.success);
+    expect(fake.current.ownsTheme('obsidian'), isTrue);
+    expect(emits.last.ownsTheme('obsidian'), isTrue);
+  });
+
+  test('purchaseTheme cancelled leaves ownership unchanged', () async {
+    final fake = FakeBillingService(nextThemePurchase: PurchaseOutcome.cancelled);
+    addTearDown(fake.dispose);
+    final outcome = await fake.purchaseTheme('sage');
+    expect(outcome, PurchaseOutcome.cancelled);
+    expect(fake.current.ownsTheme('sage'), isFalse);
+  });
+
+  test('themeProducts returns the scripted list', () async {
+    final fake = FakeBillingService(themeProductList: const [
+      ThemeProduct(themeId: 'tide', priceString: r'$1.99', raw: 'x'),
+    ]);
+    addTearDown(fake.dispose);
+    final products = await fake.themeProducts();
+    expect(products.single.themeId, 'tide');
+    expect(products.single.priceString, r'$1.99');
+  });
+
+  test('themeProducts defaults to empty (key-less)', () async {
+    final fake = FakeBillingService();
+    addTearDown(fake.dispose);
+    expect(await fake.themeProducts(), isEmpty);
+  });
 }

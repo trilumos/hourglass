@@ -25,4 +25,19 @@ void main() {
 
     expect(container.read(entitlementsProvider).pro, isTrue);
   });
+
+  test('a theme purchase unlocks it live through entitlementsProvider', () async {
+    final fake = FakeBillingService();
+    final container = ProviderContainer(
+        overrides: [billingServiceProvider.overrideWithValue(fake)]);
+    addTearDown(container.dispose);
+    addTearDown(fake.dispose);
+
+    expect(container.read(entitlementsProvider).ownsTheme('obsidian'), isFalse);
+
+    await fake.purchaseTheme('obsidian');
+    await Future<void>.delayed(Duration.zero);
+
+    expect(container.read(entitlementsProvider).ownsTheme('obsidian'), isTrue);
+  });
 }
