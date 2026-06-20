@@ -10,6 +10,7 @@ import 'focus_score_screen.dart';
 import 'guide_screen.dart';
 import 'insights_screen.dart';
 import 'photo_viewer_screen.dart';
+import 'preview_guard.dart';
 import 'session_format.dart';
 import 'session_history_screen.dart';
 import 'widgets/profile_avatar.dart';
@@ -63,6 +64,7 @@ class ProfileScreen extends ConsumerWidget {
                       if (path != null) {
                         _push(context, PhotoViewerScreen(imagePath: path));
                       } else {
+                        if (blockedByPreview(context, ref, 'edit profile')) return;
                         _push(context, const EditProfileScreen());
                       }
                     },
@@ -129,7 +131,10 @@ class ProfileScreen extends ConsumerWidget {
                 Center(
                   child: _Capsule(
                     label: hasName ? 'Edit profile' : 'Set up your profile',
-                    onTap: () => _push(context, const EditProfileScreen()),
+                    onTap: () {
+                      if (blockedByPreview(context, ref, 'edit profile')) return;
+                      _push(context, const EditProfileScreen());
+                    },
                   ),
                 ),
                 const SizedBox(height: HgSpacing.xl),

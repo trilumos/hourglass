@@ -13,6 +13,7 @@ import 'faq_screen.dart';
 import 'guide_screen.dart';
 import '../app/theme_providers.dart';
 import 'paywall_screen.dart';
+import 'preview_guard.dart';
 import 'themes_screen.dart';
 import 'profile_screen.dart';
 import 'widgets/screen_background.dart';
@@ -139,6 +140,10 @@ class SettingsScreen extends ConsumerWidget {
                       : 'After a break, you tap to start the next focus block.',
                   value: autoAdvance,
                   onChanged: (v) async {
+                    if (blockedByPreview(
+                        context, ref, 'change session settings')) {
+                      return;
+                    }
                     HapticFeedback.selectionClick();
                     await ref
                         .read(settingsRepositoryProvider)
@@ -155,6 +160,10 @@ class SettingsScreen extends ConsumerWidget {
                       "length (with a “keep going” option near the end).",
                   value: runUntilEnded,
                   onChanged: (v) async {
+                    if (blockedByPreview(
+                        context, ref, 'change session settings')) {
+                      return;
+                    }
                     HapticFeedback.selectionClick();
                     await ref
                         .read(settingsRepositoryProvider)
@@ -201,7 +210,10 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle:
                       'Delete every session, your stats, and profile. Can’t be undone.',
                   danger: true,
-                  onTap: () => _confirmClear(context, ref),
+                  onTap: () {
+                    if (blockedByPreview(context, ref, 'clear data')) return;
+                    _confirmClear(context, ref);
+                  },
                 ),
                 const SizedBox(height: HgSpacing.xxl),
 

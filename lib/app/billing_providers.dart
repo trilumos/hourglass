@@ -8,10 +8,20 @@ import '../billing/revenuecat_billing_service.dart';
 import '../domain/entitlements.dart';
 import 'tokens.dart';
 
+/// Debug-only stand-in à-la-carte products so the per-theme Buy flow is visible
+/// and testable on-device before the real Play Console / RevenueCat products
+/// exist. Compiled out of release (kDebugMode is a const false), where key-less
+/// themes correctly show "In Pro" until the founder configures real products.
+List<ThemeProduct> _devThemeProducts() => [
+      for (final id in kCatalogThemeIds)
+        ThemeProduct(themeId: id, priceString: r'$1.99', raw: 'dev'),
+    ];
+
 /// Picks the real service when a key is configured, else the fake (key-less:
 /// everyone Free). Real purchases are inherently Play Console / RevenueCat work.
 BillingService createBillingService() => kRevenueCatAndroidKey.isEmpty
-    ? FakeBillingService()
+    ? FakeBillingService(
+        themeProductList: kDebugMode ? _devThemeProducts() : const [])
     : RevenueCatBillingService(apiKey: kRevenueCatAndroidKey);
 
 /// The billing service. Overridden in main() with the initialized instance and
