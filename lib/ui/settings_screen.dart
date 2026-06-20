@@ -11,6 +11,7 @@ import '../app/theme_controller.dart';
 import '../app/tokens.dart';
 import 'faq_screen.dart';
 import 'guide_screen.dart';
+import '../app/theme_providers.dart';
 import 'paywall_screen.dart';
 import 'themes_screen.dart';
 import 'profile_screen.dart';
@@ -311,6 +312,9 @@ Future<void> _clearAll(WidgetRef ref) async {
   // Theme prefs live in SharedPreferences, not the Settings table — reset them
   // too so the wipe is a true factory reset.
   await ref.read(themeControllerProvider.notifier).reset();
+  // Drop any in-memory theme preview so the reset can't leave the preview bar
+  // hanging over the fresh onboarding flow.
+  ref.read(previewThemeProvider.notifier).clear();
   ref.invalidate(profileProvider);
   ref.invalidate(homeStatsProvider);
   ref.invalidate(focusScoreProvider);
