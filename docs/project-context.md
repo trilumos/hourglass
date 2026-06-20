@@ -123,6 +123,19 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
   A subtle upsell line on each locked theme sheet says Pro unlocks every theme in one payment. (Production Buy
   already launches the real Google Play checkout; the instant grant is debug-only — no code change needed.)
 - Keep adding features; ship V2 when traction is good.
+- **Data backup/restore + export split LOCKED (founder, 2026-06-20).** v1 data-loss safety net (full
+  cloud sync + auth stays V2). **Manual backup/restore:** `BackupService` exports ALL on-device data as one
+  versioned JSON (sessions w/ uuids, settings, profile + avatar base64, theme prefs); restore **MERGES by
+  uuid** (never deletes) and is offered via a prominent Settings → "Your data" section (export shares via
+  `share_plus`; import picks via `file_selector` — NOT `file_picker`, which pins `win32 ^5` and collides with
+  `share_plus`'s `^6`). Onboarding tells the user data is on-device + backable up; the clear-data dialog nudges
+  "back up first." **Export split:** raw **CSV** (session history) lives on the **History** screen header;
+  **Insights** exports a detailed **PDF Focus Report** (`lib/ui/insights_pdf.dart` + pure tested
+  `lib/domain/focus_report.dart`). The PDF is a 14-section, data-scaling narrative report (grows 1pg→5-7pg with
+  history; every section gated so nothing renders empty/fabricated; Focus Score/Stamina hidden until real Flow
+  data; Stamina + avg session Pro-gated). **Ships fontless** (built-in Helvetica + ASCII-safe text → real bold,
+  every glyph renders; `_ascii()` folds InsightsCopy em-dashes/minus at the render edge). Founder said "lock
+  this." Future option (not committed): embed a Unicode TTF (Geist) for em-dashes/brand font if desired.
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
