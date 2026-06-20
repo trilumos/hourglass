@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/app_database.dart';
+import '../data/backup_service.dart';
 import '../data/image_storage_service.dart';
 import '../data/profile_repository.dart';
 import '../data/session_repository.dart';
@@ -14,6 +15,7 @@ import '../domain/stamina_calculator.dart';
 import '../domain/stats_calculator.dart';
 import '../domain/user_profile.dart';
 import '../session/session_finalizer.dart';
+import 'theme_controller.dart';
 
 /// The on-device database. Closed automatically when the provider is disposed.
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -168,6 +170,15 @@ final profileRepositoryProvider = Provider<ProfileRepository>(
 
 final imageStorageProvider =
     Provider<ImageStorageService>((ref) => ImageStorageService());
+
+/// Manual data backup/restore (export/import all on-device data as JSON).
+final backupServiceProvider = Provider<BackupService>(
+  (ref) => BackupService(
+    ref.watch(databaseProvider),
+    ref.watch(sharedPrefsProvider),
+    ref.watch(imageStorageProvider),
+  ),
+);
 
 final profileProvider = FutureProvider<UserProfile>(
   (ref) => ref.watch(profileRepositoryProvider).load(),

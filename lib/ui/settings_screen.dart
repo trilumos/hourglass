@@ -12,6 +12,7 @@ import '../app/tokens.dart';
 import 'faq_screen.dart';
 import 'guide_screen.dart';
 import '../app/theme_providers.dart';
+import 'data_backup.dart';
 import 'paywall_screen.dart';
 import 'preview_guard.dart';
 import 'themes_screen.dart';
@@ -101,6 +102,34 @@ class SettingsScreen extends ConsumerWidget {
                         ref.read(devProUnlockProvider.notifier).toggle(),
                   ),
 
+                const SizedBox(height: HgSpacing.xl),
+
+                // ── Your data (backup/restore — prominent, not buried) ───────
+                _SectionLabel('YOUR DATA'),
+                const SizedBox(height: HgSpacing.xs),
+                Text(
+                  'Your focus history lives on this device. Back it up so you '
+                  'never lose it when you switch phones.',
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 13,
+                    color: hg.textMuted,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Back up your data',
+                  subtitle:
+                      'Save your sessions, streaks, and profile to a file you keep.',
+                  onTap: () => exportBackup(context, ref),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Restore from backup',
+                  subtitle: 'Bring your data to a new phone from a backup file.',
+                  onTap: () => restoreBackup(context, ref),
+                ),
                 const SizedBox(height: HgSpacing.xl),
 
                 // ── Display ──────────────────────────────────────────────────
@@ -282,7 +311,8 @@ class _ClearDataDialogState extends State<_ClearDataDialog> {
         children: [
           const Text(
               'This permanently deletes every session, your stats, and your '
-              'profile. This can’t be undone.'),
+              'profile. This can’t be undone. If you might want it back, close '
+              'this and tap “Back up your data” first.'),
           const SizedBox(height: HgSpacing.md),
           Text('Type Delete to confirm.',
               style: TextStyle(color: hg.textMuted, fontSize: 13)),

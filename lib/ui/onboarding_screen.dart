@@ -439,6 +439,18 @@ class _ProfileView extends StatelessWidget {
               color: hg.textMuted,
             ),
           ),
+          const SizedBox(height: HgSpacing.lg),
+          Text(
+            'Your focus history stays on this device — private to you. Back it '
+            'up anytime in Settings → Your data, so you never lose it when you '
+            'switch phones.',
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 13,
+              height: 1.45,
+              color: hg.textMuted,
+            ),
+          ),
         ],
       ),
     );
