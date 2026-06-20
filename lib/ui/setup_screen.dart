@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
+import '../app/theme_providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
@@ -181,8 +182,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       soundscape: 'sand',
       skinId: 'classic',
     );
+    // While previewing a locked theme, any session is a capped, non-recording
+    // preview (so a preview can never become free themed usage).
+    final previewing = ref.read(previewThemeProvider) != null;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => SessionScreen(config: config)),
+      MaterialPageRoute(
+        builder: (_) => SessionScreen(config: config, previewMode: previewing),
+      ),
     );
   }
 

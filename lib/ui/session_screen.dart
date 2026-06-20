@@ -21,6 +21,7 @@ import '../session/session_controller.dart';
 import '../session/session_plan.dart';
 import '../session/session_state.dart';
 import '../session/ticker.dart';
+import 'themes_screen.dart';
 import 'widgets/primary_button.dart';
 import 'widgets/screen_background.dart';
 
@@ -37,11 +38,18 @@ class SessionScreen extends ConsumerStatefulWidget {
   final Ticker? ticker;
   final DateTime Function()? now;
 
+  /// When true, this is a THEME PREVIEW run (started while previewing a locked
+  /// theme). It shows the themed hourglass in motion but is capped at ~10s and
+  /// persists NOTHING (no Focus Score, streak, Today, or history). It exists so
+  /// a preview shows the hero moment without granting free themed usage.
+  final bool previewMode;
+
   const SessionScreen({
     super.key,
     required this.config,
     this.ticker,
     this.now,
+    this.previewMode = false,
   });
 
   @override
@@ -64,6 +72,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Timer? _revealTimer;
   Timer? _idleTimer;
   Timer? _checkpointTimer;
+  Timer? _previewCapTimer;
+  bool _previewEnded = false;
 
   static const _idleDelay = Duration(seconds: 45);
 
@@ -93,7 +103,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     // Safety net: continuously checkpoint focus-so-far so a force-kill (or any
     // crash) can't lose the block — and force-killing counts as a give-up, just
     // like the button. Skipped under test (a fake ticker drives time).
-    if (widget.ticker == null) {
+    if (widget.ticker == null && !widget.previewMode) {
       _checkpointTimer = Timer.periodic(const Duration(seconds: 8), (_) {
         final s = _controller.state;
         if (s.status == SessionStatus.running &&
@@ -102,6 +112,24 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         }
       });
     }
+    // Theme preview: a capped, non-recording taste of the themed session. After
+    // ~10s it ends with a buy/exit prompt. It persists NOTHING (see
+    // _saveCheckpoint / the lifecycle guard) so it can never be free themed usage.
+    if (widget.previewMode) {
+      _previewCapTimer = Timer(const Duration(seconds: 10), _endPreview);
+    }
+  }
+
+  /// End a theme-preview session: freeze the hourglass and show the buy/exit
+  /// prompt. Records nothing.
+  void _endPreview() {
+    if (!mounted || _previewEnded) return;
+    final st = _controller.state.status;
+    if (st == SessionStatus.running || st == SessionStatus.paused) {
+      _controller.pause();
+    }
+    WakelockPlus.disable();
+    setState(() => _previewEnded = true);
   }
 
   /// Flip the hourglass over to begin a (new) block. Skipped under test where a
@@ -151,6 +179,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   /// extended — one record per block. Refresh derived providers only after the
   /// write lands (invalidating early recomputes from stale data).
   Future<void> _saveCheckpoint(SessionRecord record) async {
+    if (widget.previewMode) return; // a theme preview records nothing, ever
     final finalizer = ref.read(sessionFinalizerProvider);
     if (!_persisted) {
       _persisted = true; // claim synchronously so concurrent checkpoints don't double-insert
@@ -189,6 +218,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // A theme preview has no real block to protect and persists nothing.
+    if (widget.previewMode) return;
     // Protect the block: leaving the app ends the running session.
     if (state == AppLifecycleState.paused &&
         _controller.state.status == SessionStatus.running) {
@@ -203,6 +234,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     _revealTimer?.cancel();
     _idleTimer?.cancel();
     _checkpointTimer?.cancel();
+    _previewCapTimer?.cancel();
     WakelockPlus.disable();
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_onChange);
@@ -436,29 +468,38 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   @override
   Widget build(BuildContext context) {
     final s = _controller.state;
-    final terminal = s.status == SessionStatus.completed ||
+    // In preview, ANY ending (the ~10s cap, or give-up) shows the preview
+    // prompt, never the real completion/score screen.
+    final previewDone = widget.previewMode &&
+        (_previewEnded ||
+            s.status == SessionStatus.finished ||
+            s.status == SessionStatus.completed);
+    final terminal = previewDone ||
+        s.status == SessionStatus.completed ||
         s.status == SessionStatus.finished;
     // Ending a session returns all the way to Home (not back to Setup).
     void goHome() => Navigator.of(context).popUntil((r) => r.isFirst);
-    final Widget view = switch (s.status) {
-      SessionStatus.finished => _Completion(
-          key: const ValueKey('done'),
-          record: _record,
-          config: widget.config,
-          canKeepGoing: false,
-          onDone: goHome,
-        ),
-      SessionStatus.completed => _Completion(
-          key: const ValueKey('completed'),
-          record: _record,
-          config: widget.config,
-          canKeepGoing: true,
-          onKeepGoing: _onKeepGoing,
-          onDone: goHome,
-        ),
-      SessionStatus.awaitingResume => _awaitingView(s),
-      _ => s.isResting ? _restView(s) : _focusView(s),
-    };
+    final Widget view = previewDone
+        ? _previewEndView(goHome)
+        : switch (s.status) {
+            SessionStatus.finished => _Completion(
+                key: const ValueKey('done'),
+                record: _record,
+                config: widget.config,
+                canKeepGoing: false,
+                onDone: goHome,
+              ),
+            SessionStatus.completed => _Completion(
+                key: const ValueKey('completed'),
+                record: _record,
+                config: widget.config,
+                canKeepGoing: true,
+                onKeepGoing: _onKeepGoing,
+                onDone: goHome,
+              ),
+            SessionStatus.awaitingResume => _awaitingView(s),
+            _ => s.isResting ? _restView(s) : _focusView(s),
+          };
 
     return PopScope(
       // Back is intercepted: mid-session it confirms (abandon = give up); on a
@@ -486,6 +527,79 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // ── Theme preview ending ────────────────────────────────────────────────────
+  /// Shown when a capped theme-preview session ends: the frozen themed hourglass
+  /// plus a gentle buy/exit prompt. Nothing was recorded.
+  Widget _previewEndView(VoidCallback goHome) {
+    final hg = context.hg;
+    final previewId = ref.watch(previewThemeProvider);
+    final name = HgThemes.byId(previewId ?? 'sand').name;
+    return Padding(
+      key: const ValueKey('preview-end'),
+      padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 140,
+            child: HourglassView(
+              progress: 0.5,
+              animate: false,
+              skin: ref
+                  .watch(activeThemeProvider)
+                  .skinFor(Theme.of(context).brightness),
+            ),
+          ),
+          const SizedBox(height: HgSpacing.xl),
+          Text(
+            'Enjoying $name?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: HgFont.serif,
+              fontSize: 24,
+              color: hg.textPrimary,
+            ),
+          ),
+          const SizedBox(height: HgSpacing.sm),
+          Text(
+            'This was a quick preview, so nothing was recorded. Unlock the theme '
+            'to focus in it for real.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 14,
+              color: hg.textSecondary,
+            ),
+          ),
+          const SizedBox(height: HgSpacing.xl),
+          PrimaryButton(
+            label: 'Get it',
+            onPressed: () {
+              goHome();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ThemesScreen()),
+              );
+            },
+          ),
+          const SizedBox(height: HgSpacing.sm),
+          TextButton(
+            onPressed: () {
+              ref.read(previewThemeProvider.notifier).clear();
+              goHome();
+            },
+            child: Text(
+              'Exit preview',
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                color: hg.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
