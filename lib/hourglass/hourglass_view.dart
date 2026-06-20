@@ -87,11 +87,17 @@ class _HourglassViewState extends State<HourglassView>
   @override
   void didUpdateWidget(HourglassView old) {
     super.didUpdateWidget(old);
+    // Use isActive (started, regardless of TickerMode mute), NOT isTicking
+    // (active AND unmuted). A theme change rebuilds this widget; while the view
+    // is muted (e.g. covered by another route) isTicking is false even though
+    // the ticker is already started, so guarding on isTicking would call
+    // start() on an active ticker -> "A ticker was started twice" + leaked frame
+    // callbacks (the seed of the stale/ghost hourglass). isActive is correct.
     if (!widget.animate) {
       // Frozen: show the exact level (e.g. the settled completion hourglass).
       _shown = widget.progress.clamp(0.0, 1.0);
-      if (_ticker.isTicking) _ticker.stop();
-    } else if (!_ticker.isTicking) {
+      if (_ticker.isActive) _ticker.stop();
+    } else if (!_ticker.isActive) {
       _ticker.start();
     }
   }
