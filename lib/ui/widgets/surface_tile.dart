@@ -4,8 +4,9 @@ import '../../app/theme.dart';
 import '../../app/tokens.dart';
 
 /// Soft-rect surface tile (the only place the app uses tile/bento containers —
-/// stats surfaces). Lighter warm surface + hairline in dark; white + soft warm
-/// shadow in light. Optional tap. Never nest these.
+/// stats surfaces). A raised surface + hairline, no drop shadow, so it reads as
+/// a clean seamless card on every theme in both modes (a tinted/warm light-mode
+/// shadow read as a rectangular smudge on cool themes). Optional tap. Never nest.
 class SurfaceTile extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
@@ -20,7 +21,6 @@ class SurfaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    final light = Theme.of(context).brightness == Brightness.light;
     return Material(
       color: hg.surfaceRaised,
       borderRadius: BorderRadius.circular(HgRadius.lg),
@@ -31,7 +31,6 @@ class SurfaceTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(HgRadius.lg),
             border: Border.all(color: hg.hairline),
-            boxShadow: light ? hgSoftShadow(hg.textPrimary) : null,
           ),
           child: Padding(padding: padding, child: child),
         ),

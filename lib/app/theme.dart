@@ -54,16 +54,6 @@ class HgMotion {
 
 /// Soft warm shadow for raised surfaces in LIGHT mode (dark uses lighter
 /// surfaces, not shadows).
-/// A soft light-mode tile shadow tinted by the theme's own ink ([HgTokens.
-/// textPrimary]) so it harmonizes with every palette instead of casting one
-/// fixed warm shadow on cool themes. Kept subtle (low alpha, tight blur).
-List<BoxShadow> hgSoftShadow(Color ink) => [
-      BoxShadow(
-        color: ink.withValues(alpha: 0.06),
-        blurRadius: 16,
-        offset: const Offset(0, 6),
-      ),
-    ];
 
 /// Builds a [ThemeData] for the given semantic tokens + brightness.
 ThemeData buildTheme(HgTokens t, Brightness brightness) {
