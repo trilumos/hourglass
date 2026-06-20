@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
 import '../app/theme.dart';
+import '../app/theme_providers.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../hourglass/hourglass_view.dart';
@@ -110,10 +111,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       // available vertical space without displacing anything.
                       padding:
                           const EdgeInsets.symmetric(vertical: HgSpacing.xs),
-                      child: const HourglassView(
+                      child: HourglassView(
                         progress: 0,
                         ambient: true, // alive idle fall, full top, no pile
                         heroTag: kHourglassHeroTag,
+                        skin: ref
+                            .watch(activeThemeProvider)
+                            .skinFor(Theme.of(context).brightness),
                       ),
                     ),
                   ),

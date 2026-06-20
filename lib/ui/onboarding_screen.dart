@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../app/providers.dart';
 import '../app/theme.dart';
+import '../app/theme_providers.dart';
 import '../app/tokens.dart';
 import '../data/image_storage_service.dart';
 import '../hourglass/hourglass_view.dart';
@@ -260,6 +261,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           child: HourglassView(
                             progress: _heroProgress,
                             heroTag: kHourglassHeroTag,
+                            skin: ref
+                                .watch(activeThemeProvider)
+                                .skinFor(Theme.of(context).brightness),
                           ),
                         );
                       },

@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hourglass/app/billing_providers.dart';
 import 'package:hourglass/app/providers.dart';
 import 'package:hourglass/app/theme.dart';
+import 'package:hourglass/app/theme_controller.dart';
+import 'package:hourglass/billing/fake_billing_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/data/app_database.dart';
 import 'package:hourglass/domain/session_mode.dart';
@@ -33,13 +37,16 @@ class FakeTicker implements Ticker {
 void main() {
   // wakelock_plus talks over a method channel that has no implementation in the
   // test host — answer it so initState's enable()/disable() don't throw.
-  setUp(() {
+  late SharedPreferences prefs;
+  setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
       const MethodChannel('dev.fluttercommunity.plus/wakelock'),
       (call) async => null,
     );
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
   });
 
   SessionConfig flowConfig() => SessionConfig(
@@ -53,6 +60,12 @@ void main() {
 
   Widget harness(AppDatabase db, FakeTicker ticker) => ProviderScope(
         overrides: [
+          sharedPrefsProvider.overrideWithValue(prefs),
+          billingServiceProvider.overrideWith((ref) {
+            final s = FakeBillingService();
+            ref.onDispose(s.dispose);
+            return s;
+          }),
           databaseProvider.overrideWith((ref) {
             ref.onDispose(db.close);
             return db;

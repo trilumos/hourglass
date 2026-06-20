@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hourglass/app/app.dart';
+import 'package:hourglass/app/billing_providers.dart';
 import 'package:hourglass/app/providers.dart';
+import 'package:hourglass/billing/fake_billing_service.dart';
 import 'package:hourglass/app/theme_controller.dart';
 import 'package:hourglass/data/app_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +16,11 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPrefsProvider.overrideWithValue(prefs),
+          billingServiceProvider.overrideWith((ref) {
+            final s = FakeBillingService();
+            ref.onDispose(s.dispose);
+            return s;
+          }),
           databaseProvider.overrideWith((ref) {
             final db = AppDatabase.memory();
             ref.onDispose(db.close);

@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hourglass/app/billing_providers.dart';
 import 'package:hourglass/app/providers.dart';
 import 'package:hourglass/app/theme.dart';
+import 'package:hourglass/app/theme_controller.dart';
+import 'package:hourglass/billing/fake_billing_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/domain/session_mode.dart';
 import 'package:hourglass/ui/session_screen.dart';
 import 'package:hourglass/ui/setup_screen.dart';
 
 void main() {
+  late SharedPreferences prefs;
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
   Future<void> phoneSurface(WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(412, 915));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -20,6 +30,12 @@ void main() {
   }) =>
       ProviderScope(
         overrides: [
+          sharedPrefsProvider.overrideWithValue(prefs),
+          billingServiceProvider.overrideWith((ref) {
+            final s = FakeBillingService();
+            ref.onDispose(s.dispose);
+            return s;
+          }),
           staminaProvider.overrideWith((ref) async => stamina),
           breakAutoAdvanceProvider.overrideWith((ref) async => true),
           flowRunUntilEndedProvider.overrideWith((ref) async => false),

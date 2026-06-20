@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hourglass/app/billing_providers.dart';
 import 'package:hourglass/app/providers.dart';
 import 'package:hourglass/app/root_gate.dart';
+import 'package:hourglass/billing/fake_billing_service.dart';
 import 'package:hourglass/app/theme.dart';
 import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/app/theme_controller.dart';
@@ -18,6 +20,11 @@ Future<void> _pump(WidgetTester tester, {required bool complete}) async {
     ProviderScope(
       overrides: [
         sharedPrefsProvider.overrideWithValue(prefs),
+        billingServiceProvider.overrideWith((ref) {
+          final s = FakeBillingService();
+          ref.onDispose(s.dispose);
+          return s;
+        }),
         databaseProvider.overrideWith((ref) {
           final db = AppDatabase.memory();
           ref.onDispose(db.close);

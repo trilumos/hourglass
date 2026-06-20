@@ -9,6 +9,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/theme_controller.dart';
+import '../app/theme_providers.dart';
 import '../app/tokens.dart';
 import '../domain/focus_phase.dart';
 import '../domain/focus_score_calculator.dart';
@@ -669,6 +670,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                       child: HourglassView(
                         progress: _controller.segmentProgress,
                         animate: !paused,
+                        skin: ref
+                            .watch(activeThemeProvider)
+                            .skinFor(Theme.of(context).brightness),
                       ),
                     ),
                   ],
@@ -1025,9 +1029,15 @@ class _Completion extends ConsumerWidget {
                 BoxShadow(color: hg.glow, blurRadius: 60, spreadRadius: 10),
               ],
             ),
-            child: const SizedBox(
+            child: SizedBox(
               width: 140,
-              child: HourglassView(progress: 1, animate: false),
+              child: HourglassView(
+                progress: 1,
+                animate: false,
+                skin: ref
+                    .watch(activeThemeProvider)
+                    .skinFor(Theme.of(context).brightness),
+              ),
             ),
           ),
           const SizedBox(height: HgSpacing.xl),
