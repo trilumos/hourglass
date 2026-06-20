@@ -26,6 +26,11 @@ class HgTokens extends ThemeExtension<HgTokens> {
   final Color warning;
   final Color danger;
 
+  /// Optional premium full-screen backdrop gradient (a subtle, STATIC accent
+  /// wash). Null = the neutral surface→background radial (Sand's austere look).
+  /// Static only — never animated; honours the motion rule on every screen.
+  final Gradient? backdropGradient;
+
   const HgTokens({
     required this.backdrop,
     required this.background,
@@ -45,6 +50,7 @@ class HgTokens extends ThemeExtension<HgTokens> {
     required this.success,
     required this.warning,
     required this.danger,
+    this.backdropGradient,
   });
 
   @override
@@ -67,6 +73,7 @@ class HgTokens extends ThemeExtension<HgTokens> {
     Color? success,
     Color? warning,
     Color? danger,
+    Gradient? backdropGradient,
   }) {
     return HgTokens(
       backdrop: backdrop ?? this.backdrop,
@@ -87,6 +94,7 @@ class HgTokens extends ThemeExtension<HgTokens> {
       success: success ?? this.success,
       warning: warning ?? this.warning,
       danger: danger ?? this.danger,
+      backdropGradient: backdropGradient ?? this.backdropGradient,
     );
   }
 
@@ -225,6 +233,8 @@ class HgThemes {
     required Color lHairline,
     required Color sandDark,
     required Color sandLight,
+    List<Color>? sandCycleDark,
+    List<Color>? sandCycleLight,
   }) {
     final dark = HgTokens(
       backdrop: _mix(dBg, _black, 0.5),
@@ -245,6 +255,14 @@ class HgThemes {
       success: const Color(0xFF9BC59A),
       warning: const Color(0xFFE0B873),
       danger: const Color(0xFFD98A7A),
+      // Premium static backdrop: a soft accent-tinted glow from above fading to
+      // bg. Subtle (no chroma under body text) and motionless.
+      backdropGradient: RadialGradient(
+        center: const Alignment(0, -0.8),
+        radius: 1.3,
+        colors: [_mix(dSurface, dAccent, 0.14), dBg],
+        stops: const [0.0, 0.62],
+      ),
     );
     final light = HgTokens(
       backdrop: _mix(lBg, _black, 0.045),
@@ -265,6 +283,12 @@ class HgThemes {
       success: const Color(0xFF4F7A4D),
       warning: const Color(0xFF9A6F1E),
       danger: const Color(0xFFA8503C),
+      backdropGradient: RadialGradient(
+        center: const Alignment(0, -0.8),
+        radius: 1.3,
+        colors: [_mix(lBg, lAccent, 0.06), lBg],
+        stops: const [0.0, 0.62],
+      ),
     );
     final darkSkin = HourglassSkin(
       id: id,
@@ -272,6 +296,7 @@ class HgThemes {
       glassTint: const Color(0x14FFFFFF),
       glassOutline: const Color(0x33FFFFFF),
       neckWidth: 0.012,
+      sandCycle: sandCycleDark,
     );
     final lightSkin = HourglassSkin(
       id: id,
@@ -279,6 +304,7 @@ class HgThemes {
       glassTint: lText, // opaque dark glass body (mirrors classicLight)
       glassOutline: lText.withValues(alpha: 0.2),
       neckWidth: 0.012,
+      sandCycle: sandCycleLight,
     );
     return HgTheme(
       id: id,
@@ -332,6 +358,13 @@ class HgThemes {
     lText: const Color(0xFF15172B), lText2: const Color(0xFF4A4D72),
     lAccent: const Color(0xFF4B30D6), lAccentMuted: const Color(0xFFE2DDF9), lHairline: const Color(0xFFDCDCF0),
     sandDark: const Color(0xFFEFE3B0), sandLight: const Color(0xFFA8923F),
+    // Starfield shimmer (home only): starlight-gold -> periwinkle -> ice-blue -> violet.
+    sandCycleDark: const [
+      Color(0xFFEFE3B0), Color(0xFFCFCAF2), Color(0xFFC6D6F0), Color(0xFFDCC6F0),
+    ],
+    sandCycleLight: const [
+      Color(0xFFA8923F), Color(0xFF8076C0), Color(0xFF6E84C0), Color(0xFF9A78B0),
+    ],
   );
 
   static final dusk = _premium(
@@ -343,6 +376,13 @@ class HgThemes {
     lText: const Color(0xFF1C1626), lText2: const Color(0xFF564B66),
     lAccent: const Color(0xFF7B3FC9), lAccentMuted: const Color(0xFFE9DCF8), lHairline: const Color(0xFFE6DBF3),
     sandDark: const Color(0xFFD7B8F2), sandLight: const Color(0xFF9B6FCB),
+    // Twilight shimmer (home only): orchid -> lavender -> lilac -> periwinkle.
+    sandCycleDark: const [
+      Color(0xFFD7B8F2), Color(0xFFC4BEF2), Color(0xFFE6BCEA), Color(0xFFC2C8F2),
+    ],
+    sandCycleLight: const [
+      Color(0xFF9B6FCB), Color(0xFF8478C8), Color(0xFFB068C2), Color(0xFF7E78CC),
+    ],
   );
 
   static final tide = _premium(
@@ -354,6 +394,13 @@ class HgThemes {
     lText: const Color(0xFF0B201F), lText2: const Color(0xFF3E5450),
     lAccent: const Color(0xFF0B746A), lAccentMuted: const Color(0xFFCDE8E2), lHairline: const Color(0xFFCFE3DD),
     sandDark: const Color(0xFFA9E8DC), sandLight: const Color(0xFF4FA294),
+    // Ocean shimmer (home only): seafoam -> aqua -> mint -> sky-cyan.
+    sandCycleDark: const [
+      Color(0xFFA9E8DC), Color(0xFF9BE6E2), Color(0xFFAEE6C6), Color(0xFF96DCEC),
+    ],
+    sandCycleLight: const [
+      Color(0xFF4FA294), Color(0xFF3FA0A8), Color(0xFF5BA878), Color(0xFF4894A8),
+    ],
   );
 
   static final noir = _premium(

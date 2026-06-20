@@ -14,12 +14,15 @@ class ScreenBackground extends StatelessWidget {
     final hg = context.hg;
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: const Alignment(0, -0.75),
-          radius: 1.2,
-          colors: [hg.surface, hg.background],
-          stops: const [0.0, 0.7],
-        ),
+        // Premium themes carry a subtle accent-tinted backdrop; Sand (null) keeps
+        // the neutral surface→background ambient. Both static.
+        gradient: hg.backdropGradient ??
+            RadialGradient(
+              center: const Alignment(0, -0.75),
+              radius: 1.2,
+              colors: [hg.surface, hg.background],
+              stops: const [0.0, 0.7],
+            ),
       ),
       child: child,
     );

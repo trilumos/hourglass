@@ -108,12 +108,35 @@ class _HourglassViewState extends State<HourglassView>
     super.dispose();
   }
 
+  /// Smoothly cycle a sand palette by time (a slow shimmer with eased
+  /// transitions). One Color.lerp per frame — negligible cost.
+  static Color _cycledSand(List<Color> palette, double time) {
+    if (palette.length == 1) return palette.first;
+    const secondsPerColor = 9.0;
+    final pos = (time / secondsPerColor) % palette.length;
+    final i = pos.floor();
+    final f = pos - i;
+    final e = f * f * (3 - 2 * f); // smoothstep ease
+    return Color.lerp(palette[i], palette[(i + 1) % palette.length], e)!;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final skin = widget.skin ??
+    final baseSkin = widget.skin ??
         (Theme.of(context).brightness == Brightness.dark
             ? HourglassSkin.classic
             : HourglassSkin.classicLight);
+    // Home (ambient) "living" sand: if the theme supplies a sandCycle, slowly
+    // shimmer the sand through it. Ambient-only, so a focus session never
+    // animates colour (motion rule). Grain colour follows sand, so the falling
+    // sand and the bulb sand shimmer as one material.
+    final cycle = baseSkin.sandCycle;
+    final skin = (cycle != null &&
+            cycle.isNotEmpty &&
+            widget.ambient &&
+            widget.animate)
+        ? baseSkin.withSand(_cycledSand(cycle, _time))
+        : baseSkin;
     final progress = (widget.animate ? _shown : widget.progress).clamp(0.0, 1.0);
 
     Widget visual = RepaintBoundary(

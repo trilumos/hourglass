@@ -44,4 +44,23 @@ void main() {
   test('kThemeProductId maps id to theme.<id>', () {
     expect(kThemeProductId('obsidian'), 'theme.obsidian');
   });
+
+  test('living-sand themes carry a sand cycle (light + dark); others do not', () {
+    const cycling = {'tide', 'dusk', 'indigo'};
+    for (final t in HgThemes.all) {
+      final hasDark = t.darkSkin.sandCycle != null;
+      expect(hasDark, cycling.contains(t.id), reason: '${t.id} dark cycle');
+      if (hasDark) {
+        expect(t.darkSkin.sandCycle!.length, greaterThan(1));
+        expect(t.lightSkin.sandCycle, isNotNull, reason: '${t.id} light cycle');
+        expect(t.lightSkin.sandCycle!.length, greaterThan(1));
+      }
+    }
+  });
+
+  test('withSand keeps grain matched to the cycled sand (locked rule, dynamic)', () {
+    final s = HgThemes.tide.darkSkin.withSand(const Color(0xFF123456));
+    expect(s.sandColor, const Color(0xFF123456));
+    expect(s.grainColor, s.sandColor);
+  });
 }

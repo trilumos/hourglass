@@ -17,13 +17,32 @@ class HourglassSkin {
   /// Neck half-width as a fraction of the widget width (smaller = finer neck).
   final double neckWidth;
 
+  /// Optional palette the **home (ambient)** hourglass slowly cycles the sand
+  /// through — a premium "living" touch (a shimmering precious material). Null =
+  /// static sand. NEVER used during a focus session (ambient mode only), so the
+  /// session screen stays motionless except the hourglass itself. Because
+  /// [grainColor] returns [sandColor], the falling sand and the pile shimmer
+  /// together as one material at every step (the locked sand rule holds).
+  final List<Color>? sandCycle;
+
   const HourglassSkin({
     required this.id,
     required this.sandColor,
     required this.glassTint,
     required this.glassOutline,
     required this.neckWidth,
+    this.sandCycle,
   });
+
+  /// A copy with a resolved sand colour — the view feeds the painter the current
+  /// cycled colour while keeping every other property identical.
+  HourglassSkin withSand(Color sand) => HourglassSkin(
+        id: id,
+        sandColor: sand,
+        glassTint: glassTint,
+        glassOutline: glassOutline,
+        neckWidth: neckWidth,
+      );
 
   static const classic = HourglassSkin(
     id: 'classic',
