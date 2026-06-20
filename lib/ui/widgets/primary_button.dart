@@ -24,9 +24,11 @@ class PrimaryButton extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color.lerp(hg.accent, Colors.white, 0.16)!,
+                Color.lerp(hg.accent, Colors.white, 0.22)!,
                 hg.accent,
+                Color.lerp(hg.accent, Colors.black, 0.10)!,
               ],
+              stops: const [0.0, 0.55, 1.0],
             ))
         : null;
     return SizedBox(

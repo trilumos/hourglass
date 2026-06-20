@@ -262,13 +262,18 @@ class HgThemes {
       success: const Color(0xFF9BC59A),
       warning: const Color(0xFFE0B873),
       danger: const Color(0xFFD98A7A),
-      // Premium static backdrop: a soft accent-tinted glow from above fading to
-      // bg. Subtle (no chroma under body text) and motionless.
+      // Premium static backdrop: a soft accent-lit crown from above, a gentle
+      // accent wash through the middle, and a slightly deeper foot (vignette
+      // depth). Subtle (no chroma under body text) and motionless.
       backdropGradient: RadialGradient(
-        center: const Alignment(0, -0.8),
-        radius: 1.3,
-        colors: [_mix(dSurface, dAccent, 0.14), dBg],
-        stops: const [0.0, 0.62],
+        center: const Alignment(0, -0.85),
+        radius: 1.5,
+        colors: [
+          _mix(dSurface, dAccent, 0.22),
+          _mix(dBg, dAccent, 0.05),
+          _mix(dBg, _black, 0.07),
+        ],
+        stops: const [0.0, 0.42, 1.0],
       ),
     );
     final light = HgTokens(
@@ -291,10 +296,14 @@ class HgThemes {
       warning: const Color(0xFF9A6F1E),
       danger: const Color(0xFFA8503C),
       backdropGradient: RadialGradient(
-        center: const Alignment(0, -0.8),
-        radius: 1.3,
-        colors: [_mix(lBg, lAccent, 0.06), lBg],
-        stops: const [0.0, 0.62],
+        center: const Alignment(0, -0.85),
+        radius: 1.5,
+        colors: [
+          _mix(lBg, lAccent, 0.10),
+          _mix(lBg, lAccent, 0.03),
+          lBg,
+        ],
+        stops: const [0.0, 0.48, 1.0],
       ),
     );
     final darkSkin = HourglassSkin(

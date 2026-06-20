@@ -24,6 +24,7 @@ const Map<String, String> _moods = {
   'tide': 'Deep luxe teal, like the ocean.',
   'noir': 'True black and warm gold.',
   'mocha': 'Dark espresso and caramel.',
+  'aurora': 'Deep cosmos lit by shifting aurora light.',
 };
 
 /// Browse, preview, apply, and buy color themes. Owned themes apply instantly;

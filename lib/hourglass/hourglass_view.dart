@@ -108,16 +108,28 @@ class _HourglassViewState extends State<HourglassView>
     super.dispose();
   }
 
-  /// Smoothly cycle a sand palette by time (a slow shimmer with eased
-  /// transitions). One Color.lerp per frame — negligible cost.
+  /// Smoothly cycle a sand palette by time: a slow, calm hue drift through the
+  /// palette (smoothstep between neighbours) plus a gentle "breathing" glow on a
+  /// DIFFERENT period, so the two never sync and the sand reads as a living,
+  /// glowing precious material. A couple of cheap ops per frame.
   static Color _cycledSand(List<Color> palette, double time) {
-    if (palette.length == 1) return palette.first;
-    const secondsPerColor = 9.0;
-    final pos = (time / secondsPerColor) % palette.length;
-    final i = pos.floor();
-    final f = pos - i;
-    final e = f * f * (3 - 2 * f); // smoothstep ease
-    return Color.lerp(palette[i], palette[(i + 1) % palette.length], e)!;
+    final n = palette.length;
+    Color hue;
+    if (n <= 1) {
+      hue = palette.first;
+    } else {
+      const secondsPerColor = 12.0; // slow + premium
+      final pos = (time / secondsPerColor) % n;
+      final i = pos.floor();
+      final f = pos - i;
+      final e = f * f * (3 - 2 * f); // smoothstep ease
+      hue = Color.lerp(palette[i], palette[(i + 1) % n], e)!;
+    }
+    // Gentle ±~4.5% luminance breath (~14s period) — a subtle glow.
+    final glow = 0.045 * math.sin(time * 0.45);
+    return glow >= 0
+        ? Color.lerp(hue, const Color(0xFFFFFFFF), glow)!
+        : Color.lerp(hue, const Color(0xFF000000), -glow)!;
   }
 
   @override
