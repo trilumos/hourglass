@@ -380,7 +380,8 @@ class _ThemeSheet extends StatelessWidget {
               ),
               const SizedBox(height: HgSpacing.sm),
               Text(
-                'Pro unlocks every theme, forever, in one payment.',
+                'Pro unlocks every theme while active. Pro Lifetime keeps them '
+                'forever.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: HgFont.sans,
