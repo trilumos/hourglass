@@ -127,6 +127,14 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
+- **Motion rule (founder, 2026-06-20, CONFIRMED).** The **session screen** must have NO moving/animated/
+  changing elements except the **hourglass** (it is the one intentional motion; protect focus). ELSEWHERE
+  (home, themes, settings, insights, onboarding) subtle motion/animation IS allowed — gradients, transitions,
+  tasteful living touches — **but only if it stays buttery smooth.** It must never make the app clunky,
+  glitchy, or buggy. If a motion can't be guaranteed smooth on the low-RAM device, don't add it. Applies to the
+  advanced-theme-styles work (gradients yes; animated/aurora only off the session screen and only if smooth;
+  no neumorphism). Validate against this AND the perf/smoothness bar.
+
 - **Optimize, never change functionality (founder, 2026-06-20, CONFIRMED).** When asked to make the app
   faster/smoother/better (perf, transitions, visuals, refactors), the changes must be **behavior-preserving**:
   no feature, flow, logic, or core functionality may change. Only quality improves (const/RepaintBoundary/
