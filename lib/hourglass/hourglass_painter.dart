@@ -46,15 +46,6 @@ class HourglassPainter extends CustomPainter {
     double rx(double half) => cx + half;
     double lx(double half) => cx - half;
 
-    // Light, never-dark sand fill (pile) so the bottom matches the upper sand.
-    Paint sandFill() => Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(cx, yToPx(0.18)),
-        Offset(cx, yToPx(1.0)),
-        [Color.lerp(skin.sandColor, Colors.white, 0.14)!, skin.sandColor],
-        [0.0, 1.0],
-      );
-
     // --- elegant elongated glass ---
     final Path glass = Path()..moveTo(cx, yToPx(0.0));
     glass.cubicTo(rx(maxHalf * 0.86), yToPx(0.010), rx(maxHalf), yToPx(0.05),
@@ -172,7 +163,25 @@ class HourglassPainter extends CustomPainter {
       // alive. back = light sand (highest); front = base sand (bulk).
       drawWaveLayer(-amp * 0.95, 0.24, 0.6,
           Paint()..color = Color.lerp(skin.sandColor, Colors.white, 0.20)!);
-      drawWaveLayer(0.0, 0.34, 4.0, Paint()..color = skin.sandColor);
+      // Front (bulk) layer: a 3-stop vertical gradient — lighter at the surface,
+      // base sand in the middle, darker toward the neck — so the top sand reads
+      // with depth (light top -> dark bottom), like the buttons.
+      drawWaveLayer(
+        0.0,
+        0.34,
+        4.0,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset(cx, restSurf),
+            Offset(cx, neckPx),
+            [
+              Color.lerp(skin.sandColor, Colors.white, 0.05)!,
+              skin.sandColor,
+              Color.lerp(skin.sandColor, Colors.black, 0.12)!,
+            ],
+            const [0.0, 0.5, 1.0],
+          ),
+      );
     }
 
     // BOTTOM pile (never in ambient mode — nothing accumulates).
@@ -191,7 +200,23 @@ class HourglassPainter extends CustomPainter {
       pile.lineTo(w, floorY);
       pile.lineTo(0, floorY);
       pile.close();
-      canvas.drawPath(pile, sandFill());
+      // 3-stop fill anchored to the pile: lighter at its surface, base sand in
+      // the middle, darker at the floor (matches the top sand + the buttons).
+      final double pileTopY = floorY - math.max(pileHeightAt(cx), 1.0);
+      canvas.drawPath(
+        pile,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset(cx, pileTopY),
+            Offset(cx, floorY),
+            [
+              Color.lerp(skin.sandColor, Colors.white, 0.16)!,
+              skin.sandColor,
+              Color.lerp(skin.sandColor, Colors.black, 0.14)!,
+            ],
+            const [0.0, 0.5, 1.0],
+          ),
+      );
     }
 
     // FALLING SAND: a thin, near-straight central column of matte grains that
