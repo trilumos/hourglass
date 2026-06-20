@@ -6,6 +6,7 @@ import 'package:hourglass/app/theme.dart';
 import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/data/app_database.dart';
 import 'package:hourglass/ui/edit_profile_screen.dart';
+import 'package:hourglass/ui/widgets/primary_button.dart';
 
 void main() {
   testWidgets('Save is disabled until a non-empty name is entered',
@@ -25,12 +26,12 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    final save = find.widgetWithText(FilledButton, 'Save');
+    final save = find.widgetWithText(PrimaryButton, 'Save');
     expect(save, findsOneWidget);
-    expect(tester.widget<FilledButton>(save).onPressed, isNull);
+    expect(tester.widget<PrimaryButton>(save).onPressed, isNull);
 
     await tester.enterText(find.byType(TextField), '  Deep  ');
     await tester.pump();
-    expect(tester.widget<FilledButton>(save).onPressed, isNotNull);
+    expect(tester.widget<PrimaryButton>(save).onPressed, isNotNull);
   });
 }

@@ -31,6 +31,10 @@ class HgTokens extends ThemeExtension<HgTokens> {
   /// Static only — never animated; honours the motion rule on every screen.
   final Gradient? backdropGradient;
 
+  /// Optional STATIC gradient for the primary button. Null = a subtle top-sheen
+  /// derived from [accent]; a theme (e.g. Aurora) may supply a richer one.
+  final Gradient? accentGradient;
+
   const HgTokens({
     required this.backdrop,
     required this.background,
@@ -51,6 +55,7 @@ class HgTokens extends ThemeExtension<HgTokens> {
     required this.warning,
     required this.danger,
     this.backdropGradient,
+    this.accentGradient,
   });
 
   @override
@@ -74,6 +79,7 @@ class HgTokens extends ThemeExtension<HgTokens> {
     Color? warning,
     Color? danger,
     Gradient? backdropGradient,
+    Gradient? accentGradient,
   }) {
     return HgTokens(
       backdrop: backdrop ?? this.backdrop,
@@ -95,6 +101,7 @@ class HgTokens extends ThemeExtension<HgTokens> {
       warning: warning ?? this.warning,
       danger: danger ?? this.danger,
       backdropGradient: backdropGradient ?? this.backdropGradient,
+      accentGradient: accentGradient ?? this.accentGradient,
     );
   }
 
@@ -325,6 +332,13 @@ class HgThemes {
     lText: const Color(0xFF121726), lText2: const Color(0xFF49546B),
     lAccent: const Color(0xFF2456C4), lAccentMuted: const Color(0xFFD9E2F7), lHairline: const Color(0xFFD7DEEC),
     sandDark: const Color(0xFFC3D2EE), sandLight: const Color(0xFF5E7CB0),
+    // Quicksilver shimmer (home only): silver -> ice-blue -> steel -> frost.
+    sandCycleDark: const [
+      Color(0xFFC3D2EE), Color(0xFFCEDAF2), Color(0xFFBED0EA), Color(0xFFD8E0F4),
+    ],
+    sandCycleLight: const [
+      Color(0xFF5E7CB0), Color(0xFF6886BA), Color(0xFF5874A6), Color(0xFF7088B8),
+    ],
   );
 
   static final sage = _premium(
@@ -336,6 +350,13 @@ class HgThemes {
     lText: const Color(0xFF161C10), lText2: const Color(0xFF4C5743),
     lAccent: const Color(0xFF3F7A24), lAccentMuted: const Color(0xFFDDE8CD), lHairline: const Color(0xFFDBE3CC),
     sandDark: const Color(0xFFD7DCA0), sandLight: const Color(0xFF879143),
+    // Wheat shimmer (home only): wheat-gold -> sage -> moss -> lime-cream.
+    sandCycleDark: const [
+      Color(0xFFD7DCA0), Color(0xFFC8DC9C), Color(0xFFD2D690), Color(0xFFDEDCAC),
+    ],
+    sandCycleLight: const [
+      Color(0xFF879143), Color(0xFF7A9440), Color(0xFF8E9850), Color(0xFF969A4E),
+    ],
   );
 
   static final rose = _premium(
@@ -347,6 +368,13 @@ class HgThemes {
     lText: const Color(0xFF2A171A), lText2: const Color(0xFF6E5258),
     lAccent: const Color(0xFFB94E5C), lAccentMuted: const Color(0xFFF1D7D9), lHairline: const Color(0xFFEDD5D6),
     sandDark: const Color(0xFFEAB6A4), sandLight: const Color(0xFFC97D74),
+    // Rose-gold shimmer (home only): rose-gold -> blush -> peach -> pink.
+    sandCycleDark: const [
+      Color(0xFFEAB6A4), Color(0xFFEAA8AC), Color(0xFFEEBCA6), Color(0xFFE6AEB2),
+    ],
+    sandCycleLight: const [
+      Color(0xFFC97D74), Color(0xFFC9727E), Color(0xFFCE8870), Color(0xFFC27A82),
+    ],
   );
 
   static final indigo = _premium(
@@ -412,6 +440,13 @@ class HgThemes {
     lText: const Color(0xFF171309), lText2: const Color(0xFF544D3B),
     lAccent: const Color(0xFF9A6A10), lAccentMuted: const Color(0xFFEFE1BE), lHairline: const Color(0xFFE7DEC8),
     sandDark: const Color(0xFFF0C44E), sandLight: const Color(0xFFC9911F),
+    // Molten-gold shimmer (home only): gold -> amber -> champagne -> bronze.
+    sandCycleDark: const [
+      Color(0xFFF0C44E), Color(0xFFF0B848), Color(0xFFF2CE70), Color(0xFFE8BA42),
+    ],
+    sandCycleLight: const [
+      Color(0xFFC9911F), Color(0xFFC98420), Color(0xFFCE9E32), Color(0xFFC08A2E),
+    ],
   );
 
   static final mocha = _premium(
@@ -423,11 +458,39 @@ class HgThemes {
     lText: const Color(0xFF2A1D0E), lText2: const Color(0xFF6B5A44),
     lAccent: const Color(0xFF9A5E1C), lAccentMuted: const Color(0xFFEEDCBE), lHairline: const Color(0xFFE6D6BB),
     sandDark: const Color(0xFFF0D5A6), sandLight: const Color(0xFFC68F4A),
+    // Caramel shimmer (home only): cream -> caramel -> latte -> honey.
+    sandCycleDark: const [
+      Color(0xFFF0D5A6), Color(0xFFF0CC96), Color(0xFFF2D8B2), Color(0xFFE8CC98),
+    ],
+    sandCycleLight: const [
+      Color(0xFFC68F4A), Color(0xFFC6844A), Color(0xFFCE9858), Color(0xFFC0884A),
+    ],
+  );
+
+  // Flagship "living" theme: a deep cosmic base with luminous aurora accent and
+  // the most vivid home-sand shimmer (a full aurora spectrum). Still static off
+  // the hourglass; the sand shimmer is home-only.
+  static final aurora = _premium(
+    id: 'aurora', name: 'Aurora',
+    dBg: const Color(0xFF0A0E1A), dSurface: const Color(0xFF121A2E), dRaised: const Color(0xFF1C2742),
+    dText: const Color(0xFFEAEDFA), dText2: const Color(0xFFAAB4D8), dText3: const Color(0xFF6E78A0),
+    dAccent: const Color(0xFF5BE3C0), dAccentMuted: const Color(0xFF123830), dOnAccent: const Color(0xFF021712), dHairline: const Color(0xFF222C48),
+    lBg: const Color(0xFFEFF2FB), lSurface: const Color(0xFFFFFFFF),
+    lText: const Color(0xFF111626), lText2: const Color(0xFF49526E),
+    lAccent: const Color(0xFF0E8A78), lAccentMuted: const Color(0xFFD2EEE8), lHairline: const Color(0xFFD8E0EE),
+    sandDark: const Color(0xFFA8E8D0), sandLight: const Color(0xFF4FA890),
+    // Aurora spectrum (home only): green -> cyan -> violet -> magenta -> mint.
+    sandCycleDark: const [
+      Color(0xFF7FE8C0), Color(0xFF7FD6E8), Color(0xFFA89CF0), Color(0xFFE89CD8), Color(0xFF8FE8B8),
+    ],
+    sandCycleLight: const [
+      Color(0xFF3FA890), Color(0xFF3F92B0), Color(0xFF7A6CC0), Color(0xFFB060A0), Color(0xFF4FA878),
+    ],
   );
 
   /// The theme catalog (Sand first as the free default). Add a theme = append here.
   static final List<HgTheme> all = <HgTheme>[
-    sand, obsidian, sage, rose, indigo, dusk, tide, noir, mocha,
+    sand, obsidian, sage, rose, indigo, dusk, tide, noir, mocha, aurora,
   ];
 
   static HgTheme byId(String id) =>

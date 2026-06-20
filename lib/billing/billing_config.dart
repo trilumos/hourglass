@@ -11,7 +11,7 @@ const String kProEntitlement = 'pro';
 /// Purchasable theme ids (the app catalog minus the always-free 'sand'). Pro
 /// grants all of these; each is also sellable à la carte (see kThemeProductId).
 const Set<String> kCatalogThemeIds = <String>{
-  'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir', 'mocha',
+  'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir', 'mocha', 'aurora',
 };
 
 /// The Play / RevenueCat **product id** for a theme (a non-consumable). The

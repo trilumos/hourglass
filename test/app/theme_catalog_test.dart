@@ -4,19 +4,21 @@ import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/billing/billing_config.dart';
 
 void main() {
-  test('catalog has Sand plus the 8 premium themes', () {
+  test('catalog has Sand plus the 9 premium themes', () {
     expect(HgThemes.all.first.id, 'sand');
     final ids = HgThemes.all.map((t) => t.id).toList();
     expect(ids, containsAll(<String>[
-      'sand', 'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir', 'mocha',
+      'sand', 'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir',
+      'mocha', 'aurora',
     ]));
-    expect(HgThemes.all.length, 9);
+    expect(HgThemes.all.length, 10);
     expect(ids.toSet().length, ids.length, reason: 'ids must be unique');
   });
 
-  test('kCatalogThemeIds is the 8 premium ids (no sand)', () {
+  test('kCatalogThemeIds is the 9 premium ids (no sand)', () {
     expect(kCatalogThemeIds, <String>{
       'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir', 'mocha',
+      'aurora',
     });
     expect(kCatalogThemeIds.contains('sand'), isFalse);
     // Every premium id has a catalog theme, and vice versa.
@@ -45,16 +47,12 @@ void main() {
     expect(kThemeProductId('obsidian'), 'theme.obsidian');
   });
 
-  test('living-sand themes carry a sand cycle (light + dark); others do not', () {
-    const cycling = {'tide', 'dusk', 'indigo'};
+  test('every theme has a living sand cycle (light + dark)', () {
     for (final t in HgThemes.all) {
-      final hasDark = t.darkSkin.sandCycle != null;
-      expect(hasDark, cycling.contains(t.id), reason: '${t.id} dark cycle');
-      if (hasDark) {
-        expect(t.darkSkin.sandCycle!.length, greaterThan(1));
-        expect(t.lightSkin.sandCycle, isNotNull, reason: '${t.id} light cycle');
-        expect(t.lightSkin.sandCycle!.length, greaterThan(1));
-      }
+      expect(t.darkSkin.sandCycle, isNotNull, reason: '${t.id} dark cycle');
+      expect(t.darkSkin.sandCycle!.length, greaterThan(1), reason: '${t.id} dark');
+      expect(t.lightSkin.sandCycle, isNotNull, reason: '${t.id} light cycle');
+      expect(t.lightSkin.sandCycle!.length, greaterThan(1), reason: '${t.id} light');
     }
   });
 

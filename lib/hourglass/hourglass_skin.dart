@@ -50,6 +50,10 @@ class HourglassSkin {
     glassTint: Color(0x14FFFFFF),
     glassOutline: Color(0x33FFFFFF),
     neckWidth: 0.012,
+    // Warm desert shimmer (home only): tan -> gold -> amber -> cream.
+    sandCycle: [
+      Color(0xFFE8C9A0), Color(0xFFE8C290), Color(0xFFEAD0AA), Color(0xFFE0BE96),
+    ],
   );
 
   /// Light-theme variant: the dark-tuned glass (white tints) is invisible on a
@@ -61,5 +65,8 @@ class HourglassSkin {
     glassTint: Color(0xFF1F1B14),
     glassOutline: Color(0x331F1B14),
     neckWidth: 0.012,
+    sandCycle: [
+      Color(0xFFC69A5E), Color(0xFFC69054), Color(0xFFCCA068), Color(0xFFC09058),
+    ],
   );
 }
