@@ -98,6 +98,21 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 - **More monetization**, **home-screen widgets**, and **break-time activities** (sudoku, meditation, exercise, breathing exercises).
 - **Spotify connect** (focus music during sessions) and a **notes / journal** feature (in-app journaling, e.g. per-session reflections) — both V2 (founder, 2026-06-19; tiers TBD, lean Plus for Spotify / Pro for journal). Full monetization model + feature→tier→release map lives in `docs/superpowers/specs/2026-06-19-monetization-and-v1-paid-tier-design.md`.
 - **Picture-in-Picture mini-session (V2; founder, 2026-06-19):** pressing the phone's Home button during a live session keeps the session running and shows the falling hourglass in a floating mini-window (PiP) so the user sees progress while in another app. Feasibility: Android supports a custom PiP view (PiP Activity + platform channel, or a plugin) — straightforward on Android; iOS PiP is video-only so it needs a workaround (e.g. render the hourglass to a video layer) or may be Android-first. Tier TBD (lean free, it's core-loop UX). Must keep the wakelock + session-state persistence already in place.
+- **Focus currency + optional rewarded ads (V1.2 idea; founder, 2026-06-20):** earn an in-app
+  "focus currency" per completed session, scaled by completion rate; spend it to unlock themes (alongside the
+  cash à-la-carte path) and other cosmetics. Plus **optional, user-initiated** rewarded ads (Forest-style:
+  never auto-played) to **save a streak / save a session** or top up currency. Strong fit — rewards the core
+  behavior (focusing), gives non-payers a path to themes (boosts engagement + theme attach), and adds
+  non-coercive ad revenue that matches Sustain's calm/no-dark-patterns ethos. Tradeoffs to design: currency
+  economy + balancing so it doesn't cannibalize Pro/à-la-carte; AdMob (or similar) SDK adds Play Data-Safety +
+  privacy disclosures; themes become earnable not just purchasable (revenue-model impact). Keep Pro as the
+  "unlock everything + analytics" tier. Target V1.2 (founder said add it then if it's a good idea — it is).
+- **Move Focus Stamina + Focus Average behind Pro (DECISION PENDING; founder proposed 2026-06-20):** today the
+  Insights depth band (Focus Score & Stamina over time, personal bests, CSV) is Pro-gated, but the Home **Avg**
+  stat and the Flow-setup **personalized Stamina length** are FREE — an inconsistency (a free user gets a
+  personalized stamina suggestion while stamina analytics are Pro). Resolve by deciding whether "Focus
+  Stamina" (and Average) is a Pro feature everywhere (Home stat + setup length + Insights), with free Flow
+  setup falling back to a plain default length. Awaiting founder's choice before implementing.
 - Keep adding features; ship V2 when traction is good.
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
