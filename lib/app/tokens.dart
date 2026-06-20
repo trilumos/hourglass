@@ -163,43 +163,56 @@ class HgThemes {
     name: 'Sand',
     dark: HgTokens(
       backdrop: Color(0xFF000000),
-      background: Color(0xFF15120E), // warm charcoal (richer than near-black)
-      surface: Color(0xFF1E1A15),
-      surfaceRaised: Color(0xFF272118),
-      surfaceSunken: Color(0xFF110E0A),
-      textPrimary: Color(0xFFF2EDE4),
-      textSecondary: Color(0xFFB7AF9F),
-      textMuted: Color(0xFF8A8378),
-      accent: Color(0xFFE8C9A0),
-      accentMuted: Color(0xFF3A3024),
-      onAccent: Color(0xFF1A1206),
-      hairline: Color(0xFF2E2A24),
-      glow: Color(0x1FE8C9A0),
-      focusRing: Color(0xFFE8C9A0),
+      background: Color(0xFF161009), // warm golden-dark (not grey-brown mud)
+      surface: Color(0xFF211913),
+      surfaceRaised: Color(0xFF2C2218),
+      surfaceSunken: Color(0xFF120C06),
+      textPrimary: Color(0xFFF5EFE1),
+      textSecondary: Color(0xFFC0B299),
+      textMuted: Color(0xFF8E8167),
+      accent: Color(0xFFEDC56C), // rich warm GOLD (was a desaturated tan)
+      accentMuted: Color(0xFF3E311C),
+      onAccent: Color(0xFF1A1204),
+      hairline: Color(0xFF342A1C),
+      glow: Color(0x1FEDC56C),
+      focusRing: Color(0xFFEDC56C),
       scrim: Color(0xB3000000),
       success: Color(0xFF9BC59A),
       warning: Color(0xFFE0B873),
       danger: Color(0xFFD98A7A),
+      // Warm-gold accent backdrop (matches the premium themes' 3-stop style).
+      backdropGradient: RadialGradient(
+        center: Alignment(0, -0.85),
+        radius: 1.5,
+        colors: [Color(0xFF4E3F27), Color(0xFF21190E), Color(0xFF140F08)],
+        stops: [0.0, 0.42, 1.0],
+      ),
     ),
     light: HgTokens(
-      backdrop: Color(0xFFF2ECE1),
-      background: Color(0xFFF7F3EC),
+      backdrop: Color(0xFFF2EAD9),
+      background: Color(0xFFF9F4E9), // warm golden paper
       surface: Color(0xFFFFFFFF),
       surfaceRaised: Color(0xFFFFFFFF),
-      surfaceSunken: Color(0xFFEFE8DB),
-      textPrimary: Color(0xFF1F1B14),
-      textSecondary: Color(0xFF5A5246),
-      textMuted: Color(0xFF8A8073),
-      accent: Color(0xFFB07A3C),
-      accentMuted: Color(0xFFEBDCC4),
+      surfaceSunken: Color(0xFFF0E7D4),
+      textPrimary: Color(0xFF221A0E),
+      textSecondary: Color(0xFF5E5340),
+      textMuted: Color(0xFF8E8167),
+      accent: Color(0xFFB5831E), // deep GOLD (was a muddy caramel-brown)
+      accentMuted: Color(0xFFEEDDB8),
       onAccent: Color(0xFFFFFFFF),
-      hairline: Color(0xFFE3DACB),
-      glow: Color(0x14B07A3C),
-      focusRing: Color(0xFFB07A3C),
+      hairline: Color(0xFFE9DFC8),
+      glow: Color(0x14B5831E),
+      focusRing: Color(0xFFB5831E),
       scrim: Color(0x40000000),
       success: Color(0xFF4F7A4D),
       warning: Color(0xFF9A6F1E),
       danger: Color(0xFFA8503C),
+      backdropGradient: RadialGradient(
+        center: Alignment(0, -0.85),
+        radius: 1.5,
+        colors: [Color(0xFFF2E9D5), Color(0xFFF7F1E3), Color(0xFFF9F4E9)],
+        stops: [0.0, 0.48, 1.0],
+      ),
     ),
     lightSkin: HourglassSkin.classicLight,
     darkSkin: HourglassSkin.classic,
@@ -343,10 +356,12 @@ class HgThemes {
     sandDark: const Color(0xFFC3D2EE), sandLight: const Color(0xFF5E7CB0),
     // Quicksilver shimmer (home only): silver -> ice-blue -> steel -> frost.
     sandCycleDark: const [
-      Color(0xFFC3D2EE), Color(0xFFCEDAF2), Color(0xFFBED0EA), Color(0xFFD8E0F4),
+      Color(0xFFCBD8F2), Color(0xFFA9C0EF), Color(0xFF7FA8F4),
+      Color(0xFF6E9BF0), Color(0xFF93B4F2), Color(0xFFC0D2F0),
     ],
     sandCycleLight: const [
-      Color(0xFF5E7CB0), Color(0xFF6886BA), Color(0xFF5874A6), Color(0xFF7088B8),
+      Color(0xFF6E8BC0), Color(0xFF4E74C2), Color(0xFF3A63C6),
+      Color(0xFF2456C4), Color(0xFF4E78C0), Color(0xFF7088B8),
     ],
   );
 
@@ -361,10 +376,12 @@ class HgThemes {
     sandDark: const Color(0xFFD7DCA0), sandLight: const Color(0xFF879143),
     // Wheat shimmer (home only): wheat-gold -> sage -> moss -> lime-cream.
     sandCycleDark: const [
-      Color(0xFFD7DCA0), Color(0xFFC8DC9C), Color(0xFFD2D690), Color(0xFFDEDCAC),
+      Color(0xFFE2E0A4), Color(0xFFC4DA88), Color(0xFF9FCF6E),
+      Color(0xFF8FCB6E), Color(0xFFB7D67E), Color(0xFFD6DC9A),
     ],
     sandCycleLight: const [
-      Color(0xFF879143), Color(0xFF7A9440), Color(0xFF8E9850), Color(0xFF969A4E),
+      Color(0xFF8E9445), Color(0xFF6F9038), Color(0xFF528A2A),
+      Color(0xFF3F7A24), Color(0xFF5F8A30), Color(0xFF879143),
     ],
   );
 
@@ -379,10 +396,12 @@ class HgThemes {
     sandDark: const Color(0xFFEAB6A4), sandLight: const Color(0xFFC97D74),
     // Rose-gold shimmer (home only): rose-gold -> blush -> peach -> pink.
     sandCycleDark: const [
-      Color(0xFFEAB6A4), Color(0xFFEAA8AC), Color(0xFFEEBCA6), Color(0xFFE6AEB2),
+      Color(0xFFEAB6A4), Color(0xFFE59CAB), Color(0xFFCF6E8E),
+      Color(0xFFEC9CB0), Color(0xFFF0C2A6),
     ],
     sandCycleLight: const [
-      Color(0xFFC97D74), Color(0xFFC9727E), Color(0xFFCE8870), Color(0xFFC27A82),
+      Color(0xFFC97D74), Color(0xFFC95C72), Color(0xFFB94E5C),
+      Color(0xFFCE7A6E), Color(0xFFC96E84),
     ],
   );
 
@@ -397,10 +416,12 @@ class HgThemes {
     sandDark: const Color(0xFFEFE3B0), sandLight: const Color(0xFFA8923F),
     // Starfield shimmer (home only): starlight-gold -> periwinkle -> ice-blue -> violet.
     sandCycleDark: const [
-      Color(0xFFEFE3B0), Color(0xFFCFCAF2), Color(0xFFC6D6F0), Color(0xFFDCC6F0),
+      Color(0xFFF2E4A8), Color(0xFFB9A9FA), Color(0xFF8E7BE8),
+      Color(0xFF7A66E2), Color(0xFFAEC2F2), Color(0xFFD8CEF0),
     ],
     sandCycleLight: const [
-      Color(0xFFA8923F), Color(0xFF8076C0), Color(0xFF6E84C0), Color(0xFF9A78B0),
+      Color(0xFFA8923F), Color(0xFF7C68D8), Color(0xFF5B40D8),
+      Color(0xFF4B30D6), Color(0xFF5E72C0), Color(0xFF8E7A4E),
     ],
   );
 
@@ -415,10 +436,12 @@ class HgThemes {
     sandDark: const Color(0xFFD7B8F2), sandLight: const Color(0xFF9B6FCB),
     // Twilight shimmer (home only): orchid -> lavender -> lilac -> periwinkle.
     sandCycleDark: const [
-      Color(0xFFD7B8F2), Color(0xFFC4BEF2), Color(0xFFE6BCEA), Color(0xFFC2C8F2),
+      Color(0xFFD7B8F2), Color(0xFFC79CF0), Color(0xFFB081E2),
+      Color(0xFFCE92E2), Color(0xFFA898EE), Color(0xFFDEC2F4),
     ],
     sandCycleLight: const [
-      Color(0xFF9B6FCB), Color(0xFF8478C8), Color(0xFFB068C2), Color(0xFF7E78CC),
+      Color(0xFF9B6FCB), Color(0xFF8C56C8), Color(0xFF7B3FC9),
+      Color(0xFFA050BE), Color(0xFF6E58C2), Color(0xFF9466C6),
     ],
   );
 
@@ -433,10 +456,12 @@ class HgThemes {
     sandDark: const Color(0xFFA9E8DC), sandLight: const Color(0xFF4FA294),
     // Ocean shimmer (home only): seafoam -> aqua -> mint -> sky-cyan.
     sandCycleDark: const [
-      Color(0xFFA9E8DC), Color(0xFF9BE6E2), Color(0xFFAEE6C6), Color(0xFF96DCEC),
+      Color(0xFFA9E8DC), Color(0xFF6FE3D6), Color(0xFF3FD6C8),
+      Color(0xFF49C9DE), Color(0xFF7CE0C0),
     ],
     sandCycleLight: const [
-      Color(0xFF4FA294), Color(0xFF3FA0A8), Color(0xFF5BA878), Color(0xFF4894A8),
+      Color(0xFF4FA294), Color(0xFF2FA89A), Color(0xFF159A8E),
+      Color(0xFF0B746A), Color(0xFF3C9E92),
     ],
   );
 
@@ -451,10 +476,12 @@ class HgThemes {
     sandDark: const Color(0xFFF0C44E), sandLight: const Color(0xFFC9911F),
     // Molten-gold shimmer (home only): gold -> amber -> champagne -> bronze.
     sandCycleDark: const [
-      Color(0xFFF0C44E), Color(0xFFF0B848), Color(0xFFF2CE70), Color(0xFFE8BA42),
+      Color(0xFFF6D169), Color(0xFFE5B84B), Color(0xFFD9A22F),
+      Color(0xFFC68A1E), Color(0xFFE0AE3C), Color(0xFFF2C95A),
     ],
     sandCycleLight: const [
-      Color(0xFFC9911F), Color(0xFFC98420), Color(0xFFCE9E32), Color(0xFFC08A2E),
+      Color(0xFFD8A12C), Color(0xFFC9911F), Color(0xFFB67A14),
+      Color(0xFF9A6A10), Color(0xFFBE8420), Color(0xFFD49A28),
     ],
   );
 
@@ -469,10 +496,12 @@ class HgThemes {
     sandDark: const Color(0xFFF0D5A6), sandLight: const Color(0xFFC68F4A),
     // Caramel shimmer (home only): cream -> caramel -> latte -> honey.
     sandCycleDark: const [
-      Color(0xFFF0D5A6), Color(0xFFF0CC96), Color(0xFFF2D8B2), Color(0xFFE8CC98),
+      Color(0xFFF3DCAE), Color(0xFFEDC882), Color(0xFFE3A654),
+      Color(0xFFD99A4A), Color(0xFFEFCB8E),
     ],
     sandCycleLight: const [
-      Color(0xFFC68F4A), Color(0xFFC6844A), Color(0xFFCE9858), Color(0xFFC0884A),
+      Color(0xFFCE9A56), Color(0xFFC07E36), Color(0xFF9A5E1C),
+      Color(0xFFB06A24), Color(0xFFC68F4A),
     ],
   );
 
@@ -490,10 +519,12 @@ class HgThemes {
     sandDark: const Color(0xFFA8E8D0), sandLight: const Color(0xFF4FA890),
     // Aurora spectrum (home only): green -> cyan -> violet -> magenta -> mint.
     sandCycleDark: const [
-      Color(0xFF7FE8C0), Color(0xFF7FD6E8), Color(0xFFA89CF0), Color(0xFFE89CD8), Color(0xFF8FE8B8),
+      Color(0xFF5BE3C0), Color(0xFF34CFB8), Color(0xFF5FC8EA),
+      Color(0xFF9A86F0), Color(0xFFE07ECE), Color(0xFF53E0A8),
     ],
     sandCycleLight: const [
-      Color(0xFF3FA890), Color(0xFF3F92B0), Color(0xFF7A6CC0), Color(0xFFB060A0), Color(0xFF4FA878),
+      Color(0xFF0E8A78), Color(0xFF1AA38C), Color(0xFF2E86B0),
+      Color(0xFF6A54B8), Color(0xFFA8489A), Color(0xFF1F9E6E),
     ],
   );
 
