@@ -127,6 +127,13 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
+- **Optimize, never change functionality (founder, 2026-06-20, CONFIRMED).** When asked to make the app
+  faster/smoother/better (perf, transitions, visuals, refactors), the changes must be **behavior-preserving**:
+  no feature, flow, logic, or core functionality may change. Only quality improves (const/RepaintBoundary/
+  .select/ListView.builder/animation curves/memoization, color palettes, copy). The theme redesign changes
+  only hex VALUES, not the theme system. If an "optimization" would alter behavior, STOP and confirm first.
+  Validate every such change against this AND [[the iron rule]] before shipping.
+
 - **⚖️ THE IRON RULE (founder, 2026-06-20, CONFIRMED — the standard ALL work is validated against).**
   Division of labor: **the founder owns on-device testing** — visuals, seamlessness, how it looks/feels to
   users. **I own building it properly: no errors, no logic problems, no ignored edge cases, no
