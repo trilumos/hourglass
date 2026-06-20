@@ -378,6 +378,16 @@ class _ThemeSheet extends StatelessWidget {
                 color: t.textSecondary,
                 onPressed: onGetPro,
               ),
+              const SizedBox(height: HgSpacing.sm),
+              Text(
+                'Pro unlocks every theme, forever, in one payment.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 12,
+                  color: t.textMuted,
+                ),
+              ),
             ],
           ],
         ),

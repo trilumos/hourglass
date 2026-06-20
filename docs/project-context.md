@@ -115,15 +115,13 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
   on `entitlementsProvider.pro` (free → `_defaultFlowMin`, no chip); Insights RECORDS "Avg session" tile shows
   a Pro upsell (tap → paywall) when free. **Why:** strengthens the Pro value prop; keeps a healthy free tier;
   fixes the prior leak (free users got a personalized stamina length while stamina analytics were Pro).
-- **Theme cart = Pro-conversion funnel (founder, 2026-06-20, CONFIRMED; to build).** Add themes to an
-  in-memory cart; a cart page shows the selected themes + running total; once the total nears/exceeds the Pro
-  **Lifetime** price, prominently nudge "Get Pro Lifetime for ₹Y — unlock ALL themes forever." Actual multi-buy
-  processes themes **one at a time** (Google Play Billing only buys one product per transaction — no atomic
-  multi-IAP checkout; this ruled out a true "buy all at once"). Build: `cartProvider` (Notifier<Set<String>>,
-  in-memory), Add-to-cart affordance on the Themes sheet, a cart screen with total + Pro-Lifetime upsell
-  (price from `proOffering()`), and sequential `purchaseTheme` checkout. Testable in debug via the stand-in
-  theme products; real purchases need the Play/RevenueCat setup. NOTE: production Buy already launches the
-  real Google Play checkout (the instant grant is debug-only) — no code change needed for that.
+- **NO theme cart — Pro Lifetime IS the "pay once, own all" bundle (founder, 2026-06-20, CONFIRMED).**
+  Google Play Billing charges ONE fixed-price product per transaction (digital IAP must use Play Billing; no
+  dynamic-sum/multi-item checkout), so a cart that sums arbitrary themes into one charge is impossible. Decided
+  against a cart and against per-theme bundle SKUs. Instead: single theme = à la carte (`purchaseTheme`, one
+  payment, that theme); to "own many," push **Pro Lifetime** (one payment → all 8 themes forever + analytics).
+  A subtle upsell line on each locked theme sheet says Pro unlocks every theme in one payment. (Production Buy
+  already launches the real Google Play checkout; the instant grant is debug-only — no code change needed.)
 - Keep adding features; ship V2 when traction is good.
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
