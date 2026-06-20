@@ -75,8 +75,9 @@ void main() {
     // Today's focus reflects the seeded 25-minute completed session.
     expect(find.textContaining('25'), findsWidgets);
     // Average is a Pro stat: a free user sees Focus, Today, Streak but no Avg.
-    expect(find.text('Today'), findsOneWidget);
-    expect(find.text('Streak'), findsOneWidget);
-    expect(find.text('Avg'), findsNothing);
+    // (Stat labels render uppercase via label.toUpperCase().)
+    expect(find.text('TODAY'), findsOneWidget);
+    expect(find.text('STREAK'), findsOneWidget);
+    expect(find.text('AVG'), findsNothing);
   });
 }
