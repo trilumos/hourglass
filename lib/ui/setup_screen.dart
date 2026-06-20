@@ -11,6 +11,8 @@ import '../domain/stamina_calculator.dart';
 import '../session/session_config.dart';
 import '../session/session_plan.dart';
 import 'session_screen.dart';
+import 'themes_screen.dart';
+import 'widgets/preview_bar.dart';
 import 'widgets/primary_button.dart';
 import 'widgets/screen_background.dart';
 
@@ -207,6 +209,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         _mode == SessionMode.custom ? HgSpacing.lg : HgSpacing.xl;
 
     return Scaffold(
+      bottomNavigationBar: PreviewBar(
+        onGetIt: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ThemesScreen()),
+        ),
+      ),
       body: ScreenBackground(
         child: SafeArea(
           child: Column(

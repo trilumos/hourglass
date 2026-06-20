@@ -202,7 +202,8 @@ class _ThemeTile extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: HgSpacing.lg, vertical: HgSpacing.sm),
                       child: SizedBox(
-                        height: 78,
+                        width: 47,
+                        height: 90,
                         child: HourglassView(
                           progress: 0.5,
                           animate: false,
@@ -324,12 +325,17 @@ class _ThemeSheet extends StatelessWidget {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(HgSpacing.lg),
-                child: SizedBox(
-                  height: 150,
-                  child: HourglassView(
-                    progress: 0.5,
-                    animate: false,
-                    skin: theme.skinFor(brightness),
+                child: Center(
+                  // Explicit 0.52 ratio box (matches HourglassView) so the
+                  // stretched sheet column can't squash it wide.
+                  child: SizedBox(
+                    width: 83,
+                    height: 160,
+                    child: HourglassView(
+                      progress: 0.5,
+                      animate: false,
+                      skin: theme.skinFor(brightness),
+                    ),
                   ),
                 ),
               ),

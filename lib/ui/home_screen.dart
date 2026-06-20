@@ -13,7 +13,9 @@ import 'settings_screen.dart';
 import 'setup_screen.dart';
 import 'widgets/adaptive_tagline.dart';
 import 'widgets/greeting_line.dart';
+import 'themes_screen.dart';
 import 'widgets/mode_selector.dart';
+import 'widgets/preview_bar.dart';
 import 'widgets/primary_button.dart';
 import 'widgets/profile_avatar.dart';
 import 'widgets/screen_background.dart';
@@ -54,6 +56,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final stats = ref.watch(homeStatsProvider);
 
     return Scaffold(
+      // The preview bar (when previewing a locked theme) sits in the bottom slot
+      // so it reserves real layout space and never covers Begin.
+      bottomNavigationBar: PreviewBar(
+        onGetIt: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ThemesScreen()),
+        ),
+      ),
       body: ScreenBackground(
         child: SafeArea(
           child: Padding(
