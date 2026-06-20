@@ -272,7 +272,7 @@ get a quick design pass first.
 
 ---
 
-## Pricing (researched + recommended 2026-06-20; founder to confirm + set in Play Console)
+## Pricing (LOCKED — founder confirmed 2026-06-20; set in Play Console)
 
 Market-grounded (cosmetic-IAP + focus-app sub/lifetime research, India PPP-localized
 ~0.2-0.3x US; charm pricing; impulse ceiling India ~Rs199 / global ~$4.99). Prices are

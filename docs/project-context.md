@@ -127,6 +127,14 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
+- **Pricing LOCKED (founder, 2026-06-20, CONFIRMED).** Standard premium theme **₹89 / $1.99**; **Aurora**
+  flagship **₹199 / $4.99**; Pro **Monthly ₹149 / $4.99**, **Yearly ₹799 / $29.99** (Best value), **Lifetime
+  ₹1,499 / $59.99** (hero — own every theme forever). India leads with Lifetime; global leads with Yearly.
+  Prices are NEVER hardcoded (fetched live from RevenueCat/Play) — this is the founder's Play Console +
+  RevenueCat setup input. Full rationale + funnel math in
+  `docs/superpowers/specs/2026-06-19-monetization-and-v1-paid-tier-design.md` (Pricing section). No dark
+  patterns: à-la-carte themes are owned forever; subs say "access while subscribed."
+
 - **Motion rule (founder, 2026-06-20, CONFIRMED).** The **session screen** must have NO moving/animated/
   changing elements except the **hourglass** (it is the one intentional motion; protect focus). ELSEWHERE
   (home, themes, settings, insights, onboarding) subtle motion/animation IS allowed — gradients, transitions,
