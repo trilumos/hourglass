@@ -31,7 +31,7 @@ class SurfaceTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(HgRadius.lg),
             border: Border.all(color: hg.hairline),
-            boxShadow: light ? hgShadowSoft : null,
+            boxShadow: light ? hgSoftShadow(hg.textPrimary) : null,
           ),
           child: Padding(padding: padding, child: child),
         ),
