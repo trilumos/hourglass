@@ -6,6 +6,7 @@ import 'package:hourglass/app/providers.dart';
 import 'package:hourglass/app/theme.dart';
 import 'package:hourglass/app/theme_controller.dart';
 import 'package:hourglass/billing/fake_billing_service.dart';
+import 'package:hourglass/domain/entitlements.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hourglass/app/tokens.dart';
 import 'package:hourglass/domain/session_mode.dart';
@@ -24,15 +25,19 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
   }
 
+  // Stamina is a Pro feature now, so the stamina-chip tests run as Pro.
+  const pro = Entitlements(pro: true, ownedThemeIds: {'sand'});
+
   Widget harness(
     SessionMode mode, {
     StaminaInfo stamina = const StaminaInfo(true, Duration(minutes: 30)),
+    Entitlements entitlements = Entitlements.free,
   }) =>
       ProviderScope(
         overrides: [
           sharedPrefsProvider.overrideWithValue(prefs),
           billingServiceProvider.overrideWith((ref) {
-            final s = FakeBillingService();
+            final s = FakeBillingService(initial: entitlements);
             ref.onDispose(s.dispose);
             return s;
           }),
@@ -46,10 +51,10 @@ void main() {
         ),
       );
 
-  testWidgets('Flow: intention, stamina-matched length, endless, begin',
+  testWidgets('Flow (Pro): intention, stamina-matched length, endless, begin',
       (tester) async {
     await phoneSurface(tester);
-    await tester.pumpWidget(harness(SessionMode.flowBlock));
+    await tester.pumpWidget(harness(SessionMode.flowBlock, entitlements: pro));
     await tester.pump();
 
     expect(find.text('INTENTION'), findsOneWidget);
@@ -66,11 +71,12 @@ void main() {
     expect(find.byType(SessionScreen), findsOneWidget);
   });
 
-  testWidgets('Flow: the stamina chip is shown but locked until earned',
+  testWidgets('Flow (Pro): the stamina chip is shown but locked until earned',
       (tester) async {
     await phoneSurface(tester);
     await tester.pumpWidget(harness(SessionMode.flowBlock,
-        stamina: const StaminaInfo(false, Duration(minutes: 25))));
+        stamina: const StaminaInfo(false, Duration(minutes: 25)),
+        entitlements: pro));
     await tester.pump();
 
     // Shown but inaccessible: bare "Stamina" label (no "· Nm"), with a note.
@@ -80,6 +86,18 @@ void main() {
         findsOneWidget);
     // A plain 25-min starting block is offered instead.
     expect(find.text('25 min'), findsOneWidget);
+  });
+
+  testWidgets('Flow (free): no Stamina chip; plain default length', (tester) async {
+    await phoneSurface(tester);
+    // Free user, even with established stamina, sees no stamina personalization.
+    await tester.pumpWidget(harness(SessionMode.flowBlock));
+    await tester.pump();
+
+    expect(find.text('Length'), findsOneWidget);
+    expect(find.text('Stamina'), findsNothing);
+    expect(find.text('Stamina · 30m'), findsNothing);
+    expect(find.textContaining('Pick a block length'), findsOneWidget);
   });
 
   testWidgets('Pomodoro: total → focus time → block length, no endless',

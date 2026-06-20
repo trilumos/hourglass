@@ -80,6 +80,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(ProviderScope(
       overrides: [
+        billingServiceProvider.overrideWithValue(FakeBillingService()),
         databaseProvider.overrideWith((ref) {
           final db = AppDatabase.memory();
           ref.onDispose(db.close);

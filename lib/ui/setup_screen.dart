@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/billing_providers.dart';
 import '../app/providers.dart';
 import '../app/theme_providers.dart';
 import '../app/theme.dart';
@@ -73,6 +74,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   /// Flow session the stamina chip is shown locked.
   bool _staminaEstablished = false;
   int _staminaMin = StaminaCalculator.defaultStart.inMinutes;
+
+  /// Focus Stamina is a Pro feature; free users get a plain default Flow length
+  /// and no Stamina chip. Refreshed from entitlements each build.
+  bool _staminaIsPro = false;
 
   /// The Flow length used before stamina is established (a plain starting block,
   /// not labelled as stamina).
@@ -198,7 +203,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Widget build(BuildContext context) {
     final hg = context.hg;
     final info = ref.watch(staminaProvider).asData?.value;
-    _staminaEstablished = info?.established ?? false;
+    _staminaIsPro = ref.watch(entitlementsProvider).pro;
+    // Stamina personalization is Pro-only; gate the established flag on it so the
+    // default length, preset list, and stretch caution all fall back for free.
+    _staminaEstablished = (info?.established ?? false) && _staminaIsPro;
     _staminaMin =
         info?.value.inMinutes ?? StaminaCalculator.defaultStart.inMinutes;
     final plan = _buildPlan();
@@ -348,24 +356,29 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return [
       const _SectionHeading('Length'),
       const SizedBox(height: HgSpacing.sm),
-      _Hint(_staminaEstablished
-          ? 'Your stamina is ${_staminaMin}m. Finish a block to hold it; '
-              'go past it (Endless, or +5 near the end) to grow it.'
-          : 'Your stamina sets after your first recorded Flow session, '
-              'then grows with you.'),
+      _Hint(_staminaIsPro
+          ? (_staminaEstablished
+              ? 'Your stamina is ${_staminaMin}m. Finish a block to hold it; '
+                  'go past it (Endless, or +5 near the end) to grow it.'
+              : 'Your stamina sets after your first recorded Flow session, '
+                  'then grows with you.')
+          : 'Pick a block length that fits your focus.'),
       const SizedBox(height: HgSpacing.md),
       Wrap(
         spacing: HgSpacing.sm,
         runSpacing: HgSpacing.sm,
         children: [
-          // Shown always; locked (inaccessible) until stamina is established.
-          _Chip(
-            label: _staminaEstablished ? 'Stamina · ${_staminaMin}m' : 'Stamina',
-            active: _staminaEstablished && minutes == _staminaMin,
-            enabled: _staminaEstablished,
-            icon: _staminaEstablished ? null : Icons.lock_outline_rounded,
-            onTap: () => _tap(() => _flowMinutes = _staminaMin),
-          ),
+          // Stamina is a Pro feature: the chip only shows for Pro (locked until
+          // established). Free users just pick from the fixed presets.
+          if (_staminaIsPro)
+            _Chip(
+              label:
+                  _staminaEstablished ? 'Stamina · ${_staminaMin}m' : 'Stamina',
+              active: _staminaEstablished && minutes == _staminaMin,
+              enabled: _staminaEstablished,
+              icon: _staminaEstablished ? null : Icons.lock_outline_rounded,
+              onTap: () => _tap(() => _flowMinutes = _staminaMin),
+            ),
           for (final mm in fixed)
             _Chip(
               label: '$mm min',

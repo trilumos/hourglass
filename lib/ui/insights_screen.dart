@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../app/billing_providers.dart';
 import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
@@ -13,6 +14,7 @@ import '../domain/personal_bests.dart';
 import '../domain/session_csv.dart';
 import '../domain/stamina_calculator.dart';
 import 'insights_copy.dart';
+import 'paywall_screen.dart';
 import 'session_format.dart';
 import 'widgets/bar_readout_chart.dart';
 import 'widgets/contribution_graph.dart';
@@ -39,6 +41,8 @@ class InsightsScreen extends ConsumerWidget {
     final now = ref.watch(clockProvider)();
     final stats = ref.watch(profileStatsProvider).value ?? ProfileStats.empty;
     final daily = ref.watch(dailyFocusProvider).value ?? const {};
+    // Average is a Pro stat; free users see a Pro upsell in its place.
+    final pro = ref.watch(entitlementsProvider).pro;
 
     final hasAnyData = stats.totalSessions > 0;
     final activeDays = _activeDaysLast30(daily, now);
@@ -74,9 +78,18 @@ class InsightsScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _row(
                     StatTile(label: 'Best streak', value: '${stats.bestStreak}'),
-                    StatTile(
-                        label: 'Avg session',
-                        value: formatFocusDuration(stats.avgSession)),
+                    pro
+                        ? StatTile(
+                            label: 'Avg session',
+                            value: formatFocusDuration(stats.avgSession))
+                        : StatTile(
+                            label: 'Avg session',
+                            value: 'Pro',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => const PaywallScreen()),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 12),
                   _row(

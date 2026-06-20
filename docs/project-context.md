@@ -107,12 +107,14 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
   economy + balancing so it doesn't cannibalize Pro/à-la-carte; AdMob (or similar) SDK adds Play Data-Safety +
   privacy disclosures; themes become earnable not just purchasable (revenue-model impact). Keep Pro as the
   "unlock everything + analytics" tier. Target V1.2 (founder said add it then if it's a good idea — it is).
-- **Move Focus Stamina + Focus Average behind Pro (DECISION PENDING; founder proposed 2026-06-20):** today the
-  Insights depth band (Focus Score & Stamina over time, personal bests, CSV) is Pro-gated, but the Home **Avg**
-  stat and the Flow-setup **personalized Stamina length** are FREE — an inconsistency (a free user gets a
-  personalized stamina suggestion while stamina analytics are Pro). Resolve by deciding whether "Focus
-  Stamina" (and Average) is a Pro feature everywhere (Home stat + setup length + Insights), with free Flow
-  setup falling back to a plain default length. Awaiting founder's choice before implementing.
+- **Focus Stamina + Focus Average are PRO everywhere (founder, 2026-06-20, CONFIRMED + implemented).** Free
+  tier: Focus Score, Today, Streak, sessions, themes (Sand + à-la-carte), consistency heatmap, and a plain
+  default Flow length. Pro unlocks: the **personalized Stamina length** + Stamina chip in Flow setup, the
+  **Avg** stat on Home, the **Avg session** record in Insights, and the Insights depth-band analytics.
+  Implementation: Home `_StatRow` hides Avg when not pro; `setup_screen` gates the stamina chip/personalization
+  on `entitlementsProvider.pro` (free → `_defaultFlowMin`, no chip); Insights RECORDS "Avg session" tile shows
+  a Pro upsell (tap → paywall) when free. **Why:** strengthens the Pro value prop; keeps a healthy free tier;
+  fixes the prior leak (free users got a personalized stamina length while stamina analytics were Pro).
 - Keep adding features; ship V2 when traction is good.
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)

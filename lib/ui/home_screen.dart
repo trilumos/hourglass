@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/billing_providers.dart';
 import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/theme_providers.dart';
@@ -137,6 +138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _StatRow(
                   stats: stats,
                   focusScore: ref.watch(focusScoreProvider).value,
+                  isPro: ref.watch(entitlementsProvider).pro,
                 ),
                 const SizedBox(height: HgSpacing.lg),
                 Center(
@@ -161,7 +163,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 class _StatRow extends StatelessWidget {
   final AsyncValue<HomeStats> stats;
   final int? focusScore;
-  const _StatRow({required this.stats, required this.focusScore});
+  // Average is a Pro stat; free users see Focus, Today, Streak.
+  final bool isPro;
+  const _StatRow({
+    required this.stats,
+    required this.focusScore,
+    required this.isPro,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -191,8 +199,10 @@ class _StatRow extends StatelessWidget {
               accent: true,
             ),
           ),
-          divider(),
-          _Stat(label: 'Avg', value: _formatFocus(data.avgSession)),
+          if (isPro) ...[
+            divider(),
+            _Stat(label: 'Avg', value: _formatFocus(data.avgSession)),
+          ],
           divider(),
           _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
           divider(),
