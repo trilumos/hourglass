@@ -584,8 +584,8 @@ class _BestRow extends StatelessWidget {
   }
 }
 
-/// The calm CSV-export action — a secondary surface (pill is reserved for the
-/// primary action), full-width, with a quiet share glyph.
+/// The calm PDF-report export action — a secondary surface (pill is reserved
+/// for the primary action), full-width, with a quiet document glyph.
 class _ExportButton extends StatelessWidget {
   final VoidCallback onExport;
   const _ExportButton({required this.onExport});
@@ -599,11 +599,11 @@ class _ExportButton extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.ios_share_rounded,
+          Icon(Icons.picture_as_pdf_rounded,
               size: HgSize.iconSm, color: hg.textSecondary),
           const SizedBox(width: HgSpacing.sm),
           Text(
-            'Export CSV',
+            'Export PDF report',
             style: TextStyle(
               fontFamily: HgFont.sans,
               fontSize: 14,

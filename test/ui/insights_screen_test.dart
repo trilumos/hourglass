@@ -124,7 +124,7 @@ void main() {
     expect(find.text('FOLLOW-THROUGH'), findsOneWidget);
     expect(find.text('BY MODE'), findsOneWidget);
     expect(find.text('PERSONAL BESTS'), findsOneWidget);
-    expect(find.text('Export CSV'), findsOneWidget);
+    expect(find.text('Export PDF report'), findsOneWidget);
   });
 
   testWidgets('trend sections show honest empty copy with no scored sessions',
