@@ -27,7 +27,13 @@ class SessionHistoryScreen extends ConsumerWidget {
     } else if (sessions.isEmpty) {
       body = _Empty();
     } else {
-      body = ListView(children: _rows(context, sessions, now));
+      // Build the grouped rows once, then let ListView.builder inflate only the
+      // visible ones (lazy viewport) — same rows, same order.
+      final rows = _rows(context, sessions, now);
+      body = ListView.builder(
+        itemCount: rows.length,
+        itemBuilder: (_, i) => rows[i],
+      );
     }
 
     return Scaffold(

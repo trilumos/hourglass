@@ -252,11 +252,14 @@ class _Stat extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (animatedNumber != null)
-          TweenAnimationBuilder<double>(
-            tween: Tween(end: animatedNumber!.toDouble()),
-            duration: const Duration(milliseconds: 900),
-            curve: HgMotion.calm,
-            builder: (_, v, _) => Text('${v.round()}', style: style),
+          // Isolate the 900ms count-up so it doesn't repaint its sibling stats.
+          RepaintBoundary(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: animatedNumber!.toDouble()),
+              duration: const Duration(milliseconds: 900),
+              curve: HgMotion.calm,
+              builder: (_, v, _) => Text('${v.round()}', style: style),
+            ),
           )
         else
           Text(value, style: style),

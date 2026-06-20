@@ -213,6 +213,9 @@ class HourglassPainter extends CustomPainter {
         const double v0Frac = 0.10; // small exit speed; rest is gravity (phase^2)
         final double colHalf = neckHalf * 1.3; // thin column ~ the hole width
         final math.Random rng = math.Random(7); // seeded -> stable per grain
+        // One reusable Paint for the whole spray (we only mutate its colour each
+        // grain) — avoids ~80 Paint allocations every frame. Output is identical.
+        final Paint grainPaint = Paint();
         for (int i = 0; i < grainCount; i++) {
           final double lane = rng.nextDouble() * 2 - 1;
           final double laneR = rng.nextDouble();
@@ -240,11 +243,8 @@ class HourglassPainter extends CustomPainter {
               ((py - holeY) / (floorY - holeY)).clamp(0.0, 1.0);
           final double aFade =
               ambient ? 0.78 * (1.0 - _smooth((drop - 0.42) / 0.58)) : 1.0;
-          canvas.drawCircle(
-            Offset(px, py),
-            r,
-            Paint()..color = grain.withValues(alpha: a * aFade),
-          );
+          grainPaint.color = grain.withValues(alpha: a * aFade);
+          canvas.drawCircle(Offset(px, py), r, grainPaint);
         }
 
         // IMPACT SCATTER: grains the stream kicks off the pile apex. Each is a
@@ -258,6 +258,7 @@ class HourglassPainter extends CustomPainter {
         final double hScale = maxHalf * (0.10 + 0.40 * fill) * 2.2;
         final double vScale = usableH * (0.010 + 0.055 * fill) * 2.2;
         final math.Random erng = math.Random(31);
+        final Paint scatterPaint = Paint(); // reused across the scatter hops
         for (int i = 0; i < scatterN; i++) {
           // Alternate sides by index so the spray is always balanced left/right
           // (a seeded coin-flip skewed to one side with so few grains).
@@ -277,11 +278,8 @@ class HourglassPainter extends CustomPainter {
           final double r = 0.25 + 0.35 * sizeR; // fine grains
           final double a = ((1 - p) * 0.8 * gate).clamp(0.0, 1.0).toDouble();
           if (a <= 0.02) continue;
-          canvas.drawCircle(
-            Offset(ex, ey),
-            r,
-            Paint()..color = grain.withValues(alpha: a),
-          );
+          scatterPaint.color = grain.withValues(alpha: a);
+          canvas.drawCircle(Offset(ex, ey), r, scatterPaint);
         }
       }
     }

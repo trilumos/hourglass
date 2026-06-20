@@ -40,12 +40,18 @@ class ProfileAvatar extends ConsumerWidget {
       builder: (context, snap) {
         final file = snap.data;
         if (file == null) return fallback();
+        // Avatars are stored at 512² but shown at 36–92px; decode to display
+        // size so the full bitmap isn't held in the image cache (low-RAM win).
+        final cachePx =
+            (size * MediaQuery.of(context).devicePixelRatio).ceil();
         return ClipOval(
           child: Image.file(
             file,
             width: size,
             height: size,
             fit: BoxFit.cover,
+            cacheWidth: cachePx,
+            cacheHeight: cachePx,
             gaplessPlayback: true,
             errorBuilder: (_, _, _) => fallback(),
           ),
