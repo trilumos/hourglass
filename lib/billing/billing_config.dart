@@ -8,6 +8,12 @@ const String kRevenueCatAndroidKey = '';
 /// to pro.monthly / pro.yearly / pro.lifetime).
 const String kProEntitlement = 'pro';
 
-/// Purchasable theme ids (the app catalog minus the always-free 'sand'). Empty
-/// until the themes build adds products; Pro grants all of these.
-const Set<String> kCatalogThemeIds = <String>{};
+/// Purchasable theme ids (the app catalog minus the always-free 'sand'). Pro
+/// grants all of these; each is also sellable à la carte (see kThemeProductId).
+const Set<String> kCatalogThemeIds = <String>{
+  'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir', 'mocha',
+};
+
+/// The Play / RevenueCat **product id** for a theme (a non-consumable). The
+/// matching RevenueCat entitlement is `theme_<id>` (see entitlementsFrom).
+String kThemeProductId(String themeId) => 'theme.$themeId';
