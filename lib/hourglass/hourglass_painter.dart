@@ -175,9 +175,9 @@ class HourglassPainter extends CustomPainter {
             Offset(cx, restSurf),
             Offset(cx, neckPx),
             [
-              Color.lerp(skin.sandColor, Colors.white, 0.05)!,
+              Color.lerp(skin.sandColor, Colors.white, 0.12)!,
               skin.sandColor,
-              Color.lerp(skin.sandColor, Colors.black, 0.12)!,
+              Color.lerp(skin.sandColor, Colors.black, 0.24)!,
             ],
             const [0.0, 0.5, 1.0],
           ),
@@ -210,9 +210,9 @@ class HourglassPainter extends CustomPainter {
             Offset(cx, pileTopY),
             Offset(cx, floorY),
             [
-              Color.lerp(skin.sandColor, Colors.white, 0.16)!,
+              Color.lerp(skin.sandColor, Colors.white, 0.24)!,
               skin.sandColor,
-              Color.lerp(skin.sandColor, Colors.black, 0.14)!,
+              Color.lerp(skin.sandColor, Colors.black, 0.26)!,
             ],
             const [0.0, 0.5, 1.0],
           ),
