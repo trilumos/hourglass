@@ -12,6 +12,7 @@ import '../app/tokens.dart';
 import 'faq_screen.dart';
 import 'guide_screen.dart';
 import 'paywall_screen.dart';
+import 'themes_screen.dart';
 import 'profile_screen.dart';
 import 'widgets/screen_background.dart';
 
@@ -116,6 +117,14 @@ class SettingsScreen extends ConsumerWidget {
                       ref.read(themeControllerProvider.notifier).setMode(mode);
                     },
                   ),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Themes',
+                  subtitle: 'Color the whole app and the hourglass',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ThemesScreen()),
+                  ),
+                ),
 
                 const SizedBox(height: HgSpacing.xl),
 
