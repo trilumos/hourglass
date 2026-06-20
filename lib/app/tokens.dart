@@ -170,12 +170,12 @@ class HgThemes {
       textPrimary: Color(0xFFF5EFE1),
       textSecondary: Color(0xFFC0B299),
       textMuted: Color(0xFF8E8167),
-      accent: Color(0xFFEDC56C), // rich warm GOLD (was a desaturated tan)
+      accent: Color(0xFFF0C85C), // rich warm GOLD (more saturated, less muddy)
       accentMuted: Color(0xFF3E311C),
       onAccent: Color(0xFF1A1204),
       hairline: Color(0xFF342A1C),
-      glow: Color(0x1FEDC56C),
-      focusRing: Color(0xFFEDC56C),
+      glow: Color(0x1FF0C85C),
+      focusRing: Color(0xFFF0C85C),
       scrim: Color(0xB3000000),
       success: Color(0xFF9BC59A),
       warning: Color(0xFFE0B873),
@@ -197,12 +197,12 @@ class HgThemes {
       textPrimary: Color(0xFF221A0E),
       textSecondary: Color(0xFF5E5340),
       textMuted: Color(0xFF8E8167),
-      accent: Color(0xFFB5831E), // deep GOLD (was a muddy caramel-brown)
+      accent: Color(0xFFBA8A14), // deep GOLD (more saturated, less muddy)
       accentMuted: Color(0xFFEEDDB8),
       onAccent: Color(0xFFFFFFFF),
       hairline: Color(0xFFE9DFC8),
-      glow: Color(0x14B5831E),
-      focusRing: Color(0xFFB5831E),
+      glow: Color(0x14BA8A14),
+      focusRing: Color(0xFFBA8A14),
       scrim: Color(0x40000000),
       success: Color(0xFF4F7A4D),
       warning: Color(0xFF9A6F1E),

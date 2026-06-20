@@ -8,6 +8,20 @@ double _smooth(double x) {
   return c * c * (3 - 2 * c);
 }
 
+/// Vary only HSL lightness so a gold stays gold (lerping a colour toward
+/// black/white desaturates and muddies it). Used for the sand gradient.
+Color _deeper(Color c, double amount) {
+  final h = HSLColor.fromColor(c);
+  return h.withLightness((h.lightness * (1 - amount)).clamp(0.0, 1.0)).toColor();
+}
+
+Color _lighter(Color c, double amount) {
+  final h = HSLColor.fromColor(c);
+  return h
+      .withLightness((h.lightness + (1 - h.lightness) * amount).clamp(0.0, 1.0))
+      .toColor();
+}
+
 /// Draws a premium hourglass. [progress] is session progress (0 = top full,
 /// 1 = pile full). [time] is elapsed seconds — it drives the falling spray and
 /// the kinematic liquid top surface.
@@ -175,9 +189,9 @@ class HourglassPainter extends CustomPainter {
             Offset(cx, restSurf),
             Offset(cx, neckPx),
             [
-              Color.lerp(skin.sandColor, Colors.white, 0.12)!,
+              _lighter(skin.sandColor, 0.14),
               skin.sandColor,
-              Color.lerp(skin.sandColor, Colors.black, 0.24)!,
+              _deeper(skin.sandColor, 0.20),
             ],
             const [0.0, 0.5, 1.0],
           ),
@@ -210,9 +224,9 @@ class HourglassPainter extends CustomPainter {
             Offset(cx, pileTopY),
             Offset(cx, floorY),
             [
-              Color.lerp(skin.sandColor, Colors.white, 0.24)!,
+              _lighter(skin.sandColor, 0.26),
               skin.sandColor,
-              Color.lerp(skin.sandColor, Colors.black, 0.26)!,
+              _deeper(skin.sandColor, 0.22),
             ],
             const [0.0, 0.5, 1.0],
           ),

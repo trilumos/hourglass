@@ -16,18 +16,21 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final hg = context.hg;
     final enabled = onPressed != null;
-    // A soft top-down sheen from a slightly-lighter accent to the accent. Static,
-    // GPU-cheap. A theme may override it (e.g. Aurora) via hg.accentGradient.
+    // A soft top-down sheen. Vary only LIGHTNESS in HSL (keep hue + saturation)
+    // so a gold accent stays gold top-to-bottom instead of muddying toward
+    // black/olive (a plain lerp-to-black desaturates). A theme may override it
+    // (e.g. Aurora) via hg.accentGradient.
+    final hsl = HSLColor.fromColor(hg.accent);
+    double clampL(double l) => l.clamp(0.0, 1.0);
+    final accentLight =
+        hsl.withLightness(clampL(hsl.lightness + (1 - hsl.lightness) * 0.18)).toColor();
+    final accentDeep = hsl.withLightness(clampL(hsl.lightness * 0.80)).toColor();
     final gradient = enabled
         ? (hg.accentGradient ??
             LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color.lerp(hg.accent, Colors.white, 0.22)!,
-                hg.accent,
-                Color.lerp(hg.accent, Colors.black, 0.10)!,
-              ],
+              colors: [accentLight, hg.accent, accentDeep],
               stops: const [0.0, 0.55, 1.0],
             ))
         : null;
