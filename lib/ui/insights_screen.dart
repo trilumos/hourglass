@@ -1,9 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../app/billing_providers.dart';
 import '../app/providers.dart';
@@ -11,9 +7,9 @@ import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../domain/analytics_calculator.dart';
 import '../domain/personal_bests.dart';
-import '../domain/session_csv.dart';
 import '../domain/stamina_calculator.dart';
 import 'insights_copy.dart';
+import 'insights_pdf.dart';
 import 'paywall_screen.dart';
 import 'session_format.dart';
 import 'widgets/bar_readout_chart.dart';
@@ -195,13 +191,13 @@ class _DepthBand extends ConsumerWidget {
             _BestsList(extras.bests),
           ],
 
-          // ── Export (lifetime; your data) ───────────────────────────────
+          // ── Export (a polished PDF report of the whole story) ───────────
           const SizedBox(height: HgSpacing.xl),
-          _Label('YOUR DATA'),
+          _Label('SHARE YOUR PROGRESS'),
           const SizedBox(height: HgSpacing.xs),
-          const _Descriptor(InsightsCopy.dataExport),
+          const _Descriptor(InsightsCopy.reportExport),
           const SizedBox(height: HgSpacing.md),
-          _ExportButton(onExport: () => _export(context, ref)),
+          _ExportButton(onExport: () => exportInsightsPdf(context, ref)),
         ],
       ],
     );
@@ -313,30 +309,6 @@ class _DepthBand extends ConsumerWidget {
       ),
       _Insight(InsightsCopy.modeInsight(data.byMode)),
     ];
-  }
-
-  Future<void> _export(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final sessions = await ref.read(allSessionsProvider.future);
-      if (sessions.isEmpty) {
-        messenger.showSnackBar(
-            const SnackBar(content: Text('Nothing to export yet.')));
-        return;
-      }
-      final csv = sessionsToCsv(sessions);
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/sustain-focus-history.csv');
-      await file.writeAsString(csv);
-      await SharePlus.instance.share(ShareParams(
-        files: [XFile(file.path, mimeType: 'text/csv')],
-        subject: 'Sustain — focus history',
-        text: 'My focus history from Sustain.',
-      ));
-    } catch (_) {
-      messenger.showSnackBar(
-          const SnackBar(content: Text("Couldn't export right now.")));
-    }
   }
 }
 

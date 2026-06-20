@@ -23,6 +23,8 @@ class InsightsCopy {
   static const followThrough = 'How often your Flow sessions reach their mark.';
   static const personalBests = 'Your records so far. Each one really happened.';
   static const dataExport = 'Your history is yours. Take a copy with you.';
+  static const reportExport =
+      'A clean PDF of your whole focus story — score, records, and bests.';
 
   // ── What feeds each section (the Flow-only vs all-modes distinction) ────────
   /// One-line legend at the top of the depth band.

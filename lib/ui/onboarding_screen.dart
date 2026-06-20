@@ -431,23 +431,12 @@ class _ProfileView extends StatelessWidget {
           ),
           const SizedBox(height: HgSpacing.sm),
           Text(
-            'Optional — you can add or change this later in your profile.',
+            'Optional — change it later in your profile. Your focus data stays '
+            'on this device; back it up anytime in Settings → Your data.',
             style: TextStyle(
               fontFamily: HgFont.sans,
               fontSize: 13,
               height: 1.4,
-              color: hg.textMuted,
-            ),
-          ),
-          const SizedBox(height: HgSpacing.lg),
-          Text(
-            'Your focus history stays on this device — private to you. Back it '
-            'up anytime in Settings → Your data, so you never lose it when you '
-            'switch phones.',
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 13,
-              height: 1.45,
               color: hg.textMuted,
             ),
           ),

@@ -174,9 +174,12 @@ class HourglassPainter extends CustomPainter {
 
       // Two layers moving in sympathy: close speeds (~1.4x) so they flow
       // together as one body with subtle depth, beating just enough to feel
-      // alive. back = light sand (highest); front = base sand (bulk).
-      drawWaveLayer(-amp * 0.95, 0.24, 0.6,
-          Paint()..color = Color.lerp(skin.sandColor, Colors.white, 0.20)!);
+      // alive. back = light sand (highest); front = base sand (bulk). The back
+      // crest is brightened IN-HUE (not toward white, which desaturated to the
+      // same tone as the front surface and made the second wave vanish — worst
+      // on the already-light Sand gold in dark mode) and peeks a touch higher.
+      drawWaveLayer(-amp * 1.1, 0.24, 0.6,
+          Paint()..color = _lighter(skin.sandColor, 0.46));
       // Front (bulk) layer: a 3-stop vertical gradient — lighter at the surface,
       // base sand in the middle, darker toward the neck — so the top sand reads
       // with depth (light top -> dark bottom), like the buttons.

@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../app/providers.dart';
 import '../app/theme.dart';
 import '../app/tokens.dart';
+import '../domain/session_csv.dart';
 import '../domain/session_record.dart';
 import 'session_format.dart';
 import 'session_summary_screen.dart';
@@ -45,7 +50,21 @@ class SessionHistoryScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: HgSpacing.sm),
-                const ScreenHeader(title: 'History'),
+                ScreenHeader(
+                  title: 'History',
+                  actions: sessions.isEmpty
+                      ? const []
+                      : [
+                          IconButton(
+                            onPressed: () => exportSessionsCsv(context, ref),
+                            iconSize: HgSize.iconMd,
+                            color: context.hg.textSecondary,
+                            icon: const Icon(Icons.ios_share_rounded),
+                            tooltip: 'Export CSV',
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
+                ),
                 const SizedBox(height: HgSpacing.lg),
                 Expanded(child: body),
               ],
@@ -182,5 +201,31 @@ class _Empty extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Exports every recorded session as a CSV file and opens the share sheet. Lives
+/// on the History screen (CSV is raw history data); Insights exports a PDF report.
+Future<void> exportSessionsCsv(BuildContext context, WidgetRef ref) async {
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    final sessions = await ref.read(allSessionsProvider.future);
+    if (sessions.isEmpty) {
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Nothing to export yet.')));
+      return;
+    }
+    final csv = sessionsToCsv(sessions);
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/sustain-focus-history.csv');
+    await file.writeAsString(csv);
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path, mimeType: 'text/csv')],
+      subject: 'Sustain — focus history',
+      text: 'My focus history from Sustain.',
+    ));
+  } catch (_) {
+    messenger.showSnackBar(
+        const SnackBar(content: Text("Couldn't export right now.")));
   }
 }
