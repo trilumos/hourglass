@@ -103,6 +103,19 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
+- **⚖️ THE IRON RULE (founder, 2026-06-20, CONFIRMED — the standard ALL work is validated against).**
+  Division of labor: **the founder owns on-device testing** — visuals, seamlessness, how it looks/feels to
+  users. **I own building it properly: no errors, no logic problems, no ignored edge cases, no
+  inconsistencies, no foolish mistakes.** No bug or glitch may stay. Everything must be **smooth and working
+  end to end** with **no privacy, security, or logical issues anywhere in the workflow.** **Never assume —
+  always confirm with the founder first** before deciding anything ambiguous; "build as you see fit" applies
+  only to implementation detail, not to scope/UX/product decisions. Every change, before I call it done, is
+  validated against this rule. **Why:** the founder verifies the experience; I am accountable for everything
+  internal being genuinely correct, so his testing finds a working app, not my mistakes. **How to apply:**
+  ship only self-verified work (analyze clean + serial tests green + edges reasoned through + no
+  privacy/security/logic gaps); when anything is unclear or assumed, stop and ask. This subsumes and is the
+  canonical statement of the "Division of responsibility" rule below.
+
 - **Hourglass falling sand MUST match the bulb sand colour (founder, 2026-06-19, CONFIRMED).** The falling-sand grains and the sand piled in the bulbs are the same material and must **never** look like different colours, in any theme/skin. **Why:** in light theme the grains were a separate deep-caramel value while the pile was a lighter tan, which looked wrong. **How to apply:** `HourglassSkin.grainColor` is a computed getter that returns `sandColor` (not a separate field) so the two can't diverge; any new skin only sets `sandColor`. Don't reintroduce a standalone grain colour. (`lib/hourglass/hourglass_skin.dart`.)
   - **Falling-sand particle look LOCKED (founder, 2026-06-19, APPROVED):** fine, dense spray of small round
     grains (`grainCount = 80`, radius ~0.4–1.0px tapering as they fall) — NOT thick streaks/threads. Any
