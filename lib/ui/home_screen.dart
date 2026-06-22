@@ -43,9 +43,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (ref.read(soundsEnabledProvider)) {
       ref.read(soundCuePlayerProvider).preload();
     }
-    // Stop any session foreground-service orphaned by a force-killed session —
-    // landing on Home means there's nothing to return to.
+    // Stop any session foreground-service orphaned by a force-killed session,
+    // and clear any grace pushes it left scheduled — landing on Home means
+    // there's nothing to return to.
     ref.read(sessionGuardProvider).stop();
+    ref.read(notificationServiceProvider).cancelGraceAlerts();
     // Reconcile the opt-in notification schedule with prefs + today's data
     // (after the first frame, so it never delays Home appearing).
     WidgetsBinding.instance.addPostFrameCallback((_) {

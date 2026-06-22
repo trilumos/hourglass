@@ -312,16 +312,23 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       _leftAt = _now();
       _leftWhileRunning = true;
       _controller.suspend(); // freeze the clock while away
-      // The foreground service flips to a live 30s "come back" countdown.
-      _guard.leaveGrace(_now().add(_rules.leaveGrace));
+      final end = _now().add(_rules.leaveGrace);
+      _guard.leaveGrace(end); // FGS flips to a live 30s "come back" countdown
+      if (!widget.previewMode) {
+        // Immediate sounding "come back" push + a scheduled "session ended" if
+        // they don't return in time (fires even with the app closed).
+        _notifs.showGraceAlert(HgNotif.graceLeave, 'Come back to keep your block',
+            'Return within ${_rules.leaveGrace.inSeconds}s or your block ends.');
+        _notifs.scheduleGraceAlert(HgNotif.graceLeave, end, 'Session ended',
+            'You were away too long.');
+      }
     } else if (status == SessionStatus.paused && _pausedAt != null) {
       _leftAt = _now();
       _leftWhileRunning = false;
       _pauseWatch?.cancel();
       _pauseWatch = null;
-      // The service counts down to the cap, then to the 15s "pause is up" grace.
-      final capAt = _pausedAt!.add(_rules.pauseCap);
-      _guard.pauseAway(capAt, capAt.add(_rules.capGrace));
+      // The pause cap/grace pushes were already scheduled on pause and the FGS is
+      // already counting down the cap — nothing more to arm here.
     }
   }
 
@@ -344,17 +351,23 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           _guard.focusing();
         }
       }
+      // The leave grace is resolved on return — clear its pushes either way.
+      if (!widget.previewMode) _notifs.cancelGraceAlerts();
     } else if (_pausedAt != null) {
       final totalPaused = _now().difference(_pausedAt!);
       if (_rules.endAfterPaused(totalPaused)) {
         _clearPause();
         _controller.abandon();
         _guard.stop();
+        if (!widget.previewMode) _notifs.cancelGraceAlerts(); // pause ended
       } else {
+        // Still within the cap — the pause continues, so KEEP the scheduled cap/
+        // grace pushes; just restore the live countdown + foreground watcher.
         _pauseCapHit = _rules.inCapGrace(totalPaused);
         _startPauseWatch(); // re-arm the foreground watcher
         _ensureGuardStarted(); // in case the 600ms start was skipped while away
-        _guard.paused();
+        final capAt = _pausedAt!.add(_rules.pauseCap);
+        _guard.pauseAway(capAt, capAt.add(_rules.capGrace));
       }
     }
     if (mounted) setState(() {});
@@ -369,10 +382,23 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           _controller.state.recordedFocus.inSeconds >= 120) {
         _saveCheckpoint(_controller.finalize());
       }
-      _pausedAt = _now();
+      final pausedAt = _now();
+      _pausedAt = pausedAt;
       _pauseCapHit = false;
       _startPauseWatch();
-      _guard.paused();
+      // FGS live cap countdown + sounding pushes (cap reached, then the 15s
+      // grace) — these fire whether the user stays in-app or leaves.
+      final capAt = pausedAt.add(_rules.pauseCap);
+      final endAt = capAt.add(_rules.capGrace);
+      _guard.pauseAway(capAt, endAt);
+      if (!widget.previewMode) {
+        _notifs.showGraceAlert(HgNotif.gracePauseUp, 'Paused',
+            'You have ${_rules.pauseCap.inMinutes} min before your block is at risk.');
+        _notifs.scheduleGraceAlert(HgNotif.gracePauseUp, capAt, 'Your pause is up',
+            'Resume within ${_rules.capGrace.inSeconds}s to keep your block.');
+        _notifs.scheduleGraceAlert(HgNotif.gracePauseEnd, endAt, 'Session ended',
+            'Your pause ran out.');
+      }
       if (mounted) setState(() {});
     } else {
       _openPaywall(); // out of free pauses → Pro
@@ -383,6 +409,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     _controller.resume();
     _clearPause();
     _guard.focusing();
+    if (!widget.previewMode) _notifs.cancelGraceAlerts(); // pause resolved
     _resetIdle();
     if (mounted) setState(() {});
   }
@@ -566,6 +593,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     if (give == true) {
       HapticFeedback.selectionClick();
       _controller.end();
+      if (!widget.previewMode) _notifs.cancelGraceAlerts(); // no stale pushes
     }
   }
 

@@ -14,6 +14,11 @@ class HgNotif {
   static const quoteDays = 7;
 
   static const channel = 'engagement';
+
+  // Time-sensitive in-session grace pushes (heads-up, sounding).
+  static const graceLeave = 9101; // "come back" / "block ended" (leave-running)
+  static const gracePauseUp = 9102; // "your pause is up"
+  static const gracePauseEnd = 9103; // "block ended" (pause ran out)
 }
 
 /// Wraps `flutter_local_notifications` for the MAIN isolate: permission + the
@@ -163,6 +168,67 @@ class NotificationService {
         ),
       );
     } catch (_) {}
+  }
+
+  /// Time-sensitive grace pushes: heads-up + sound, shown on the lock screen.
+  static const NotificationDetails _alertDetails = NotificationDetails(
+    android: AndroidNotificationDetails(
+      'session_alerts',
+      'Session alerts',
+      channelDescription:
+          'Time-sensitive alerts during a session: pause cap, grace windows, '
+          'and block-ended notices.',
+      importance: Importance.max,
+      priority: Priority.max,
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      icon: 'ic_stat_hourglass',
+    ),
+  );
+
+  /// Fire an immediate, sounding heads-up alert (the moment you pause / leave).
+  Future<void> showGraceAlert(int id, String title, String body) async {
+    await init();
+    if (!_ready) return;
+    try {
+      await _plugin.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: _alertDetails,
+      );
+    } catch (_) {}
+  }
+
+  /// An EXACT-time sounding grace alert that fires even in doze / app closed
+  /// (cap reached, grace expired). Replaces the same [id] if already shown.
+  Future<void> scheduleGraceAlert(
+      int id, DateTime when, String title, String body) async {
+    await init();
+    if (!_ready) return;
+    try {
+      final tzWhen = tz.TZDateTime.from(when, tz.local);
+      if (!tzWhen.isAfter(tz.TZDateTime.now(tz.local))) {
+        // Already past (e.g. a sub-second window) — fire it now instead.
+        await showGraceAlert(id, title, body);
+        return;
+      }
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzWhen,
+        notificationDetails: _alertDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } catch (_) {}
+  }
+
+  /// Clear every pending in-session grace alert (on resume / return / end).
+  Future<void> cancelGraceAlerts() async {
+    await cancel(HgNotif.graceLeave);
+    await cancel(HgNotif.gracePauseUp);
+    await cancel(HgNotif.gracePauseEnd);
   }
 
   Future<void> cancel(int id) async {
