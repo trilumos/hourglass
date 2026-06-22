@@ -128,9 +128,20 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       ref.read(soundCuePlayerProvider).preload(); // warm so the start cue is snappy
     }
     _controller.start();
-    // Start the persistent session foreground service (must be while foreground).
-    if (!widget.previewMode) _guard.start();
     _resetIdle();
+    // Spin up the session foreground service only AFTER the Begin transition and
+    // the hourglass hero have settled — starting its service + isolate mid-flight
+    // janks the launch. ~600ms in it's invisible, and the app is still foreground
+    // so Android's background-start restriction is satisfied.
+    if (!widget.previewMode) {
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted &&
+            WidgetsBinding.instance.lifecycleState ==
+                AppLifecycleState.resumed) {
+          _guard.start();
+        }
+      });
+    }
     // Safety net: continuously checkpoint focus-so-far so a force-kill (or any
     // crash) can't lose the block — and force-killing counts as a give-up, just
     // like the button. Skipped under test (a fake ticker drives time).
