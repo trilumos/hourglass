@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +10,8 @@ import 'app/theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Needed for the session foreground service to message its isolate.
+  FlutterForegroundTask.initCommunicationPort();
   // Portrait only — the layouts are designed for portrait; landscape breaks them.
   await SystemChrome.setPreferredOrientations(
     const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],

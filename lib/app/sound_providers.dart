@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../audio/sound_cues.dart';
-import '../session/session_notifications.dart';
+import '../session/session_guard.dart';
 import 'theme_controller.dart' show sharedPrefsProvider;
 
 /// Whether session sound cues play. Persisted; **on by default**. The cues are
@@ -37,11 +37,11 @@ final soundCuePlayerProvider = Provider<SoundCuePlayer>((ref) {
   return player;
 });
 
-/// Local "come back to keep your block" grace notifications. Silent no-op under
-/// `flutter_test` (no notifications plugin there).
-final sessionNotifierProvider = Provider<SessionNotifier>((ref) {
+/// The session foreground-service guard (the live, non-dismissable session +
+/// "come back" notification). Silent no-op under `flutter_test`.
+final sessionGuardProvider = Provider<SessionGuard>((ref) {
   if (Platform.environment.containsKey('FLUTTER_TEST')) {
-    return const SilentSessionNotifier();
+    return const SilentSessionGuard();
   }
-  return LocalSessionNotifier();
+  return FgsSessionGuard();
 });

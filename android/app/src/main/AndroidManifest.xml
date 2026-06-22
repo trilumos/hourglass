@@ -1,6 +1,11 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Session "come back to keep your block" grace reminders (Android 13+). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- The session foreground service: a live, non-dismissable session +
+         "come back" notification that survives the app being closed. specialUse
+         = an ongoing focus-session timer (declared at Play submission). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <application
         android:label="Sustain"
         android:name="${applicationName}"
@@ -27,14 +32,21 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- Required by flutter_local_notifications for SCHEDULED (zonedSchedule)
-             notifications — the plugin does not auto-declare it, and without it
-             the AlarmManager broadcast has no receiver and the pause-cap reminder
-             is silently dropped. (Short-lived grace reminders, so no boot receiver
-             is needed — they don't survive a reboot, which is fine.) -->
-        <receiver
+        <!-- The session foreground-service (flutter_foreground_task). specialUse:
+             a live focus-session timer that pins a return reminder while away. -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="specialUse"
             android:exported="false"
-            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+            tools:replace="android:foregroundServiceType">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="focus_session_timer"/>
+        </service>
+        <!-- Custom branded status-bar icon for the session notification. -->
+        <meta-data
+            android:name="com.trilumos.sustain.NOTIFICATION_ICON"
+            android:resource="@drawable/ic_stat_hourglass"/>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -42,10 +42,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (ref.read(soundsEnabledProvider)) {
       ref.read(soundCuePlayerProvider).preload();
     }
-    // Clear any stale "come back" grace notification left scheduled by a
-    // session whose process was killed — landing on Home means there's nothing
-    // to return to.
-    ref.read(sessionNotifierProvider).cancel();
+    // Stop any session foreground-service orphaned by a force-killed session —
+    // landing on Home means there's nothing to return to.
+    ref.read(sessionGuardProvider).stop();
   }
 
   void _begin() {

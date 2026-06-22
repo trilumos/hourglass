@@ -20,7 +20,7 @@ import '../domain/session_record.dart';
 import '../hourglass/hourglass_view.dart';
 import '../session/session_config.dart';
 import '../session/session_controller.dart';
-import '../session/session_notifications.dart';
+import '../session/session_guard.dart';
 import '../session/session_plan.dart';
 import '../session/session_state.dart';
 import '../session/strict_rules.dart';
@@ -82,7 +82,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
   // Strict-session state: pause limits + the away/cap grace windows.
   late final StrictRules _rules;
-  late final SessionNotifier _notifier;
+  late final SessionGuard _guard;
   DateTime? _pausedAt; // when the current manual pause began
   Timer? _pauseWatch; // 1s check of the pause cap while paused
   bool _pauseCapHit = false; // inside the post-cap "return now" grace
@@ -110,8 +110,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       duration: const Duration(milliseconds: 1100),
     )..repeat(reverse: true);
     _rules = StrictRules.forPro(ref.read(entitlementsProvider).pro);
-    _notifier = ref.read(sessionNotifierProvider);
-    if (!widget.previewMode) _notifier.init();
+    _guard = ref.read(sessionGuardProvider);
     _controller = SessionController(
       config: widget.config,
       ticker: widget.ticker ?? PeriodicTicker(),
@@ -129,6 +128,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       ref.read(soundCuePlayerProvider).preload(); // warm so the start cue is snappy
     }
     _controller.start();
+    // Start the persistent session foreground service (must be while foreground).
+    if (!widget.previewMode) _guard.start();
     _resetIdle();
     // Safety net: continuously checkpoint focus-so-far so a force-kill (or any
     // crash) can't lose the block — and force-killing counts as a give-up, just
@@ -200,6 +201,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       _idleTimer?.cancel();
       _dimmed = false;
       WakelockPlus.disable();
+      _guard.stop(); // session over → drop the foreground-service notification
       HapticFeedback.mediumImpact();
     }
     if (mounted) setState(() {});
@@ -263,39 +265,42 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       _leftAt = _now();
       _leftWhileRunning = true;
       _controller.suspend(); // freeze the clock while away
-      _notifier.showGrace(GraceKind.leaveRunning); // "come back, 30s"
+      // The foreground service flips to a live 30s "come back" countdown.
+      _guard.leaveGrace(_now().add(_rules.leaveGrace));
     } else if (status == SessionStatus.paused && _pausedAt != null) {
       _leftAt = _now();
       _leftWhileRunning = false;
-      // Stop the in-app watcher (unreliable while backgrounded) and fire the
-      // "you're paused, come back" notification immediately. The block-end
-      // decision is still enforced on return (paused past the cap + grace).
       _pauseWatch?.cancel();
       _pauseWatch = null;
-      _notifier.showGrace(GraceKind.pauseCap);
+      // The service counts down to the cap, then to the 15s "pause is up" grace.
+      final capAt = _pausedAt!.add(_rules.pauseCap);
+      _guard.pauseAway(capAt, capAt.add(_rules.capGrace));
     }
   }
 
   /// Returned to the app: apply the grace decision (resume vs end).
   void _onReturnApp() {
-    _notifier.cancel();
     final leftAt = _leftAt;
     if (leftAt == null) return;
     _leftAt = null;
     if (_leftWhileRunning) {
       if (_rules.endAfterAwayRunning(_now().difference(leftAt))) {
         _controller.abandon(); // came back too late
+        _guard.stop();
       } else {
         _controller.unsuspend(); // resume the clock
+        _guard.focusing();
       }
     } else if (_pausedAt != null) {
       final totalPaused = _now().difference(_pausedAt!);
       if (_rules.endAfterPaused(totalPaused)) {
         _clearPause();
         _controller.abandon();
+        _guard.stop();
       } else {
         _pauseCapHit = _rules.inCapGrace(totalPaused);
         _startPauseWatch(); // re-arm the foreground watcher
+        _guard.paused();
       }
     }
     if (mounted) setState(() {});
@@ -313,6 +318,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       _pausedAt = _now();
       _pauseCapHit = false;
       _startPauseWatch();
+      _guard.paused();
       if (mounted) setState(() {});
     } else {
       _openPaywall(); // out of free pauses → Pro
@@ -322,6 +328,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   void _resumeSession() {
     _controller.resume();
     _clearPause();
+    _guard.focusing();
     _resetIdle();
     if (mounted) setState(() {});
   }
@@ -337,7 +344,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     _pauseWatch = null;
     _pausedAt = null;
     _pauseCapHit = false;
-    _notifier.cancel();
   }
 
   /// Each second while paused: enforce the cap, then its 15 s grace.
@@ -350,6 +356,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     if (_rules.endAfterPaused(paused)) {
       _clearPause();
       _controller.abandon(); // past the cap + grace → block ends
+      _guard.stop();
     } else if (!_pauseCapHit && paused >= _rules.pauseCap) {
       _pauseCapHit = true; // entered the "return now" grace
     }
@@ -460,7 +467,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     _checkpointTimer?.cancel();
     _previewCapTimer?.cancel();
     _pauseWatch?.cancel();
-    _notifier.cancel();
+    _guard.stop();
     WakelockPlus.disable();
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_onChange);
