@@ -26,8 +26,18 @@ class SessionController extends ChangeNotifier {
   /// Max manual pauses allowed this session; null = unlimited (Pro / tests).
   final int? pauseLimit;
 
+  /// Whether a Pomodoro/Custom session may CONTINUE (append more blocks) past its
+  /// planned end instead of finishing — a Pro feature; the UI passes the
+  /// entitlement. Flow Block's keep-going is separate and always available.
+  final bool allowContinue;
+
   SessionState _state = SessionState.initial();
   late final DateTime _startedAt;
+
+  /// The working segment list — seeded from the plan, but APPENDABLE when a
+  /// Pomodoro/Custom session is continued past its end (see [addBlock] /
+  /// [repeatPlan]). The plan itself stays immutable (used for the planned total).
+  late final List<SessionSegment> _segments = List.of(config.plan.segments);
 
   /// Whether this block runs open-ended (never auto-stops). Seeded from the
   /// config's pre-set toggle, but can be switched on mid-block by the user
@@ -50,6 +60,7 @@ class SessionController extends ChangeNotifier {
     required this.now,
     this.onCue,
     this.pauseLimit,
+    this.allowContinue = false,
   });
 
   /// Manual pauses used so far this session.
@@ -65,7 +76,7 @@ class SessionController extends ChangeNotifier {
 
   SessionPlan get plan => config.plan;
 
-  SessionSegment get currentSegment => plan.segments[_state.segmentIndex];
+  SessionSegment get currentSegment => _segments[_state.segmentIndex];
 
   Duration get segmentRemaining {
     final r = currentSegment.duration - _state.segmentElapsed;
@@ -79,9 +90,11 @@ class SessionController extends ChangeNotifier {
     return (_state.segmentElapsed.inSeconds / total).clamp(0.0, 1.0);
   }
 
-  /// Overall session progress, 0..1.
+  /// Overall session progress, 0..1 (over the working segments, which grow when
+  /// a Pomodoro/Custom session is continued).
   double get progress {
-    final total = plan.totalDuration.inSeconds;
+    final total =
+        _segments.fold(Duration.zero, (a, s) => a + s.duration).inSeconds;
     if (total <= 0) return 0;
     return (_state.elapsed.inSeconds / total).clamp(0.0, 1.0);
   }
@@ -105,21 +118,33 @@ class SessionController extends ChangeNotifier {
       PhaseEngine.forBlock(focusDuration).phaseAt(inSegment);
 
   void _onTick(Duration delta) {
-    // Endless single-focus: never auto-finish; overflow counts as focus.
+    // Endless single-focus: never auto-finish. The hourglass CYCLES — each time
+    // it drains (segmentElapsed reaches the block length) it flips and refills
+    // (a new lap), so the sand keeps falling instead of stopping at 0. Total
+    // elapsed/recorded keep accumulating across laps.
     if (_endlessSingleFocus) {
       final focusDur = plan.segments.first.duration;
-      final elapsed = _state.elapsed + delta;
+      final total = _state.elapsed + delta;
+      var segEl = _state.segmentElapsed + delta;
+      var lap = _state.lap;
+      if (focusDur > Duration.zero) {
+        while (segEl >= focusDur) {
+          segEl -= focusDur; // drained → flip + refill, next lap
+          lap += 1;
+        }
+      }
       _set(_state.copyWith(
-        elapsed: elapsed,
-        segmentElapsed: elapsed,
-        recordedFocus: elapsed,
-        phase: _phaseFor(focusDur, elapsed),
-        goalReached: _state.goalReached || elapsed >= focusDur,
+        elapsed: total,
+        segmentElapsed: segEl,
+        recordedFocus: total,
+        lap: lap,
+        phase: _phaseFor(focusDur, segEl),
+        goalReached: _state.goalReached || total >= focusDur,
       ));
       return;
     }
 
-    final segs = plan.segments;
+    final segs = _segments;
     var remaining = delta;
     var idx = _state.segmentIndex;
     var segElapsed = _state.segmentElapsed;
@@ -142,9 +167,15 @@ class SessionController extends ChangeNotifier {
         if (idx == segs.length - 1) {
           ticker.stop();
           // A Flow Block (single focus) pauses at a "completed" decision point
-          // so the user can collect it or keep going. Everything else finishes.
-          final completable =
+          // so the user can collect it or keep going. Pomodoro/Custom pause there
+          // too WHEN continue is allowed (Pro) so they can add more blocks;
+          // otherwise they finish.
+          final isFlowDecision =
               plan.isSingleFocus && config.mode == SessionMode.flowBlock;
+          final canContinue = allowContinue &&
+              (config.mode == SessionMode.pomodoro ||
+                  config.mode == SessionMode.custom);
+          final completable = isFlowDecision || canContinue;
           _set(_state.copyWith(
             status: completable
                 ? SessionStatus.completed
@@ -275,6 +306,46 @@ class SessionController extends ChangeNotifier {
       status: SessionStatus.running,
       segmentElapsed: Duration.zero, // drain from full again
       phase: _phaseFor(currentSegment.duration, Duration.zero),
+    ));
+    ticker.start(_onTick);
+  }
+
+  /// Repeat the whole original plan again (Pomodoro/Custom continue) — appends a
+  /// fresh copy of the plan's segments and resumes from the completed point.
+  void repeatPlan() {
+    if (_state.status != SessionStatus.completed) return;
+    _segments.addAll(config.plan.segments);
+    _resumeAppended();
+  }
+
+  /// Add one more focus block of [focus] (Pomodoro/Custom continue), optionally
+  /// preceded by a [precedingRest] break, and resume from the completed point.
+  void addBlock(Duration focus, {Duration precedingRest = Duration.zero}) {
+    if (_state.status != SessionStatus.completed || focus <= Duration.zero) {
+      return;
+    }
+    if (precedingRest > Duration.zero) {
+      _segments.add(SessionSegment.rest(precedingRest));
+    }
+    _segments.add(SessionSegment.focus(focus));
+    _resumeAppended();
+  }
+
+  /// Resume running into the first appended segment after the completed point.
+  void _resumeAppended() {
+    final nextIdx = _state.segmentIndex + 1;
+    final next = _segments[nextIdx];
+    _set(_state.copyWith(
+      status: SessionStatus.running,
+      segmentIndex: nextIdx,
+      currentKind: next.kind,
+      segmentElapsed: Duration.zero,
+      // The planned goal was already reached — bonus blocks keep the session
+      // 'completed' on finalize even if a bonus block is later given up.
+      goalReached: true,
+      phase: next.isFocus
+          ? _phaseFor(next.duration, Duration.zero)
+          : _state.phase,
     ));
     ticker.start(_onTick);
   }

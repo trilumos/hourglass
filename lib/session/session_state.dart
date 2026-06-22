@@ -42,6 +42,10 @@ class SessionState {
   /// The planned end has been passed (the completion chime fires).
   final bool goalReached;
 
+  /// Completed laps of an ENDLESS Flow Block — each lap the hourglass drains, it
+  /// flips and refills (the sand keeps falling instead of stopping at 0).
+  final int lap;
+
   const SessionState({
     required this.status,
     required this.segmentIndex,
@@ -51,6 +55,7 @@ class SessionState {
     required this.recordedFocus,
     required this.phase,
     required this.goalReached,
+    this.lap = 0,
   });
 
   factory SessionState.initial() => const SessionState(
@@ -75,6 +80,7 @@ class SessionState {
     Duration? recordedFocus,
     FocusPhase? phase,
     bool? goalReached,
+    int? lap,
   }) =>
       SessionState(
         status: status ?? this.status,
@@ -85,5 +91,6 @@ class SessionState {
         recordedFocus: recordedFocus ?? this.recordedFocus,
         phase: phase ?? this.phase,
         goalReached: goalReached ?? this.goalReached,
+        lap: lap ?? this.lap,
       );
 }

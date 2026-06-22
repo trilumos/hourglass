@@ -75,6 +75,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   bool _autoRevealed = false;
   int? _recordId;
   int _flippedIndex = -1; // last focus-block index we played the flip for
+  int _flippedLap = 0; // last endless lap we played the flip for
   SessionRecord? _record;
   Timer? _revealTimer;
   Timer? _idleTimer;
@@ -123,6 +124,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       ticker: widget.ticker ?? PeriodicTicker(),
       now: widget.now ?? DateTime.now,
       pauseLimit: widget.previewMode ? null : _rules.pauseLimit,
+      // Pomodoro/Custom may continue (add blocks) past the planned end — Pro.
+      allowContinue: !widget.previewMode && ref.read(entitlementsProvider).pro,
       // Ritual sound cues — never in a theme preview (records/plays nothing).
       onCue: widget.previewMode
           ? null
@@ -191,11 +194,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   void _onChange() {
     final s = _controller.state;
     // Flip the hourglass whenever a fresh focus block starts (begin, after a
-    // break, after "keep going").
+    // break, after "keep going") OR an endless block drains and starts a new lap.
     if (s.status == SessionStatus.running &&
         s.currentKind == SegmentKind.focus &&
-        _flippedIndex != s.segmentIndex) {
+        (_flippedIndex != s.segmentIndex || _flippedLap != s.lap)) {
       _flippedIndex = s.segmentIndex;
+      _flippedLap = s.lap;
       _playFlip();
       // Show the time briefly when the session first begins, then let it fade.
       if (!_autoRevealed) {
@@ -283,6 +287,38 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     _flippedIndex = -1; // force a fresh flip for the new drain
     _controller.keepGoing();
     _resetIdle();
+  }
+
+  /// Pomodoro/Custom continue (Pro): repeat the whole plan again.
+  void _onRepeatPlan() {
+    _flippedIndex = -1;
+    _controller.repeatPlan();
+    _resetIdle();
+  }
+
+  /// Pomodoro/Custom continue (Pro): append one more focus block.
+  void _onAddBlock(Duration focus, Duration precedingRest) {
+    _flippedIndex = -1;
+    _controller.addBlock(focus, precedingRest: precedingRest);
+    _resetIdle();
+  }
+
+  /// The plan's focus-block length (the "+1 block" default) — first focus
+  /// segment, or 25 min if somehow none.
+  Duration get _continueBlockLen {
+    for (final s in widget.config.plan.segments) {
+      if (s.isFocus) return s.duration;
+    }
+    return const Duration(minutes: 25);
+  }
+
+  /// The plan's break length, inserted before a "+1 block" — first rest segment,
+  /// or zero for break-less plans.
+  Duration get _continueBreakLen {
+    for (final s in widget.config.plan.segments) {
+      if (!s.isFocus) return s.duration;
+    }
+    return Duration.zero;
   }
 
   @override
@@ -809,8 +845,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                 key: const ValueKey('completed'),
                 record: _record,
                 config: widget.config,
-                canKeepGoing: true,
+                // Flow Block → keep going; Pomodoro/Custom (Pro) → continue.
+                canKeepGoing: widget.config.mode == SessionMode.flowBlock,
                 onKeepGoing: _onKeepGoing,
+                onRepeat: widget.config.mode == SessionMode.flowBlock
+                    ? null
+                    : _onRepeatPlan,
+                onAddBlock: widget.config.mode == SessionMode.flowBlock
+                    ? null
+                    : _onAddBlock,
+                blockLength: _continueBlockLen,
+                breakLength: _continueBreakLen,
                 onDone: goHome,
               ),
             SessionStatus.awaitingResume => _awaitingView(s),
@@ -830,7 +875,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         }
       },
       child: Listener(
-        onPointerDown: (_) => _resetIdle(),
+        // One touch anywhere both un-dims AND peeks the time (revealTime calls
+        // resetIdle). No haptic here — the hourglass tap keeps the tactile one.
+        onPointerDown: (_) => _revealTime(haptic: false),
         child: Scaffold(
           body: ScreenBackground(
             child: SafeArea(
@@ -1413,6 +1460,13 @@ class _Completion extends ConsumerWidget {
   final VoidCallback onDone;
   final bool canKeepGoing;
   final VoidCallback? onKeepGoing;
+
+  /// Pomodoro/Custom continue (Pro): repeat the whole plan, or add another block.
+  /// When [onRepeat] is set, the continue options replace the plain "Done".
+  final VoidCallback? onRepeat;
+  final void Function(Duration focus, Duration precedingRest)? onAddBlock;
+  final Duration blockLength; // the plan's focus-block length (for "+1 block")
+  final Duration breakLength; // the plan's break before an added block
   const _Completion({
     super.key,
     required this.record,
@@ -1420,6 +1474,10 @@ class _Completion extends ConsumerWidget {
     required this.onDone,
     this.canKeepGoing = false,
     this.onKeepGoing,
+    this.onRepeat,
+    this.onAddBlock,
+    this.blockLength = Duration.zero,
+    this.breakLength = Duration.zero,
   });
 
   @override
@@ -1567,7 +1625,40 @@ class _Completion extends ConsumerWidget {
             ],
           ],
           const SizedBox(height: HgSpacing.xxl),
-          if (canKeepGoing) ...[
+          if (onRepeat != null) ...[
+            // Pomodoro/Custom continue (Pro) — keep the session going.
+            PrimaryButton(
+              label: '+ One more block · ${blockLength.inMinutes} min',
+              onPressed: () => onAddBlock!(blockLength, breakLength),
+            ),
+            const SizedBox(height: HgSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: onRepeat,
+                    child: Text('Repeat plan',
+                        style: TextStyle(
+                            fontFamily: HgFont.sans, color: hg.textSecondary)),
+                  ),
+                ),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => _pickCustomBlock(context, onAddBlock!),
+                    child: Text('Custom length',
+                        style: TextStyle(
+                            fontFamily: HgFont.sans, color: hg.textSecondary)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: HgSpacing.xs),
+            TextButton(
+              onPressed: onDone,
+              child: Text('Finish',
+                  style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted)),
+            ),
+          ] else if (canKeepGoing) ...[
             PrimaryButton(label: 'Keep going', onPressed: onKeepGoing),
             const SizedBox(height: HgSpacing.xs),
             TextButton(
@@ -1581,6 +1672,74 @@ class _Completion extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A quick "add focus" sheet for the Pomodoro/Custom continue — preset minutes
+/// added as a straight focus block (no break).
+Future<void> _pickCustomBlock(
+    BuildContext context, void Function(Duration, Duration) add) async {
+  final hg = context.hg;
+  const presets = [10, 15, 20, 25, 30, 45];
+  await showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: hg.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(HgRadius.lg)),
+    ),
+    builder: (sheetCtx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(HgSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Add focus',
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: hg.textPrimary,
+              ),
+            ),
+            const SizedBox(height: HgSpacing.md),
+            Wrap(
+              spacing: HgSpacing.sm,
+              runSpacing: HgSpacing.sm,
+              children: [
+                for (final m in presets)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(sheetCtx).pop();
+                      add(Duration(minutes: m), Duration.zero);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: HgSpacing.lg, vertical: HgSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: hg.accent.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(HgRadius.md),
+                        border:
+                            Border.all(color: hg.accent.withValues(alpha: 0.30)),
+                      ),
+                      child: Text(
+                        '$m min',
+                        style: TextStyle(
+                          fontFamily: HgFont.sans,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: hg.accent,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// A single prominent bullet in the completion screen's "why this didn't count"

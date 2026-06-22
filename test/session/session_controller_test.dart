@@ -32,6 +32,7 @@ SessionController _controller(
   required SessionPlan plan,
   bool autoContinue = false,
   bool autoAdvanceBreaks = true,
+  bool allowContinue = false,
   SessionMode mode = SessionMode.flowBlock,
 }) {
   return SessionController(
@@ -46,6 +47,7 @@ SessionController _controller(
     ),
     ticker: ticker,
     now: () => DateTime(2026, 6, 12, 9),
+    allowContinue: allowContinue,
   );
 }
 
@@ -291,6 +293,110 @@ void main() {
       expect(c.state.segmentElapsed, m(2));
       expect(c.state.elapsed, m(12));
       expect(c.state.recordedFocus, m(10));
+    });
+  });
+
+  group('continue (Pomodoro/Custom, Pro)', () {
+    // f25 · r5 · f25  (50 min planned focus)
+    SessionPlan twoBlocks() => SessionPlan.pomodoro(
+          work: m(25),
+          shortBreak: m(5),
+          longBreak: m(15),
+          blocks: 2,
+        );
+
+    test('without allowContinue, a pomodoro still finishes at the end', () {
+      final ticker = FakeTicker();
+      final c =
+          _controller(ticker, plan: twoBlocks(), mode: SessionMode.pomodoro);
+      c.start();
+      ticker.advance(m(55)); // 25 + 5 + 25
+      expect(c.state.status, SessionStatus.finished);
+    });
+
+    test('with allowContinue, a pomodoro parks at completed instead', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      ticker.advance(m(55));
+      expect(c.state.status, SessionStatus.completed);
+      expect(c.state.goalReached, isTrue);
+      expect(c.state.recordedFocus, m(50));
+    });
+
+    test('addBlock appends a focus block, resumes, then re-parks at completed',
+        () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      ticker.advance(m(55)); // → completed (50 focus)
+
+      c.addBlock(m(10)); // +10 min straight focus
+      expect(c.state.status, SessionStatus.running);
+      expect(ticker.running, isTrue);
+      ticker.advance(m(10));
+      expect(c.state.status, SessionStatus.completed,
+          reason: 'back to the decision point');
+      expect(c.state.recordedFocus, m(60));
+      final rec = c.finalize();
+      expect(rec.recordedFocus, m(60));
+      expect(rec.completed, isTrue);
+    });
+
+    test('addBlock with a preceding rest runs the break before the block', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      ticker.advance(m(55)); // completed
+      c.addBlock(m(25), precedingRest: m(5));
+      expect(c.state.isResting, isTrue, reason: 'the inserted break runs first');
+      ticker.advance(m(5));
+      expect(c.state.isResting, isFalse);
+      ticker.advance(m(25));
+      expect(c.state.status, SessionStatus.completed);
+      expect(c.state.recordedFocus, m(75));
+    });
+
+    test('repeatPlan appends the whole plan again', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      ticker.advance(m(55)); // completed (50 focus)
+      c.repeatPlan();
+      expect(c.state.status, SessionStatus.running);
+      ticker.advance(m(55)); // run the repeated plan
+      expect(c.state.status, SessionStatus.completed);
+      expect(c.state.recordedFocus, m(100));
+    });
+
+    test('giving up a bonus block still finalizes the session as completed', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      ticker.advance(m(55)); // completed
+      c.addBlock(m(25));
+      ticker.advance(m(10)); // 10 into the bonus block
+      c.end(); // give up the bonus
+      expect(c.state.status, SessionStatus.finished);
+      final rec = c.finalize();
+      expect(rec.completed, isTrue,
+          reason: 'the planned session was already completed');
+      expect(rec.recordedFocus, m(60));
+    });
+
+    test('addBlock is a no-op unless parked at completed', () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      c.addBlock(m(10)); // running, not completed → ignored
+      expect(c.state.status, SessionStatus.running);
+      expect(c.state.segmentIndex, 0);
     });
   });
 }
