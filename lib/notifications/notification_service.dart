@@ -132,10 +132,11 @@ class NotificationService {
     } catch (_) {}
   }
 
-  /// Fire an immediate in-session alert (break start/end, session complete) on
-  /// the same high-priority channel the foreground-service isolate uses, so they
-  /// read as one consistent stream. Used from the foreground (in-app) where the
-  /// main isolate is reliably alive.
+  /// Fire an immediate, **silent** in-session notice (break start/end, session
+  /// complete) from the foreground (in-app), where the session bell cue already
+  /// provides the sound — so this is a visual heads-up only and never double-dings.
+  /// (The away grace alerts, where no bell plays, keep their sound in the
+  /// foreground-service isolate.)
   Future<void> showSessionAlert(String title, String body) async {
     await init();
     if (!_ready) return;
@@ -146,12 +147,15 @@ class NotificationService {
         body: body,
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
-            'session_alerts',
-            'Session alerts',
+            'session_notices',
+            'Session notices (silent)',
             channelDescription:
-                'Break and return alerts during a focus session.',
-            importance: Importance.max,
+                'Silent break and finish notices — the session bell is the sound.',
+            importance: Importance.high,
             priority: Priority.high,
+            playSound: false,
+            enableVibration: false,
+            onlyAlertOnce: true,
             category: AndroidNotificationCategory.reminder,
             visibility: NotificationVisibility.public,
             icon: 'ic_stat_hourglass',

@@ -28,6 +28,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       final granted =
           await ref.read(notificationServiceProvider).requestPermission();
       if (mounted) setState(() => _denied = !granted);
+    } else if (mounted) {
+      setState(() => _denied = false); // turning things off clears the warning
     }
     await syncNotifications(ref);
   }

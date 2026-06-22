@@ -200,6 +200,10 @@ class SessionGuardHandler extends TaskHandler {
   @override
   void onRepeatEvent(DateTime timestamp) {
     final now = DateTime.now().millisecondsSinceEpoch;
+    // Only the AWAY transitions buzz from the isolate (no session bell plays when
+    // the app is gone). Break start/end and session-complete are owned by the
+    // foreground UI — a silent notice + the session bell — so 'break'/'focus'/
+    // 'paused' intentionally fire nothing here.
     switch (_mode) {
       case 'pauseAway':
         if (!_firedCap && _cap > 0 && now >= _cap) {
@@ -230,8 +234,13 @@ class SessionGuardHandler extends TaskHandler {
             ? 'Break — ${_fmt(_end - now)} left. Rest your eyes.'
             : 'Break\'s over — back to focus.';
       case 'leave':
-        title = 'Come back to keep your block';
-        text = '${_fmt(_end - now)} left before it ends.';
+        if (now < _end) {
+          title = 'Come back to keep your block';
+          text = '${_fmt(_end - now)} left before it ends.';
+        } else {
+          title = 'Block ended';
+          text = 'You were away too long.';
+        }
       case 'paused':
         title = 'Paused';
         text = 'Tap to return to your session.';

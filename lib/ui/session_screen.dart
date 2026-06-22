@@ -88,6 +88,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   late final SessionGuard _guard;
   late final NotificationService _notifs;
   bool _wasResting = false; // tracks rest/focus transitions for break alerts
+  bool _guardStarted = false; // the foreground service has been started once
   DateTime? _pausedAt; // when the current manual pause began
   Timer? _pauseWatch; // 1s check of the pause cap while paused
   bool _pauseCapHit = false; // inside the post-cap "return now" grace
@@ -144,7 +145,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         if (mounted &&
             WidgetsBinding.instance.lifecycleState ==
                 AppLifecycleState.resumed) {
-          _guard.start();
+          _ensureGuardStarted();
         }
       });
     }
@@ -294,6 +295,16 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     }
   }
 
+  /// Start the session foreground service once (idempotent). Normally fires from
+  /// the post-animation timer; also called on return, in case the user
+  /// backgrounded within that first 600ms (when an FGS can't be started from the
+  /// background) and the timer therefore skipped it.
+  void _ensureGuardStarted() {
+    if (_guardStarted || widget.previewMode) return;
+    _guardStarted = true;
+    _guard.start();
+  }
+
   /// Backgrounded mid-session: start the right grace window + push notification.
   void _onLeaveApp() {
     final status = _controller.state.status;
@@ -325,6 +336,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         _guard.stop();
       } else {
         _controller.unsuspend(); // resume the clock
+        _ensureGuardStarted(); // in case the 600ms start was skipped while away
         // Restore the right notification state — they may have left mid-break.
         if (_controller.state.isResting) {
           _guard.breakStarted(_now().add(_controller.segmentRemaining));
@@ -341,6 +353,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       } else {
         _pauseCapHit = _rules.inCapGrace(totalPaused);
         _startPauseWatch(); // re-arm the foreground watcher
+        _ensureGuardStarted(); // in case the 600ms start was skipped while away
         _guard.paused();
       }
     }
