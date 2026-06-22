@@ -26,51 +26,72 @@ users expect (instant-kill-on-leave is a documented 1-star complaint class).
 
 ## Part 1 — Strict session rules
 
-### 1.1 Leaving the app (the core fix)
-
-Leaving the app (`AppLifecycleState.paused`/`inactive`) ends the block whether it
-was **running or paused** — with a short grace so accidental switches and
-incoming calls don't unfairly kill a session.
-
-- On background: record `backgroundedAt`; freeze the session (no focus accrues
-  while away). This freeze does **not** consume a manual-pause (see 1.2).
-- On return (`resumed`):
-  - elapsed ≤ **15 s** → restore the prior state (a running block resumes; a
-    manually-paused block stays paused). Block survives.
-  - elapsed > 15 s → the block **ends** (abandon → recorded as given-up, with
-    whatever focus was banked before leaving, per the existing recording rule).
-- If the user never returns, the block stays frozen until they reopen the app
-  (then it ends per the rule); a force-kill is already handled by the 8-s
-  checkpoint safety net (records focus-so-far as given-up).
-- Applies to all modes; **preview mode stays fully exempt.**
-
-### 1.2 Manual pause (the in-app pause button)
-
-Pause stays **free** but disciplined; Pro is lenient.
+### 1.1 Numbers (final)
 
 | | Free | Pro |
 |---|---|---|
-| Pauses per session | **2** | **Unlimited** |
-| Max single pause (auto-acts) | **3 min** | **10 min** |
+| Pauses per session | **3** | **Unlimited** |
+| Max single pause (cap) | **3 min** | **10 min** |
+| Leave-while-**running** grace | **30 s** | 30 s |
+| Pause-**cap** grace (after the cap) | **15 s** | 15 s |
 
-- **Pause count:** after a free user spends their 2 pauses, the pause control is
-  disabled and shows a calm Pro nudge ("You've used your 2 pauses — Pro gives
-  unlimited pauses"). The session keeps **running** (we never end a block just
-  for *wanting* to pause again).
-- **Pause duration:** a single pause that exceeds the cap ends the block
-  (abandon) — staying paused that long means you walked away. A gentle line
-  explains it. (Pro's 10-min cap is a safety stop, not a discipline lever.)
-- Limits are keyed off `entitlementsProvider.pro`. Pause count resets per
-  session.
+All limits are keyed off `entitlementsProvider.pro`; pause count resets per
+session. **Preview mode is fully exempt** from every rule below.
 
-### 1.3 Copy & feel (calm, not punitive)
+### 1.2 The prompts live in PUSH NOTIFICATIONS (the key insight)
 
-- Grace return prompt is reassuring, e.g. a brief "Come back to keep your block"
-  state on return-too-late, not a scolding.
-- Pro nudges are quiet upsells (tap → paywall), consistent with the rest of the
-  app. Never block the *core* loop; only the *leniency* is gated.
+The grace windows happen while the user is **outside** the app, so the "come
+back" prompt **cannot** be in-app UI — it is a **local push notification**
+(`flutter_local_notifications`). The notification both warns them and is the way
+back (tapping it reopens the app to the live session). In-app states are still
+shown for the moments the user *is* looking at the screen.
 
-### 1.4 Deferred (recorded, not built now)
+- New dependency: **`flutter_local_notifications`** + Android 13+ runtime
+  **`POST_NOTIFICATIONS`** permission (requested gracefully; if denied, the grace
+  logic still runs on return — they just don't get the external nudge).
+- Notifications are **scheduled** so they fire even if the OS suspends or kills
+  the app while backgrounded. Each grace notification is cancelled if the user
+  returns in time.
+
+### 1.3 Leaving the app while RUNNING (didn't pause)
+
+The strictest path — they bailed without using a pause.
+
+- On background while running: **immediately show** a notification — *"Come back
+  to keep your block — you have 30 seconds."* Start a **30 s** grace.
+- Return (tap the notification or reopen) within 30 s → the block **resumes**
+  running; the notification is cancelled.
+- 30 s elapses (or the app is killed) → the block **ends** (given-up, banking the
+  focus done before leaving). Enforced on return by comparing elapsed time; a
+  force-kill is already covered by the 8-s checkpoint safety net.
+
+### 1.4 Manual pause — and pausing-then-leaving
+
+Pausing is deliberate, so it earns the full pause budget (the cap), not just the
+30 s leave-grace.
+
+- **Count:** Free gets **3** pauses/session. After the 3rd is used, the pause
+  control is disabled with a quiet Pro nudge (*"You've used your 3 pauses — Pro
+  gives unlimited pauses"*). The session keeps **running** — we never end a block
+  just for *wanting* to pause again. Pro is unlimited.
+- **Duration + the cap grace:** a pause may last up to the cap (**3 min** free /
+  **10 min** Pro), whether the user stays in-app or leaves. When the pause
+  **reaches the cap**:
+  1. Show a notification — *"Your pause is up — return within 15 seconds to keep
+     your block."* (and the same prominent state in-app if they're looking).
+  2. Start a **15 s** grace, revealed **only now** (a pause under the cap never
+     shows a countdown — it's calm until the cap is hit).
+  3. Return within 15 s → the block **resumes** running (the pause is over).
+  4. 15 s elapses → the block **ends** (given-up).
+
+### 1.5 Copy & feel (calm, not punitive)
+
+- Notification + in-app copy is reassuring and brief ("Come back to keep your
+  block"), never a scolding. Tapping the notification deep-links to the session.
+- Pro nudges are quiet upsells (tap → paywall). Never block the *core* loop; only
+  the *leniency* is gated.
+
+### 1.6 Deferred (recorded, not built now)
 
 - **Allow-list of permitted apps** (open music/maps mid-session without ending
   the block) — across Forest/Opal/Focus Plant this is the single most-paywalled
@@ -97,29 +118,44 @@ Monthly/Yearly lead and Lifetime reads as a premium "own it forever" option.
 
 ## Architecture / where it lives
 
-- **`SessionController`** (domain, pure): owns the rules. Add `pauseCount`,
-  pause-cap + count limits (injected, so free/Pro and the durations are
-  parameters — testable without Flutter), an `onLimitHit`/state for "out of
-  pauses", and a `leftAt`/grace check API. Keep audio/entitlement out of the
-  domain — the UI passes in the limits (like it already passes `onCue`).
-- **`SessionScreen`**: wires the limits from `entitlementsProvider.pro`, drives
-  the lifecycle grace (background timestamp + on-resume check), renders the
-  pause button states + the Pro nudge + the grace return state.
+- **`SessionController`** (domain, pure): owns the *rules* (counts, caps, the
+  grace math). Add `pauseCount`, the count + cap + grace durations (injected as
+  params, so free/Pro values are testable without Flutter), an "out of pauses"
+  state, and a grace/away check API. Audio/entitlement/notifications stay out of
+  the domain — the UI passes the limits in (exactly like it already passes
+  `onCue`) and reacts to controller state.
+- **Notification service** (new, `lib/audio/`-style sibling, e.g.
+  `lib/session/session_notifications.dart`): a thin wrapper over
+  `flutter_local_notifications` — `graceReminder(kind, deadline)` schedules/shows
+  the "come back / pause's up" notification and `cancel()` clears it. A no-op
+  impl for tests + a `FLUTTER_TEST` guard provider, mirroring `SoundCuePlayer`.
+- **`SessionScreen`**: wires limits from `entitlementsProvider.pro`; on
+  background, freezes + fires the right notification (30 s leave grace, or the
+  pause-cap grace) and records `awayAt`; on resume, applies the grace decision
+  (resume vs end) and cancels the notification; renders the in-app pause-button
+  states, the Pro nudge, and the cap countdown.
+- **Android manifest / permissions:** add `POST_NOTIFICATIONS` (Android 13+),
+  request at the right moment (first session, not at launch). Notification tap
+  re-opens to the running session.
 - **Paywall screen**: reorder tiers + add the pause benefit. No billing changes.
 
 ## Testing
 
-- Controller unit tests (pure, fake ticker): leave-while-running and
-  leave-while-paused both end the block after grace; return-within-grace
-  survives; free pause count caps at 2 then blocks (session keeps running);
-  pause-duration cap ends the block; Pro params give unlimited + 10 min.
-- Widget: pause button disables + shows the upsell after 2 (free); grace return
-  state renders; preview mode exempt from all rules.
-- Paywall widget: tier order + pause benefit present; Lifetime still shown.
-- Serial `flutter test --concurrency=1`; `flutter analyze` clean.
+- Controller unit tests (pure, fake ticker): leave-while-running ends after the
+  30 s grace, returns-in-time survives; a manual pause past the cap triggers the
+  cap grace then ends after 15 s; free pause count caps at **3** then blocks
+  (session keeps running); Pro params give unlimited + 10 min.
+- Notification service: the no-op/`FLUTTER_TEST` path is used in tests (no real
+  notifications); the wrapper schedules/cancels for the right kind+deadline.
+- Widget: pause button disables + shows the upsell after 3 (free); cap countdown
+  + grace states render; preview mode exempt from all rules.
+- Paywall widget: tier order (Yearly→Monthly→Lifetime) + pause benefit present;
+  Lifetime still shown.
+- Serial `flutter test --concurrency=1`; `flutter analyze` clean. Verify the
+  `flutter_local_notifications` Android build (like the audio plugins).
 
 ## Out of scope / non-goals
 
-- App allow-list (deferred, §1.4). No change to pricing or the entitlement
+- App allow-list (deferred, §1.6). No change to pricing or the entitlement
   engine. No change to the free *core* loop (Flow/Pomodoro/Custom, score,
   streak, stats stay free). Grace/limits never apply to theme preview.
