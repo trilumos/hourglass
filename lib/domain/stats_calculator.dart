@@ -26,16 +26,39 @@ class StatsCalculator {
         .fold(Duration.zero, (sum, s) => sum + s.recordedFocus);
   }
 
+  /// The current streak, counting the days you actually focused, with a **1-day
+  /// grace**: a single missed day never breaks the streak — only two consecutive
+  /// empty days do. A missed day doesn't add to the count (nothing is inflated),
+  /// it just keeps the run alive. If today is the (still-empty) grace day, the
+  /// streak holds from yesterday; focus again within the day to keep it.
   int currentStreak(DateTime today, List<SessionRecord> sessions) {
     final days = sessions
         .where((s) => s.recordedFocus > Duration.zero)
         .map((s) => _dateOnly(s.startedAt))
         .toSet();
-    var streak = 0;
+    if (days.isEmpty) return 0;
     var cursor = _dateOnly(today);
-    while (days.contains(cursor)) {
-      streak++;
-      cursor = cursor.subtract(const Duration(days: 1));
+    // If today has no focus yet, the streak still lives on its grace day as long
+    // as yesterday was focused; anchor the walk there. Two empty days = broken.
+    if (!days.contains(cursor)) {
+      final grace = cursor.subtract(const Duration(days: 1));
+      if (days.contains(grace)) {
+        cursor = grace;
+      } else {
+        return 0;
+      }
+    }
+    var streak = 0;
+    while (true) {
+      if (days.contains(cursor)) {
+        streak++;
+        cursor = cursor.subtract(const Duration(days: 1));
+      } else if (days.contains(cursor.subtract(const Duration(days: 1)))) {
+        // A single empty day, bridged by the grace — don't count it, keep going.
+        cursor = cursor.subtract(const Duration(days: 1));
+      } else {
+        break; // two consecutive empty days → the run ends
+      }
     }
     return streak;
   }
@@ -49,7 +72,10 @@ class StatsCalculator {
       .where((s) => s.recordedFocus > Duration.zero)
       .fold(Duration.zero, (sum, s) => sum + s.recordedFocus);
 
-  /// The longest run of consecutive focused days the user has ever had.
+  /// The longest run of focused days the user has ever had, using the same 1-day
+  /// grace as [currentStreak]: a single empty day between two focused days bridges
+  /// the run (a gap of two calendar days), but two empty days break it. Counts
+  /// focused days only — grace days don't inflate the total.
   int bestStreak(List<SessionRecord> sessions) {
     final days = sessions
         .where((s) => s.recordedFocus > Duration.zero)
@@ -60,7 +86,9 @@ class StatsCalculator {
     if (days.isEmpty) return 0;
     var best = 1, run = 1;
     for (var i = 1; i < days.length; i++) {
-      run = days[i].difference(days[i - 1]).inDays == 1 ? run + 1 : 1;
+      // Gap of 1 = consecutive, 2 = one empty day bridged by the grace; both
+      // continue the run. A gap of 3+ (two empty days) resets it.
+      run = days[i].difference(days[i - 1]).inDays <= 2 ? run + 1 : 1;
       if (run > best) best = run;
     }
     return best;

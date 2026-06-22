@@ -62,21 +62,45 @@ void main() {
     expect(calc.focusOnDay(day, sessions), Duration.zero);
   });
 
-  test('currentStreak counts consecutive days ending today', () {
+  test('currentStreak bridges a single gap day (1-day grace)', () {
     final today = DateTime(2026, 6, 11);
     final sessions = [
       _session(startedAt: DateTime(2026, 6, 11)),
       _session(startedAt: DateTime(2026, 6, 10)),
       _session(startedAt: DateTime(2026, 6, 9)),
+      // 6/8 empty — bridged by the grace
       _session(startedAt: DateTime(2026, 6, 7)),
     ];
-    expect(calc.currentStreak(today, sessions), 3);
+    // 11, 10, 9, 7 all count (8 is the bridged grace day, not counted itself).
+    expect(calc.currentStreak(today, sessions), 4);
   });
 
-  test('currentStreak is 0 when there is no completed session today', () {
+  test('currentStreak holds on the grace day when today is still empty', () {
     final today = DateTime(2026, 6, 11);
-    final sessions = [_session(startedAt: DateTime(2026, 6, 10))];
+    // No focus today, but yesterday focused → streak alive at 1 (the grace day).
+    final sessions = [
+      _session(startedAt: DateTime(2026, 6, 10)),
+      _session(startedAt: DateTime(2026, 6, 9)),
+    ];
+    expect(calc.currentStreak(today, sessions), 2);
+  });
+
+  test('currentStreak breaks after two consecutive empty days', () {
+    final today = DateTime(2026, 6, 11);
+    // Today and yesterday both empty → past the grace → 0.
+    final sessions = [_session(startedAt: DateTime(2026, 6, 9))];
     expect(calc.currentStreak(today, sessions), 0);
+  });
+
+  test('currentStreak stops at a two-day internal gap', () {
+    final today = DateTime(2026, 6, 11);
+    final sessions = [
+      _session(startedAt: DateTime(2026, 6, 11)),
+      _session(startedAt: DateTime(2026, 6, 10)),
+      // 6/9 and 6/8 both empty (two-day gap) → run ends here
+      _session(startedAt: DateTime(2026, 6, 7)),
+    ];
+    expect(calc.currentStreak(today, sessions), 2);
   });
 
   test('sessionsCompleted counts only completed sessions', () {
@@ -115,6 +139,20 @@ void main() {
       _session(startedAt: DateTime(2026, 6, 11)), // run of 2
     ];
     expect(calc.bestStreak(sessions), 3);
+  });
+
+  test('bestStreak bridges single gap days with the grace', () {
+    final sessions = [
+      _session(startedAt: DateTime(2026, 6, 1)),
+      // 6/2 empty — bridged
+      _session(startedAt: DateTime(2026, 6, 3)),
+      _session(startedAt: DateTime(2026, 6, 4)),
+      // 6/5 empty — bridged
+      _session(startedAt: DateTime(2026, 6, 6)), // run of 4 focused days (2 grace bridges)
+      // 6/7 and 6/8 both empty (two-day gap) → resets
+      _session(startedAt: DateTime(2026, 6, 9)),
+    ];
+    expect(calc.bestStreak(sessions), 4);
   });
 
   test('averageSession, longestSession, totalSessions ignore zero-focus', () {

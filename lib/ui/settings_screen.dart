@@ -14,6 +14,7 @@ import 'guide_screen.dart';
 import '../app/sound_providers.dart';
 import '../app/theme_providers.dart';
 import 'data_backup.dart';
+import 'notifications_screen.dart';
 import 'paywall_screen.dart';
 import 'preview_guard.dart';
 import 'themes_screen.dart';
@@ -217,6 +218,20 @@ class SettingsScreen extends ConsumerWidget {
                         .setBool(SettingsKeys.flowRunUntilEnded, v);
                     ref.invalidate(flowRunUntilEndedProvider);
                   },
+                ),
+                const SizedBox(height: HgSpacing.xl),
+
+                // ── Notifications ─────────────────────────────────────────────
+                _SectionLabel('NOTIFICATIONS'),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Notifications',
+                  subtitle:
+                      'Focus reminders, daily quotes, streak nudges — all optional',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const NotificationsScreen()),
+                  ),
                 ),
                 const SizedBox(height: HgSpacing.xl),
 

@@ -9,6 +9,7 @@ import '../app/theme_providers.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../hourglass/hourglass_view.dart';
+import '../notifications/notification_coordinator.dart';
 import 'focus_score_screen.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
@@ -45,6 +46,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Stop any session foreground-service orphaned by a force-killed session —
     // landing on Home means there's nothing to return to.
     ref.read(sessionGuardProvider).stop();
+    // Reconcile the opt-in notification schedule with prefs + today's data
+    // (after the first frame, so it never delays Home appearing).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) syncNotifications(ref);
+    });
   }
 
   void _begin() {
@@ -68,6 +74,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
+    // When a finished session changes today's data, reconcile the streak nudge
+    // (e.g. cancel it once you've focused today).
+    ref.listen(homeStatsProvider, (_, next) {
+      if (next.hasValue) syncNotifications(ref);
+    });
     final stats = ref.watch(homeStatsProvider);
 
     return Scaffold(

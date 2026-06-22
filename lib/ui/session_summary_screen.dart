@@ -85,13 +85,31 @@ class SessionSummaryScreen extends ConsumerWidget {
                 _CompletionBar(fraction: completion),
                 const SizedBox(height: HgSpacing.xl),
 
-                // Fact bento.
+                // Fact bento — exact focused duration first.
                 Row(
                   children: [
                     Expanded(
-                        child: _Fact(label: 'Mode', value: modeLabel(session.mode))),
+                      child: _Fact(
+                        label: 'Duration',
+                        value: formatExactDuration(session.recordedFocus),
+                      ),
+                    ),
                     const SizedBox(width: 12),
+                    Expanded(
+                        child: _Fact(label: 'Mode', value: modeLabel(session.mode))),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
                     Expanded(child: _Fact(label: 'Outcome', value: _outcome)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _Fact(
+                        label: 'Planned',
+                        value: formatFocusDuration(session.plannedDuration),
+                      ),
+                    ),
                   ],
                 ),
 

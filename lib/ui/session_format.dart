@@ -24,6 +24,18 @@ String formatFocusDuration(Duration d) {
   return '${h}h ${m}m';
 }
 
+/// Exact focused time, down to the second — "47s", "25m 47s", "1h 5m 12s".
+String formatExactDuration(Duration d) {
+  final h = d.inHours;
+  final m = d.inMinutes % 60;
+  final s = d.inSeconds % 60;
+  final parts = <String>[];
+  if (h > 0) parts.add('${h}h');
+  if (m > 0) parts.add('${m}m');
+  if (s > 0 || parts.isEmpty) parts.add('${s}s');
+  return parts.join(' ');
+}
+
 /// "9:05 AM" — 12-hour clock, no intl dependency.
 String formatClock(DateTime d) {
   final ampm = d.hour < 12 ? 'AM' : 'PM';

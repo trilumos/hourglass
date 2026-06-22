@@ -18,6 +18,8 @@ import '../domain/focus_score_calculator.dart';
 import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
 import '../hourglass/hourglass_view.dart';
+import '../notifications/notification_coordinator.dart';
+import '../notifications/notification_service.dart';
 import '../session/session_config.dart';
 import '../session/session_controller.dart';
 import '../session/session_guard.dart';
@@ -78,11 +80,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Timer? _idleTimer;
   Timer? _checkpointTimer;
   Timer? _previewCapTimer;
+  Timer? _guardStartTimer; // deferred foreground-service start (post-animation)
   bool _previewEnded = false;
 
   // Strict-session state: pause limits + the away/cap grace windows.
   late final StrictRules _rules;
   late final SessionGuard _guard;
+  late final NotificationService _notifs;
+  bool _wasResting = false; // tracks rest/focus transitions for break alerts
   DateTime? _pausedAt; // when the current manual pause began
   Timer? _pauseWatch; // 1s check of the pause cap while paused
   bool _pauseCapHit = false; // inside the post-cap "return now" grace
@@ -111,6 +116,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     )..repeat(reverse: true);
     _rules = StrictRules.forPro(ref.read(entitlementsProvider).pro);
     _guard = ref.read(sessionGuardProvider);
+    _notifs = ref.read(notificationServiceProvider);
     _controller = SessionController(
       config: widget.config,
       ticker: widget.ticker ?? PeriodicTicker(),
@@ -134,7 +140,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     // janks the launch. ~600ms in it's invisible, and the app is still foreground
     // so Android's background-start restriction is satisfied.
     if (!widget.previewMode) {
-      Future.delayed(const Duration(milliseconds: 600), () {
+      _guardStartTimer = Timer(const Duration(milliseconds: 600), () {
         if (mounted &&
             WidgetsBinding.instance.lifecycleState ==
                 AppLifecycleState.resumed) {
@@ -197,6 +203,23 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       }
     }
 
+    // Drive the session notification + break alerts off the rest/focus phase.
+    if (!widget.previewMode) {
+      final resting = s.status == SessionStatus.running && s.isResting;
+      if (resting != _wasResting) {
+        _wasResting = resting;
+        if (resting) {
+          _guard.breakStarted(_now().add(_controller.segmentRemaining));
+          _notifs.showSessionAlert(
+              'Break — rest your eyes', 'A short rest; I\'ll call you back to focus.');
+        } else if (s.status == SessionStatus.running) {
+          _guard.focusing();
+          _notifs.showSessionAlert(
+              'Back to focus', 'Break\'s over — flip the hourglass and continue.');
+        }
+      }
+    }
+
     if (s.status == SessionStatus.completed) {
       // Reached the planned length — checkpoint it so it's never lost, but stay
       // on screen offering "Keep going".
@@ -213,6 +236,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       _dimmed = false;
       WakelockPlus.disable();
       _guard.stop(); // session over → drop the foreground-service notification
+      _notifs.showSessionAlert(
+          'Session complete', 'Nicely done — your focus is logged.');
       HapticFeedback.mediumImpact();
     }
     if (mounted) setState(() {});
@@ -300,7 +325,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         _guard.stop();
       } else {
         _controller.unsuspend(); // resume the clock
-        _guard.focusing();
+        // Restore the right notification state — they may have left mid-break.
+        if (_controller.state.isResting) {
+          _guard.breakStarted(_now().add(_controller.segmentRemaining));
+        } else {
+          _guard.focusing();
+        }
       }
     } else if (_pausedAt != null) {
       final totalPaused = _now().difference(_pausedAt!);
@@ -477,6 +507,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     _idleTimer?.cancel();
     _checkpointTimer?.cancel();
     _previewCapTimer?.cancel();
+    _guardStartTimer?.cancel();
     _pauseWatch?.cancel();
     _guard.stop();
     WakelockPlus.disable();

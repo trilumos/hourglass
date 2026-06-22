@@ -1,9 +1,18 @@
+import 'dart:ui' show Color;
+
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as fln;
+
+/// Warm Sand-accent used behind the status-bar hourglass on the notification.
+const _brandAccent = Color(0xFFC8841E);
 
 /// Owns the session's FOREGROUND-SERVICE notification — a persistent, lock-screen
 /// notification present for the whole session that becomes a live, non-dismissable
-/// "come back" countdown when the user leaves, and keeps ticking even if the app
-/// is closed (the work runs in the service isolate, see [SessionGuardHandler]).
+/// countdown when the user leaves or pauses-and-leaves, plus discrete buzzing
+/// alerts at each transition. All of it runs in the service isolate (see
+/// [SessionGuardHandler]) so the live countdown + alerts stay accurate even when
+/// the app is closed / the screen is off.
 ///
 /// Started at session begin (while foreground — Android forbids starting a
 /// foreground service from the background). Abstracted so tests/preview use a
@@ -15,14 +24,17 @@ abstract class SessionGuard {
   /// Normal focus — calm "Focusing, tap to return" notification.
   Future<void> focusing();
 
+  /// A break began — a live break countdown ending at [endsAt] + a start alert.
+  Future<void> breakStarted(DateTime endsAt);
+
   /// Manually paused inside the app.
   Future<void> paused();
 
   /// Left the app while running — a live countdown ending at [endsAt].
   Future<void> leaveGrace(DateTime endsAt);
 
-  /// Paused then left — counts down to the cap ([capAt]), then to [endsAt]
-  /// (the 15s "pause is up" grace).
+  /// Paused then left — counts down to the cap ([capAt], an alert there), then to
+  /// [endsAt] (the 15s "pause is up" grace, an alert at the end).
   Future<void> pauseAway(DateTime capAt, DateTime endsAt);
 
   /// Stop the service (session ended / screen disposed).
@@ -36,6 +48,8 @@ class SilentSessionGuard implements SessionGuard {
   Future<void> start() async {}
   @override
   Future<void> focusing() async {}
+  @override
+  Future<void> breakStarted(DateTime endsAt) async {}
   @override
   Future<void> paused() async {}
   @override
@@ -80,7 +94,11 @@ class FgsSessionGuard implements SessionGuard {
         notificationText: 'Focusing — tap to return',
         notificationIcon: const NotificationIcon(
           metaDataName: 'com.trilumos.sustain.NOTIFICATION_ICON',
+          backgroundColor: _brandAccent,
         ),
+        notificationButtons: const [
+          NotificationButton(id: 'return', text: 'Return'),
+        ],
         callback: sessionGuardCallback,
       );
       _running = true;
@@ -96,6 +114,10 @@ class FgsSessionGuard implements SessionGuard {
 
   @override
   Future<void> focusing() => _send({'mode': 'focus'});
+
+  @override
+  Future<void> breakStarted(DateTime endsAt) =>
+      _send({'mode': 'break', 'end': endsAt.millisecondsSinceEpoch});
 
   @override
   Future<void> paused() => _send({'mode': 'paused'});
@@ -131,34 +153,82 @@ void sessionGuardCallback() {
   FlutterForegroundTask.setTaskHandler(SessionGuardHandler());
 }
 
-/// Runs in the service isolate — keeps rendering the notification (and the live
-/// countdown) every second, so it stays accurate even when the app UI is gone.
+/// Runs in the service isolate. Keeps the FGS notification's live countdown
+/// accurate every second, and fires discrete buzzing alerts (via
+/// `flutter_local_notifications`) at each transition — break start/end, the
+/// pause cap, and the grace ends — so they land even with the app closed.
 class SessionGuardHandler extends TaskHandler {
+  final fln.FlutterLocalNotificationsPlugin _alerts =
+      fln.FlutterLocalNotificationsPlugin();
+  bool _alertsReady = false;
+
   String _mode = 'focus';
   int _cap = 0;
   int _end = 0;
+  bool _firedCap = false;
+  bool _firedEnd = false;
 
   @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async => _render();
-
-  @override
-  void onReceiveData(Object data) {
-    if (data is Map) {
-      _mode = (data['mode'] as String?) ?? 'focus';
-      _cap = (data['cap'] as int?) ?? 0;
-      _end = (data['end'] as int?) ?? 0;
-      _render();
-    }
+  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    try {
+      await _alerts.initialize(
+        settings: const fln.InitializationSettings(
+          android: fln.AndroidInitializationSettings('ic_stat_hourglass'),
+        ),
+      );
+      _alertsReady = true;
+    } catch (_) {}
+    _render();
   }
 
   @override
-  void onRepeatEvent(DateTime timestamp) => _render();
+  void onReceiveData(Object data) {
+    if (data is! Map) return;
+    final mode = (data['mode'] as String?) ?? 'focus';
+    final cap = (data['cap'] as int?) ?? 0;
+    final end = (data['end'] as int?) ?? 0;
+    if (mode != _mode || cap != _cap || end != _end) {
+      _firedCap = false;
+      _firedEnd = false;
+    }
+    _mode = mode;
+    _cap = cap;
+    _end = end;
+    _render();
+  }
+
+  @override
+  void onRepeatEvent(DateTime timestamp) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    switch (_mode) {
+      case 'pauseAway':
+        if (!_firedCap && _cap > 0 && now >= _cap) {
+          _firedCap = true;
+          _ding('Your pause is up', 'Return within 15s to keep your block.');
+        }
+        if (!_firedEnd && _end > 0 && now >= _end) {
+          _firedEnd = true;
+          _ding('Block ended', 'Your pause ran out.');
+        }
+      case 'leave':
+        if (!_firedEnd && _end > 0 && now >= _end) {
+          _firedEnd = true;
+          _ding('Block ended', 'You were away too long.');
+        }
+    }
+    _render();
+  }
 
   void _render() {
     final now = DateTime.now().millisecondsSinceEpoch;
     final String title;
     final String text;
     switch (_mode) {
+      case 'break':
+        title = 'On a break';
+        text = now < _end
+            ? 'Break — ${_fmt(_end - now)} left. Rest your eyes.'
+            : 'Break\'s over — back to focus.';
       case 'leave':
         title = 'Come back to keep your block';
         text = '${_fmt(_end - now)} left before it ends.';
@@ -184,6 +254,30 @@ class SessionGuardHandler extends TaskHandler {
         notificationTitle: title, notificationText: text);
   }
 
+  Future<void> _ding(String title, String body) async {
+    if (!_alertsReady) return;
+    try {
+      await _alerts.show(
+        id: 9100,
+        title: title,
+        body: body,
+        notificationDetails: const fln.NotificationDetails(
+          android: fln.AndroidNotificationDetails(
+            'session_alerts',
+            'Session alerts',
+            channelDescription:
+                'Break and return alerts during a focus session.',
+            importance: fln.Importance.max,
+            priority: fln.Priority.high,
+            category: fln.AndroidNotificationCategory.reminder,
+            visibility: fln.NotificationVisibility.public,
+            icon: 'ic_stat_hourglass',
+          ),
+        ),
+      );
+    } catch (_) {}
+  }
+
   String _fmt(int ms) {
     var s = (ms / 1000).round();
     if (s < 0) s = 0;
@@ -191,6 +285,13 @@ class SessionGuardHandler extends TaskHandler {
     final ss = s % 60;
     return m > 0 ? '$m:${ss.toString().padLeft(2, '0')}' : '${ss}s';
   }
+
+  @override
+  void onNotificationButtonPressed(String id) =>
+      FlutterForegroundTask.launchApp();
+
+  @override
+  void onNotificationPressed() => FlutterForegroundTask.launchApp();
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {}

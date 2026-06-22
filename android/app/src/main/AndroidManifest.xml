@@ -6,6 +6,8 @@
          = an ongoing focus-session timer (declared at Play submission). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <!-- Re-schedule the opt-in reminders after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="Sustain"
         android:name="${applicationName}"
@@ -47,6 +49,20 @@
         <meta-data
             android:name="com.trilumos.sustain.NOTIFICATION_ICON"
             android:resource="@drawable/ic_stat_hourglass"/>
+        <!-- flutter_local_notifications: deliver scheduled (zonedSchedule) opt-in
+             reminders, and re-schedule them after a reboot / app update. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/>
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

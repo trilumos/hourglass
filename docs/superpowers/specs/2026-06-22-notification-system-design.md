@@ -69,10 +69,8 @@ for the daily items; Settings → Notifications panel.
      not, evening), one gentle nudge.
 3. **Daily quotes & tips** — one per day at a chosen time, rotating a curated
    library (reuse the home/session quote pool + focus tips).
-4. **Achievements & milestones** — a catalog (streak lengths, total-focus hours,
-   longest session, session counts, focus-score highs, completed counts).
-   Detected on session save; persisted (unlocked + date); an **Achievements**
-   screen (locked/unlocked); an in-app celebration + an opt-in unlock notification.
+4. **Achievements & milestones** — **DEFERRED to a later version** (founder,
+   2026-06-22). Not built in v1.
 
 ## Data / logic changes
 
@@ -80,8 +78,9 @@ for the daily items; Settings → Notifications panel.
 - **Achievements store** (Drift table: id, unlockedAt) + catalog + detector.
 - **NotificationPrefs** (persisted toggles + reminder time).
 
-## Deferred to v2
+## Deferred to a later version
 
+- **Achievements & milestones** (the whole system + its notifications).
 - Richer native notification layout (progress bar / custom RemoteViews).
 
 ## Build order (each an independent, tested commit)
@@ -92,4 +91,5 @@ for the daily items; Settings → Notifications panel.
 4. User-set focus reminder.
 5. Streak 1-day grace (logic + tests + guide) + streak reminder.
 6. Daily quotes & tips.
-7. Achievements (store + detector + screen + unlock notification).
+7. Session-history per-session exact duration.
+8. (Deferred) Achievements.
