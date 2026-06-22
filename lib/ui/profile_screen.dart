@@ -186,7 +186,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 Divider(height: 1, color: hg.hairline),
                 _NavRow(
-                  title: 'How it works',
+                  title: 'Sustain 101',
                   onTap: () => _push(context, const GuideScreen()),
                 ),
                 const SizedBox(height: HgSpacing.xl),

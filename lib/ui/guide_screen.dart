@@ -2,42 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../app/theme.dart';
 import '../app/tokens.dart';
+import 'guide_content.dart';
 import 'widgets/screen_background.dart';
 import 'widgets/screen_header.dart';
 import 'widgets/surface_tile.dart';
 
-/// "How it works" — an honest, calm explainer of the app's purpose, the
-/// Flow method, the three modes, the Focus Score, and your numbers.
-/// Copy follows the brand honesty rule: no invented science or stats.
+/// "Sustain 101" — the book of the app. A table of contents of chapters; each
+/// chapter opens to its topics. Content lives in [kSustain101] (generated from
+/// the guide-compile workflow, the single source of truth for every mechanism).
 class GuideScreen extends StatelessWidget {
   const GuideScreen({super.key});
-
-  static const _modes = <(String, String)>[
-    (
-      'Flow',
-      'One unbroken block of deep focus. Set an intention, flip the hourglass, '
-          'and ride the Struggle into Flow. It is the only mode that feeds your '
-          'Focus Score, and the one that grows your focus stamina over time.'
-    ),
-    (
-      'Pomodoro',
-      'Classic fixed blocks with short breaks (25/5, 50/10, 52/17, 90/15). You '
-          'pick how many blocks; a longer break lands every fourth.'
-    ),
-    (
-      'Custom',
-      'Your exact focus time, split into equal variable-length blocks with '
-          'automatic rests (about one part rest to five parts focus). You set '
-          'the focus time and the number of blocks.'
-    ),
-  ];
-
-  static const _numbers = <(String, String)>[
-    ('Today', 'The focus you have logged since midnight.'),
-    ('Streak', 'Consecutive days you have focused, including today.'),
-    ('Total', 'Your lifetime focus across every session.'),
-    ('Records', 'Your best streak, longest session, and this week’s focus.'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +24,10 @@ class GuideScreen extends StatelessWidget {
             child: ListView(
               children: [
                 const SizedBox(height: HgSpacing.sm),
-                const ScreenHeader(title: 'How it works'),
-                const SizedBox(height: HgSpacing.xl),
-
+                const ScreenHeader(title: 'Sustain 101'),
+                const SizedBox(height: HgSpacing.lg),
                 Text(
-                  'Train your focus like an athlete.',
+                  'The book of the app.',
                   style: TextStyle(
                     fontFamily: HgFont.sans,
                     fontSize: 26,
@@ -64,56 +37,24 @@ class GuideScreen extends StatelessWidget {
                     color: hg.textPrimary,
                   ),
                 ),
+                const SizedBox(height: HgSpacing.sm),
+                Text(
+                  'Every method, rule, and number behind your focus — '
+                  'one chapter at a time.',
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 15,
+                    height: 1.6,
+                    color: hg.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.xl),
+                _Eyebrow('CONTENTS'),
                 const SizedBox(height: HgSpacing.md),
-                _Body(
-                  'Sustain is focus training, not just a timer. You build the '
-                  'ability to concentrate deeply, and you learn to recover from '
-                  'it, so your focus grows stronger over time.',
-                ),
-
-                _Heading('THE FLOW METHOD'),
-                _Body(
-                  'Our core method. Set a small intention, flip the hourglass, '
-                  'and begin. The first few minutes are the Struggle — that '
-                  'resistance is expected and temporary. Push through it and you '
-                  'settle into Flow. Afterwards comes a short, phone-free '
-                  'recovery. The more you practise, the longer you can hold a '
-                  'block.',
-                ),
-
-                _Heading('THE THREE MODES'),
-                for (final m in _modes) ...[
-                  _ModeCard(name: m.$1, description: m.$2),
-                  const SizedBox(height: 12),
+                for (var i = 0; i < kSustain101.length; i++) ...[
+                  _ChapterCard(index: i, chapter: kSustain101[i]),
+                  const SizedBox(height: 10),
                 ],
-
-                const SizedBox(height: HgSpacing.md),
-                _Heading('YOUR FOCUS SCORE'),
-                _Body(
-                  'A reading from 0 to 100 of your recent focus ability: the '
-                  'average of your last 10 Flow sessions. It builds up over your '
-                  'first several blocks, and it rewards finishing what you '
-                  'start. Only Flow sessions count toward it. Open the Focus Score '
-                  'page any time to see how it is calculated.',
-                ),
-
-                _Heading('YOUR AVERAGE FOCUS'),
-                _Body(
-                  'Your typical focused time per session, across every mode. '
-                  'Where the Focus Score reflects ability and counts only Flow, '
-                  'your average is the simple picture of how long you usually '
-                  'focus. Flow sessions under 2 minutes are ignored, so a quick '
-                  'false start never drags it down.',
-                ),
-
-                _Heading('YOUR NUMBERS'),
-                for (final n in _numbers) _DefRow(term: n.$1, def: n.$2),
-
-                _Heading('YOUR PRIVACY'),
-                _Body(
-                  'Sustain works fully offline. Your sessions, stats, and '
-                  'profile live only on your device. We collect nothing.',
-                ),
                 const SizedBox(height: HgSpacing.xxl),
               ],
             ),
@@ -124,75 +65,193 @@ class GuideScreen extends StatelessWidget {
   }
 }
 
-class _Heading extends StatelessWidget {
-  final String text;
-  const _Heading(this.text);
+/// A single chapter page: its topics, then a "next chapter" link so the guide
+/// reads like a book. [GuideChapterScreen]s replace one another so the back
+/// arrow always returns to the table of contents.
+class GuideChapterScreen extends StatelessWidget {
+  final int index;
+  const GuideChapterScreen({super.key, required this.index});
+
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return Padding(
-      padding: const EdgeInsets.only(top: HgSpacing.xl, bottom: HgSpacing.md),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontFamily: HgFont.sans,
-          fontSize: 11,
-          letterSpacing: 2,
-          fontWeight: FontWeight.w600,
-          color: hg.textMuted,
+    final chapter = kSustain101[index];
+    final hasNext = index < kSustain101.length - 1;
+    return Scaffold(
+      body: ScreenBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
+            child: ListView(
+              children: [
+                const SizedBox(height: HgSpacing.sm),
+                const ScreenHeader(title: 'Sustain 101'),
+                const SizedBox(height: HgSpacing.lg),
+                _Eyebrow('CHAPTER ${(index + 1).toString().padLeft(2, '0')}'),
+                const SizedBox(height: HgSpacing.sm),
+                Text(
+                  chapter.title,
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    height: 1.15,
+                    letterSpacing: -0.5,
+                    color: hg.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                Text(
+                  chapter.summary,
+                  style: TextStyle(
+                    fontFamily: HgFont.serif,
+                    fontSize: 16,
+                    height: 1.5,
+                    fontStyle: FontStyle.italic,
+                    color: hg.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.lg),
+                for (final t in chapter.topics) _TopicBlock(topic: t),
+                if (hasNext) ...[
+                  const SizedBox(height: HgSpacing.sm),
+                  SurfaceTile(
+                    onTap: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => GuideChapterScreen(index: index + 1),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _Eyebrow('NEXT'),
+                              const SizedBox(height: 4),
+                              Text(
+                                kSustain101[index + 1].title,
+                                style: TextStyle(
+                                  fontFamily: HgFont.sans,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: hg.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_rounded,
+                            color: hg.accent, size: 20),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: HgSpacing.md),
+                Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    child: Text(
+                      'Back to contents',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 14,
+                        color: hg.textMuted,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.xl),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _Body extends StatelessWidget {
-  final String text;
-  const _Body(this.text);
-  @override
-  Widget build(BuildContext context) {
-    final hg = context.hg;
-    return Text(
-      text,
-      style: TextStyle(
-        fontFamily: HgFont.sans,
-        fontSize: 15,
-        height: 1.6,
-        color: hg.textSecondary,
-      ),
-    );
-  }
-}
+/// One topic: a prominent heading, its paragraphs, and any takeaway bullets.
+class _TopicBlock extends StatelessWidget {
+  final GuideTopic topic;
+  const _TopicBlock({required this.topic});
 
-class _ModeCard extends StatelessWidget {
-  final String name;
-  final String description;
-  const _ModeCard({required this.name, required this.description});
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return SurfaceTile(
+    final paragraphs = topic.body.split('\n\n');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: HgSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            name,
+            topic.heading,
             style: TextStyle(
               fontFamily: HgFont.sans,
-              fontSize: 17,
+              fontSize: 19,
               fontWeight: FontWeight.w600,
-              color: hg.accent,
+              height: 1.25,
+              letterSpacing: -0.2,
+              color: hg.textPrimary,
             ),
           ),
           const SizedBox(height: HgSpacing.sm),
-          Text(
-            description,
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 14,
-              height: 1.5,
-              color: hg.textSecondary,
+          for (var i = 0; i < paragraphs.length; i++) ...[
+            if (i > 0) const SizedBox(height: HgSpacing.sm),
+            Text(
+              paragraphs[i],
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 15,
+                height: 1.6,
+                color: hg.textSecondary,
+              ),
+            ),
+          ],
+          if (topic.bullets.isNotEmpty) ...[
+            const SizedBox(height: HgSpacing.md),
+            for (final b in topic.bullets) _Bullet(b),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Bullet extends StatelessWidget {
+  final String text;
+  const _Bullet(this.text);
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: HgSpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 7, right: HgSpacing.sm),
+            child: Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: hg.accent,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 14.5,
+                height: 1.5,
+                color: hg.textSecondary,
+              ),
             ),
           ),
         ],
@@ -201,37 +260,85 @@ class _ModeCard extends StatelessWidget {
   }
 }
 
-class _DefRow extends StatelessWidget {
-  final String term;
-  final String def;
-  const _DefRow({required this.term, required this.def});
+/// A small uppercase eyebrow label (CONTENTS / CHAPTER 03 / NEXT).
+class _Eyebrow extends StatelessWidget {
+  final String text;
+  const _Eyebrow(this.text);
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: HgSpacing.md),
-      child: Column(
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 11,
+        letterSpacing: 2,
+        fontWeight: FontWeight.w700,
+        color: hg.textMuted,
+      ),
+    );
+  }
+}
+
+class _ChapterCard extends StatelessWidget {
+  final int index;
+  final GuideChapter chapter;
+  const _ChapterCard({required this.index, required this.chapter});
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return SurfaceTile(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => GuideChapterScreen(index: index)),
+      ),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            term,
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: hg.textPrimary,
+          SizedBox(
+            width: 30,
+            child: Text(
+              (index + 1).toString().padLeft(2, '0'),
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: hg.accent,
+              ),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            def,
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 14,
-              height: 1.45,
-              color: hg.textMuted,
+          const SizedBox(width: HgSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  chapter.title,
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: hg.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  chapter.summary,
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 13.5,
+                    height: 1.45,
+                    color: hg.textMuted,
+                  ),
+                ),
+              ],
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: HgSpacing.xs),
+            child: Icon(Icons.chevron_right_rounded,
+                color: hg.textMuted, size: 22),
           ),
         ],
       ),

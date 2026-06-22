@@ -224,8 +224,8 @@ class SettingsScreen extends ConsumerWidget {
                 _SectionLabel('ABOUT'),
                 const SizedBox(height: HgSpacing.sm),
                 _ActionRow(
-                  title: 'How it works',
-                  subtitle: 'Modes, the Flow method, and your numbers',
+                  title: 'Sustain 101',
+                  subtitle: 'The book of the app — methods, rules, and numbers',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const GuideScreen()),
                   ),
