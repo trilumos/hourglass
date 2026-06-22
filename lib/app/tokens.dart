@@ -189,29 +189,31 @@ class HgThemes {
       ),
     ),
     light: HgTokens(
-      backdrop: Color(0xFFF2EAD9),
-      background: Color(0xFFF9F4E9), // warm golden paper
+      backdrop: Color(0xFFF0E5C9),
+      background: Color(0xFFFAF2DF), // warmer golden paper (less cool)
       surface: Color(0xFFFFFFFF),
       surfaceRaised: Color(0xFFFFFFFF),
-      surfaceSunken: Color(0xFFF0E7D4),
+      surfaceSunken: Color(0xFFF1E6CC),
       textPrimary: Color(0xFF221A0E),
       textSecondary: Color(0xFF5E5340),
       textMuted: Color(0xFF8E8167),
-      accent: Color(0xFFBA8A14), // deep GOLD (more saturated, less muddy)
-      accentMuted: Color(0xFFEEDDB8),
+      accent: Color(0xFFBA8A14), // deep GOLD (carries white button text)
+      accentMuted: Color(0xFFF1DCAC),
       onAccent: Color(0xFFFFFFFF),
-      hairline: Color(0xFFE9DFC8),
+      hairline: Color(0xFFEBDDBA),
       glow: Color(0x14BA8A14),
       focusRing: Color(0xFFBA8A14),
       scrim: Color(0x40000000),
       success: Color(0xFF4F7A4D),
       warning: Color(0xFF9A6F1E),
       danger: Color(0xFFA8503C),
+      // A present warm-gold wash behind the hourglass (mirrors dark's glow) —
+      // a golden center fading to the paper background, not a flat near-no-op.
       backdropGradient: RadialGradient(
         center: Alignment(0, -0.85),
         radius: 1.5,
-        colors: [Color(0xFFF2E9D5), Color(0xFFF7F1E3), Color(0xFFF9F4E9)],
-        stops: [0.0, 0.48, 1.0],
+        colors: [Color(0xFFF1DEB0), Color(0xFFF6EBCC), Color(0xFFFAF2DF)],
+        stops: [0.0, 0.45, 1.0],
       ),
     ),
     lightSkin: HourglassSkin.classicLight,

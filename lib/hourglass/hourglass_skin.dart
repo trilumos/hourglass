@@ -63,13 +63,16 @@ class HourglassSkin {
   /// the light-theme accent so it reads on warm paper. Shape/animation identical.
   static const classicLight = HourglassSkin(
     id: 'classic',
-    sandColor: Color(0xFFCFA248), // golden (was a muddy brown-tan)
+    sandColor: Color(0xFFE0A82C), // richer, cleaner GOLD (was a dull olive-tan)
     glassTint: Color(0xFF1F1B14),
     glassOutline: Color(0x331F1B14),
     neckWidth: 0.012,
+    // Golden desert shimmer (home only), mirroring the dark skin's progression
+    // but deeper so it reads on warm paper: light gold -> gold -> deep gold ->
+    // amber-gold -> cream-gold. Stays golden, never muddy.
     sandCycle: [
-      Color(0xFFDAB054), Color(0xFFCFA248), Color(0xFFC4943A),
-      Color(0xFFD4AA52), Color(0xFFC99C44),
+      Color(0xFFEEC158), Color(0xFFE0A82C), Color(0xFFD09420),
+      Color(0xFFE8B33E), Color(0xFFDCA734),
     ],
   );
 }
