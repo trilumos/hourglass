@@ -78,6 +78,10 @@ class SessionController extends ChangeNotifier {
 
   SessionSegment get currentSegment => _segments[_state.segmentIndex];
 
+  /// True when the current segment is the last of the working plan (used by the
+  /// near-end "add a block" nudge for Pomodoro/Custom).
+  bool get isLastSegment => _state.segmentIndex == _segments.length - 1;
+
   Duration get segmentRemaining {
     final r = currentSegment.duration - _state.segmentElapsed;
     return r.isNegative ? Duration.zero : r;
@@ -227,6 +231,10 @@ class SessionController extends ChangeNotifier {
       elapsed: elapsed,
       recordedFocus: recorded,
       phase: cur.isFocus ? _phaseFor(cur.duration, segElapsed) : _state.phase,
+      // The planned goal is reached once focus reaches the ORIGINAL plan's total,
+      // even if the session was extended past it (the near-end nudge) — so a
+      // later-abandoned bonus block still counts the session as completed.
+      goalReached: _state.goalReached || recorded >= plan.totalFocus,
     ));
   }
 
@@ -329,6 +337,22 @@ class SessionController extends ChangeNotifier {
     }
     _segments.add(SessionSegment.focus(focus));
     _resumeAppended();
+  }
+
+  /// Extend a still-RUNNING Pomodoro/Custom session (the near-end nudge): append
+  /// another focus block, optionally after a [precedingRest] break, so the block
+  /// flows straight on instead of stopping at the end. Pro only.
+  void extendNow(Duration focus, {Duration precedingRest = Duration.zero}) {
+    if (!allowContinue ||
+        _state.status != SessionStatus.running ||
+        focus <= Duration.zero) {
+      return;
+    }
+    if (precedingRest > Duration.zero) {
+      _segments.add(SessionSegment.rest(precedingRest));
+    }
+    _segments.add(SessionSegment.focus(focus));
+    notifyListeners();
   }
 
   /// Resume running into the first appended segment after the completed point.

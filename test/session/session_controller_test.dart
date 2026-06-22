@@ -389,6 +389,43 @@ void main() {
       expect(rec.recordedFocus, m(60));
     });
 
+    test('extendNow (near-end nudge) flows past the original end without stopping',
+        () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      ticker.advance(m(25)); // f1 done → break
+      ticker.advance(m(5)); // break done → the last focus block
+      expect(c.isLastSegment, isTrue);
+
+      c.extendNow(m(25), precedingRest: m(5)); // add another block while running
+      expect(c.isLastSegment, isFalse, reason: 'appended segments now follow');
+
+      ticker.advance(m(25)); // finish the original last block
+      expect(c.state.goalReached, isTrue,
+          reason: 'the original plan reached its planned focus');
+      expect(c.state.status, SessionStatus.running,
+          reason: 'flows straight on, no stop at the end');
+
+      ticker.advance(m(30)); // the appended break (5) + block (25)
+      expect(c.state.status, SessionStatus.completed);
+      expect(c.state.recordedFocus, m(75));
+    });
+
+    test('extendNow needs Pro (allowContinue) and a running session', () {
+      final ticker = FakeTicker();
+      final c =
+          _controller(ticker, plan: twoBlocks(), mode: SessionMode.pomodoro);
+      c.start();
+      ticker.advance(m(25));
+      ticker.advance(m(5)); // last block
+      c.extendNow(m(25)); // not Pro → ignored
+      ticker.advance(m(25)); // finish the original plan
+      expect(c.state.status, SessionStatus.finished,
+          reason: 'no extension was applied');
+    });
+
     test('addBlock is a no-op unless parked at completed', () {
       final ticker = FakeTicker();
       final c = _controller(ticker,

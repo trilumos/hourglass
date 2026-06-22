@@ -1176,27 +1176,49 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     );
   }
 
-  /// A gently pulsing "let it run / don't stop" affordance shown only in the
-  /// final stretch of a fixed Flow Block (turns the block open-ended).
+  /// A gently pulsing affordance in the final stretch of a block: a Flow Block
+  /// offers "don't stop" (turns it open-ended); a Pomodoro/Custom session (Pro)
+  /// offers "add a block" on its LAST block, so it flows on without stopping.
   Widget _endlessNudge(SessionState s, HgTokens hg) {
-    final isFlow = widget.config.mode == SessionMode.flowBlock;
     final remaining = _controller.segmentRemaining.inSeconds;
-    final show = isFlow &&
-        !_controller.isEndless &&
-        s.status == SessionStatus.running &&
+    final nearEnd = s.status == SessionStatus.running &&
+        !s.isResting &&
         remaining > 0 &&
         remaining <= 60;
-    if (!show) return const SizedBox(height: HgSpacing.sm);
+    final isFlow = widget.config.mode == SessionMode.flowBlock;
+
+    String? label;
+    VoidCallback? onTap;
+    if (isFlow) {
+      if (nearEnd && !_controller.isEndless) {
+        label = "Don't stop — keep flowing";
+        onTap = () {
+          HapticFeedback.selectionClick();
+          _controller.enableEndless();
+          setState(() {});
+        };
+      }
+    } else {
+      // Pomodoro/Custom continue (Pro) — only on the final block.
+      final pro = !widget.previewMode && ref.read(entitlementsProvider).pro;
+      if (nearEnd && pro && _controller.isLastSegment) {
+        label = '+ Keep going — add a block';
+        onTap = () {
+          HapticFeedback.selectionClick();
+          _controller.extendNow(_continueBlockLen,
+              precedingRest: _continueBreakLen);
+          setState(() {});
+        };
+      }
+    }
+
+    if (label == null) return const SizedBox(height: HgSpacing.sm);
     return Padding(
       padding: const EdgeInsets.only(bottom: HgSpacing.sm),
       child: FadeTransition(
         opacity: Tween(begin: 0.55, end: 1.0).animate(_pulse),
         child: OutlinedButton(
-          onPressed: () {
-            HapticFeedback.selectionClick();
-            _controller.enableEndless();
-            setState(() {});
-          },
+          onPressed: onTap,
           style: OutlinedButton.styleFrom(
             foregroundColor: hg.accent,
             side: BorderSide(color: hg.accent.withValues(alpha: 0.6)),
@@ -1204,7 +1226,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             padding: const EdgeInsets.symmetric(
                 horizontal: HgSpacing.lg, vertical: HgSpacing.sm),
           ),
-          child: const Text("Don't stop — keep flowing"),
+          child: Text(label),
         ),
       ),
     );
