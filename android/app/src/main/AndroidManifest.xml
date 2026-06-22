@@ -27,6 +27,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Required by flutter_local_notifications for SCHEDULED (zonedSchedule)
+             notifications — the plugin does not auto-declare it, and without it
+             the AlarmManager broadcast has no receiver and the pause-cap reminder
+             is silently dropped. (Short-lived grace reminders, so no boot receiver
+             is needed — they don't survive a reboot, which is fine.) -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

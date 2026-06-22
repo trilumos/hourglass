@@ -1,6 +1,4 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
-import 'package:timezone/timezone.dart' as tz;
 
 /// The two "come back to keep your block" prompts. They must be PUSH
 /// notifications because the grace windows happen while the user is OUTSIDE the
@@ -14,11 +12,12 @@ abstract class SessionNotifier {
   /// to call at session start.
   Future<void> init();
 
-  /// Show the grace notification now ([after] == zero) or schedule it [after]
-  /// from now (used for the pause-cap reminder while the app is backgrounded).
-  Future<void> showGrace(GraceKind kind, {Duration after = Duration.zero});
+  /// Show the grace notification immediately. (We fire it the moment the user
+  /// leaves — not on a scheduled alarm — because Android delays/drops inexact
+  /// alarms under battery optimization, so a scheduled reminder is unreliable.)
+  Future<void> showGrace(GraceKind kind);
 
-  /// Clear any shown/pending grace notification (the user came back in time).
+  /// Clear the shown grace notification (the user came back in time).
   Future<void> cancel();
 }
 
@@ -28,7 +27,7 @@ class SilentSessionNotifier implements SessionNotifier {
   @override
   Future<void> init() async {}
   @override
-  Future<void> showGrace(GraceKind kind, {Duration after = Duration.zero}) async {}
+  Future<void> showGrace(GraceKind kind) async {}
   @override
   Future<void> cancel() async {}
 }
@@ -45,7 +44,6 @@ class LocalSessionNotifier implements SessionNotifier {
   Future<void> init() async {
     if (_ready) return;
     try {
-      tzdata.initializeTimeZones();
       await _plugin.initialize(
         settings: const InitializationSettings(
           android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -76,36 +74,23 @@ class LocalSessionNotifier implements SessionNotifier {
             body: 'You have 30 seconds before this block ends.'
           ),
         GraceKind.pauseCap => (
-            title: 'Your pause is up',
-            body: 'Return within 15 seconds to keep your block.'
+            title: 'You\'re paused',
+            body: 'Come back soon to keep your block — your pause won\'t last '
+                'forever.'
           ),
       };
 
   @override
-  Future<void> showGrace(GraceKind kind, {Duration after = Duration.zero}) async {
+  Future<void> showGrace(GraceKind kind) async {
     try {
       await init();
       final c = _copy(kind);
-      if (after <= Duration.zero) {
-        await _plugin.show(
-          id: _id,
-          title: c.title,
-          body: c.body,
-          notificationDetails: _details,
-        );
-      } else {
-        // Schedule (inexact → no exact-alarm permission needed) so it fires at
-        // the pause cap even while the app is backgrounded. UTC keeps the
-        // absolute instant correct regardless of the device's named timezone.
-        await _plugin.zonedSchedule(
-          id: _id,
-          title: c.title,
-          body: c.body,
-          scheduledDate: tz.TZDateTime.now(tz.UTC).add(after),
-          notificationDetails: _details,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        );
-      }
+      await _plugin.show(
+        id: _id,
+        title: c.title,
+        body: c.body,
+        notificationDetails: _details,
+      );
     } catch (_) {/* never let a reminder disrupt a session */}
   }
 

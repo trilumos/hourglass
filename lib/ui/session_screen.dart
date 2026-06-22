@@ -267,13 +267,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     } else if (status == SessionStatus.paused && _pausedAt != null) {
       _leftAt = _now();
       _leftWhileRunning = false;
-      // The 1s watcher won't fire reliably while backgrounded — schedule the
-      // pause-cap notification to fire when the cap is reached instead.
+      // Stop the in-app watcher (unreliable while backgrounded) and fire the
+      // "you're paused, come back" notification immediately. The block-end
+      // decision is still enforced on return (paused past the cap + grace).
       _pauseWatch?.cancel();
       _pauseWatch = null;
-      final untilCap = _rules.pauseCap - _now().difference(_pausedAt!);
-      _notifier.showGrace(GraceKind.pauseCap,
-          after: untilCap.isNegative ? Duration.zero : untilCap);
+      _notifier.showGrace(GraceKind.pauseCap);
     }
   }
 
@@ -306,6 +305,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   void _pauseSession() {
     if (_controller.canPause) {
       _controller.pause();
+      // Bank focus-so-far so a force-kill while paused can't lose it.
+      if (!widget.previewMode &&
+          _controller.state.recordedFocus.inSeconds >= 120) {
+        _saveCheckpoint(_controller.finalize());
+      }
       _pausedAt = _now();
       _pauseCapHit = false;
       _startPauseWatch();
