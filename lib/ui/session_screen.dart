@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../app/providers.dart';
+import '../app/sound_providers.dart';
 import '../app/theme.dart';
 import '../app/theme_controller.dart';
 import '../app/theme_providers.dart';
@@ -97,7 +98,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       config: widget.config,
       ticker: widget.ticker ?? PeriodicTicker(),
       now: widget.now ?? DateTime.now,
+      // Ritual sound cues — never in a theme preview (records/plays nothing).
+      onCue: widget.previewMode
+          ? null
+          : (cue) {
+              if (!mounted || !ref.read(soundsEnabledProvider)) return;
+              ref.read(soundCuePlayerProvider).play(cue);
+            },
     )..addListener(_onChange);
+    if (!widget.previewMode && ref.read(soundsEnabledProvider)) {
+      ref.read(soundCuePlayerProvider).preload(); // warm so the start cue is snappy
+    }
     _controller.start();
     _resetIdle();
     // Safety net: continuously checkpoint focus-so-far so a force-kill (or any
@@ -612,8 +623,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final isFlow = widget.config.mode == SessionMode.flowBlock;
     final score = ref.watch(focusScoreProvider).asData?.value;
 
-    // Everything except the hourglass dims when idle (calm, ambient).
-    final chrome = _dimmed ? 0.18 : 1.0;
+    // Everything except the hourglass dims when idle (calm, ambient) — but a
+    // paused session stays fully lit so "PAUSED" and the time read clearly.
+    final chrome = (_dimmed && !paused) ? 0.18 : 1.0;
 
     // Center of the top bar: the overall Focus Score (flow) or the block label.
     final Widget topCenter = (isFlow && score != null)
@@ -696,25 +708,27 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                     ),
                   ),
                 ],
-                // Struggle reframe (or a quiet "Paused") — single line, fades out.
+                // Struggle reframe, or a bold, unmissable "PAUSED" while paused.
                 SizedBox(
-                  height: 40,
+                  height: 48,
                   child: Center(
                     child: AnimatedOpacity(
                       opacity: (struggle || paused) ? 1 : 0,
                       duration: HgMotion.slow,
                       child: Text(
                         paused
-                            ? 'Paused'
+                            ? 'PAUSED'
                             : 'The first few minutes are the hard part — stay with it.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: HgFont.sans,
-                          fontSize: 13,
+                          fontSize: paused ? 28 : 13,
+                          fontWeight:
+                              paused ? FontWeight.w700 : FontWeight.normal,
                           fontStyle:
                               paused ? FontStyle.normal : FontStyle.italic,
-                          letterSpacing: paused ? 2 : 0,
-                          color: paused ? hg.textMuted : hg.accent,
+                          letterSpacing: paused ? 5 : 0,
+                          color: hg.accent,
                         ),
                       ),
                     ),
@@ -723,11 +737,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               ],
             ),
           ),
-          // Glanced time — large readout ABOVE the hourglass; fades on tap.
+          // Glanced time — large readout ABOVE the hourglass. Normally fades
+          // after a tap; while PAUSED it stays on constantly (reverts on resume).
           SizedBox(
             height: 56,
             child: AnimatedOpacity(
-              opacity: _showTime ? 1 : 0,
+              opacity: (_showTime || paused) ? 1 : 0,
               duration: HgMotion.fast,
               child: Center(
                 child: Text(
@@ -1217,16 +1232,41 @@ class _Completion extends ConsumerWidget {
               ),
             ),
             if (subTwoMinFlow) ...[
-              const SizedBox(height: HgSpacing.md),
-              Text(
-                "Under 2 minutes, so this one won't count toward your Focus "
-                'Score or average focus. A few more next time and it will.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: HgFont.sans,
-                  fontSize: 13,
-                  height: 1.45,
-                  color: hg.textMuted,
+              const SizedBox(height: HgSpacing.lg),
+              Container(
+                padding: const EdgeInsets.all(HgSpacing.md),
+                decoration: BoxDecoration(
+                  color: hg.accent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(HgRadius.md),
+                  border: Border.all(color: hg.accent.withValues(alpha: 0.28)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline_rounded,
+                            size: 18, color: hg.accent),
+                        const SizedBox(width: HgSpacing.xs),
+                        Text(
+                          'Under 2 minutes',
+                          style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: hg.accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: HgSpacing.sm),
+                    const _SummaryPoint(
+                        "This block won't count toward your Focus Score."),
+                    const _SummaryPoint(
+                        "It won't count toward your average focus either."),
+                    const _SummaryPoint(
+                        'Stay a few minutes longer next time and it will.'),
+                  ],
                 ),
               ),
             ],
@@ -1242,6 +1282,46 @@ class _Completion extends ConsumerWidget {
             ),
           ] else
             PrimaryButton(label: 'Done', onPressed: onDone),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single prominent bullet in the completion screen's "why this didn't count"
+/// callout — a small accent dot + readable line.
+class _SummaryPoint extends StatelessWidget {
+  final String text;
+  const _SummaryPoint(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final hg = context.hg;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: HgSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 7),
+            child: Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(color: hg.accent, shape: BoxShape.circle),
+            ),
+          ),
+          const SizedBox(width: HgSpacing.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 14,
+                height: 1.4,
+                color: hg.textSecondary,
+              ),
+            ),
+          ),
         ],
       ),
     );

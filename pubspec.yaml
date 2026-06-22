@@ -51,6 +51,8 @@ dependencies:
   url_launcher: ^6.3.2
   file_selector: ^1.1.0
   pdf: ^3.13.0
+  just_audio: ^0.10.5
+  audio_session: ^0.2.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -75,6 +77,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/audio/
 
   fonts:
     - family: Geist

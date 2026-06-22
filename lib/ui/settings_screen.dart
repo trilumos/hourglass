@@ -11,6 +11,7 @@ import '../app/theme_controller.dart';
 import '../app/tokens.dart';
 import 'faq_screen.dart';
 import 'guide_screen.dart';
+import '../app/sound_providers.dart';
 import '../app/theme_providers.dart';
 import 'data_backup.dart';
 import 'paywall_screen.dart';
@@ -31,6 +32,7 @@ class SettingsScreen extends ConsumerWidget {
     final autoAdvance = ref.watch(breakAutoAdvanceProvider).asData?.value ?? true;
     final runUntilEnded =
         ref.watch(flowRunUntilEndedProvider).asData?.value ?? false;
+    final soundsEnabled = ref.watch(soundsEnabledProvider);
 
     return Scaffold(
       body: ScreenBackground(
@@ -161,6 +163,22 @@ class SettingsScreen extends ConsumerWidget {
 
                 // ── Session ──────────────────────────────────────────────────
                 _SectionLabel('SESSION'),
+                const SizedBox(height: HgSpacing.sm),
+                _SwitchRow(
+                  title: 'Session sounds',
+                  subtitle: soundsEnabled
+                      ? 'Gentle cues at the start, breaks, and finish.'
+                      : 'No sound at session transitions.',
+                  value: soundsEnabled,
+                  onChanged: (v) {
+                    if (blockedByPreview(
+                        context, ref, 'change session settings')) {
+                      return;
+                    }
+                    HapticFeedback.selectionClick();
+                    ref.read(soundsEnabledProvider.notifier).set(v);
+                  },
+                ),
                 const SizedBox(height: HgSpacing.sm),
                 _SwitchRow(
                   title: 'Auto-start next block',

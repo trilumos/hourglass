@@ -6,6 +6,7 @@ import '../domain/session_mode.dart';
 import '../domain/session_record.dart';
 import 'config_codec.dart';
 import 'session_config.dart';
+import 'session_cue.dart';
 import 'session_plan.dart';
 import 'session_state.dart';
 import 'ticker.dart';
@@ -17,6 +18,10 @@ class SessionController extends ChangeNotifier {
   final SessionConfig config;
   final Ticker ticker;
   final DateTime Function() now;
+
+  /// Optional ritual-transition hook (started / break boundaries / finished).
+  /// The UI wires this to sound cues; null in tests and preview (no audio).
+  final void Function(SessionCue cue)? onCue;
 
   SessionState _state = SessionState.initial();
   late final DateTime _startedAt;
@@ -40,6 +45,7 @@ class SessionController extends ChangeNotifier {
     required this.config,
     required this.ticker,
     required this.now,
+    this.onCue,
   });
 
   SessionState get state => _state;
@@ -79,6 +85,7 @@ class SessionController extends ChangeNotifier {
       currentKind: plan.segments.first.kind,
     ));
     ticker.start(_onTick);
+    onCue?.call(SessionCue.started);
   }
 
   FocusPhase _phaseFor(Duration focusDuration, Duration inSegment) =>
@@ -139,6 +146,7 @@ class SessionController extends ChangeNotifier {
                 : _state.phase,
             goalReached: true,
           ));
+          onCue?.call(SessionCue.finished);
           return;
         }
         // Tap-to-continue: a break just ended → wait for the user before the
@@ -155,8 +163,13 @@ class SessionController extends ChangeNotifier {
             recordedFocus: recorded,
             phase: _phaseFor(next.duration, Duration.zero),
           ));
+          onCue?.call(SessionCue.breakEnded);
           return;
         }
+        // Auto-advancing across a boundary: a focus block ending starts a break;
+        // a break ending resumes focus.
+        onCue?.call(
+            seg.isFocus ? SessionCue.breakStarted : SessionCue.breakEnded);
         idx += 1;
         segElapsed = Duration.zero;
       }
@@ -238,6 +251,9 @@ class SessionController extends ChangeNotifier {
   void end() {
     ticker.stop();
     _set(_state.copyWith(status: SessionStatus.finished));
+    // Endless blocks never hit the natural-completion cue, so their deliberate
+    // end is the "finished" moment. A non-endless early stop gets no cue.
+    if (_endless) onCue?.call(SessionCue.finished);
   }
 
   /// Session abandoned before the goal (e.g. left the app, protect-the-block).

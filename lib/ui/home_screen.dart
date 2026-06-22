@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/billing_providers.dart';
 import '../app/providers.dart';
+import '../app/sound_providers.dart';
 import '../app/theme.dart';
 import '../app/theme_providers.dart';
 import '../app/tokens.dart';
@@ -32,6 +33,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   SessionMode _mode = SessionMode.flowBlock;
+
+  @override
+  void initState() {
+    super.initState();
+    // Warm the cue player from Home so the first (session-start) sound plays
+    // instantly instead of lazy-loading the asset at the moment the cue fires.
+    if (ref.read(soundsEnabledProvider)) {
+      ref.read(soundCuePlayerProvider).preload();
+    }
+  }
 
   void _begin() {
     Navigator.of(context).push(
