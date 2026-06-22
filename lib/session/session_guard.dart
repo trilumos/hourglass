@@ -7,10 +7,10 @@ const _brandAccent = Color(0xFFC8841E);
 
 /// Owns the session's FOREGROUND-SERVICE notification — a persistent, lock-screen
 /// notification present for the whole session that becomes a live, non-dismissable
-/// countdown when the user leaves or pauses-and-leaves, plus discrete buzzing
-/// alerts at each transition. All of it runs in the service isolate (see
-/// [SessionGuardHandler]) so the live countdown + alerts stay accurate even when
-/// the app is closed / the screen is off.
+/// countdown when the user leaves or pauses-and-leaves. It renders in the service
+/// isolate (see [SessionGuardHandler]) so the live countdown stays accurate even
+/// when the app is closed / the screen is off. The sounding grace alerts are
+/// fired separately from the main isolate (see `NotificationService`).
 ///
 /// Started at session begin (while foreground — Android forbids starting a
 /// foreground service from the background). Abstracted so tests/preview use a
@@ -24,9 +24,6 @@ abstract class SessionGuard {
 
   /// A break began — a live break countdown ending at [endsAt] + a start alert.
   Future<void> breakStarted(DateTime endsAt);
-
-  /// Manually paused inside the app.
-  Future<void> paused();
 
   /// Left the app while running — a live countdown ending at [endsAt].
   Future<void> leaveGrace(DateTime endsAt);
@@ -48,8 +45,6 @@ class SilentSessionGuard implements SessionGuard {
   Future<void> focusing() async {}
   @override
   Future<void> breakStarted(DateTime endsAt) async {}
-  @override
-  Future<void> paused() async {}
   @override
   Future<void> leaveGrace(DateTime endsAt) async {}
   @override
@@ -88,8 +83,9 @@ class FgsSessionGuard implements SessionGuard {
       );
       await FlutterForegroundTask.startService(
         serviceTypes: [ForegroundServiceTypes.specialUse],
-        notificationTitle: 'Sustain',
-        notificationText: 'Focusing — tap to return',
+        notificationTitle: 'Focusing',
+        notificationText: 'Deep focus is in progress. Stay with it — tap Return '
+            'whenever you come back.',
         notificationIcon: const NotificationIcon(
           metaDataName: 'com.trilumos.sustain.NOTIFICATION_ICON',
           backgroundColor: _brandAccent,
@@ -116,9 +112,6 @@ class FgsSessionGuard implements SessionGuard {
   @override
   Future<void> breakStarted(DateTime endsAt) =>
       _send({'mode': 'break', 'end': endsAt.millisecondsSinceEpoch});
-
-  @override
-  Future<void> paused() => _send({'mode': 'paused'});
 
   @override
   Future<void> leaveGrace(DateTime endsAt) =>
@@ -184,35 +177,38 @@ class SessionGuardHandler extends TaskHandler {
     final String text;
     switch (_mode) {
       case 'break':
-        title = 'On a break';
-        text = now < _end
-            ? 'Break — ${_fmt(_end - now)} left. Rest your eyes.'
-            : 'Break\'s over — back to focus.';
+        if (now < _end) {
+          title = 'On a break · ${_fmt(_end - now)}';
+          text = 'Rest your eyes — focus picks back up when the break ends.';
+        } else {
+          title = 'Break\'s over';
+          text = 'Back to focus — your session is waiting. Tap to return.';
+        }
       case 'leave':
         if (now < _end) {
-          title = 'Come back to keep your block';
-          text = '${_fmt(_end - now)} left before it ends.';
+          title = 'Come back · ${_fmt(_end - now)}';
+          text = 'You stepped away — return before the timer runs out to keep '
+              'this block.';
         } else {
           title = 'Block ended';
-          text = 'You were away too long.';
+          text = 'You were away too long. Tap to head back.';
         }
-      case 'paused':
-        title = 'Paused';
-        text = 'Tap to return to your session.';
       case 'pauseAway':
         if (now < _cap) {
-          title = 'Paused';
-          text = '${_fmt(_cap - now)} before your pause runs out.';
+          title = 'Paused · ${_fmt(_cap - now)}';
+          text = 'Your block is held while you\'re paused. Resume before the '
+              'time runs out to keep it.';
         } else if (now < _end) {
-          title = 'Your pause is up';
-          text = 'Resume within ${_fmt(_end - now)} to keep your block.';
+          title = 'Your pause is up · ${_fmt(_end - now)}';
+          text = 'Resume now — your block closes when this grace runs out.';
         } else {
           title = 'Block ended';
-          text = 'Your pause ran out.';
+          text = 'Your pause ran out. Tap to head back.';
         }
-      default:
-        title = 'Sustain';
-        text = 'Focusing — tap to return.';
+      default: // focus
+        title = 'Focusing';
+        text = 'Deep focus is in progress. Stay with it — tap Return whenever '
+            'you come back.';
     }
     FlutterForegroundTask.updateService(
         notificationTitle: title, notificationText: text);
