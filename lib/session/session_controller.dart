@@ -23,6 +23,9 @@ class SessionController extends ChangeNotifier {
   /// The UI wires this to sound cues; null in tests and preview (no audio).
   final void Function(SessionCue cue)? onCue;
 
+  /// Max manual pauses allowed this session; null = unlimited (Pro / tests).
+  final int? pauseLimit;
+
   SessionState _state = SessionState.initial();
   late final DateTime _startedAt;
 
@@ -46,7 +49,17 @@ class SessionController extends ChangeNotifier {
     required this.ticker,
     required this.now,
     this.onCue,
+    this.pauseLimit,
   });
+
+  /// Manual pauses used so far this session.
+  int _pauseCount = 0;
+  int get pauseCount => _pauseCount;
+
+  /// Whether the user may pause right now — running, and within the pause limit.
+  bool get canPause =>
+      _state.status == SessionStatus.running &&
+      (pauseLimit == null || _pauseCount < pauseLimit!);
 
   SessionState get state => _state;
 
@@ -187,9 +200,28 @@ class SessionController extends ChangeNotifier {
   }
 
   void pause() {
-    if (_state.status != SessionStatus.running) return;
+    if (!canPause) return;
+    _pauseCount++;
     ticker.stop();
     _set(_state.copyWith(status: SessionStatus.paused));
+  }
+
+  bool _suspended = false;
+
+  /// Freeze the clock WITHOUT consuming a pause or changing status — used while
+  /// the app is backgrounded during the leave-grace window (no focus accrues
+  /// while away). [unsuspend] resumes it if the block is still running.
+  void suspend() {
+    if (_state.status == SessionStatus.running && !_suspended) {
+      _suspended = true;
+      ticker.stop();
+    }
+  }
+
+  void unsuspend() {
+    if (!_suspended) return;
+    _suspended = false;
+    if (_state.status == SessionStatus.running) ticker.start(_onTick);
   }
 
   void resume() {

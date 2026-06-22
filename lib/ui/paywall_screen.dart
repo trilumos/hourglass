@@ -157,7 +157,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     const items = [
       'Your Focus Score and Stamina, traced over time',
       'When you focus best, and your follow-through',
-      'Personal bests and CSV export',
+      'Personal bests and a detailed PDF report',
+      'Unlimited, longer pauses mid-session',
       'Every color theme, and session reuse',
       'Every Pro feature we add',
     ];
@@ -195,6 +196,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
     final selectedPkg = offering.byPlan(_selected) ?? offering.packages.first;
     return [
+      // Yearly leads (best value), then Monthly; Lifetime is the premium option.
+      if (yearly != null)
+        _PlanTile(
+            label: 'Yearly',
+            price: yearly.priceString,
+            badge: savings ?? 'Best value',
+            note: 'Billed yearly, auto-renews until cancelled',
+            selected: _selected == ProPlan.yearly,
+            onTap: () => setState(() => _selected = ProPlan.yearly)),
       if (monthly != null)
         _PlanTile(
             label: 'Monthly',
@@ -202,19 +212,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             note: 'Billed monthly, auto-renews until cancelled',
             selected: _selected == ProPlan.monthly,
             onTap: () => setState(() => _selected = ProPlan.monthly)),
-      if (yearly != null)
-        _PlanTile(
-            label: 'Yearly',
-            price: yearly.priceString,
-            badge: savings,
-            note: 'Billed yearly, auto-renews until cancelled',
-            selected: _selected == ProPlan.yearly,
-            onTap: () => setState(() => _selected = ProPlan.yearly)),
       if (lifetime != null)
         _PlanTile(
             label: 'Lifetime',
             price: lifetime.priceString,
-            note: 'One-time payment, yours forever',
+            note: 'One-time payment — own it forever',
             selected: _selected == ProPlan.lifetime,
             onTap: () => setState(() => _selected = ProPlan.lifetime)),
       const SizedBox(height: HgSpacing.lg),

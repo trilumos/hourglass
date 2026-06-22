@@ -136,6 +136,17 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
   data; Stamina + avg session Pro-gated). **Ships fontless** (built-in Helvetica + ASCII-safe text → real bold,
   every glyph renders; `_ascii()` folds InsightsCopy em-dashes/minus at the render edge). Founder said "lock
   this." Future option (not committed): embed a Unicode TTF (Geist) for em-dashes/brand font if desired.
+- **Strict sessions (anti-pause-abuse) + paywall featuring LOCKED (founder, 2026-06-22).** Spec:
+  `docs/superpowers/specs/2026-06-22-strict-sessions-and-monetization-design.md` (Forest-researched). Closes the
+  abuse where you pause → use phone → resume free. **Leaving the app (running OR paused) ends the block** after a
+  grace; the prompt is a **local push notification** (`flutter_local_notifications`) because the user is outside
+  the app. Numbers: **leave-while-running grace 30s; free = 3 pauses/session, 3-min cap; Pro = unlimited, 10-min
+  cap; pause-cap grace 15s** (revealed only at the cap). Free out-of-pauses → quiet Pro nudge (session keeps
+  running). Domain stays pure: `StrictRules` (free/Pro) + `SessionController.pauseLimit`/`suspend()`; UI
+  orchestrates timers/lifecycle/notifications; preview fully exempt. **Monetization: keep ALL Pro tiers** (pricing
+  still LOCKED) but the paywall **features Yearly → Monthly → Lifetime** (Lifetime = premium "own it forever") +
+  lists "unlimited, longer pauses". Allow-list of permitted apps = a deferred future Pro pillar. Needed
+  Android core-library desugaring + `POST_NOTIFICATIONS`.
 
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.

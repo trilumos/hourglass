@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../app/billing_providers.dart';
 import '../app/providers.dart';
 import '../app/sound_providers.dart';
 import '../app/theme.dart';
@@ -19,9 +20,12 @@ import '../domain/session_record.dart';
 import '../hourglass/hourglass_view.dart';
 import '../session/session_config.dart';
 import '../session/session_controller.dart';
+import '../session/session_notifications.dart';
 import '../session/session_plan.dart';
 import '../session/session_state.dart';
+import '../session/strict_rules.dart';
 import '../session/ticker.dart';
+import 'paywall_screen.dart';
 import 'themes_screen.dart';
 import 'widgets/primary_button.dart';
 import 'widgets/screen_background.dart';
@@ -76,7 +80,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Timer? _previewCapTimer;
   bool _previewEnded = false;
 
+  // Strict-session state: pause limits + the away/cap grace windows.
+  late final StrictRules _rules;
+  late final SessionNotifier _notifier;
+  DateTime? _pausedAt; // when the current manual pause began
+  Timer? _pauseWatch; // 1s check of the pause cap while paused
+  bool _pauseCapHit = false; // inside the post-cap "return now" grace
+  DateTime? _leftAt; // when the app was backgrounded mid-session
+  bool _leftWhileRunning = false;
+
   static const _idleDelay = Duration(seconds: 45);
+
+  DateTime _now() => (widget.now ?? DateTime.now)();
 
   @override
   void initState() {
@@ -94,10 +109,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     )..repeat(reverse: true);
+    _rules = StrictRules.forPro(ref.read(entitlementsProvider).pro);
+    _notifier = ref.read(sessionNotifierProvider);
+    if (!widget.previewMode) _notifier.init();
     _controller = SessionController(
       config: widget.config,
       ticker: widget.ticker ?? PeriodicTicker(),
       now: widget.now ?? DateTime.now,
+      pauseLimit: widget.previewMode ? null : _rules.pauseLimit,
       // Ritual sound cues — never in a theme preview (records/plays nothing).
       onCue: widget.previewMode
           ? null
@@ -229,13 +248,203 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // A theme preview has no real block to protect and persists nothing.
-    if (widget.previewMode) return;
-    // Protect the block: leaving the app ends the running session.
-    if (state == AppLifecycleState.paused &&
-        _controller.state.status == SessionStatus.running) {
-      _controller.abandon();
+    if (widget.previewMode) return; // a theme preview protects nothing
+    if (state == AppLifecycleState.paused) {
+      _onLeaveApp();
+    } else if (state == AppLifecycleState.resumed) {
+      _onReturnApp();
     }
+  }
+
+  /// Backgrounded mid-session: start the right grace window + push notification.
+  void _onLeaveApp() {
+    final status = _controller.state.status;
+    if (status == SessionStatus.running) {
+      _leftAt = _now();
+      _leftWhileRunning = true;
+      _controller.suspend(); // freeze the clock while away
+      _notifier.showGrace(GraceKind.leaveRunning); // "come back, 30s"
+    } else if (status == SessionStatus.paused && _pausedAt != null) {
+      _leftAt = _now();
+      _leftWhileRunning = false;
+      // The 1s watcher won't fire reliably while backgrounded — schedule the
+      // pause-cap notification to fire when the cap is reached instead.
+      _pauseWatch?.cancel();
+      _pauseWatch = null;
+      final untilCap = _rules.pauseCap - _now().difference(_pausedAt!);
+      _notifier.showGrace(GraceKind.pauseCap,
+          after: untilCap.isNegative ? Duration.zero : untilCap);
+    }
+  }
+
+  /// Returned to the app: apply the grace decision (resume vs end).
+  void _onReturnApp() {
+    _notifier.cancel();
+    final leftAt = _leftAt;
+    if (leftAt == null) return;
+    _leftAt = null;
+    if (_leftWhileRunning) {
+      if (_rules.endAfterAwayRunning(_now().difference(leftAt))) {
+        _controller.abandon(); // came back too late
+      } else {
+        _controller.unsuspend(); // resume the clock
+      }
+    } else if (_pausedAt != null) {
+      final totalPaused = _now().difference(_pausedAt!);
+      if (_rules.endAfterPaused(totalPaused)) {
+        _clearPause();
+        _controller.abandon();
+      } else {
+        _pauseCapHit = _rules.inCapGrace(totalPaused);
+        _startPauseWatch(); // re-arm the foreground watcher
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
+  // ── Manual pause (limited for free, lenient for Pro) ────────────────────────
+  void _pauseSession() {
+    if (_controller.canPause) {
+      _controller.pause();
+      _pausedAt = _now();
+      _pauseCapHit = false;
+      _startPauseWatch();
+      if (mounted) setState(() {});
+    } else {
+      _openPaywall(); // out of free pauses → Pro
+    }
+  }
+
+  void _resumeSession() {
+    _controller.resume();
+    _clearPause();
+    _resetIdle();
+    if (mounted) setState(() {});
+  }
+
+  void _startPauseWatch() {
+    _pauseWatch?.cancel();
+    _pauseWatch =
+        Timer.periodic(const Duration(seconds: 1), (_) => _checkPauseCap());
+  }
+
+  void _clearPause() {
+    _pauseWatch?.cancel();
+    _pauseWatch = null;
+    _pausedAt = null;
+    _pauseCapHit = false;
+    _notifier.cancel();
+  }
+
+  /// Each second while paused: enforce the cap, then its 15 s grace.
+  void _checkPauseCap() {
+    if (_controller.state.status != SessionStatus.paused || _pausedAt == null) {
+      _pauseWatch?.cancel();
+      return;
+    }
+    final paused = _now().difference(_pausedAt!);
+    if (_rules.endAfterPaused(paused)) {
+      _clearPause();
+      _controller.abandon(); // past the cap + grace → block ends
+    } else if (!_pauseCapHit && paused >= _rules.pauseCap) {
+      _pauseCapHit = true; // entered the "return now" grace
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _openPaywall() => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const PaywallScreen()),
+      );
+
+  /// The Pause/Resume control: a live "return now" countdown when a pause hits
+  /// its cap, a locked Pro nudge when free pauses run out, else Pause + a quiet
+  /// "N pauses left" line.
+  Widget _pauseControl(bool paused, HgTokens hg) {
+    if (paused) {
+      final capTotal = _rules.pauseCap + _rules.capGrace;
+      final remaining = _pausedAt == null
+          ? 0
+          : (capTotal - _now().difference(_pausedAt!)).inSeconds.clamp(0, 999);
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_pauseCapHit) ...[
+            Text(
+              'Resume now — ${remaining}s to keep your block',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: hg.accent,
+              ),
+            ),
+            const SizedBox(height: HgSpacing.sm),
+          ],
+          PrimaryButton(label: 'Resume', onPressed: _resumeSession),
+        ],
+      );
+    }
+    if (!_controller.canPause) {
+      // Out of free pauses → a quiet, locked Pro nudge; the session keeps running.
+      return GestureDetector(
+        onTap: _openPaywall,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                color: hg.surfaceRaised,
+                borderRadius: BorderRadius.circular(HgRadius.pill),
+                border: Border.all(color: hg.hairline),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.lock_outline_rounded,
+                      size: HgSize.iconSm, color: hg.textMuted),
+                  const SizedBox(width: HgSpacing.xs),
+                  Text(
+                    'Pause',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: hg.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: HgSpacing.xs),
+            Text(
+              'No pauses left — Pro gives unlimited',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontFamily: HgFont.sans, fontSize: 13, color: hg.accent),
+            ),
+          ],
+        ),
+      );
+    }
+    final remaining = _rules.remainingPauses(_controller.pauseCount);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PrimaryButton(label: 'Pause', onPressed: _pauseSession),
+        if (remaining != null) ...[
+          const SizedBox(height: HgSpacing.xs),
+          Text(
+            '$remaining pause${remaining == 1 ? '' : 's'} left',
+            style: TextStyle(
+                fontFamily: HgFont.sans, fontSize: 12, color: hg.textMuted),
+          ),
+        ],
+      ],
+    );
   }
 
   @override
@@ -246,6 +455,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     _idleTimer?.cancel();
     _checkpointTimer?.cancel();
     _previewCapTimer?.cancel();
+    _pauseWatch?.cancel();
+    _notifier.cancel();
     WakelockPlus.disable();
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_onChange);
@@ -816,17 +1027,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           AnimatedOpacity(
             opacity: chrome,
             duration: HgMotion.medium,
-            child: PrimaryButton(
-              label: paused ? 'Resume' : 'Pause',
-              onPressed: () {
-                if (paused) {
-                  _controller.resume();
-                  _resetIdle();
-                } else {
-                  _controller.pause();
-                }
-              },
-            ),
+            child: _pauseControl(paused, hg),
           ),
           const SizedBox(height: HgSpacing.xl),
         ],

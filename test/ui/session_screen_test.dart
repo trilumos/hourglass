@@ -121,4 +121,17 @@ void main() {
     expect(find.textContaining('focused'), findsOneWidget);
     expect(find.text('Done'), findsOneWidget);
   });
+
+  testWidgets('a free session shows Pause and the pauses-left count',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(412, 915));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final db = AppDatabase.memory();
+    await tester.pumpWidget(harness(db, FakeTicker()));
+    await tester.pump();
+
+    // Free users get 3 disciplined pauses, surfaced on the control.
+    expect(find.text('Pause'), findsOneWidget);
+    expect(find.text('3 pauses left'), findsOneWidget);
+  });
 }
