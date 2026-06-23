@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -10,6 +11,13 @@ import 'app/theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Register the Geist font's OFL license so it appears in the in-app
+  // open-source licenses page (Flutter auto-collects package LICENSE files, but
+  // not bundled font assets).
+  LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString('assets/fonts/Geist-OFL.txt');
+    yield LicenseEntryWithLineBreaks(const ['Geist'], license);
+  });
   // Needed for the session foreground service to message its isolate.
   FlutterForegroundTask.initCommunicationPort();
   // Portrait only — the layouts are designed for portrait; landscape breaks them.

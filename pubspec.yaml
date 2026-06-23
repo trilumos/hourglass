@@ -84,6 +84,7 @@ flutter:
 
   assets:
     - assets/audio/
+    - assets/fonts/Geist-OFL.txt # surfaced in the in-app open-source licenses
 
   fonts:
     - family: Geist
