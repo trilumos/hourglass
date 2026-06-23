@@ -1,0 +1,18 @@
+# RELEASE signing — copy this to android/key.properties (gitignored) and fill in.
+#
+# 1. Generate your upload keystore once (keep it safe + backed up; losing it means
+#    you can't update the app unless enrolled in Play App Signing):
+#
+#      keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 \
+#              -validity 10000 -alias upload
+#
+# 2. Put upload-keystore.jks somewhere outside the repo (or in android/app/ — it's
+#    gitignored) and point storeFile at it.
+# 3. Enrol the app in Play App Signing in the Play Console (recommended) so Google
+#    holds the real signing key and your upload key is only for uploads.
+
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+# Path relative to android/app/ (or an absolute path).
+storeFile=upload-keystore.jks
