@@ -20,6 +20,7 @@ import 'themes_screen.dart';
 import 'widgets/mode_selector.dart';
 import 'widgets/preview_bar.dart';
 import 'widgets/primary_button.dart';
+import 'insights_screen.dart';
 import 'widgets/profile_avatar.dart';
 import 'widgets/screen_background.dart';
 
@@ -110,7 +111,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: GestureDetector(
                           onTap: _openProfile,
                           behavior: HitTestBehavior.opaque,
-                          child: const ProfileAvatar(size: 36),
+                          // Theme-accent ring around the avatar (current theme).
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: hg.accent, width: 1.5),
+                            ),
+                            child: const ProfileAvatar(size: 36),
+                          ),
                         ),
                       ),
                     ),
@@ -208,6 +218,14 @@ class _StatRow extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: HgSpacing.md),
           color: hg.hairline,
         );
+    // Today / Streak / Avg open Insights; Focus opens the Focus Score detail.
+    Widget toInsights(Widget child) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const InsightsScreen()),
+          ),
+          child: child,
+        );
     // FittedBox keeps all four stats on one line on narrow screens / large fonts.
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -228,12 +246,15 @@ class _StatRow extends StatelessWidget {
           ),
           if (isPro) ...[
             divider(),
-            _Stat(label: 'Avg', value: _formatFocus(data.avgSession)),
+            toInsights(
+                _Stat(label: 'Avg', value: _formatFocus(data.avgSession))),
           ],
           divider(),
-          _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
+          toInsights(
+              _Stat(label: 'Today', value: _formatFocus(data.todayFocus))),
           divider(),
-          _Stat(label: 'Streak', value: _formatStreak(data.streak)),
+          toInsights(
+              _Stat(label: 'Streak', value: _formatStreak(data.streak))),
         ],
       ),
     );

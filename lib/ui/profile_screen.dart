@@ -146,27 +146,31 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // ── Supporting stats ────────────────────────────────────────
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatTile(
-                        label: 'Total focus',
-                        value: formatFocusDuration(stats.totalFocus),
+                // ── Supporting stats (tap → Insights) ───────────────────────
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _push(context, const InsightsScreen()),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: StatTile(
+                          label: 'Total focus',
+                          value: formatFocusDuration(stats.totalFocus),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: StatTile(
-                          label: 'Streak', value: '${stats.streak}'),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: StatTile(
-                          label: 'Sessions',
-                          value: '${stats.sessionsCompleted}'),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StatTile(
+                            label: 'Streak', value: '${stats.streak}'),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StatTile(
+                            label: 'Sessions',
+                            value: '${stats.sessionsCompleted}'),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: HgSpacing.xl),
 

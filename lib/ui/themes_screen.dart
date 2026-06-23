@@ -59,44 +59,66 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
 
     return Scaffold(
       backgroundColor: hg.background,
-      appBar: AppBar(
-        backgroundColor: hg.background,
-        elevation: 0,
-        title: Text(
-          'Themes',
-          style: TextStyle(
-            fontFamily: HgFont.sans,
-            color: hg.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
       body: ScreenBackground(
         child: SafeArea(
-          top: false,
-          child: GridView.count(
-            padding: const EdgeInsets.fromLTRB(
-                HgSpacing.lg, HgSpacing.md, HgSpacing.lg, HgSpacing.xl),
-            crossAxisCount: 2,
-            mainAxisSpacing: HgSpacing.md,
-            crossAxisSpacing: HgSpacing.md,
-            childAspectRatio: 0.72,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final theme in HgThemes.all)
-                _ThemeTile(
-                  theme: theme,
-                  owned: entitlements.ownsTheme(theme.id),
-                  // The applied look: the user's chosen theme, when owned. (While
-                  // previewing, this still marks the real underlying selection.)
-                  active: theme.id == selectedId &&
-                      entitlements.ownsTheme(theme.id),
-                  product: _products[theme.id],
-                  onTap: () => _openSheet(
-                    theme,
-                    owned: entitlements.ownsTheme(theme.id),
-                    product: _products[theme.id],
-                  ),
+              const SizedBox(height: HgSpacing.sm),
+              // In-body header (no Material AppBar) — matches Settings / Profile.
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      iconSize: HgSize.iconMd,
+                      color: hg.textSecondary,
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tooltip: 'Back',
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: HgSpacing.xs),
+                    Text(
+                      'Themes',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: hg.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: HgSpacing.md),
+              Expanded(
+                child: GridView.count(
+                  padding: const EdgeInsets.fromLTRB(
+                      HgSpacing.lg, 0, HgSpacing.lg, HgSpacing.xl),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: HgSpacing.md,
+                  crossAxisSpacing: HgSpacing.md,
+                  childAspectRatio: 0.72,
+                  children: [
+                    for (final theme in HgThemes.all)
+                      _ThemeTile(
+                        theme: theme,
+                        owned: entitlements.ownsTheme(theme.id),
+                        // The applied look: the user's chosen theme, when owned.
+                        active: theme.id == selectedId &&
+                            entitlements.ownsTheme(theme.id),
+                        product: _products[theme.id],
+                        onTap: () => _openSheet(
+                          theme,
+                          owned: entitlements.ownsTheme(theme.id),
+                          product: _products[theme.id],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

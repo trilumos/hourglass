@@ -9,6 +9,7 @@ import '../app/theme.dart';
 import '../app/tokens.dart';
 import '../domain/session_mode.dart';
 import '../domain/stamina_calculator.dart';
+import '../notifications/notification_coordinator.dart';
 import '../session/session_config.dart';
 import '../session/session_plan.dart';
 import 'session_screen.dart';
@@ -58,6 +59,23 @@ class SetupScreen extends ConsumerStatefulWidget {
 }
 
 class _SetupScreenState extends ConsumerState<SetupScreen> {
+  // Ask for notification permission once per launch, at this calm moment right
+  // before a session — so the in-session live notification + grace alerts (which
+  // need POST_NOTIFICATIONS on Android 13+) work without the user digging into
+  // system settings. The OS only shows the dialog once regardless.
+  static bool _askedNotifPermission = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_askedNotifPermission) {
+      _askedNotifPermission = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(notificationServiceProvider).requestPermission();
+      });
+    }
+  }
+
   // The ~90-min deep-work reference (shared with stamina). A soft guide, not a
   // hard limit — longer blocks are allowed (+5 / endless).
   static final _flowSoftCap = StaminaCalculator.referenceBlock.inMinutes;

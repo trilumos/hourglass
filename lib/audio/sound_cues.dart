@@ -42,7 +42,9 @@ class JustAudioSoundCues implements SoundCuePlayer {
 
   /// The source bell is long; play only the opening as the cue.
   static const _clip = Duration(seconds: 5);
-  static const _volume = 0.85;
+  // Gentle by default; the phone's MEDIA volume now controls it (see the media
+  // routing below), so the user can take it lower or higher.
+  static const _volume = 0.55;
 
   AudioPlayer? _player;
   Future<void>? _init;
@@ -59,9 +61,11 @@ class JustAudioSoundCues implements SoundCuePlayer {
         avAudioSessionCategory: AVAudioSessionCategory.ambient,
         avAudioSessionCategoryOptions:
             AVAudioSessionCategoryOptions.mixWithOthers,
+        // Route to the MEDIA stream so the phone's media volume controls the
+        // cues (sonification/assistance ignored media volume and played loud).
         androidAudioAttributes: AndroidAudioAttributes(
-          contentType: AndroidAudioContentType.sonification,
-          usage: AndroidAudioUsage.assistanceSonification,
+          contentType: AndroidAudioContentType.music,
+          usage: AndroidAudioUsage.media,
         ),
         androidAudioFocusGainType:
             AndroidAudioFocusGainType.gainTransientMayDuck,

@@ -74,11 +74,9 @@ class SettingsScreen extends ConsumerWidget {
                   title: 'Profile',
                   selected: false,
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (_) => const ProfileScreen()),
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
                   ),
                 ),
-
                 const SizedBox(height: HgSpacing.xl),
 
                 // ── Sustain Pro ──────────────────────────────────────────────
@@ -105,34 +103,6 @@ class SettingsScreen extends ConsumerWidget {
                         ref.read(devProUnlockProvider.notifier).toggle(),
                   ),
 
-                const SizedBox(height: HgSpacing.xl),
-
-                // ── Your data (backup/restore — prominent, not buried) ───────
-                _SectionLabel('YOUR DATA'),
-                const SizedBox(height: HgSpacing.xs),
-                Text(
-                  'Your focus history lives on this device. Back it up so you '
-                  'never lose it when you switch phones.',
-                  style: TextStyle(
-                    fontFamily: HgFont.sans,
-                    fontSize: 13,
-                    color: hg.textMuted,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: HgSpacing.sm),
-                _ActionRow(
-                  title: 'Back up your data',
-                  subtitle:
-                      'Save your sessions, streaks, and profile to a file you keep.',
-                  onTap: () => exportBackup(context, ref),
-                ),
-                const SizedBox(height: HgSpacing.sm),
-                _ActionRow(
-                  title: 'Restore from backup',
-                  subtitle: 'Bring your data to a new phone from a backup file.',
-                  onTap: () => restoreBackup(context, ref),
-                ),
                 const SizedBox(height: HgSpacing.xl),
 
                 // ── Display ──────────────────────────────────────────────────
@@ -232,6 +202,34 @@ class SettingsScreen extends ConsumerWidget {
                     MaterialPageRoute(
                         builder: (_) => const NotificationsScreen()),
                   ),
+                ),
+                const SizedBox(height: HgSpacing.xl),
+
+                // ── Your data (back it up so a new phone keeps your history) ──
+                _SectionLabel('YOUR DATA'),
+                const SizedBox(height: HgSpacing.xs),
+                Text(
+                  'Your focus history lives on this device. Back it up so you '
+                  'never lose it when you switch phones.',
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 13,
+                    color: hg.textMuted,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Back up your data',
+                  subtitle:
+                      'Save your sessions, streaks, and profile to a file you keep.',
+                  onTap: () => exportBackup(context, ref),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                _ActionRow(
+                  title: 'Restore from backup',
+                  subtitle: 'Bring your data to a new phone from a backup file.',
+                  onTap: () => restoreBackup(context, ref),
                 ),
                 const SizedBox(height: HgSpacing.xl),
 

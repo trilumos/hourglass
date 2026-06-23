@@ -61,6 +61,21 @@ ThemeData buildTheme(HgTokens t, Brightness brightness) {
   return base.copyWith(
     scaffoldBackgroundColor: t.background,
     pageTransitionsTheme: hgPageTransitionsTheme,
+    // Flat, blended app bar (used by the built-in licenses page) so it reads
+    // like the app's other in-body headers, not a raised Material bar.
+    appBarTheme: AppBarTheme(
+      backgroundColor: t.background,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      foregroundColor: t.textPrimary,
+      titleTextStyle: TextStyle(
+        fontFamily: HgFont.sans,
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: t.textPrimary,
+      ),
+    ),
     colorScheme: base.colorScheme.copyWith(
       brightness: brightness,
       surface: t.surface,

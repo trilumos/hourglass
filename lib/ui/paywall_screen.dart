@@ -121,7 +121,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         fontFamily: HgFont.sans,
                         fontSize: 16,
                         color: hg.textSecondary)),
+                const SizedBox(height: HgSpacing.xs),
+                Text(
+                    'Unlock the full instrument — your insights, full control of '
+                    'your sessions, and every theme. One quiet upgrade, forever.',
+                    style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 14,
+                        height: 1.4,
+                        color: hg.textMuted)),
                 const SizedBox(height: HgSpacing.xl),
+                Text('WHAT YOU UNLOCK',
+                    style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 11,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.w600,
+                        color: hg.textMuted)),
+                const SizedBox(height: HgSpacing.md),
                 ..._benefits(hg),
                 const SizedBox(height: HgSpacing.xl),
                 if (pro)
@@ -154,30 +171,75 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   List<Widget> _benefits(HgTokens hg) {
-    const items = [
-      'Your Focus Score and Stamina, traced over time',
-      'When you focus best, and your follow-through',
-      'Personal bests and a detailed PDF report',
-      'Unlimited, longer pauses mid-session',
-      'Every color theme, and session reuse',
-      'Every Pro feature we add',
+    const items = <(IconData, String, String)>[
+      (
+        Icons.insights_rounded,
+        'Deep insights',
+        'Your Focus Score and Stamina traced over time, your best hours, and your follow-through.'
+      ),
+      (
+        Icons.workspace_premium_rounded,
+        'Personal bests + PDF report',
+        'Records and milestones, plus a detailed focus report you can export and keep.'
+      ),
+      (
+        Icons.pause_circle_outline_rounded,
+        'Unlimited, longer pauses',
+        'Step away mid-session — for longer, as often as you need — without losing your block.'
+      ),
+      (
+        Icons.add_circle_outline_rounded,
+        'Keep any session going',
+        'Add more blocks to a Pomodoro or Custom session on the fly, right as it ends.'
+      ),
+      (
+        Icons.palette_outlined,
+        'Every color theme',
+        'All premium themes — now and every one we add — plus one-tap session reuse.'
+      ),
+      (
+        Icons.auto_awesome_rounded,
+        'Everything new, included',
+        'Every Pro feature we ship lands in your plan automatically.'
+      ),
     ];
     return [
-      for (final t in items)
+      for (final (icon, title, body) in items)
         Padding(
-          padding: const EdgeInsets.only(bottom: HgSpacing.sm),
+          padding: const EdgeInsets.only(bottom: HgSpacing.md),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.check_rounded, size: 18, color: hg.accent),
-              const SizedBox(width: HgSpacing.sm),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: hg.accentMuted,
+                  borderRadius: BorderRadius.circular(HgRadius.md),
+                ),
+                child: Icon(icon, size: 20, color: hg.accent),
+              ),
+              const SizedBox(width: HgSpacing.md),
               Expanded(
-                  child: Text(t,
-                      style: TextStyle(
-                          fontFamily: HgFont.sans,
-                          fontSize: 15,
-                          height: 1.35,
-                          color: hg.textPrimary))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w600,
+                            color: hg.textPrimary)),
+                    const SizedBox(height: 2),
+                    Text(body,
+                        style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 13,
+                            height: 1.35,
+                            color: hg.textSecondary)),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

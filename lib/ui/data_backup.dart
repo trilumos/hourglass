@@ -9,7 +9,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../app/providers.dart';
-import '../app/theme_controller.dart';
 import '../data/backup_service.dart';
 
 /// Export all on-device data to a JSON file and open the share sheet so the user
@@ -62,6 +61,11 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
   if (ok != true || !context.mounted) return;
 
   final messenger = ScaffoldMessenger.of(context);
+  // The app-level container + navigator survive leaving this screen, so we can
+  // refresh AFTER returning to Home (a fragile in-place rebuild of the screen
+  // that launched restore is what greyed the app out before).
+  final container = ProviderScope.containerOf(context, listen: false);
+  final navigator = Navigator.of(context);
   XFile? file;
   try {
     file = await openFile(acceptedTypeGroups: const [
@@ -77,13 +81,26 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
   try {
     final content = await file.readAsString();
     final data = jsonDecode(content) as Map<String, dynamic>;
-    final added = await ref.read(backupServiceProvider).importData(data);
-    _refreshAfterRestore(ref);
-    messenger.showSnackBar(SnackBar(
-      content: Text(added == 0
-          ? 'Backup restored. Everything was already here.'
-          : 'Backup restored. Added $added session${added == 1 ? '' : 's'}.'),
-    ));
+    final added = await container.read(backupServiceProvider).importData(data);
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Backup restored'),
+        content: Text(added == 0
+            ? 'Everything in this backup was already here.'
+            : 'Added $added session${added == 1 ? '' : 's'}. Your profile and '
+                'settings are updated.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Done')),
+        ],
+      ),
+    );
+    // Return to a fresh Home, THEN re-read the restored data through the app
+    // container (which outlives this screen) — no in-place cascade to grey out.
+    navigator.popUntil((r) => r.isFirst);
+    _refreshAfterRestore(container);
   } on BackupException catch (e) {
     messenger.showSnackBar(SnackBar(content: Text(e.message)));
   } catch (_) {
@@ -92,15 +109,16 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
   }
 }
 
-void _refreshAfterRestore(WidgetRef ref) {
-  ref.invalidate(profileProvider);
-  ref.invalidate(homeStatsProvider);
-  ref.invalidate(focusScoreProvider);
-  ref.invalidate(profileStatsProvider);
-  ref.invalidate(sessionHistoryProvider);
-  ref.invalidate(dailyFocusProvider);
-  ref.invalidate(staminaProvider);
-  ref.invalidate(breakAutoAdvanceProvider);
-  ref.invalidate(flowRunUntilEndedProvider);
-  ref.invalidate(themeControllerProvider);
+void _refreshAfterRestore(ProviderContainer c) {
+  // The theme lives in SharedPreferences (not in the backup), so it isn't
+  // refreshed here. Everything below reads the DB the restore just wrote.
+  c.invalidate(profileProvider);
+  c.invalidate(homeStatsProvider);
+  c.invalidate(focusScoreProvider);
+  c.invalidate(profileStatsProvider);
+  c.invalidate(sessionHistoryProvider);
+  c.invalidate(dailyFocusProvider);
+  c.invalidate(staminaProvider);
+  c.invalidate(breakAutoAdvanceProvider);
+  c.invalidate(flowRunUntilEndedProvider);
 }
