@@ -21,10 +21,17 @@ void main() {
     return file;
   }
 
-  test('saveAvatar writes a 512x512 jpg and returns the relative path',
+  void expectAvatarPath(String rel) {
+    // Unique per save (busts the path-keyed image cache); lives in profile/.
+    expect(p.dirname(rel), 'profile');
+    expect(p.basename(rel), startsWith('avatar_'));
+    expect(p.extension(rel), '.jpg');
+  }
+
+  test('saveAvatar writes a 512x512 jpg and returns a unique relative path',
       () async {
     final rel = await service.saveAvatar(writePng(200, 120));
-    expect(rel, p.join('profile', 'avatar.jpg'));
+    expectAvatarPath(rel);
 
     final saved = await service.resolve(rel);
     expect(await saved.exists(), isTrue);
@@ -36,11 +43,22 @@ void main() {
   test('saveAvatarBytes persists a 512x512 jpg from encoded bytes', () async {
     final rel = await service.saveAvatarBytes(
         img.encodePng(img.Image(width: 300, height: 300)));
-    expect(rel, p.join('profile', 'avatar.jpg'));
+    expectAvatarPath(rel);
     final decoded =
         img.decodeImage(await (await service.resolve(rel)).readAsBytes())!;
     expect(decoded.width, 512);
     expect(decoded.height, 512);
+  });
+
+  test('each save replaces the previous avatar (only one file remains)',
+      () async {
+    await service.saveAvatar(writePng(64, 64));
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    final rel2 = await service.saveAvatar(writePng(80, 80));
+    final dir = Directory(p.join(tmp.path, 'profile'));
+    final files = dir.listSync().whereType<File>().toList();
+    expect(files.length, 1); // old avatar cleaned up
+    expect(p.basename(files.single.path), p.basename(rel2));
   });
 
   test('deleteAvatar removes the file', () async {

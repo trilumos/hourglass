@@ -124,6 +124,37 @@ class RevenueCatBillingService implements BillingService {
   }
 
   @override
+  Future<ProStatus?> proStatus() async {
+    try {
+      final info = await Purchases.getCustomerInfo();
+      final ent = info.entitlements.active[kProEntitlement];
+      if (ent == null || !ent.isActive) return null;
+      // Lifetime is a non-subscription purchase: no expiry, nothing to renew.
+      final exp = ent.expirationDate;
+      final isLifetime = exp == null;
+      return ProStatus(
+        plan: _planOf(ent.productIdentifier, ent.productPlanIdentifier),
+        expiration: exp == null ? null : DateTime.tryParse(exp),
+        willRenew: ent.willRenew,
+        isLifetime: isLifetime,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Best-effort plan from the store ids (e.g. 'pro.yearly', base plan 'p1y').
+  ProPlan? _planOf(String productId, String? planId) {
+    final s = '${productId.toLowerCase()} ${(planId ?? '').toLowerCase()}';
+    if (s.contains('life')) return ProPlan.lifetime;
+    if (s.contains('year') || s.contains('annual') || s.contains('p1y')) {
+      return ProPlan.yearly;
+    }
+    if (s.contains('month') || s.contains('p1m')) return ProPlan.monthly;
+    return null;
+  }
+
+  @override
   Future<List<ThemeProduct>> themeProducts() async {
     if (kCatalogThemeIds.isEmpty) return const [];
     try {

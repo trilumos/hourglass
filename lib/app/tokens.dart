@@ -530,9 +530,10 @@ class HgThemes {
     ],
   );
 
-  /// The theme catalog (Sand first as the free default). Add a theme = append here.
+  /// The theme catalog. Sand first (the free default), then Aurora (the
+  /// flagship), then the rest. Add a theme = append here.
   static final List<HgTheme> all = <HgTheme>[
-    sand, obsidian, sage, rose, indigo, dusk, tide, noir, mocha, aurora,
+    sand, aurora, obsidian, sage, rose, indigo, dusk, tide, noir, mocha,
   ];
 
   static HgTheme byId(String id) =>

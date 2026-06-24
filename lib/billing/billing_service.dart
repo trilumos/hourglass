@@ -26,6 +26,31 @@ class ProPackage {
   });
 }
 
+/// A snapshot of the user's active Pro purchase, for the management screen.
+/// Only meaningful when Pro is active; null otherwise (free, unknown, key-less).
+class ProStatus {
+  /// The plan the user is on, when it can be determined from the store product.
+  final ProPlan? plan;
+
+  /// When the current subscription period ends. Null for Lifetime (no expiry)
+  /// or when the store did not report a date.
+  final DateTime? expiration;
+
+  /// True while a subscription is set to renew at [expiration]; false once it
+  /// has been cancelled (but is still active until [expiration]).
+  final bool willRenew;
+
+  /// True for a one-time Lifetime purchase (no expiry, nothing to renew).
+  final bool isLifetime;
+
+  const ProStatus({
+    required this.plan,
+    required this.expiration,
+    required this.willRenew,
+    required this.isLifetime,
+  });
+}
+
 /// The Pro offering = the packages to show on the paywall.
 class ProOffering {
   final List<ProPackage> packages;
@@ -68,6 +93,10 @@ abstract class BillingService {
 
   Future<PurchaseOutcome> purchase(ProPackage package);
   Future<RestoreOutcome> restore();
+
+  /// Details of the active Pro purchase (plan, renewal/expiry), or null when Pro
+  /// is not active or the store cannot report it. Never throws (guard internally).
+  Future<ProStatus?> proStatus();
 
   /// The purchasable themes (à la carte). Empty when unavailable (offline /
   /// key-less / no products configured). Pro grants all themes regardless.

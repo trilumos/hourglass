@@ -127,7 +127,7 @@ class InsightsScreen extends ConsumerWidget {
                       headline: 'See your full focus story with Pro',
                       body:
                           'Your Focus Score and Stamina over time, when you focus '
-                          'best, follow-through, personal bests, and CSV export.',
+                          'best, follow-through, personal bests, and a PDF report.',
                     ),
                     child: _DepthBand(),
                   ),

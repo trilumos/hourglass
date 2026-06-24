@@ -196,6 +196,7 @@ class _ThemeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final t = _tokensFor(theme, brightness);
+    final isFlagship = theme.id == 'aurora';
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(HgRadius.lg),
@@ -208,9 +209,11 @@ class _ThemeTile extends StatelessWidget {
             width: active ? 1.5 : 1,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(HgSpacing.md),
-          child: Column(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(HgSpacing.md),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // A small live-coloured hourglass over the theme's own backdrop.
@@ -267,8 +270,41 @@ class _ThemeTile extends StatelessWidget {
                   color: owned ? t.accent : t.textMuted,
                 ),
               ),
-            ],
-          ),
+                ],
+              ),
+            ),
+            if (isFlagship)
+              Positioned(
+                top: HgSpacing.sm,
+                right: HgSpacing.sm,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: t.accent,
+                    borderRadius: BorderRadius.circular(HgRadius.sm),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.auto_awesome_rounded,
+                          size: 11, color: t.onAccent),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Flagship',
+                        style: TextStyle(
+                          fontFamily: HgFont.sans,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                          color: t.onAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

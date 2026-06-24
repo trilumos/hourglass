@@ -22,6 +22,7 @@ class PaywallScreen extends ConsumerStatefulWidget {
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   final _pageCtrl = PageController();
   ProOffering? _offering;
+  ProStatus? _status;
   bool _loading = true;
   bool _busy = false;
   ProPlan _selected = ProPlan.yearly;
@@ -40,10 +41,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Future<void> _load() async {
-    final o = await ref.read(billingServiceProvider).proOffering();
+    final svc = ref.read(billingServiceProvider);
+    final o = await svc.proOffering();
+    // Only the management view needs the active-purchase details.
+    final s = ref.read(entitlementsProvider).pro ? await svc.proStatus() : null;
     if (!mounted) return;
     setState(() {
       _offering = o;
+      _status = s;
       _loading = false;
     });
   }
@@ -150,40 +155,46 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   fontSize: 15,
                   height: 1.4,
                   color: hg.textSecondary)),
-          const SizedBox(height: HgSpacing.xl),
-          _ManagementTile(
-            icon: Icons.open_in_new_rounded,
-            title: 'Manage subscription',
-            subtitle: 'Cancel, pause, or update billing in Google Play.',
-            hg: hg,
-            onTap: _busy ? null : _manageSubscription,
-          ),
-          const SizedBox(height: HgSpacing.sm),
-          _ManagementTile(
-            icon: Icons.swap_horiz_rounded,
-            title: 'Change plan',
-            subtitle: 'Switch between monthly, yearly, or lifetime.',
-            hg: hg,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => _ChangePlanScreen(
-                  offering: _offering,
-                  loading: _loading,
-                  busy: _busy,
-                  selected: _selected,
-                  onSelect: (p) => setState(() => _selected = p),
-                  onBuy: () {
-                    if (_offering == null) return;
-                    final pkg = _offering!.byPlan(_selected) ??
-                        _offering!.packages.first;
-                    _buy(pkg);
-                  },
-                  onRestore: _restore,
+          const SizedBox(height: HgSpacing.lg),
+          _StatusCard(status: _status, loading: _loading, hg: hg),
+          const SizedBox(height: HgSpacing.lg),
+          // A Lifetime owner has no subscription to manage or plan to change —
+          // there is only restore. Subscribers (and unknown status) see all three.
+          if (_status?.isLifetime != true) ...[
+            _ManagementTile(
+              icon: Icons.open_in_new_rounded,
+              title: 'Manage subscription',
+              subtitle: 'Cancel, pause, or update billing in Google Play.',
+              hg: hg,
+              onTap: _busy ? null : _manageSubscription,
+            ),
+            const SizedBox(height: HgSpacing.sm),
+            _ManagementTile(
+              icon: Icons.swap_horiz_rounded,
+              title: 'Change plan',
+              subtitle: 'Switch between monthly, yearly, or lifetime.',
+              hg: hg,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => _ChangePlanScreen(
+                    offering: _offering,
+                    loading: _loading,
+                    busy: _busy,
+                    selected: _selected,
+                    onSelect: (p) => setState(() => _selected = p),
+                    onBuy: () {
+                      if (_offering == null) return;
+                      final pkg = _offering!.byPlan(_selected) ??
+                          _offering!.packages.first;
+                      _buy(pkg);
+                    },
+                    onRestore: _restore,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: HgSpacing.sm),
+            const SizedBox(height: HgSpacing.sm),
+          ],
           _ManagementTile(
             icon: Icons.restore_rounded,
             title: 'Restore purchases',
@@ -272,6 +283,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           const SizedBox(height: HgSpacing.md),
           ..._benefits(hg),
           const SizedBox(height: HgSpacing.xl),
+          Text('FREE VS PRO',
+              style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w600,
+                  color: hg.textMuted)),
+          const SizedBox(height: HgSpacing.md),
+          _comparison(hg),
+          const SizedBox(height: HgSpacing.xl),
           PrimaryButton(
             label: 'See pricing →',
             onPressed: _goToPricing,
@@ -344,6 +365,102 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   // ── Shared helpers ───────────────────────────────────────────────────────────
 
+  /// A compact table showing, at a glance, exactly what Pro changes. Only the
+  /// rows that differ between Free and Pro — the deltas, not the whole app.
+  Widget _comparison(HgTokens hg) {
+    const rows = <(String, String, String)>[
+      ('Insights over time', '—', 'Full'),
+      ('Color themes', 'Sand', 'All 9'),
+      ('Mid-session pauses', '3 × 3 min', 'Unlimited × 10 min'),
+      ('PDF Focus Report', '—', 'Yes'),
+      ('Average session stat', '—', 'Yes'),
+      ('New Pro features', '—', 'Included'),
+    ];
+    Widget cell(String text, {required bool pro}) {
+      final isDash = text == '—';
+      return Expanded(
+        flex: 4,
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: HgFont.sans,
+            fontSize: 12.5,
+            fontWeight: pro ? FontWeight.w600 : FontWeight.w400,
+            color: isDash
+                ? hg.textMuted
+                : (pro ? hg.accent : hg.textSecondary),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: hg.surfaceRaised,
+        borderRadius: BorderRadius.circular(HgRadius.lg),
+        border: Border.all(color: hg.hairline),
+      ),
+      padding: const EdgeInsets.symmetric(
+          horizontal: HgSpacing.md, vertical: HgSpacing.sm),
+      child: Column(
+        children: [
+          // Header row.
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: HgSpacing.sm),
+            child: Row(
+              children: [
+                const Expanded(flex: 7, child: SizedBox()),
+                Expanded(
+                  flex: 4,
+                  child: Text('Free',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontFamily: HgFont.sans,
+                          fontSize: 11,
+                          letterSpacing: 1,
+                          fontWeight: FontWeight.w600,
+                          color: hg.textMuted)),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Text('Pro',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontFamily: HgFont.sans,
+                          fontSize: 11,
+                          letterSpacing: 1,
+                          fontWeight: FontWeight.w700,
+                          color: hg.accent)),
+                ),
+              ],
+            ),
+          ),
+          for (final (label, free, pro) in rows) ...[
+            Divider(height: 1, color: hg.hairline),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: HgSpacing.sm),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 7,
+                    child: Text(label,
+                        style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 13,
+                            color: hg.textPrimary)),
+                  ),
+                  cell(free, pro: false),
+                  cell(pro, pro: true),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   List<Widget> _benefits(HgTokens hg) {
     const items = <(IconData, String, String)>[
       (
@@ -363,13 +480,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       (
         Icons.add_circle_outline_rounded,
-        'Keep any session going',
-        'Add more blocks to a Pomodoro or Custom session on the fly, right as it ends.'
+        'Keep going, and repeat',
+        'Add blocks to a Pomodoro or Custom session as it ends, and start again from any past session in one tap.'
       ),
       (
         Icons.palette_outlined,
         'Every color theme',
-        'All premium themes — now and every one we add — plus one-tap session reuse.'
+        'All premium themes — now and every one we add — unlocked while Pro is active.'
       ),
       (
         Icons.auto_awesome_rounded,
@@ -421,39 +538,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   List<Widget> _plans(HgTokens hg, ProOffering offering) {
-    final monthly = offering.byPlan(ProPlan.monthly);
-    final yearly = offering.byPlan(ProPlan.yearly);
-    final lifetime = offering.byPlan(ProPlan.lifetime);
-    String? savings;
-    if (monthly != null && yearly != null && monthly.priceAmount > 0) {
-      final pct =
-          (100 * (1 - yearly.priceAmount / (monthly.priceAmount * 12))).round();
-      if (pct > 0) savings = 'Save $pct%';
-    }
     final selectedPkg = offering.byPlan(_selected) ?? offering.packages.first;
     return [
-      if (yearly != null)
-        _PlanTile(
-            label: 'Yearly',
-            price: yearly.priceString,
-            badge: savings ?? 'Best value',
-            note: 'Billed yearly, auto-renews until cancelled',
-            selected: _selected == ProPlan.yearly,
-            onTap: () => setState(() => _selected = ProPlan.yearly)),
-      if (monthly != null)
-        _PlanTile(
-            label: 'Monthly',
-            price: monthly.priceString,
-            note: 'Billed monthly, auto-renews until cancelled',
-            selected: _selected == ProPlan.monthly,
-            onTap: () => setState(() => _selected = ProPlan.monthly)),
-      if (lifetime != null)
-        _PlanTile(
-            label: 'Lifetime',
-            price: lifetime.priceString,
-            note: 'One-time payment — own it forever',
-            selected: _selected == ProPlan.lifetime,
-            onTap: () => setState(() => _selected = ProPlan.lifetime)),
+      ...buildPlanTiles(
+        offering: offering,
+        selected: _selected,
+        onSelect: (p) => setState(() => _selected = p),
+      ),
       const SizedBox(height: HgSpacing.lg),
       PrimaryButton(
         label: _selected == ProPlan.lifetime ? 'Get Lifetime' : 'Start Pro',
@@ -462,7 +553,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       const SizedBox(height: HgSpacing.sm),
       Text(
         _selected == ProPlan.lifetime
-            ? 'A one-time payment. No subscription, no renewal.'
+            ? 'A one-time payment — no subscription, no renewal. Every Pro feature we add later is included automatically.'
             : 'Auto-renews until cancelled. Manage or cancel anytime in Google Play.',
         textAlign: TextAlign.center,
         style:
@@ -483,6 +574,67 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               fontFamily: HgFont.sans, fontSize: 14, color: hg.textSecondary),
         ),
       );
+}
+
+/// "≈ ₹X/mo" derived from an annual package, for the Yearly tile. Null when it
+/// can't be computed cleanly (missing price, unrecognised currency formatting).
+String? _perMonthLabel(ProPackage? yearly) {
+  if (yearly == null || yearly.priceAmount <= 0) return null;
+  final ps = yearly.priceString.trim();
+  // The currency symbol = the price string minus digits, separators, and spaces.
+  final symbol = ps.replaceAll(RegExp(r'[0-9.,\s ]'), '');
+  if (symbol.isEmpty) return null;
+  final per = yearly.priceAmount / 12;
+  final num = per >= 100 ? per.round().toString() : per.toStringAsFixed(2);
+  // Mirror the symbol's side (prefix for ₹/$/€/£, suffix for e.g. "199 kr").
+  final symbolFirst = RegExp(r'^[^0-9]').hasMatch(ps);
+  final money = symbolFirst ? '$symbol$num' : '$num$symbol';
+  return '≈ $money/mo';
+}
+
+/// The plan tiles, shared by the paywall pricing page and the Change-plan screen.
+List<Widget> buildPlanTiles({
+  required ProOffering offering,
+  required ProPlan selected,
+  required ValueChanged<ProPlan> onSelect,
+}) {
+  final monthly = offering.byPlan(ProPlan.monthly);
+  final yearly = offering.byPlan(ProPlan.yearly);
+  final lifetime = offering.byPlan(ProPlan.lifetime);
+  String? savings;
+  if (monthly != null && yearly != null && monthly.priceAmount > 0) {
+    final pct =
+        (100 * (1 - yearly.priceAmount / (monthly.priceAmount * 12))).round();
+    if (pct > 0) savings = 'Save $pct%';
+  }
+  final perMonth = _perMonthLabel(yearly);
+  return [
+    if (yearly != null)
+      _PlanTile(
+          label: 'Yearly',
+          price: yearly.priceString,
+          badge: savings ?? 'Best value',
+          note: perMonth != null
+              ? '$perMonth · billed yearly, auto-renews'
+              : 'Billed yearly, auto-renews until cancelled',
+          selected: selected == ProPlan.yearly,
+          onTap: () => onSelect(ProPlan.yearly)),
+    if (monthly != null)
+      _PlanTile(
+          label: 'Monthly',
+          price: monthly.priceString,
+          note: 'Billed monthly, auto-renews until cancelled',
+          selected: selected == ProPlan.monthly,
+          onTap: () => onSelect(ProPlan.monthly)),
+    if (lifetime != null)
+      _PlanTile(
+          label: 'Lifetime',
+          price: lifetime.priceString,
+          badge: 'Own forever',
+          note: 'One-time payment — no subscription, no renewal',
+          selected: selected == ProPlan.lifetime,
+          onTap: () => onSelect(ProPlan.lifetime)),
+  ];
 }
 
 // ── Change Plan screen (used from Pro management) ────────────────────────────
@@ -589,7 +741,11 @@ class _ChangePlanScreenState extends ConsumerState<_ChangePlanScreen> {
                     ),
                   )
                 else ...[
-                  ..._buildTiles(hg, offering),
+                  ...buildPlanTiles(
+                    offering: offering,
+                    selected: _selected,
+                    onSelect: (p) => setState(() => _selected = p),
+                  ),
                   const SizedBox(height: HgSpacing.lg),
                   PrimaryButton(
                     label: _selected == ProPlan.lifetime
@@ -600,7 +756,7 @@ class _ChangePlanScreenState extends ConsumerState<_ChangePlanScreen> {
                   const SizedBox(height: HgSpacing.sm),
                   Text(
                     _selected == ProPlan.lifetime
-                        ? 'A one-time payment. No subscription, no renewal.'
+                        ? 'A one-time payment — no subscription, no renewal. Every Pro feature we add later is included automatically.'
                         : 'Auto-renews until cancelled. Manage or cancel anytime in Google Play.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -627,45 +783,115 @@ class _ChangePlanScreenState extends ConsumerState<_ChangePlanScreen> {
       ),
     );
   }
-
-  List<Widget> _buildTiles(HgTokens hg, ProOffering offering) {
-    final monthly = offering.byPlan(ProPlan.monthly);
-    final yearly = offering.byPlan(ProPlan.yearly);
-    final lifetime = offering.byPlan(ProPlan.lifetime);
-    String? savings;
-    if (monthly != null && yearly != null && monthly.priceAmount > 0) {
-      final pct =
-          (100 * (1 - yearly.priceAmount / (monthly.priceAmount * 12))).round();
-      if (pct > 0) savings = 'Save $pct%';
-    }
-    return [
-      if (yearly != null)
-        _PlanTile(
-            label: 'Yearly',
-            price: yearly.priceString,
-            badge: savings ?? 'Best value',
-            note: 'Billed yearly, auto-renews until cancelled',
-            selected: _selected == ProPlan.yearly,
-            onTap: () => setState(() => _selected = ProPlan.yearly)),
-      if (monthly != null)
-        _PlanTile(
-            label: 'Monthly',
-            price: monthly.priceString,
-            note: 'Billed monthly, auto-renews until cancelled',
-            selected: _selected == ProPlan.monthly,
-            onTap: () => setState(() => _selected = ProPlan.monthly)),
-      if (lifetime != null)
-        _PlanTile(
-            label: 'Lifetime',
-            price: lifetime.priceString,
-            note: 'One-time payment — own it forever',
-            selected: _selected == ProPlan.lifetime,
-            onTap: () => setState(() => _selected = ProPlan.lifetime)),
-    ];
-  }
 }
 
 // ── Shared tile widgets ──────────────────────────────────────────────────────
+
+/// The active-plan card at the top of the Pro management view: which plan, and
+/// when it renews or ends. Degrades gracefully when the store can't report it.
+class _StatusCard extends StatelessWidget {
+  final ProStatus? status;
+  final bool loading;
+  final HgTokens hg;
+  const _StatusCard(
+      {required this.status, required this.loading, required this.hg});
+
+  static const _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  static String _fmt(DateTime d) {
+    final local = d.toLocal();
+    return '${local.day} ${_months[local.month - 1]} ${local.year}';
+  }
+
+  static String _planLabel(ProPlan? p) => switch (p) {
+        ProPlan.monthly => 'Monthly plan',
+        ProPlan.yearly => 'Yearly plan',
+        ProPlan.lifetime => 'Lifetime',
+        null => 'Sustain Pro',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final s = status;
+    final String title;
+    final String detail;
+    final IconData icon;
+    if (loading) {
+      title = 'Sustain Pro';
+      detail = 'Loading your plan…';
+      icon = Icons.workspace_premium_rounded;
+    } else if (s == null) {
+      // Active (we only build this view when Pro), but the store withheld detail.
+      title = 'Sustain Pro';
+      detail = 'Your Pro access is active.';
+      icon = Icons.workspace_premium_rounded;
+    } else if (s.isLifetime) {
+      title = 'Lifetime';
+      detail = 'Yours forever — no renewal. Every Pro feature we add later is '
+          'included automatically.';
+      icon = Icons.all_inclusive_rounded;
+    } else {
+      title = _planLabel(s.plan);
+      final when = s.expiration;
+      if (when == null) {
+        detail = 'Your plan is active.';
+      } else if (s.willRenew) {
+        detail = 'Renews on ${_fmt(when)}.';
+      } else {
+        detail = 'Cancelled — Pro stays active until ${_fmt(when)}.';
+      }
+      icon = s.willRenew
+          ? Icons.autorenew_rounded
+          : Icons.event_busy_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(HgSpacing.md),
+      decoration: BoxDecoration(
+        color: hg.accentMuted,
+        borderRadius: BorderRadius.circular(HgRadius.lg),
+        border: Border.all(color: hg.accent.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 22, color: hg.accent),
+          const SizedBox(width: HgSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('YOUR PLAN',
+                    style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 10,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w600,
+                        color: hg.textMuted)),
+                const SizedBox(height: 3),
+                Text(title,
+                    style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: hg.textPrimary)),
+                const SizedBox(height: 2),
+                Text(detail,
+                    style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 13,
+                        height: 1.35,
+                        color: hg.textSecondary)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _ManagementTile extends StatelessWidget {
   final IconData icon;

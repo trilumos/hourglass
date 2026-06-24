@@ -49,11 +49,13 @@ const _faqs = <_Qa>[
   _Qa(
     'What is free, and what is Pro?',
     'Free includes the full focus loop (all three modes), your Focus Score, '
-        'streak, today / total / average, the basic Insights (records and the '
-        'consistency heatmap), the Sand look, and session sound cues. Pro adds the '
-        'full Insights depth (Focus Score and Stamina over time, your peak window, '
-        'follow-through, personal bests, and CSV export), every color theme, '
-        'session reuse, and every Pro feature added later.',
+        'streak, today / total, the basic Insights (records and the consistency '
+        'heatmap), CSV history export, the Sand look, and session sound cues. Pro '
+        'adds the full Insights depth (Focus Score and Stamina over time, your peak '
+        'window, follow-through, personal bests, average session, and a PDF Focus '
+        'Report), every color theme, unlimited longer pauses (up to 10 minutes), '
+        'keeping a Pomodoro or Custom session going past its end, session reuse, '
+        'and every Pro feature added later.',
   ),
   _Qa(
     'How do payments work?',
@@ -78,8 +80,9 @@ const _faqs = <_Qa>[
   ),
   _Qa(
     'Can I export my data?',
-    'Yes. Pro includes CSV export from the Insights page, so your focus history is '
-        'yours to keep.',
+    'Yes. Your raw session history exports as a CSV from the History screen — that '
+        'is free, because your data is yours. Pro adds a polished PDF Focus Report '
+        'from Insights for the whole story in one shareable document.',
   ),
   _Qa(
     'Are there ads?',

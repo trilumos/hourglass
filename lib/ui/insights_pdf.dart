@@ -26,6 +26,11 @@ const _goldSoft = PdfColor.fromInt(0xFFEAD7A6);
 const _line = PdfColor.fromInt(0xFFEDE5D6);
 const _white = PdfColors.white;
 
+/// The page's horizontal content margin, applied consistently to the header
+/// band, every body block, and the footer so nothing crowds the paper edge.
+/// A4 is 595pt wide; 40pt (~0.55") reads as a proper, breathable document margin.
+const double _margin = 40;
+
 const _months = [
   'January', 'February', 'March', 'April', 'May', 'June', //
   'July', 'August', 'September', 'October', 'November', 'December'
@@ -107,7 +112,7 @@ Future<Uint8List> buildFocusReportBytes(FocusReportData d) async {
             pw.FullPage(ignoreMargins: true, child: pw.Container(color: _paper)),
       ),
       footer: (ctx) => pw.Padding(
-        padding: const pw.EdgeInsets.fromLTRB(28, 6, 28, 16),
+        padding: const pw.EdgeInsets.fromLTRB(_margin, 6, _margin, 16),
         child: pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -239,7 +244,7 @@ List<pw.Widget> _content(FocusReportData d) {
 }
 
 pw.Widget _pad(pw.Widget child) =>
-    pw.Padding(padding: const pw.EdgeInsets.symmetric(horizontal: 28), child: child);
+    pw.Padding(padding: const pw.EdgeInsets.symmetric(horizontal: _margin), child: child);
 
 // ── Section header ────────────────────────────────────────────────────────────
 
@@ -295,7 +300,7 @@ String _ascii(String s) => s
 // ── 1. Header band + executive summary ────────────────────────────────────────
 
 pw.Widget _headerBand(String name, DateTime now) => pw.Container(
-      padding: const pw.EdgeInsets.fromLTRB(28, 22, 28, 22),
+      padding: const pw.EdgeInsets.fromLTRB(_margin, 26, _margin, 26),
       decoration: const pw.BoxDecoration(
         gradient: pw.LinearGradient(
           begin: pw.Alignment.centerLeft,

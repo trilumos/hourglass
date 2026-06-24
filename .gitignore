@@ -55,3 +55,6 @@ android/key.properties
 *.mobileprovision
 .env
 .env.*
+
+# Android build outputs (was accidentally tracked)
+/android/build/

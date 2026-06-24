@@ -22,6 +22,13 @@ Widget _wrap(FakeBillingService fake) => ProviderScope(
       ),
     );
 
+/// The non-Pro paywall opens on the features page; pricing (plans, buy, restore)
+/// is page 2. Tap through to it before asserting on plan content.
+Future<void> _toPricing(WidgetTester tester) async {
+  await tester.tap(find.text('See pricing →'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   // A tall viewport so the whole paywall list builds (lazy ListView children
   // below the fold are otherwise never built, so taps/finds miss them).
@@ -38,6 +45,7 @@ void main() {
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
     expect(find.text(r'$1.99'), findsOneWidget);
     expect(find.text(r'$9.99'), findsOneWidget);
     expect(find.text(r'$24.99'), findsOneWidget);
@@ -49,6 +57,7 @@ void main() {
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
     expect(find.textContaining('unavailable'), findsOneWidget);
     expect(find.text('Restore purchases'), findsOneWidget);
   });
@@ -61,6 +70,7 @@ void main() {
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
     await tester.tap(find.text('Start Pro'));
     await tester.pumpAndSettle();
     expect(find.text("You're Pro"), findsOneWidget);
@@ -74,10 +84,11 @@ void main() {
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
     await tester.tap(find.text('Start Pro'));
     await tester.pumpAndSettle();
     expect(find.text("You're Pro"), findsNothing);
-    expect(find.text('Sustain Pro'), findsOneWidget);
+    expect(find.text('Choose your plan'), findsOneWidget);
   });
 
   testWidgets('pending purchase shows a processing message', (tester) async {
@@ -87,6 +98,7 @@ void main() {
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
     await tester.tap(find.text('Start Pro'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -101,6 +113,7 @@ void main() {
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
     await tester.tap(find.text('Start Pro'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -115,6 +128,7 @@ void main() {
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
     await tester.tap(find.text('Restore purchases'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

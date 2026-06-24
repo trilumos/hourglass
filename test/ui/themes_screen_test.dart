@@ -33,6 +33,15 @@ void main() {
     prefs = await SharedPreferences.getInstance();
   });
 
+  // A tall viewport so every theme tile in the grid is on-screen and hittable
+  // (Obsidian sits in the second row now that Aurora is pinned second).
+  void tall(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1200, 3600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
   testWidgets('Sand shows as Owned and the catalog renders', (tester) async {
     final fake = FakeBillingService();
     addTearDown(fake.dispose);
@@ -44,11 +53,13 @@ void main() {
   });
 
   testWidgets('a locked theme opens a sheet with Preview + Get Pro', (tester) async {
+    tall(tester);
     final fake = FakeBillingService(); // key-less: no à-la-carte products
     addTearDown(fake.dispose);
     await tester.pumpWidget(await _app(fake, prefs));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Obsidian'));
     await tester.tap(find.text('Obsidian'));
     await tester.pumpAndSettle();
     expect(find.text('Preview'), findsOneWidget);
@@ -57,6 +68,7 @@ void main() {
   });
 
   testWidgets('Pro user sees a locked theme as Apply, not Buy', (tester) async {
+    tall(tester);
     final fake = FakeBillingService(
       initial: const Entitlements(pro: true, ownedThemeIds: {
         'sand', 'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir', 'mocha',
@@ -66,6 +78,7 @@ void main() {
     await tester.pumpWidget(await _app(fake, prefs));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Obsidian'));
     await tester.tap(find.text('Obsidian'));
     await tester.pumpAndSettle();
     expect(find.text('Apply'), findsOneWidget);
@@ -73,6 +86,7 @@ void main() {
   });
 
   testWidgets('Preview sets previewThemeProvider', (tester) async {
+    tall(tester);
     final fake = FakeBillingService();
     addTearDown(fake.dispose);
     late ProviderContainer container;
@@ -88,6 +102,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Obsidian'));
     await tester.tap(find.text('Obsidian'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Preview'));
@@ -96,6 +111,7 @@ void main() {
   });
 
   testWidgets('an owned theme applies via the sheet', (tester) async {
+    tall(tester);
     final fake = FakeBillingService(
       initial: const Entitlements(pro: false, ownedThemeIds: {'sand', 'obsidian'}),
     );
@@ -113,6 +129,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Obsidian'));
     await tester.tap(find.text('Obsidian'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Apply'));

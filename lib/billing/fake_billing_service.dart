@@ -61,6 +61,12 @@ class FakeBillingService implements BillingService {
   }
 
   @override
+  Future<ProStatus?> proStatus() async => proStatusValue;
+
+  /// Scripted status for tests; null by default (key-less / dev-unlock show none).
+  ProStatus? proStatusValue;
+
+  @override
   Future<List<ThemeProduct>> themeProducts() async => themeProductList;
 
   @override

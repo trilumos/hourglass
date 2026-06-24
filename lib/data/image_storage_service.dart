@@ -13,7 +13,6 @@ class ImageStorageService {
       : _baseDir = baseDirOverride ?? getApplicationDocumentsDirectory;
 
   static const _relDir = 'profile';
-  static const _avatarName = 'avatar.jpg';
   static const _size = 512;
 
   /// Saves a picked image, center-cropped to a square. (Fallback path.)
@@ -45,9 +44,20 @@ class ImageStorageService {
     final jpg = img.encodeJpg(resized, quality: 85);
     final dir = Directory(p.join((await _baseDir()).path, _relDir));
     await dir.create(recursive: true);
-    final file = File(p.join(dir.path, _avatarName));
+    // Unique filename each save so the path changes — Flutter's image cache is
+    // keyed by path (and decode size), so a fixed name served a stale photo
+    // until the next app launch. A new name busts every cached variant at once.
+    final name = 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final file = File(p.join(dir.path, name));
     await file.writeAsBytes(jpg, flush: true);
-    return p.join(_relDir, _avatarName);
+    // Only one avatar is ever needed — remove any earlier ones so the folder
+    // doesn't accumulate orphans.
+    try {
+      await for (final e in dir.list()) {
+        if (e is File && p.basename(e.path) != name) await e.delete();
+      }
+    } catch (_) {/* best-effort cleanup */}
+    return p.join(_relDir, name);
   }
 
   Future<void> deleteAvatar(String relativePath) async {

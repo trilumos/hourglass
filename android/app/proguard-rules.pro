@@ -30,3 +30,7 @@
 # Tink / crypto (transitive, used by some plugins).
 -dontwarn javax.annotation.**
 -dontwarn com.google.errorprone.annotations.**
+
+# image_cropper (uCrop) — native crop activity resolved by name.
+-keep class com.yalantis.ucrop.** { *; }
+-dontwarn com.yalantis.ucrop.**

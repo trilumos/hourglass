@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,11 +130,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final picked = await ImagePicker()
         .pickImage(source: ImageSource.gallery, maxWidth: 2048);
     if (picked == null || !mounted) return;
-    final bytes = await Navigator.of(context).push<Uint8List?>(
-      MaterialPageRoute(
-        builder: (_) => CropAvatarScreen(source: File(picked.path)),
-      ),
-    );
+    final bytes = await cropAvatar(context, picked.path);
     if (bytes == null || !mounted) return;
     try {
       final storage = ref.read(imageStorageProvider);

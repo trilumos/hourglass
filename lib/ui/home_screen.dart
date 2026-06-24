@@ -111,16 +111,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: GestureDetector(
                           onTap: _openProfile,
                           behavior: HitTestBehavior.opaque,
-                          // Theme-accent ring around the avatar (current theme).
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border:
-                                  Border.all(color: hg.accent, width: 1.5),
-                            ),
-                            child: const ProfileAvatar(size: 36),
-                          ),
+                          child: const ProfileAvatar(size: 40),
                         ),
                       ),
                     ),
