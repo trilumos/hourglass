@@ -181,8 +181,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     setState(() => _flipping = true);
     await _flip.forward(from: 0);
     if (!mounted) return;
-    ref.invalidate(profileProvider);
-    ref.invalidate(onboardingCompleteProvider);
     // Cross-fade to Home while the (now full, upright) hourglass Hero-flies to
     // its Home position — no cut, no fill pop.
     Navigator.of(context).pushReplacement(
@@ -195,6 +193,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         ),
       ),
     );
+    // Invalidate profile AFTER starting navigation so the rebuild hits the
+    // incoming HomeScreen, not the outgoing OnboardingScreen.
+    // onboardingCompleteProvider is intentionally NOT invalidated here: doing so
+    // causes RootGate (which watches it) to swap widgets mid-transition, fighting
+    // pushReplacement. The flag is already persisted; RootGate reads it correctly
+    // on the next cold start or if the app rebuilds from scratch.
+    ref.invalidate(profileProvider);
   }
 
   /// Cross-fades + lifts page content as it scrolls past centre (buttery, vs a

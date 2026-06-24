@@ -68,8 +68,9 @@ class _CropAvatarScreenState extends State<CropAvatarScreen> {
     if (_image == null) return;
     _center = Offset(viewport.width / 2, viewport.height / 2);
     _radius = math.min(viewport.width, viewport.height) / 2 - 8;
-    // Cover: the smaller source dimension scaled must span the ring diameter.
-    _minScale = (2 * _radius) / math.min(_imgW, _imgH);
+    // +2px so floating-point rounding never lets the image edge fall inside the
+    // ring — guards against the cover constraint breaking in release mode.
+    _minScale = (2 * _radius + 2.0) / math.min(_imgW, _imgH);
     _maxScale = _minScale * 4;
     if (!_placed) {
       _scale = _minScale;
@@ -78,6 +79,10 @@ class _CropAvatarScreenState extends State<CropAvatarScreen> {
         _center.dy - _imgH * _scale / 2,
       );
       _placed = true;
+    } else {
+      // Re-clamp scale if the viewport changed after placement (system UI insets,
+      // orientation) — prevents _scale falling below the updated _minScale.
+      _scale = _scale.clamp(_minScale, _maxScale);
     }
     _offset = _clampOffset(_offset, _scale);
   }

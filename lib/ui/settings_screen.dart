@@ -84,10 +84,10 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: HgSpacing.sm),
                 _ActionRow(
                   title: ref.watch(entitlementsProvider).pro
-                      ? 'You have Pro'
+                      ? 'Subscription'
                       : 'Get Sustain Pro',
                   subtitle: ref.watch(entitlementsProvider).pro
-                      ? 'Thank you for supporting Sustain.'
+                      ? 'Manage your plan and subscription.'
                       : 'Your full focus story, every theme, and more.',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const PaywallScreen()),

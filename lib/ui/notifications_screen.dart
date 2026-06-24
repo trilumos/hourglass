@@ -34,6 +34,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     await syncNotifications(ref);
   }
 
+  Future<void> _retryPermission() async {
+    final granted =
+        await ref.read(notificationServiceProvider).requestPermission();
+    if (!mounted) return;
+    setState(() => _denied = !granted);
+    if (granted) await syncNotifications(ref);
+  }
+
   Future<void> _pickTime(int minutes, Future<void> Function(int) setter) async {
     final picked = await showTimePicker(
       context: context,
@@ -74,7 +82,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 ),
                 if (_denied) ...[
                   const SizedBox(height: HgSpacing.md),
-                  _DeniedNote(),
+                  _DeniedNote(onRetry: _retryPermission),
                 ],
                 const SizedBox(height: HgSpacing.lg),
 
@@ -260,6 +268,9 @@ class _Divider extends StatelessWidget {
 }
 
 class _DeniedNote extends StatelessWidget {
+  final VoidCallback? onRetry;
+  const _DeniedNote({this.onRetry});
+
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
@@ -270,15 +281,34 @@ class _DeniedNote extends StatelessWidget {
         borderRadius: BorderRadius.circular(HgRadius.md),
         border: Border.all(color: hg.hairline),
       ),
-      child: Text(
-        'Notifications are turned off for Sustain in your phone\'s settings, so '
-        'these won\'t appear until you allow them there.',
-        style: TextStyle(
-          fontFamily: HgFont.sans,
-          fontSize: 13,
-          height: 1.4,
-          color: hg.textSecondary,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Notifications are blocked. Tap "Request again" — if your phone '
+            'still blocks them, go to Settings → Apps → Sustain → Notifications '
+            'and turn them on there.',
+            style: TextStyle(
+              fontFamily: HgFont.sans,
+              fontSize: 13,
+              height: 1.4,
+              color: hg.textSecondary,
+            ),
+          ),
+          const SizedBox(height: HgSpacing.sm),
+          GestureDetector(
+            onTap: onRetry,
+            child: Text(
+              'Request again',
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: hg.accent,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
