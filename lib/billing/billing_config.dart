@@ -2,7 +2,7 @@
 /// means key-less: the app runs Free for everyone (see createBillingService).
 /// Fill this in (and create the Play Console + RevenueCat products) to go live;
 /// no other code changes are needed.
-const String kRevenueCatAndroidKey = '';
+const String kRevenueCatAndroidKey = 'goog_qvcafNNwzocZLDKSJFfVqqRPmgW';
 
 /// The single RevenueCat entitlement that means "Pro" (attached in the dashboard
 /// to pro.monthly / pro.yearly / pro.lifetime).

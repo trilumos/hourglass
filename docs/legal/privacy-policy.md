@@ -1,8 +1,8 @@
 # Sustain — Privacy Policy
 
-**Effective date:** [FILL IN before publishing]
+**Effective date:** 25 June 2026
 **App:** Sustain (`com.trilumos.sustain`)
-**Contact:** [FILL IN — a support email you're happy to make public]
+**Contact:** trilumos.app@gmail.com
 
 Sustain is built privacy-first. The short version: **your focus data never leaves
 your device, and we don't run any analytics, tracking, or advertising.**
@@ -83,4 +83,4 @@ Material changes will be noted in the app's release notes.
 
 ## 8. Contact
 
-Questions about privacy? Email **[FILL IN support email]**.
+Questions about privacy? Email **trilumos.app@gmail.com**.

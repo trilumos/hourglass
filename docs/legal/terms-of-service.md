@@ -1,8 +1,8 @@
 # Sustain — Terms of Service
 
-**Effective date:** [FILL IN before publishing]
+**Effective date:** 25 June 2026
 **App:** Sustain (`com.trilumos.sustain`)
-**Contact:** [FILL IN support email]
+**Contact:** trilumos.app@gmail.com
 
 These terms are intentionally short and plain. By using Sustain, you agree to them.
 
@@ -44,4 +44,4 @@ use after a change means you accept the updated terms.
 
 ## 7. Contact
 
-Questions? Email **[FILL IN support email]**.
+Questions? Email **trilumos.app@gmail.com**.
