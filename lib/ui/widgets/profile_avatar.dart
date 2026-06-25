@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,28 +33,24 @@ class ProfileAvatar extends ConsumerWidget {
 
     if (path == null) return fallback();
 
-    return FutureBuilder<File>(
-      future: ref.watch(imageStorageProvider).resolve(path),
-      builder: (context, snap) {
-        final file = snap.data;
-        if (file == null) return fallback();
-        // Avatars are stored at 512² but shown at 36–92px; decode to display
-        // size so the full bitmap isn't held in the image cache (low-RAM win).
-        final cachePx =
-            (size * MediaQuery.of(context).devicePixelRatio).ceil();
-        return ClipOval(
-          child: Image.file(
-            file,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            cacheWidth: cachePx,
-            cacheHeight: cachePx,
-            gaplessPlayback: true,
-            errorBuilder: (_, _, _) => fallback(),
-          ),
-        );
-      },
+    // Resolved once and cached by path (see [resolvedImageProvider]) so a rebuild
+    // doesn't re-run the async lookup and flash the fallback glyph.
+    final file = ref.watch(resolvedImageProvider(path)).asData?.value;
+    if (file == null) return fallback();
+    // Avatars are stored at 512² but shown at 36–92px; decode to display
+    // size so the full bitmap isn't held in the image cache (low-RAM win).
+    final cachePx = (size * MediaQuery.of(context).devicePixelRatio).ceil();
+    return ClipOval(
+      child: Image.file(
+        file,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        cacheWidth: cachePx,
+        cacheHeight: cachePx,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => fallback(),
+      ),
     );
   }
 }

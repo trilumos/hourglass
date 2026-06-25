@@ -17,7 +17,7 @@ class StatsCalculator {
   /// Total focus in the 7-day window ending on [day] (inclusive).
   Duration focusInWeekEnding(DateTime day, List<SessionRecord> sessions) {
     final end = _dateOnly(day);
-    final start = end.subtract(const Duration(days: 6));
+    final start = _minusDays(end, 6);
     return sessions
         .where((s) =>
             s.recordedFocus > Duration.zero &&
@@ -41,7 +41,7 @@ class StatsCalculator {
     // If today has no focus yet, the streak still lives on its grace day as long
     // as yesterday was focused; anchor the walk there. Two empty days = broken.
     if (!days.contains(cursor)) {
-      final grace = cursor.subtract(const Duration(days: 1));
+      final grace = _minusDays(cursor, 1);
       if (days.contains(grace)) {
         cursor = grace;
       } else {
@@ -52,10 +52,10 @@ class StatsCalculator {
     while (true) {
       if (days.contains(cursor)) {
         streak++;
-        cursor = cursor.subtract(const Duration(days: 1));
-      } else if (days.contains(cursor.subtract(const Duration(days: 1)))) {
+        cursor = _minusDays(cursor, 1);
+      } else if (days.contains(_minusDays(cursor, 1))) {
         // A single empty day, bridged by the grace — don't count it, keep going.
-        cursor = cursor.subtract(const Duration(days: 1));
+        cursor = _minusDays(cursor, 1);
       } else {
         break; // two consecutive empty days → the run ends
       }
@@ -87,8 +87,9 @@ class StatsCalculator {
     var best = 1, run = 1;
     for (var i = 1; i < days.length; i++) {
       // Gap of 1 = consecutive, 2 = one empty day bridged by the grace; both
-      // continue the run. A gap of 3+ (two empty days) resets it.
-      run = days[i].difference(days[i - 1]).inDays <= 2 ? run + 1 : 1;
+      // continue the run. A gap of 3+ (two empty days) resets it. Round to the
+      // nearest day so a DST shift between the two midnights (±1h) never miscounts.
+      run = _calendarGap(days[i - 1], days[i]) <= 2 ? run + 1 : 1;
       if (run > best) best = run;
     }
     return best;
@@ -123,6 +124,16 @@ class StatsCalculator {
   }
 
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// [n] calendar days before [d], always at local midnight. Unlike
+  /// `subtract(Duration(days: n))`, this stays on midnight across a DST shift
+  /// (where a calendar day is 23 or 25 hours) and rolls over month/year ends.
+  DateTime _minusDays(DateTime d, int n) => DateTime(d.year, d.month, d.day - n);
+
+  /// Whole calendar days between two date-only midnights, rounded so a DST shift
+  /// (±1h) between them never miscounts the gap.
+  int _calendarGap(DateTime a, DateTime b) =>
+      (b.difference(a).inMinutes / (24 * 60)).round();
 
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;

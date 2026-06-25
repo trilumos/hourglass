@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/app_database.dart';
@@ -170,6 +172,16 @@ final profileRepositoryProvider = Provider<ProfileRepository>(
 
 final imageStorageProvider =
     Provider<ImageStorageService>((ref) => ImageStorageService());
+
+/// Resolves a stored relative image path to an absolute [File], cached by path.
+/// Widgets (e.g. [ProfileAvatar]) watch this instead of building a fresh
+/// `FutureBuilder` future every rebuild — which reset to the loading state and
+/// flashed the fallback glyph, and re-ran the platform documents-dir lookup each
+/// frame. A new path (avatars use a unique filename per save) is a new key, so
+/// an updated photo still refreshes.
+final resolvedImageProvider = FutureProvider.autoDispose
+    .family<File, String>((ref, relativePath) =>
+        ref.watch(imageStorageProvider).resolve(relativePath));
 
 /// Manual data backup/restore (export/import all on-device data as JSON).
 final backupServiceProvider = Provider<BackupService>(

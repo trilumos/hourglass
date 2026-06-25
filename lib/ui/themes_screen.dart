@@ -323,7 +323,7 @@ class _Swatch extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0x22000000)),
+        border: Border.all(color: context.hg.hairline),
       ),
     );
   }

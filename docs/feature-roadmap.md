@@ -1,9 +1,13 @@
 # Sustain — Feature Roadmap & Version Checklist
 
-> Single source of truth for **what ships in v1**, **what's v1.2**, and **what's v2**.
+> Single source of truth for **what ships in v1**, **what's v1.2**, and **what's v2** — and the home
+> for all future planning. If a future idea lives in a design spec, give it a one-line entry here and
+> link the spec, so plans stop being scattered.
 > Created 2026-06-22 (founder request) so we're clear after publish on where to pick up.
 > Pairs with `docs/v1-launch-checklist.md` (the pre-publish store/security/legal audit) and
 > the version split in `docs/project-context.md` (Roadmap, LOCKED 2026-06-17).
+> **See [`docs/README.md`](README.md) for the full documentation map** (which spec is current vs
+> shipped vs future). Detailed future research lives in `docs/superpowers/specs/future/`.
 
 ---
 
@@ -37,7 +41,7 @@
 ## V1.2 — first post-launch update
 
 - [ ] **Background soundscapes** — ambient session audio (sand, water, etc.) during focus; picker in Setup/Settings; free-vs-Pro split (à-la-carte like themes). *Signature "sand" loop is the hard sourcing problem (royalty-free / CC0 + CREDITS.md). Deferred from v1 (founder, 2026-06-22).*
-- [ ] **Focus currency + optional rewarded ads** — earn currency per completed session (scaled by completion); spend on themes/cosmetics; **user-initiated** rewarded ads (Forest-style, never auto-played) to save a streak/session or top up. Keeps Pro as "unlock everything". (Founder: V1.2.)
+- [ ] **Focus currency + optional rewarded ads** — earn currency per completed session (scaled by completion); spend on themes/cosmetics; **user-initiated** rewarded ads (Forest-style, never auto-played) to save a streak/session or top up. Keeps Pro as "unlock everything". (Founder: V1.2.) *Full design + the brand tension (we currently promise "no ads") + competitor study (Regain/Forest/Opal): [`specs/future/2026-06-24-future-versions-research.md`](superpowers/specs/future/2026-06-24-future-versions-research.md). Decide ads vs coins-only before building.*
 - [ ] **Native MediaStyle notification** — the "Spotify-shaped" larger branded session notification (big hourglass artwork + colorized background + round controls). Needs Kotlin MediaSession + MediaStyle (~1 focused day + device testing). Parked from the rich-standard pass (founder, 2026-06-22).
 - [ ] **Sand-fall origin realism** (polish) — sand originates from a natural converging neck/aperture with a believable funnel/pile-collapse, not a flat line. Touches the locked hourglass painter — confirm before changing the locked look.
 

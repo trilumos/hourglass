@@ -1,6 +1,7 @@
-// Sustain 101 -- the in-app guide content. GENERATED from the guide-compile
-// workflow (regenerate via tools/gen_guide.py, do not hand-edit). The single
+// Sustain 101 -- the in-app guide content. Hand-maintained (originally generated,
+// but the generator's source is gone; edit this file directly). The single
 // source of truth for every mechanism, rule, and feature, written for users.
+// Keep it in sync with the app's actual behaviour and the FAQ (faq_screen.dart).
 
 class GuideTopic {
   final String heading;

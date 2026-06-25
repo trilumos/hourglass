@@ -103,6 +103,36 @@ void main() {
     expect(calc.currentStreak(today, sessions), 2);
   });
 
+  test('currentStreak counts across a month boundary', () {
+    final today = DateTime(2026, 7, 1);
+    final sessions = [
+      _session(startedAt: DateTime(2026, 7, 1)),
+      _session(startedAt: DateTime(2026, 6, 30)),
+      _session(startedAt: DateTime(2026, 6, 29)),
+    ];
+    expect(calc.currentStreak(today, sessions), 3);
+  });
+
+  test('currentStreak counts across a year boundary', () {
+    final today = DateTime(2027, 1, 1);
+    final sessions = [
+      _session(startedAt: DateTime(2027, 1, 1)),
+      _session(startedAt: DateTime(2026, 12, 31)),
+      _session(startedAt: DateTime(2026, 12, 30)),
+    ];
+    expect(calc.currentStreak(today, sessions), 3);
+  });
+
+  test('bestStreak counts across a month boundary', () {
+    final sessions = [
+      _session(startedAt: DateTime(2026, 5, 30)),
+      _session(startedAt: DateTime(2026, 5, 31)),
+      _session(startedAt: DateTime(2026, 6, 1)),
+      _session(startedAt: DateTime(2026, 6, 2)), // run of 4 across May→June
+    ];
+    expect(calc.bestStreak(sessions), 4);
+  });
+
   test('sessionsCompleted counts only completed sessions', () {
     final sessions = [
       _session(startedAt: DateTime(2026, 6, 11)),

@@ -1,6 +1,15 @@
 # Hourglass — Project Context & Memory
 
 > Durable context for this project. Kept **in the project folder** (per founder preference — never in the C-drive `.claude` user folder).
+>
+> **Navigation:** [`docs/README.md`](README.md) is the documentation map (which spec is shipped vs
+> future vs superseded). **Future planning is consolidated in [`feature-roadmap.md`](feature-roadmap.md)**
+> — that is the canonical "what's next" list. The **"Open follow-ups"** and **"Roadmap"** sections
+> lower in *this* file are a historical record: several items there are now **shipped** (onboarding,
+> monetization, themes, data backup, notifications, Pomodoro/Custom continue) — trust the roadmap +
+> the code for current status. The **locked decisions / confirmed rules** sections remain
+> authoritative. (The app is now named **Sustain**; "Hourglass" survives only as the visual motif and
+> some old filenames.)
 
 ## Founder / working preferences
 - Solo founder, hopes Hourglass becomes a real company and full-time income ("big break").

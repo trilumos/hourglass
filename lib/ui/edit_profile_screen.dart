@@ -312,6 +312,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               width: size,
               height: size,
               fit: BoxFit.cover,
+              // Decode to the on-screen size (not the full 512²) — low-RAM win.
+              cacheWidth:
+                  (size * MediaQuery.of(context).devicePixelRatio).ceil(),
+              cacheHeight:
+                  (size * MediaQuery.of(context).devicePixelRatio).ceil(),
               gaplessPlayback: true,
             ),
           );
