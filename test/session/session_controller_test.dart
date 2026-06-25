@@ -435,5 +435,31 @@ void main() {
       expect(c.state.status, SessionStatus.running);
       expect(c.state.segmentIndex, 0);
     });
+
+    test('applyProEntitlement upgrades a started free session (late entitlement)',
+        () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: false);
+      c.start();
+      // Pro resolves AFTER the session began (cold start / post-purchase).
+      c.applyProEntitlement(pauseLimit: null, allowContinue: true);
+      expect(c.allowContinue, isTrue);
+      ticker.advance(m(55)); // 25 + 5 + 25
+      // Now parks at completed (continue available) instead of finishing.
+      expect(c.state.status, SessionStatus.completed);
+    });
+
+    test('applyProEntitlement only relaxes — never tightens a running session',
+        () {
+      final ticker = FakeTicker();
+      final c = _controller(ticker,
+          plan: twoBlocks(), mode: SessionMode.pomodoro, allowContinue: true);
+      c.start();
+      // A stray "free" read must not strip an already-Pro session.
+      c.applyProEntitlement(pauseLimit: 3, allowContinue: false);
+      expect(c.allowContinue, isTrue, reason: 'continue stays enabled');
+      expect(c.pauseLimit, isNull, reason: 'unlimited pauses not reduced');
+    });
   });
 }

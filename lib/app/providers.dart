@@ -17,6 +17,7 @@ import '../domain/stamina_calculator.dart';
 import '../domain/stats_calculator.dart';
 import '../domain/user_profile.dart';
 import '../session/session_finalizer.dart';
+import '../session/ticker.dart';
 import 'theme_controller.dart';
 
 /// The on-device database. Closed automatically when the provider is disposed.
@@ -36,6 +37,12 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 
 /// Wall-clock injection point so screens and stats are testable.
 final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
+
+/// Factory for the session clock. Default is the real per-second ticker; the
+/// screenshot/preview build overrides this to fast-forward a session to a
+/// preset state for clean captures. The real app is unaffected.
+final sessionTickerFactoryProvider =
+    Provider<Ticker Function()>((ref) => PeriodicTicker.new);
 
 /// Settings keys (string-typed key/value store).
 class SettingsKeys {

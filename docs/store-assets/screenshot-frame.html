@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sustain — store screenshot framer (phone & tablet)</title>
+<style>
+  body{background:#0b0905;color:#cbb;font-family:'Segoe UI',system-ui,Arial,sans-serif;margin:0;padding:24px;
+    display:flex;flex-direction:column;align-items:center;gap:16px}
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;max-width:920px;justify-content:center}
+  label{font-size:13px;color:#9a8e74}
+  input[type=text]{font:14px 'Segoe UI',sans-serif;padding:8px 12px;width:380px;border-radius:8px;border:1px solid #333;background:#181308;color:#eee}
+  select,input[type=file]{font:13px 'Segoe UI',sans-serif;padding:8px 12px;border-radius:8px;border:1px solid #333;background:#181308;color:#eee;cursor:pointer}
+  button{font:600 13px 'Segoe UI',sans-serif;padding:9px 16px;border:0;border-radius:8px;background:#F0C85C;color:#1A1204;cursor:pointer}
+  #preview{max-height:640px}
+  #preview svg{height:auto;max-height:640px;width:auto;border:1px solid #2a2317}
+  .hint{font-size:13px;max-width:920px;line-height:1.55;color:#9a8e74;text-align:center}
+  code{color:#F0C85C}
+</style>
+</head>
+<body>
+  <div class="controls">
+    <label>Size
+      <select id="size" onchange="render()">
+        <option value="1080x1920">Phone 1080×1920</option>
+        <option value="1200x1920">Tablet 7" 1200×1920</option>
+        <option value="1600x2560">Tablet 10" 1600×2560</option>
+      </select>
+    </label>
+    <input id="cap" type="text" oninput="render()" value="Train your focus *like an athlete*" />
+    <input id="file" type="file" accept="image/*" onchange="loadImg(event)" />
+    <button onclick="dl()">Download PNG</button>
+  </div>
+
+  <div id="preview"></div>
+
+  <p class="hint">
+    Pick a size → type a caption (wrap a phrase in <code>*stars*</code> to gold it) → choose your raw
+    device screenshot → <b>Download PNG</b>. Do the phone set (required) first, then reload each shot at
+    Tablet 7" and 10". Capture raw shots on your device (<code>adb shell screencap</code> or the phone's
+    screenshot). See <code>README.md</code> for the 8-shot caption plan.
+  </p>
+
+<script>
+  let imgData=null;
+  function loadImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{imgData=r.result;render();};r.readAsDataURL(f);}
+
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  // caption "a *b* c" -> word list with gold flags
+  function words(cap){
+    const out=[];
+    cap.split('*').forEach((seg,i)=>{const gold=i%2===1;seg.split(/\s+/).forEach(w=>{if(w)out.push({w,gold});});});
+    return out;
+  }
+
+  function buildSVG(w,h){
+    const pad=Math.round(w*0.06), fs=Math.round(w*0.05), lh=Math.round(fs*1.18);
+    const maxChars=Math.max(8,Math.floor((w-2*pad)/(fs*0.56)));
+    // wrap
+    const ws=words(esc(document.getElementById('cap').value));
+    const lines=[[]];let len=0;
+    ws.forEach(o=>{const add=(len?1:0)+o.w.length;if(len+add>maxChars&&len>0){lines.push([]);len=0;}lines[lines.length-1].push(o);len+=(len?1:0)+o.w.length;});
+    const capTop=Math.round(h*0.085);
+    let capSVG='';
+    lines.forEach((line,li)=>{
+      const y=capTop+li*lh;
+      let tspans='';
+      line.forEach((o,wi)=>{const pre=wi?' ':'';tspans+='<tspan fill="'+(o.gold?'#F0C85C':'#F5EFE1')+'">'+pre+o.w+'</tspan>';});
+      capSVG+='<text x="'+(w/2)+'" y="'+y+'" font-size="'+fs+'" font-weight="600" text-anchor="middle">'+tspans+'</text>';
+    });
+    const dx=pad, dy=Math.round(h*0.215), dw=w-2*pad, dh=Math.round(h*0.65), rx=Math.round(w*0.045);
+    const imgEl=imgData
+      ? '<image href="'+imgData+'" x="'+dx+'" y="'+dy+'" width="'+dw+'" height="'+dh+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#dc)"/>'
+      : '<text x="'+(w/2)+'" y="'+(dy+dh/2)+'" font-size="'+Math.round(w*0.03)+'" fill="#6b6048" text-anchor="middle">Choose a screenshot ↑</text>';
+    return ''+
+    '<svg id="fg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" '+
+      'font-family="\'Segoe UI\', system-ui, Arial, sans-serif">'+
+      '<defs>'+
+        '<linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#4E3F27"/><stop offset="0.52" stop-color="#21190E"/><stop offset="1" stop-color="#140F08"/></linearGradient>'+
+        '<clipPath id="dc"><rect x="'+dx+'" y="'+dy+'" width="'+dw+'" height="'+dh+'" rx="'+rx+'"/></clipPath>'+
+      '</defs>'+
+      '<rect width="'+w+'" height="'+h+'" fill="url(#bg)"/>'+
+      capSVG+
+      '<rect x="'+dx+'" y="'+dy+'" width="'+dw+'" height="'+dh+'" rx="'+rx+'" fill="#211913"/>'+
+      imgEl+
+      '<rect x="'+dx+'" y="'+dy+'" width="'+dw+'" height="'+dh+'" rx="'+rx+'" fill="none" stroke="#342A1C" stroke-width="2"/>'+
+      '<text x="'+(w/2)+'" y="'+Math.round(h*0.955)+'" font-size="'+Math.round(w*0.028)+'" font-weight="600" letter-spacing="3" fill="#C0B299" text-anchor="middle">SUSTAIN</text>'+
+    '</svg>';
+  }
+
+  function dims(){return document.getElementById('size').value.split('x').map(Number);}
+  function render(){const [w,h]=dims();document.getElementById('preview').innerHTML=buildSVG(w,h);}
+
+  function dl(){
+    const [w,h]=dims();
+    const svg=buildSVG(w,h);
+    const url='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
+    const img=new Image();
+    img.onload=function(){
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const a=document.createElement('a');a.download='sustain-shot-'+w+'x'+h+'.png';
+      a.href=c.toDataURL('image/png');a.click();
+    };
+    img.onerror=function(){alert('Export failed — try Chrome.');};
+    img.src=url;
+  }
+  render();
+</script>
+</body>
+</html>

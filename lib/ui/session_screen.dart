@@ -84,8 +84,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Timer? _guardStartTimer; // deferred foreground-service start (post-animation)
   bool _previewEnded = false;
 
-  // Strict-session state: pause limits + the away/cap grace windows.
-  late final StrictRules _rules;
+  // Strict-session state: pause limits + the away/cap grace windows. Not final:
+  // it widens to Pro if the entitlement resolves after the session started.
+  late StrictRules _rules;
+  bool _isPro = false; // entitlement captured at start; may flip true mid-session
   late final SessionGuard _guard;
   late final NotificationService _notifs;
   bool _wasResting = false; // tracks rest/focus transitions for break alerts
@@ -116,16 +118,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     )..repeat(reverse: true);
-    _rules = StrictRules.forPro(ref.read(entitlementsProvider).pro);
+    _isPro = ref.read(entitlementsProvider).pro;
+    _rules = StrictRules.forPro(_isPro);
     _guard = ref.read(sessionGuardProvider);
     _notifs = ref.read(notificationServiceProvider);
     _controller = SessionController(
       config: widget.config,
-      ticker: widget.ticker ?? PeriodicTicker(),
+      ticker: widget.ticker ?? ref.read(sessionTickerFactoryProvider)(),
       now: widget.now ?? DateTime.now,
       pauseLimit: widget.previewMode ? null : _rules.pauseLimit,
       // Pomodoro/Custom may continue (add blocks) past the planned end — Pro.
-      allowContinue: !widget.previewMode && ref.read(entitlementsProvider).pro,
+      allowContinue: !widget.previewMode && _isPro,
       // Ritual sound cues — never in a theme preview (records/plays nothing).
       onCue: widget.previewMode
           ? null
@@ -819,6 +822,21 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Entitlement can resolve AFTER a session starts (RevenueCat answers late on
+    // a cold start, or right after a purchase). If the user turns out to be Pro,
+    // widen THIS session's limits (longer/unlimited pauses + continue) so they
+    // aren't denied the feature for the block they're already in.
+    ref.listen(entitlementsProvider, (_, next) {
+      if (widget.previewMode || _isPro || !next.pro) return;
+      _isPro = true;
+      _rules = StrictRules.pro;
+      _controller.applyProEntitlement(
+        pauseLimit: StrictRules.pro.pauseLimit,
+        allowContinue: true,
+      );
+      if (mounted) setState(() {});
+    });
+
     final s = _controller.state;
     // In preview, ANY ending (the ~10s cap, or give-up) shows the preview
     // prompt, never the real completion/score screen.
@@ -1200,7 +1218,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       }
     } else {
       // Pomodoro/Custom continue (Pro) — only on the final block.
-      final pro = !widget.previewMode && ref.read(entitlementsProvider).pro;
+      final pro = !widget.previewMode && _isPro;
       if (nearEnd && pro && _controller.isLastSegment) {
         label = '+ Keep going — add a block';
         onTap = () {

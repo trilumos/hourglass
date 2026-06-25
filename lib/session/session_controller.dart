@@ -24,12 +24,14 @@ class SessionController extends ChangeNotifier {
   final void Function(SessionCue cue)? onCue;
 
   /// Max manual pauses allowed this session; null = unlimited (Pro / tests).
-  final int? pauseLimit;
+  /// Not final: [applyProEntitlement] can widen it if Pro resolves late.
+  int? pauseLimit;
 
   /// Whether a Pomodoro/Custom session may CONTINUE (append more blocks) past its
   /// planned end instead of finishing — a Pro feature; the UI passes the
   /// entitlement. Flow Block's keep-going is separate and always available.
-  final bool allowContinue;
+  /// Not final: [applyProEntitlement] can enable it if Pro resolves late.
+  bool allowContinue;
 
   SessionState _state = SessionState.initial();
   late final DateTime _startedAt;
@@ -62,6 +64,23 @@ class SessionController extends ChangeNotifier {
     this.pauseLimit,
     this.allowContinue = false,
   });
+
+  /// Re-apply entitlement-derived limits when the user's Pro status resolves
+  /// AFTER the session started (e.g. RevenueCat answers late on a cold start, or
+  /// right after a purchase while offline). Only ever RELAXES the running
+  /// session — widening the pause limit and enabling continue — never tightens
+  /// it, so an in-progress block can't be penalised by a late entitlement read.
+  void applyProEntitlement({required int? pauseLimit, required bool allowContinue}) {
+    // Only relax, never tighten: unlimited (null) widens any finite limit; a
+    // finite value applies only if it's larger than the current one.
+    if (pauseLimit == null) {
+      this.pauseLimit = null;
+    } else if (this.pauseLimit != null && pauseLimit > this.pauseLimit!) {
+      this.pauseLimit = pauseLimit;
+    }
+    if (allowContinue) this.allowContinue = true;
+    notifyListeners();
+  }
 
   /// Manual pauses used so far this session.
   int _pauseCount = 0;

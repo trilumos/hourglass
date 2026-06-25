@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sustain — Play feature graphic (1024×500)</title>
+<style>
+  body{background:#0b0905;margin:0;padding:28px;display:flex;flex-direction:column;align-items:center;gap:18px;
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;color:#9a8e74}
+  #stage{width:100%;max-width:1024px}
+  svg{width:100%;height:auto;display:block;border-radius:2px}
+  button{font:600 14px 'Segoe UI',system-ui,sans-serif;padding:11px 20px;border:0;border-radius:10px;
+    background:#F0C85C;color:#1A1204;cursor:pointer}
+  .hint{font-size:13px;max-width:1024px;line-height:1.55;text-align:center}
+  code{color:#F0C85C}
+</style>
+</head>
+<body>
+  <button onclick="dl()">Download PNG (1024×500)</button>
+
+  <div id="stage">
+  <!-- The whole graphic is ONE SVG → renders + exports deterministically. -->
+  <svg id="fg" width="1024" height="500" viewBox="0 0 1024 500" xmlns="http://www.w3.org/2000/svg"
+       font-family="'Segoe UI', system-ui, Arial, sans-serif">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#4E3F27"/><stop offset="0.5" stop-color="#21190E"/><stop offset="1" stop-color="#140F08"/>
+      </linearGradient>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#F0C85C" stop-opacity="0.28"/><stop offset="0.7" stop-color="#F0C85C" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="vig" cx="50%" cy="45%" r="75%">
+        <stop offset="0.6" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.42"/>
+      </radialGradient>
+      <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F3E0A4"/><stop offset="1" stop-color="#EACA78"/>
+      </linearGradient>
+      <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F0C85C" stop-opacity="0.9"/><stop offset="1" stop-color="#F0C85C" stop-opacity="0.5"/>
+      </linearGradient>
+    </defs>
+
+    <rect width="1024" height="500" fill="url(#bg)"/>
+    <circle cx="812" cy="250" r="230" fill="url(#glow)"/>
+
+    <!-- hourglass -->
+    <svg x="690" y="80" width="250" height="340" viewBox="0 0 300 380">
+      <rect x="48" y="8"   width="204" height="14" rx="7" fill="url(#glass)"/>
+      <rect x="48" y="358" width="204" height="14" rx="7" fill="url(#glass)"/>
+      <path d="M70 22 C70 96 150 150 150 190 C150 150 230 96 230 22 Z" fill="#F0C85C" fill-opacity="0.06" stroke="url(#glass)" stroke-width="3"/>
+      <path d="M70 358 C70 284 150 230 150 190 C150 230 230 284 230 358 Z" fill="#F0C85C" fill-opacity="0.06" stroke="url(#glass)" stroke-width="3"/>
+      <path d="M88 40 C92 92 150 132 150 168 C150 132 208 92 212 40 Z" fill="url(#sand)" opacity="0.95"/>
+      <rect x="147" y="168" width="6" height="150" rx="3" fill="#EACA78"/>
+      <path d="M96 340 C110 300 190 300 204 340 Z" fill="url(#sand)"/>
+      <ellipse cx="150" cy="340" rx="54" ry="9" fill="#EACA78"/>
+    </svg>
+
+    <rect width="1024" height="500" fill="url(#vig)"/>
+
+    <!-- copy -->
+    <text x="72" y="210" font-size="86" font-weight="700" fill="#F5EFE1" letter-spacing="1">Sustain<tspan fill="#F0C85C">.</tspan></text>
+    <text x="74" y="266" font-size="30" font-weight="600" fill="#F5EFE1">Train your focus <tspan fill="#F0C85C">like an athlete.</tspan></text>
+    <text x="74" y="308" font-size="18" font-weight="500" fill="#C0B299">Flow, Pomodoro &amp; custom focus sessions — calm, private, no ads.</text>
+
+    <!-- chips -->
+    <g font-size="14" font-weight="500" fill="#C0B299">
+      <rect x="72"  y="332" width="118" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.03" stroke="#342A1C"/>
+      <text x="131" y="354" text-anchor="middle">Focus Score</text>
+      <rect x="200" y="332" width="160" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.03" stroke="#342A1C"/>
+      <text x="280" y="354" text-anchor="middle">Deep work &amp; study</text>
+      <rect x="370" y="332" width="158" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.03" stroke="#342A1C"/>
+      <text x="449" y="354" text-anchor="middle">On-device privacy</text>
+    </g>
+  </svg>
+  </div>
+
+  <p class="hint">
+    Click <b>Download PNG</b> — you get an exact <b>1024×500</b> file Play accepts.<br/>
+    (Uses a clean system font. Want the exact Geist wordmark? Tell me and I'll embed it.)
+  </p>
+
+<script>
+  function dl(){
+    const svg=document.getElementById('fg');
+    const xml=new XMLSerializer().serializeToString(svg);
+    const url='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(xml)));
+    const img=new Image();
+    img.onload=function(){
+      const c=document.createElement('canvas');c.width=1024;c.height=500;
+      c.getContext('2d').drawImage(img,0,0,1024,500);
+      const a=document.createElement('a');a.download='sustain-feature-graphic-1024x500.png';
+      a.href=c.toDataURL('image/png');a.click();
+    };
+    img.onerror=function(){alert('Export failed — try Chrome.');};
+    img.src=url;
+  }
+</script>
+</body>
+</html>

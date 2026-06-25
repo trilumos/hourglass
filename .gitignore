@@ -1,6 +1,7 @@
 # Miscellaneous
 *.class
 *.log
+android/.kotlin/
 *.pyc
 *.swp
 .DS_Store
