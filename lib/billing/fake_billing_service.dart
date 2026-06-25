@@ -41,8 +41,13 @@ class FakeBillingService implements BillingService {
   @override
   Future<ProOffering?> proOffering() async => offering;
 
+  /// The last package passed to [purchase] — lets tests assert the right plan
+  /// was bought (e.g. that selecting Lifetime doesn't buy Yearly).
+  ProPackage? lastPurchased;
+
   @override
   Future<PurchaseOutcome> purchase(ProPackage package) async {
+    lastPurchased = package;
     if (nextPurchase == PurchaseOutcome.success ||
         nextPurchase == PurchaseOutcome.alreadyOwned) {
       _current = _pro;

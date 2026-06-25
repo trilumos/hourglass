@@ -181,13 +181,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     loading: _loading,
                     busy: _busy,
                     selected: _selected,
-                    onSelect: (p) => setState(() => _selected = p),
-                    onBuy: () {
-                      if (_offering == null) return;
-                      final pkg = _offering!.byPlan(_selected) ??
-                          _offering!.packages.first;
-                      _buy(pkg);
-                    },
+                    onBuy: _buy,
                     onRestore: _restore,
                   ),
                 ),
@@ -644,8 +638,7 @@ class _ChangePlanScreen extends ConsumerStatefulWidget {
   final bool loading;
   final bool busy;
   final ProPlan selected;
-  final ValueChanged<ProPlan> onSelect;
-  final VoidCallback onBuy;
+  final void Function(ProPackage pkg) onBuy;
   final VoidCallback onRestore;
 
   const _ChangePlanScreen({
@@ -653,7 +646,6 @@ class _ChangePlanScreen extends ConsumerStatefulWidget {
     required this.loading,
     required this.busy,
     required this.selected,
-    required this.onSelect,
     required this.onBuy,
     required this.onRestore,
   });
@@ -751,7 +743,12 @@ class _ChangePlanScreenState extends ConsumerState<_ChangePlanScreen> {
                     label: _selected == ProPlan.lifetime
                         ? 'Get Lifetime'
                         : 'Switch plan',
-                    onPressed: widget.busy ? null : widget.onBuy,
+                    onPressed: widget.busy
+                        ? null
+                        : () => widget.onBuy(
+                              offering.byPlan(_selected) ??
+                                  offering.packages.first,
+                            ),
                   ),
                   const SizedBox(height: HgSpacing.sm),
                   Text(

@@ -155,7 +155,19 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
             ref.read(themeControllerProvider.notifier).setTheme(theme.id);
             ref.read(previewThemeProvider.notifier).clear();
           }
-          if (mounted) Navigator.of(context).pop();
+          Navigator.of(context).pop();
+          // Feedback on the non-success paths (mirrors the paywall); cancelled is
+          // silent. Pending: it unlocks later via the entitlements stream.
+          final msg = switch (outcome) {
+            PurchaseOutcome.pending =>
+              'Purchase processing — the theme unlocks once it is confirmed.',
+            PurchaseOutcome.error => 'That did not go through. Please try again.',
+            _ => null,
+          };
+          if (msg != null) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(msg)));
+          }
         },
         onGetPro: () {
           Navigator.of(context).pop();
