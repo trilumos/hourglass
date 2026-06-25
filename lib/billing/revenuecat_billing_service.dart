@@ -31,7 +31,16 @@ class RevenueCatBillingService implements BillingService {
   @override
   Future<void> init() async {
     try {
-      await Purchases.configure(PurchasesConfiguration(apiKey));
+      // Trusted Entitlements (informational): RevenueCat cryptographically
+      // verifies the entitlement response, so a tampered local cache (e.g. a
+      // rooted device editing it) can be detected. Informational mode only
+      // *reports* the result (via CustomerInfo.entitlements.verification) and
+      // never locks anyone out — zero effect on legitimate users.
+      await Purchases.configure(
+        PurchasesConfiguration(apiKey)
+          ..entitlementVerificationMode =
+              EntitlementVerificationMode.informational,
+      );
       // Register the listener FIRST so that even if the initial fetch fails
       // (transient/offline), a later push still updates entitlements without an
       // app restart. The SDK delivers the last-known info to a new listener.

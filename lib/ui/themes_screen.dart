@@ -113,6 +113,8 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
                         onTap: () => _openSheet(
                           theme,
                           owned: entitlements.ownsTheme(theme.id),
+                          active: theme.id == selectedId &&
+                              entitlements.ownsTheme(theme.id),
                           product: _products[theme.id],
                         ),
                       ),
@@ -126,7 +128,8 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
     );
   }
 
-  void _openSheet(HgTheme theme, {required bool owned, ThemeProduct? product}) {
+  void _openSheet(HgTheme theme,
+      {required bool owned, required bool active, ThemeProduct? product}) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -134,6 +137,7 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
       builder: (_) => _ThemeSheet(
         theme: theme,
         owned: owned,
+        active: active,
         product: product,
         onApply: () {
           ref.read(themeControllerProvider.notifier).setTheme(theme.id);
@@ -344,6 +348,7 @@ class _Swatch extends StatelessWidget {
 class _ThemeSheet extends StatelessWidget {
   final HgTheme theme;
   final bool owned;
+  final bool active; // already the applied theme
   final ThemeProduct? product;
   final VoidCallback onApply;
   final VoidCallback onPreview;
@@ -352,6 +357,7 @@ class _ThemeSheet extends StatelessWidget {
   const _ThemeSheet({
     required this.theme,
     required this.owned,
+    required this.active,
     required this.product,
     required this.onApply,
     required this.onPreview,
@@ -432,7 +438,12 @@ class _ThemeSheet extends StatelessWidget {
             ),
             const SizedBox(height: HgSpacing.lg),
             if (owned)
-              _SheetTheme(t, child: PrimaryButton(label: 'Apply', onPressed: onApply))
+              _SheetTheme(
+                  t,
+                  child: PrimaryButton(
+                    label: active ? 'Applied' : 'Apply',
+                    onPressed: active ? null : onApply,
+                  ))
             else ...[
               _SheetTheme(t, child: PrimaryButton(label: 'Preview', onPressed: onPreview)),
               const SizedBox(height: HgSpacing.sm),
