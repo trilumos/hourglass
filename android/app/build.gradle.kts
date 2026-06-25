@@ -49,6 +49,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Distinct id so the screenshot/preview build (built in debug) installs
+            // ALONGSIDE the release app from the Play track — no uninstall needed.
+            // Release (the shipped app) is unaffected.
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-preview"
+        }
         release {
             signingConfig = if (hasReleaseKeystore) {
                 signingConfigs.getByName("release")
