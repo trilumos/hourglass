@@ -109,23 +109,23 @@ Create each product below. For each one:
 - **Name** and **Description** are store-facing (users see these)
 - **Status:** Active
 - Set a price (the founder decides — suggested prices are in brackets)
-- **Pricing is USD-only (founder, 2026-06-25):** set the **USD** price below, then let
-  Play **auto-convert** to local currencies for other countries (Play Console offers this when you
-  set the price). Don't hand-set per-country (₹ etc.) tiers.
+- **Pricing = USD base + India ₹ override (founder, 2026-06-26):** set the **USD** price below and let
+  Play **auto-convert** for most countries, but **override India** with the ₹ value shown (India auto-convert
+  lands ~2× too high vs PPP). In Play Console, set the USD price, then edit the **India** row to the ₹ value.
 - Save + Activate
 
-| Product ID | Name | Description | Price (USD) |
-|---|---|---|---|
-| `pro.lifetime` | Sustain Pro — Lifetime | Unlock all Pro features forever | **$59.99** |
-| `theme.obsidian` | Obsidian Theme | Dark volcanic — deep black & amber | **$1.99** |
-| `theme.sage` | Sage Theme | Earthy green calm | **$1.99** |
-| `theme.rose` | Rosé Theme | Warm blush & rose gold | **$1.99** |
-| `theme.indigo` | Indigo Theme | Deep blue focus | **$1.99** |
-| `theme.dusk` | Dusk Theme | Warm amber twilight | **$1.99** |
-| `theme.tide` | Tide Theme | Ocean teal & seafoam | **$1.99** |
-| `theme.noir` | Noir Theme | Pure black & white contrast | **$1.99** |
-| `theme.mocha` | Mocha Theme | Rich coffee browns | **$1.99** |
-| `theme.aurora` | Aurora Theme | Flagship — deep cosmos, aurora shimmer | **$3.99** |
+| Product ID | Name | Description | Price (USD) | India ₹ |
+|---|---|---|---|---|
+| `pro.lifetime` | Sustain Pro — Lifetime | Unlock all Pro features forever | **$59.99** | **₹1,499** |
+| `theme.obsidian` | Obsidian Theme | Dark volcanic — deep black & amber | **$1.99** | **₹89** |
+| `theme.sage` | Sage Theme | Earthy green calm | **$1.99** | **₹89** |
+| `theme.rose` | Rosé Theme | Warm blush & rose gold | **$1.99** | **₹89** |
+| `theme.indigo` | Indigo Theme | Deep blue focus | **$1.99** | **₹89** |
+| `theme.dusk` | Dusk Theme | Warm amber twilight | **$1.99** | **₹89** |
+| `theme.tide` | Tide Theme | Ocean teal & seafoam | **$1.99** | **₹89** |
+| `theme.noir` | Noir Theme | Pure black & white contrast | **$1.99** | **₹89** |
+| `theme.mocha` | Mocha Theme | Rich coffee browns | **$1.99** | **₹89** |
+| `theme.aurora` | Aurora Theme | Flagship — deep cosmos, aurora shimmer | **$3.99** | **₹169** |
 
 > **Important:** Product IDs use a **dot** separator (`theme.obsidian`). This must
 > match exactly — the app derives the ID programmatically.
@@ -145,7 +145,7 @@ Create 2 subscriptions:
 - Add a base plan:
   - **Base plan ID:** `monthly` (or any short ID)
   - **Billing period:** Monthly
-  - **Price:** $4.99/month (USD; let Play auto-convert other countries)
+  - **Price:** $4.99/month (USD base; **override India to ₹149**; auto-convert elsewhere)
   - **Free trial:** optional (7 days recommended for conversion)
 - Save + Activate
 
@@ -156,7 +156,7 @@ Create 2 subscriptions:
 - Add a base plan:
   - **Base plan ID:** `annual` (or any short ID)
   - **Billing period:** Yearly
-  - **Price:** $29.99/year (USD; positions as "Best value" — shown with a savings badge vs monthly)
+  - **Price:** $29.99/year (USD base; **override India to ₹799**; "Best value", savings badge vs monthly)
   - **Free trial:** optional (7 days recommended)
 - Save + Activate
 
@@ -645,11 +645,11 @@ in Play Console or RevenueCat, or when answering any question about what Pro doe
 
 #### Plan billing comparison
 
-| Plan | Price | Billing | Cancellation | Notes |
+| Plan | Price (USD / India ₹) | Billing | Cancellation | Notes |
 |---|---|---|---|---|
-| **Monthly** | $4.99/mo | Charged monthly, auto-renews | Cancel anytime in Google Play | Entry point — try before committing |
-| **Yearly** | $29.99/yr | Charged once a year, auto-renews | Cancel anytime in Google Play | **Best value** — shown with savings badge vs monthly |
-| **Lifetime** | $59.99 | One-time payment, no subscription | N/A — own it forever | **Hero offer** — own every theme and all Pro, forever |
+| **Monthly** | $4.99 / ₹149 | Charged monthly, auto-renews | Cancel anytime in Google Play | Entry point — try before committing |
+| **Yearly** | $29.99 / ₹799 | Charged once a year, auto-renews | Cancel anytime in Google Play | **Best value** — shown with savings badge vs monthly |
+| **Lifetime** | $59.99 / ₹1,499 | One-time payment, no subscription | N/A — own it forever | **Hero offer** — own every theme and all Pro, forever |
 
 ---
 
@@ -658,18 +658,18 @@ in Play Console or RevenueCat, or when answering any question about what Pro doe
 These are the exact in-app descriptions used in the Themes screen.
 Use them for Play Console product descriptions, store listings, or any marketing copy.
 
-| Theme ID | Display name | In-app description | Price | Mood / accent colour |
+| Theme ID | Display name | In-app description | Price (USD / India ₹) | Mood / accent colour |
 |---|---|---|---|---|
 | `sand` | Sand | The default. Warm and grounded. | **FREE** | Warm golden sand tones |
-| `obsidian` | Obsidian | Cool blue-black. Nocturnal and premium. | $1.99 | Deep blue-black with electric blue accent |
-| `sage` | Sage | Quiet pine and forest green. | $1.99 | Dark forest green with bright sage accent |
-| `rose` | Rosé | Soft, elegant warm rose. | $1.99 | Deep burgundy-rose with blush pink accent |
-| `indigo` | Indigo | Deep sapphire jewel tones. | $1.99 | Midnight indigo with violet-blue accent |
-| `dusk` | Dusk | Gentle lavender at twilight. | $1.99 | Soft purple-dark with orchid accent |
-| `tide` | Tide | Deep luxe teal, like the ocean. | $1.99 | Near-black teal with cyan-teal accent |
-| `noir` | Noir | True black and warm gold. | $1.99 | Almost pure black with molten gold accent |
-| `mocha` | Mocha | Dark espresso and caramel. | $1.99 | Deep espresso brown with warm amber accent |
-| `aurora` | Aurora | Deep cosmos lit by shifting aurora light. | **$3.99** | Cosmic dark with teal aurora accent + full spectrum shimmer on home screen |
+| `obsidian` | Obsidian | Cool blue-black. Nocturnal and premium. | $1.99 / ₹89 | Deep blue-black with electric blue accent |
+| `sage` | Sage | Quiet pine and forest green. | $1.99 / ₹89 | Dark forest green with bright sage accent |
+| `rose` | Rosé | Soft, elegant warm rose. | $1.99 / ₹89 | Deep burgundy-rose with blush pink accent |
+| `indigo` | Indigo | Deep sapphire jewel tones. | $1.99 / ₹89 | Midnight indigo with violet-blue accent |
+| `dusk` | Dusk | Gentle lavender at twilight. | $1.99 / ₹89 | Soft purple-dark with orchid accent |
+| `tide` | Tide | Deep luxe teal, like the ocean. | $1.99 / ₹89 | Near-black teal with cyan-teal accent |
+| `noir` | Noir | True black and warm gold. | $1.99 / ₹89 | Almost pure black with molten gold accent |
+| `mocha` | Mocha | Dark espresso and caramel. | $1.99 / ₹89 | Deep espresso brown with warm amber accent |
+| `aurora` | Aurora | Deep cosmos lit by shifting aurora light. | **$3.99 / ₹169** | Cosmic dark with teal aurora accent + full spectrum shimmer on home screen |
 
 **Aurora** is the flagship theme — it has a living aurora-spectrum shimmer on the
 home screen sand (cycles through green, cyan, violet, magenta, mint). Position it

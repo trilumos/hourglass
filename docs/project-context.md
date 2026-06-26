@@ -160,17 +160,25 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
-- **Pricing LOCKED — USD-ONLY (founder, 2026-06-25; supersedes the earlier ₹/$ dual tiers).** Standard
-  premium theme **$1.99**; **Aurora** flagship **$3.99** (lowered from $4.99 on 2026-06-25); Pro **Monthly
-  $4.99**, **Yearly $29.99** (Best value), **Lifetime $59.99** (hero — own every theme forever). Set the
-  **USD** price in Play Console and let Play **auto-convert** to local currencies — do NOT hand-set ₹ (or
-  other) per-country tiers. Global leads with Yearly; Lifetime is the hero. Prices are NEVER hardcoded
-  (fetched live from RevenueCat/Play, shown in the user's local currency) — this is the founder's Play
-  Console + RevenueCat setup input. **TODO (founder): update `theme.aurora` to $3.99 in Play Console (the
-  app shows the live price).** Full rationale + funnel math in
-  `docs/superpowers/specs/2026-06-19-monetization-and-v1-paid-tier-design.md` (Pricing section; ₹ figures
-  there are historical). No dark patterns: à-la-carte themes are owned forever; subs say "access while
-  subscribed."
+- **Pricing LOCKED — USD base + India-specific ₹ (founder, 2026-06-26; supersedes the 06-25 USD-only note,
+  because exchange-rate auto-convert priced India ~₹470/mo, far above PPP).** Set the **USD** price as the
+  base and let Play auto-convert for most countries, BUT **override India with these ₹ values** (PPP-aligned,
+  ~30–54% of US per research that India prices at ~46–54% of top markets):
+
+  | Product | USD (global) | India ₹ |
+  |---|---|---|
+  | Standard theme (`theme.<id>`) | $1.99 | ₹89 |
+  | Aurora (`theme.aurora`) | $3.99 | ₹169 |
+  | Pro Monthly (`pro.monthly`) | $4.99 | ₹149 |
+  | Pro Yearly (`pro.yearly`) | $29.99 (Best value) | ₹799 |
+  | Pro Lifetime (`pro.lifetime`) | $59.99 (hero) | ₹1,499 |
+
+  Rationale: Indian users are price-sensitive (subs compete with essentials); ₹149/mo sits in the
+  competitive focus/edtech band, yearly ₹799 is a visible ~55% saving vs monthly×12, lifetime ₹1,499 ≈ 1.9×
+  yearly. Prices are NEVER hardcoded (fetched live from RevenueCat/Play, shown in the user's local
+  currency). **TODO (founder): in Play Console set these India price overrides + `theme.aurora` $3.99.**
+  Full rationale in `docs/superpowers/specs/2026-06-19-monetization-and-v1-paid-tier-design.md`. No dark
+  patterns: à-la-carte themes are owned forever; subs say "access while subscribed."
 
 - **Motion rule (founder, 2026-06-20, CONFIRMED).** The **session screen** must have NO moving/animated/
   changing elements except the **hourglass** (it is the one intentional motion; protect focus). ELSEWHERE
