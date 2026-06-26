@@ -4,10 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hourglass/app/billing_providers.dart';
 import 'package:hourglass/app/theme.dart';
 import 'package:hourglass/app/tokens.dart';
-import 'package:hourglass/billing/billing_config.dart';
 import 'package:hourglass/billing/billing_service.dart';
 import 'package:hourglass/billing/fake_billing_service.dart';
-import 'package:hourglass/domain/entitlements.dart';
 import 'package:hourglass/ui/paywall_screen.dart';
 
 ProOffering _offering() => const ProOffering([
@@ -123,25 +121,17 @@ void main() {
     expect(find.text("You're Pro"), findsNothing);
   });
 
-  testWidgets('Change plan: selecting Lifetime buys the lifetime package '
-      '(not the default yearly)', (tester) async {
+  testWidgets('selecting Lifetime buys the lifetime package (not the default)',
+      (tester) async {
     tall(tester);
-    // A Pro (non-lifetime) user sees the management view with "Change plan".
-    final fake = FakeBillingService(
-      initial: entitlementsFrom(
-        activeEntitlementIds: const {kProEntitlement},
-        catalogThemeIds: kCatalogThemeIds,
-      ),
-      nextPurchase: PurchaseOutcome.success,
-    )..offering = _offering();
+    final fake = FakeBillingService(nextPurchase: PurchaseOutcome.success)
+      ..offering = _offering();
     addTearDown(fake.dispose);
     await tester.pumpWidget(_wrap(fake));
     await tester.pumpAndSettle();
+    await _toPricing(tester);
 
-    await tester.tap(find.text('Change plan'));
-    await tester.pumpAndSettle();
-
-    // Select Lifetime, then buy.
+    // Default is Yearly; explicitly pick Lifetime, then buy.
     await tester.tap(find.text('Lifetime'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Get Lifetime'));

@@ -158,34 +158,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           const SizedBox(height: HgSpacing.lg),
           _StatusCard(status: _status, loading: _loading, hg: hg),
           const SizedBox(height: HgSpacing.lg),
-          // A Lifetime owner has no subscription to manage or plan to change —
-          // there is only restore. Subscribers (and unknown status) see all three.
+          // A Lifetime owner has no subscription to manage — only restore.
+          // Subscribers get the Play subscription link. Plan changes are handled
+          // in Google Play (cancel, then resubscribe to the plan you want) — we
+          // intentionally don't offer an in-app plan switch, which Google can't
+          // do cleanly across separate products and risks double-billing.
           if (_status?.isLifetime != true) ...[
             _ManagementTile(
               icon: Icons.open_in_new_rounded,
               title: 'Manage subscription',
-              subtitle: 'Cancel, pause, or update billing in Google Play.',
+              subtitle: 'Cancel or update billing in Google Play. To switch '
+                  'plans, cancel here, then resubscribe.',
               hg: hg,
               onTap: _busy ? null : _manageSubscription,
-            ),
-            const SizedBox(height: HgSpacing.sm),
-            _ManagementTile(
-              icon: Icons.swap_horiz_rounded,
-              title: 'Change plan',
-              subtitle: 'Switch between monthly, yearly, or lifetime.',
-              hg: hg,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => _ChangePlanScreen(
-                    offering: _offering,
-                    loading: _loading,
-                    busy: _busy,
-                    selected: _selected,
-                    onBuy: _buy,
-                    onRestore: _restore,
-                  ),
-                ),
-              ),
             ),
             const SizedBox(height: HgSpacing.sm),
           ],
@@ -629,157 +614,6 @@ List<Widget> buildPlanTiles({
           selected: selected == ProPlan.lifetime,
           onTap: () => onSelect(ProPlan.lifetime)),
   ];
-}
-
-// ── Change Plan screen (used from Pro management) ────────────────────────────
-
-class _ChangePlanScreen extends ConsumerStatefulWidget {
-  final ProOffering? offering;
-  final bool loading;
-  final bool busy;
-  final ProPlan selected;
-  final void Function(ProPackage pkg) onBuy;
-  final VoidCallback onRestore;
-
-  const _ChangePlanScreen({
-    required this.offering,
-    required this.loading,
-    required this.busy,
-    required this.selected,
-    required this.onBuy,
-    required this.onRestore,
-  });
-
-  @override
-  ConsumerState<_ChangePlanScreen> createState() => _ChangePlanScreenState();
-}
-
-class _ChangePlanScreenState extends ConsumerState<_ChangePlanScreen> {
-  late ProPlan _selected = widget.selected;
-
-  void _snack(String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-
-  Future<void> _restore() async {
-    final outcome = await ref.read(billingServiceProvider).restore();
-    if (!mounted) return;
-    switch (outcome) {
-      case RestoreOutcome.restoredPro:
-        Navigator.of(context).popUntil((r) => r.isFirst);
-      case RestoreOutcome.nothingToRestore:
-        _snack('No previous purchases found on this Google account.');
-      case RestoreOutcome.error:
-        _snack('Could not restore right now. Please try again.');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hg = context.hg;
-    final offering = widget.offering;
-    return Scaffold(
-      body: ScreenBackground(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
-            child: ListView(
-              children: [
-                const SizedBox(height: HgSpacing.sm),
-                Row(children: [
-                  IconButton(
-                    icon:
-                        Icon(Icons.arrow_back_rounded, color: hg.textSecondary),
-                    onPressed: () => Navigator.of(context).pop(),
-                    tooltip: 'Back',
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ]),
-                const SizedBox(height: HgSpacing.sm),
-                Text('Change plan',
-                    style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 26,
-                        fontWeight: FontWeight.w600,
-                        color: hg.textPrimary)),
-                const SizedBox(height: HgSpacing.xs),
-                Text(
-                  'Select a new plan below. Google Play handles the switch; '
-                  'any unused time on your current plan is credited.',
-                  style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 14,
-                      height: 1.4,
-                      color: hg.textSecondary),
-                ),
-                const SizedBox(height: HgSpacing.xl),
-                if (widget.loading)
-                  const Center(
-                      child: Padding(
-                          padding: EdgeInsets.all(HgSpacing.xl),
-                          child: CircularProgressIndicator()))
-                else if (offering == null)
-                  Container(
-                    padding: const EdgeInsets.all(HgSpacing.lg),
-                    decoration: BoxDecoration(
-                        color: hg.surfaceRaised,
-                        borderRadius: BorderRadius.circular(HgRadius.lg),
-                        border: Border.all(color: hg.hairline)),
-                    child: Text(
-                      'Pricing is unavailable right now. Check your connection.',
-                      style: TextStyle(
-                          fontFamily: HgFont.sans,
-                          fontSize: 14,
-                          color: hg.textSecondary),
-                    ),
-                  )
-                else ...[
-                  ...buildPlanTiles(
-                    offering: offering,
-                    selected: _selected,
-                    onSelect: (p) => setState(() => _selected = p),
-                  ),
-                  const SizedBox(height: HgSpacing.lg),
-                  PrimaryButton(
-                    label: _selected == ProPlan.lifetime
-                        ? 'Get Lifetime'
-                        : 'Switch plan',
-                    onPressed: widget.busy
-                        ? null
-                        : () => widget.onBuy(
-                              offering.byPlan(_selected) ??
-                                  offering.packages.first,
-                            ),
-                  ),
-                  const SizedBox(height: HgSpacing.sm),
-                  Text(
-                    _selected == ProPlan.lifetime
-                        ? 'A one-time payment — no subscription, no renewal. Every Pro feature we add later is included automatically.'
-                        : 'Auto-renews until cancelled. Manage or cancel anytime in Google Play.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 12,
-                        color: hg.textMuted),
-                  ),
-                ],
-                const SizedBox(height: HgSpacing.lg),
-                Center(
-                  child: TextButton(
-                    onPressed: _restore,
-                    child: Text('Restore purchases',
-                        style: TextStyle(
-                            fontFamily: HgFont.sans,
-                            color: hg.textSecondary)),
-                  ),
-                ),
-                const SizedBox(height: HgSpacing.xl),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ── Shared tile widgets ──────────────────────────────────────────────────────
