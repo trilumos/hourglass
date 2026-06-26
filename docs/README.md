@@ -26,6 +26,7 @@ Earlier specs are kept as a **design record** (why we built it this way), not as
 | [`feature-roadmap.md`](feature-roadmap.md) | **Canonical roadmap** — what ships in v1, v1.2, v2. The home for all future planning. |
 | [`project-context.md`](project-context.md) | Durable project memory: founder preferences, locked decisions, standing rules. |
 | [`design-language.md`](design-language.md) | Look/feel source of truth ("Warm Precision") — tokens, type, motion, voice. |
+| [`brand-design-philosophy.md`](brand-design-philosophy.md) | Distilled brand/design DNA (colours, type, motif, anti-patterns) — for generating on-brand visuals/assets. |
 | [`v1-launch-checklist.md`](v1-launch-checklist.md) | Pre-publish gating: security, legal, store, a11y, perf. |
 | [`play-console-revenuecat-setup-guide.md`](play-console-revenuecat-setup-guide.md) | Ops: Play Console + RevenueCat setup steps. |
 | [`launch-founder-actions.md`](launch-founder-actions.md) | The founder's launch to-do list. |
