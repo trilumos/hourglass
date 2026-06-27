@@ -200,8 +200,11 @@ class NotificationService {
     } catch (_) {}
   }
 
-  /// An EXACT-time sounding grace alert that fires even in doze / app closed
-  /// (cap reached, grace expired). Replaces the same [id] if already shown.
+  /// A sounding grace alert scheduled for [when] (cap reached, grace expired).
+  /// Uses INEXACT scheduling (no exact-alarm permission — Play reserves that for
+  /// alarm/calendar apps). The foreground service runs for the whole session, so
+  /// the app isn't in doze and the alert still fires close to on time; the
+  /// block-end is computed in-app on return regardless. Replaces the same [id].
   Future<void> scheduleGraceAlert(
       int id, DateTime when, String title, String body) async {
     await init();
@@ -219,7 +222,7 @@ class NotificationService {
         body: body,
         scheduledDate: tzWhen,
         notificationDetails: _alertDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     } catch (_) {}
   }
