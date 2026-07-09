@@ -1,0 +1,324 @@
+# Sustain v1 Product Description
+
+Sustain is a calm, premium focus-training app built to help people work in deep, intentional blocks instead of just running a countdown timer. The app is centered on a simple idea: focus is a skill, and it improves through repetition, honest feedback, and real recovery.
+
+It helps users start focus sessions, stay with them, recover properly, and track progress over time. Sustain is designed to feel quiet, private, and encouraging rather than noisy or gamified.
+
+## What the app does overall
+
+Sustain gives users a structured way to focus through three session modes: Flow, Pomodoro, and Custom. It uses a visually animated hourglass as the core of the experience, turning each session into a clear ritual. Users can set an intention, begin a session, follow their timing, see their progress, and review how their focus changes over time.
+
+The app also tracks meaningful stats such as Focus Score, Today’s focus, Streaks, total focus, session history, and consistency patterns. Everything is stored on-device in v1, with no account required.
+
+## Core focus modes
+
+### Flow
+Flow is the signature mode. It is designed for longer, more deliberate focus sessions that treat concentration like training. Instead of pretending the hard part does not exist, Flow recognizes the struggle phase as part of the process.
+
+How it helps:
+- It gives users a more realistic way to build focus stamina.
+- It reframes the early hard minutes as normal rather than failure.
+- It encourages persistence and recovery, which helps users sustain deeper work over time.
+
+### Pomodoro
+Pomodoro is the familiar focus-and-break method. It gives users a classic timer structure for short work cycles with breaks in between.
+
+How it helps:
+- It is ideal for users who want a simple, proven rhythm.
+- It lowers the barrier to starting when someone does not want a long session.
+- It offers a clear, predictable cycle that helps with consistency.
+
+### Custom
+Custom mode lets users choose their own focus and break timing.
+
+How it helps:
+- It supports different work styles and attention spans.
+- It gives flexibility for tasks that need unusual durations.
+- It makes the app useful for more than one productivity style.
+
+## Home screen
+
+The Home screen is the main landing area. It shows the hourglass at rest, a greeting, the current daily stats, a mode selector, and the main Begin button.
+
+What it does:
+- Gives a calm overview of the app
+- Shows today’s focus and streak information
+- Lets users choose their session mode before starting
+- Serves as the central launch point for a new session
+
+How it helps:
+- Reduces friction when starting a session
+- Keeps the most important information visible without clutter
+- Makes the app feel organized and easy to return to throughout the day
+
+## Session setup and intention
+
+Before a session starts, users go through setup and intention selection. They choose the mode, confirm the timing, and prepare to begin.
+
+What it does:
+- Lets users select the type of session they want
+- Helps users set up the block before focus begins
+- Provides a moment to mentally commit to the work
+
+How it helps:
+- Encourages intentional focus rather than impulsive timer use
+- Makes sessions feel deliberate and meaningful
+- Helps users settle into the task before the timer starts
+
+## Live session experience
+
+During a session, the hourglass becomes the center of attention. The visual is designed to make progress feel tangible and immersive.
+
+What it does:
+- Displays the active focus block
+- Shows the session as it runs
+- Supports session cues and transition states
+- Helps protect the block from distractions
+
+How it helps:
+- Gives the user a strong visual anchor during work
+- Makes focus feel immersive and continuous
+- Reinforces the idea that the user is in a real training block, not just watching a clock
+
+## Struggle, Flow, and Recovery
+
+Sustain’s Flow method is built around the idea that focus happens in stages.
+
+What it does:
+- Recognizes the early struggle phase
+- Supports the deeper flow phase
+- Ends with a recovery phase that is meant to be real and restorative
+
+How it helps:
+- Normalizes the difficulty of beginning
+- Prevents users from interpreting struggle as failure
+- Makes recovery part of the system, not an afterthought
+
+This is one of the app’s strongest differentiators. It teaches users that focus includes friction, and that pushing through the hard part is part of training.
+
+## Hourglass visual and motion
+
+The hourglass is the app’s signature visual element. It is designed to feel premium, fluid, and calm.
+
+What it does:
+- Represents the active flow of time and focus
+- Animates as sessions run
+- Changes with the chosen theme
+- Gives the app a distinctive identity
+
+How it helps:
+- Makes the app memorable
+- Creates a stronger emotional connection to the session
+- Turns focus into a visual ritual instead of a plain utility
+
+## Focus Score
+
+Focus Score is one of the app’s main progress indicators. It shows a user’s recent focus ability as a value from 0 to 100.
+
+What it does:
+- Summarizes recent Flow performance
+- Gives a simple number users can understand at a glance
+- Updates as sessions are completed
+- Reflects focus behavior over time rather than just one session
+
+How it helps:
+- Gives users a sense of progress
+- Makes improvement visible and motivating
+- Encourages consistency rather than one-off effort
+
+The score is intentionally framed as a gradual measure, so users do not jump from beginner to expert instantly. That keeps the system honest and makes progress feel earned.
+
+## Focus Stamina
+
+Focus Stamina is the app’s personalized sense of how long a user can sustainably focus.
+
+What it does:
+- Estimates a suitable focus length
+- Helps guide future session lengths
+- Supports gradual improvement over time
+
+How it helps:
+- Prevents users from overestimating what they can sustain
+- Helps them build toward longer, more realistic sessions
+- Makes the app feel adaptive rather than rigid
+
+## Focus Average
+
+Focus Average shows the user’s average session length.
+
+What it does:
+- Calculates how long the user typically focuses per session
+- Provides a simple summary of session behavior
+- Helps users understand whether they are getting better over time
+
+How it helps:
+- Makes long-term improvement visible
+- Gives users another meaningful metric beyond streaks
+- Rewards steady practice, not just perfect sessions
+
+## Today, Streak, and total focus stats
+
+Sustain tracks practical daily progress.
+
+What it does:
+- Shows today’s total focus time
+- Shows the current streak
+- Shows total focus completed over time
+
+How it helps:
+- Encourages daily habit building
+- Gives users a quick sense of momentum
+- Helps them see the results of repeated effort
+
+## Insights
+
+Insights is the app’s analytics area. It combines meaningful charts and summaries into one dashboard.
+
+What it does:
+- Shows lifetime records
+- Shows consistency patterns
+- Shows focus over time
+- Shows when the user tends to focus best
+- Breaks down focus by mode
+- Presents the information in a warm, readable way
+
+How it helps:
+- Turns raw session data into useful patterns
+- Helps users understand their habits
+- Makes it easier to notice what times, modes, and routines work best
+
+The goal is not to overwhelm users with numbers. It is to help them learn from their own behavior.
+
+## Session history
+
+Session history gives users a record of their past sessions.
+
+What it does:
+- Lists completed sessions
+- Preserves focus history on-device
+- Lets users review their work later
+
+How it helps:
+- Reinforces consistency
+- Gives users a sense of accomplishment
+- Lets them reflect on their progress over time
+
+## Profile
+
+The Profile screen is the user’s personal home inside the app.
+
+What it does:
+- Lets users add a name and profile photo
+- Shows the Focus Score prominently
+- Shows total focus, streak, and session count
+- Links to Insights, history, and the guide
+
+How it helps:
+- Gives the app a personal identity
+- Makes the user feel ownership over their progress
+- Provides a clean hub for stats and navigation
+
+## Themes
+
+Sustain includes a theme system so users can change the app’s visual style.
+
+What it does:
+- Lets users switch app colors
+- Changes the whole app and the hourglass together
+- Supports a default free theme and premium themes
+
+How it helps:
+- Makes the app feel more personal
+- Lets users choose a visual style that suits them
+- Improves long-term engagement without changing the core workflow
+
+## Notifications
+
+Notifications are optional and controlled by the user.
+
+What it does:
+- Sends focus reminders
+- Sends daily quotes or tips
+- Sends streak reminders
+- Supports session notifications during live sessions
+
+How it helps:
+- Helps users remember to focus without forcing them
+- Encourages consistency in a gentle way
+- Supports the live session experience when needed
+
+The app is careful about this area: notifications are opt-in and user-controlled, not automatic spam.
+
+## Backup and restore
+
+Sustain includes manual backup and restore so users can protect their local data.
+
+What it does:
+- Exports sessions, streaks, profile data, and settings to a file
+- Restores from a backup file
+- Merges restored data safely instead of deleting existing records
+
+How it helps:
+- Protects users from data loss when switching phones
+- Gives users ownership of their history
+- Supports the app’s privacy-first approach
+
+## Privacy and local storage
+
+A major part of the product is that v1 is private by design.
+
+What it does:
+- Stores data on the device
+- Avoids accounts in v1
+- Avoids third-party analytics
+- Avoids crash reporting
+- Keeps the product offline-first
+
+How it helps:
+- Makes the app simpler and safer to use
+- Reduces privacy risk
+- Removes the friction of sign-in
+- Makes the product feel calm and trustworthy
+
+## Guide and FAQ
+
+The app includes an educational guide and FAQ.
+
+What it does:
+- Explains how the app works
+- Explains the focus method
+- Answers common questions clearly
+- Helps users understand the rules and benefits of the system
+
+How it helps:
+- Reduces confusion
+- Teaches the method behind the app
+- Helps users get more value from the product faster
+
+## Sound and session cues
+
+Sustain supports optional session sounds.
+
+What it does:
+- Plays cues at the start, during breaks, and at the end
+- Gives the session a more tactile feel
+- Lets users keep sound on or off depending on preference
+
+How it helps:
+- Makes transitions clearer
+- Adds structure without clutter
+- Supports users who like subtle audio feedback
+
+## What v1 is designed to feel like
+
+Sustain v1 is meant to feel:
+- Calm
+- Minimal
+- Premium
+- Focused
+- Private
+- Encouraging
+- Smooth and intentional
+
+It is not built like a noisy productivity dashboard. It is built like a ritual tool for deep work and focus training.
+
