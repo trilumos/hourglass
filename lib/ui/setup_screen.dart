@@ -108,8 +108,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   _PomoEntry _pomoEntry = _PomoEntry.duration;
   int _ratioIndex = 0;
   int _blocks = 4; // by-blocks: explicit block count (fixed-length blocks)
-  int _pomoTarget = 120; // by-duration: chosen focus time (min) — exact, never auto-changes
-  int _durBlocks = 4; // by-duration: how many variable-length blocks to split into
+  int _pomoTarget =
+      120; // by-duration: chosen focus time (min) — exact, never auto-changes
+  int _durBlocks =
+      4; // by-duration: how many variable-length blocks to split into
 
   // Custom
   _CustomMode _customMode = _CustomMode.count;
@@ -133,11 +135,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   /// One-line "what is this mode" under the title.
   String _modeDescription() => switch (_mode) {
-        SessionMode.flowBlock =>
-          'One unbroken block of deep focus — recovery comes after.',
-        SessionMode.pomodoro => 'Focus in cycles with short breaks between.',
-        SessionMode.custom => 'Design your own focus-and-break schedule.',
-      };
+    SessionMode.flowBlock =>
+      'One unbroken block of deep focus — recovery comes after.',
+    SessionMode.pomodoro => 'Focus in cycles with short breaks between.',
+    SessionMode.custom => 'Design your own focus-and-break schedule.',
+  };
 
   /// Helper under the Pomodoro entry toggle.
   String _pomodoroHint() => _pomoEntry == _PomoEntry.duration
@@ -196,7 +198,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final plan = _buildPlan();
     // Flow Blocks run open-ended if the per-session toggle is on OR the global
     // "run until I end" preference is on.
-    final endless = (_endlessAvailable && _endless) ||
+    final endless =
+        (_endlessAvailable && _endless) ||
         (_mode == SessionMode.flowBlock && flowRunUntilEnded);
     final config = SessionConfig(
       mode: _mode,
@@ -228,126 +231,153 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     _staminaMin =
         info?.value.inMinutes ?? StaminaCalculator.defaultStart.inMinutes;
     final plan = _buildPlan();
-    final topLabel = _mode == SessionMode.flowBlock ? 'BLOCK LENGTH' : 'TOTAL TIME';
+    final topLabel = _mode == SessionMode.flowBlock
+        ? 'BLOCK LENGTH'
+        : 'TOTAL TIME';
     // Custom has the most controls — tighten its section gaps so it fits without
     // scrolling on a normal phone (the ListView still scrolls for large fonts).
-    final sectionGap =
-        _mode == SessionMode.custom ? HgSpacing.lg : HgSpacing.xl;
+    final sectionGap = _mode == SessionMode.custom
+        ? HgSpacing.lg
+        : HgSpacing.xl;
 
     return Scaffold(
-      bottomNavigationBar: PreviewBar(
-        onGetIt: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ThemesScreen()),
-        ),
-      ),
-      body: ScreenBackground(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: HgSpacing.sm),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      color: hg.textSecondary,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          ScreenBackground(
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: HgSpacing.sm),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: HgSpacing.screen,
                     ),
-                    const SizedBox(width: HgSpacing.sm),
-                    Text(
-                      _titles[_mode]!,
-                      style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: hg.textPrimary,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: const Icon(Icons.arrow_back_rounded),
+                          color: hg.textSecondary,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                        ),
+                        const SizedBox(width: HgSpacing.sm),
+                        Text(
+                          _titles[_mode]!,
+                          style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: hg.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        HgSpacing.screen,
+                        HgSpacing.lg,
+                        HgSpacing.screen,
+                        HgSpacing.lg,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(HgSpacing.screen,
-                      HgSpacing.lg, HgSpacing.screen, HgSpacing.lg),
-                  children: [
-                    _Label('Intention'),
-                    const SizedBox(height: HgSpacing.sm),
-                    TextField(
-                      controller: _intention,
-                      style: TextStyle(
-                          fontFamily: HgFont.sans,
-                          fontSize: 22,
-                          color: hg.textPrimary),
-                      cursorColor: hg.accent,
-                      textInputAction: TextInputAction.done,
-                      decoration: InputDecoration(
-                        hintText: 'What are you focusing on?',
-                        hintStyle: TextStyle(
+                      children: [
+                        _Label('Intention'),
+                        const SizedBox(height: HgSpacing.sm),
+                        TextField(
+                          controller: _intention,
+                          style: TextStyle(
                             fontFamily: HgFont.sans,
                             fontSize: 22,
-                            color: hg.textMuted),
-                        isDense: true,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: HgSpacing.sm),
-                        enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: hg.hairline)),
-                        focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: hg.accent)),
-                      ),
-                    ),
-                    SizedBox(height: sectionGap),
+                            color: hg.textPrimary,
+                          ),
+                          cursorColor: hg.accent,
+                          textInputAction: TextInputAction.done,
+                          decoration: InputDecoration(
+                            hintText: 'What are you focusing on?',
+                            hintStyle: TextStyle(
+                              fontFamily: HgFont.sans,
+                              fontSize: 22,
+                              color: hg.textMuted,
+                            ),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: HgSpacing.sm,
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: hg.hairline),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: hg.accent),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: sectionGap),
 
-                    // Hierarchy: TOTAL (big) → subline → focus time → config.
-                    Center(child: _CenteredLabel(topLabel)),
-                    const SizedBox(height: HgSpacing.sm),
-                    Center(child: _BigDuration(plan.totalDuration)),
-                    const SizedBox(height: HgSpacing.sm),
-                    // Full width so a long cadence line wraps to 2 rows.
-                    SizedBox(width: double.infinity, child: _subline(hg, plan)),
-                    SizedBox(height: sectionGap),
-                    ..._modeControls(hg),
+                        // Hierarchy: TOTAL (big) → subline → focus time → config.
+                        Center(child: _CenteredLabel(topLabel)),
+                        const SizedBox(height: HgSpacing.sm),
+                        Center(child: _BigDuration(plan.totalDuration)),
+                        const SizedBox(height: HgSpacing.sm),
+                        // Full width so a long cadence line wraps to 2 rows.
+                        SizedBox(
+                          width: double.infinity,
+                          child: _subline(hg, plan),
+                        ),
+                        SizedBox(height: sectionGap),
+                        ..._modeControls(hg),
 
-                    if (_endlessAvailable) ...[
-                      const SizedBox(height: HgSpacing.lg),
-                      _EndlessToggle(
-                        value: _endless,
-                        onChanged: (v) => _tap(() => _endless = v),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    HgSpacing.screen, 0, HgSpacing.screen, HgSpacing.lg),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _modeDescription(),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: HgFont.sans,
-                        fontSize: 13,
-                        height: 1.35,
-                        fontStyle: FontStyle.italic,
-                        color: hg.textMuted,
-                      ),
+                        if (_endlessAvailable) ...[
+                          const SizedBox(height: HgSpacing.lg),
+                          _EndlessToggle(
+                            value: _endless,
+                            onChanged: (v) => _tap(() => _endless = v),
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: HgSpacing.md),
-                    PrimaryButton(label: 'Begin', onPressed: _begin),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      HgSpacing.screen,
+                      0,
+                      HgSpacing.screen,
+                      HgSpacing.lg,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _modeDescription(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 13,
+                            height: 1.35,
+                            fontStyle: FontStyle.italic,
+                            color: hg.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: HgSpacing.md),
+                        PrimaryButton(label: 'Begin', onPressed: _begin),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          // Floating preview pill — overlays the screen, takes no layout
+          // space; draggable, so it can never block a control.
+          PreviewBar(
+            onGetIt: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ThemesScreen())),
+          ),
+        ],
       ),
     );
   }
@@ -366,21 +396,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   List<Widget> _flowControls(HgTokens hg) {
     final minutes = _flowMinutes ?? _flowDefault;
     // Fixed presets, minus any that coincide with the (earned) stamina anchor.
-    final fixed = ({15, 25, 30, 45, 60, 90}
-          ..removeWhere((m) =>
-              m > _flowSoftCap || (_staminaEstablished && m == _staminaMin)))
-        .toList()
-      ..sort();
+    final fixed =
+        ({15, 25, 30, 45, 60, 90}..removeWhere(
+              (m) =>
+                  m > _flowSoftCap || (_staminaEstablished && m == _staminaMin),
+            ))
+            .toList()
+          ..sort();
     return [
       const _SectionHeading('Length'),
       const SizedBox(height: HgSpacing.sm),
-      _Hint(_staminaIsPro
-          ? (_staminaEstablished
-              ? 'Your stamina is ${_staminaMin}m. Finish a block to hold it; '
-                  'go past it (Endless, or +5 near the end) to grow it.'
-              : 'Your stamina sets after your first recorded Flow session, '
-                  'then grows with you.')
-          : 'Pick a block length that fits your focus.'),
+      _Hint(
+        _staminaIsPro
+            ? (_staminaEstablished
+                  ? 'Your stamina is ${_staminaMin}m. Finish a block to hold it; '
+                        'go past it (Endless, or +5 near the end) to grow it.'
+                  : 'Your stamina sets after your first recorded Flow session, '
+                        'then grows with you.')
+            : 'Pick a block length that fits your focus.',
+      ),
       const SizedBox(height: HgSpacing.md),
       Wrap(
         spacing: HgSpacing.sm,
@@ -390,8 +424,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           // established). Free users just pick from the fixed presets.
           if (_staminaIsPro)
             _Chip(
-              label:
-                  _staminaEstablished ? 'Stamina · ${_staminaMin}m' : 'Stamina',
+              label: _staminaEstablished
+                  ? 'Stamina · ${_staminaMin}m'
+                  : 'Stamina',
               active: _staminaEstablished && minutes == _staminaMin,
               enabled: _staminaEstablished,
               icon: _staminaEstablished ? null : Icons.lock_outline_rounded,
@@ -429,8 +464,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         _LabeledStepper(
           label: 'Focus time',
           value: _fmt(_m(_pomoTarget)),
-          onMinus: _pomoTarget > 30 ? () => _tap(() => _pomoTarget -= 15) : null,
-          onPlus: _pomoTarget < 360 ? () => _tap(() => _pomoTarget += 15) : null,
+          onMinus: _pomoTarget > 30
+              ? () => _tap(() => _pomoTarget -= 15)
+              : null,
+          onPlus: _pomoTarget < 360
+              ? () => _tap(() => _pomoTarget += 15)
+              : null,
         ),
         const SizedBox(height: HgSpacing.lg),
         _LabeledStepper(
@@ -489,8 +528,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           label: 'Number of breaks',
           value: '$_customBreaks',
           onMinus: _customBreaks > 0 ? () => _tap(() => _customBreaks--) : null,
-          onPlus: (_customBreaks < 12 &&
-                  _customWork ~/ (_customBreaks + 2) >= 5)
+          onPlus:
+              (_customBreaks < 12 && _customWork ~/ (_customBreaks + 2) >= 5)
               ? () => _tap(() => _customBreaks++)
               : null,
         )
@@ -509,10 +548,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       _LabeledStepper(
         label: 'Break length',
         value: _fmt(_m(_customBreakLen)),
-        onMinus:
-            _customBreakLen > 1 ? () => _tap(() => _customBreakLen -= 1) : null,
-        onPlus:
-            _customBreakLen < 30 ? () => _tap(() => _customBreakLen += 1) : null,
+        onMinus: _customBreakLen > 1
+            ? () => _tap(() => _customBreakLen -= 1)
+            : null,
+        onPlus: _customBreakLen < 30
+            ? () => _tap(() => _customBreakLen += 1)
+            : null,
       ),
     ];
   }
@@ -526,14 +567,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         final minutes = _flowMinutes ?? _flowDefault;
         // Only caution past ~90 when reaching BEYOND proven stamina — if a long
         // block is the user's own demonstrated stamina, it isn't a stretch.
-        final beyondProven = minutes > _flowSoftCap &&
+        final beyondProven =
+            minutes > _flowSoftCap &&
             !(_staminaEstablished && minutes == _staminaMin);
         if (beyondProven) {
-          text = 'Past ~90 min, focus tends to fade. A fresh block after a '
+          text =
+              'Past ~90 min, focus tends to fade. A fresh block after a '
               'break often serves you better.';
           color = hg.warning;
         } else {
-          text = 'One unbroken block, recovery after · finish it to hold your '
+          text =
+              'One unbroken block, recovery after · finish it to hold your '
               'stamina, pass it to grow.';
           color = hg.textMuted;
         }
@@ -545,13 +589,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             text = 'One ${_fmt(plan.totalFocus)} block · no breaks';
           } else {
             final avg = (plan.totalFocus.inMinutes / focus.length).round();
-            text = '${focus.length} × ~${avg}m focus + '
+            text =
+                '${focus.length} × ~${avg}m focus + '
                 '${rests.first.duration.inMinutes}m break';
           }
           break;
         }
         final r = _ratios[_ratioIndex];
-        text = '${plan.focusCount} rounds of ${r.work}m focus + ${r.short}m break';
+        text =
+            '${plan.focusCount} rounds of ${r.work}m focus + ${r.short}m break';
         if (plan.focusCount > _longEvery) {
           // Long-break note on its own row.
           text += '\n${r.long}m long break every ${_longEvery}th';
@@ -562,13 +608,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         if (rests.isEmpty) {
           text = 'One ${_fmt(plan.totalFocus)} block · no breaks';
         } else {
-          final allEqual = focus.every((s) =>
-              s.duration.inMinutes == focus.first.duration.inMinutes);
+          final allEqual = focus.every(
+            (s) => s.duration.inMinutes == focus.first.duration.inMinutes,
+          );
           final avg = (plan.totalFocus.inMinutes / focus.length).round();
           final focusPart = allEqual
               ? '${focus.length} × ${focus.first.duration.inMinutes}m focus'
               : '${focus.length} × ~${avg}m focus';
-          text = '$focusPart · ${rests.length} × '
+          text =
+              '$focusPart · ${rests.length} × '
               '${rests.first.duration.inMinutes}m break';
         }
     }
@@ -604,15 +652,20 @@ class _BigDuration extends StatelessWidget {
       letterSpacing: -2,
       color: hg.textPrimary,
     );
-    final unitStyle =
-        TextStyle(fontFamily: HgFont.sans, fontSize: 18, color: hg.textMuted);
+    final unitStyle = TextStyle(
+      fontFamily: HgFont.sans,
+      fontSize: 18,
+      color: hg.textMuted,
+    );
     final parts = <Widget>[];
     if (h > 0) {
       parts.addAll([Text('$h', style: numStyle), Text('h', style: unitStyle)]);
       if (mm > 0) {
         parts.add(const SizedBox(width: HgSpacing.sm));
-        parts.addAll(
-            [Text('$mm', style: numStyle), Text('m', style: unitStyle)]);
+        parts.addAll([
+          Text('$mm', style: numStyle),
+          Text('m', style: unitStyle),
+        ]);
       }
     } else {
       parts.addAll([
@@ -659,8 +712,9 @@ class _SubToggle extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: HgMotion.fast,
                   curve: HgMotion.calm,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: HgSpacing.sm + 2),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: HgSpacing.sm + 2,
+                  ),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: i == selectedIndex ? hg.accent : Colors.transparent,
@@ -707,7 +761,10 @@ class _LabeledStepper extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-                fontFamily: HgFont.sans, fontSize: 16, color: hg.textPrimary),
+              fontFamily: HgFont.sans,
+              fontSize: 16,
+              color: hg.textPrimary,
+            ),
           ),
         ),
         _StepButton(icon: Icons.remove_rounded, onTap: onMinus),
@@ -861,8 +918,8 @@ class _Chip extends StatelessWidget {
     final Color fg = !enabled
         ? hg.textMuted
         : active
-            ? hg.onAccent
-            : (outline ? hg.textMuted : hg.textSecondary);
+        ? hg.onAccent
+        : (outline ? hg.textMuted : hg.textSecondary);
     return GestureDetector(
       onTap: enabled ? onTap : null,
       behavior: HitTestBehavior.opaque,
@@ -870,11 +927,15 @@ class _Chip extends StatelessWidget {
         duration: HgMotion.fast,
         curve: HgMotion.calm,
         padding: const EdgeInsets.symmetric(
-            horizontal: HgSpacing.md, vertical: HgSpacing.sm + 2),
+          horizontal: HgSpacing.md,
+          vertical: HgSpacing.sm + 2,
+        ),
         decoration: BoxDecoration(
           color: active && enabled ? hg.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(HgRadius.pill),
-          border: Border.all(color: active && enabled ? hg.accent : hg.hairline),
+          border: Border.all(
+            color: active && enabled ? hg.accent : hg.hairline,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -915,18 +976,24 @@ class _EndlessToggle extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Endless flow',
-                  style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: hg.textPrimary)),
+              Text(
+                'Endless flow',
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: hg.textPrimary,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text('Keep going past the goal until you stop.',
-                  style: TextStyle(
-                      fontFamily: HgFont.sans,
-                      fontSize: 13,
-                      color: hg.textMuted)),
+              Text(
+                'Keep going past the goal until you stop.',
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 13,
+                  color: hg.textMuted,
+                ),
+              ),
             ],
           ),
         ),

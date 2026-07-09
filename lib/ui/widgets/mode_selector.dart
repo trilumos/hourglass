@@ -30,63 +30,71 @@ class ModeSelector extends StatelessWidget {
     // Map index → Alignment.x across N equal slots (-1 .. 1).
     final x = modes.length == 1 ? 0.0 : (index / (modes.length - 1)) * 2 - 1;
 
-    return Container(
-      padding: const EdgeInsets.all(HgSpacing.xs),
-      decoration: BoxDecoration(
-        color: hg.surface,
-        borderRadius: BorderRadius.circular(HgRadius.pill),
-      ),
-      child: Stack(
-        children: [
-          // The sliding accent pill.
-          Positioned.fill(
-            child: AnimatedAlign(
-              duration: HgMotion.medium,
-              curve: HgMotion.calm,
-              alignment: Alignment(x, 0),
-              child: FractionallySizedBox(
-                widthFactor: 1 / modes.length,
-                heightFactor: 1,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: hg.accent,
-                    borderRadius: BorderRadius.circular(HgRadius.pill),
+    // Segmented-control convention: cap the text scale so "Pomodoro" can't
+    // outgrow its equal-width slot and bleed into the neighbours at XL fonts.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: Container(
+        padding: const EdgeInsets.all(HgSpacing.xs),
+        decoration: BoxDecoration(
+          color: hg.surface,
+          borderRadius: BorderRadius.circular(HgRadius.pill),
+        ),
+        child: Stack(
+          children: [
+            // The sliding accent pill.
+            Positioned.fill(
+              child: AnimatedAlign(
+                duration: HgMotion.medium,
+                curve: HgMotion.calm,
+                alignment: Alignment(x, 0),
+                child: FractionallySizedBox(
+                  widthFactor: 1 / modes.length,
+                  heightFactor: 1,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: hg.accent,
+                      borderRadius: BorderRadius.circular(HgRadius.pill),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Row(
-            children: [
-              for (final mode in modes)
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => onChanged(mode),
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      alignment: Alignment.center,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: HgSpacing.sm + 2),
-                      child: AnimatedDefaultTextStyle(
-                        duration: HgMotion.fast,
-                        curve: HgMotion.calm,
-                        style: TextStyle(
-                          fontFamily: HgFont.sans,
-                          fontSize: 13,
-                          letterSpacing: 0.3,
-                          color: mode == selected ? hg.onAccent : hg.textMuted,
-                          fontWeight: mode == selected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
+            Row(
+              children: [
+                for (final mode in modes)
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => onChanged(mode),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: HgSpacing.sm + 2,
                         ),
-                        child: Text(_labels[mode]!),
+                        child: AnimatedDefaultTextStyle(
+                          duration: HgMotion.fast,
+                          curve: HgMotion.calm,
+                          style: TextStyle(
+                            fontFamily: HgFont.sans,
+                            fontSize: 13,
+                            letterSpacing: 0.3,
+                            color: mode == selected
+                                ? hg.onAccent
+                                : hg.textMuted,
+                            fontWeight: mode == selected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                          child: Text(_labels[mode]!),
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

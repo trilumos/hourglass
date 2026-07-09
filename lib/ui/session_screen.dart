@@ -87,7 +87,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   // Strict-session state: pause limits + the away/cap grace windows. Not final:
   // it widens to Pro if the entitlement resolves after the session started.
   late StrictRules _rules;
-  bool _isPro = false; // entitlement captured at start; may flip true mid-session
+  bool _isPro =
+      false; // entitlement captured at start; may flip true mid-session
   late final SessionGuard _guard;
   late final NotificationService _notifs;
   bool _wasResting = false; // tracks rest/focus transitions for break alerts
@@ -138,7 +139,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             },
     )..addListener(_onChange);
     if (!widget.previewMode && ref.read(soundsEnabledProvider)) {
-      ref.read(soundCuePlayerProvider).preload(); // warm so the start cue is snappy
+      ref
+          .read(soundCuePlayerProvider)
+          .preload(); // warm so the start cue is snappy
     }
     _controller.start();
     _resetIdle();
@@ -219,11 +222,15 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         if (resting) {
           _guard.breakStarted(_now().add(_controller.segmentRemaining));
           _notifs.showSessionAlert(
-              'Break — rest your eyes', 'A short rest; I\'ll call you back to focus.');
+            'Break — rest your eyes',
+            'A short rest; I\'ll call you back to focus.',
+          );
         } else if (s.status == SessionStatus.running) {
           _guard.focusing();
           _notifs.showSessionAlert(
-              'Back to focus', 'Break\'s over — flip the hourglass and continue.');
+            'Back to focus',
+            'Break\'s over — flip the hourglass and continue.',
+          );
         }
       }
     }
@@ -245,7 +252,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       WakelockPlus.disable();
       _guard.stop(); // session over → drop the foreground-service notification
       _notifs.showSessionAlert(
-          'Session complete', 'Nicely done — your focus is logged.');
+        'Session complete',
+        'Nicely done — your focus is logged.',
+      );
       HapticFeedback.mediumImpact();
     }
     if (mounted) setState(() {});
@@ -258,7 +267,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     if (widget.previewMode) return; // a theme preview records nothing, ever
     final finalizer = ref.read(sessionFinalizerProvider);
     if (!_persisted) {
-      _persisted = true; // claim synchronously so concurrent checkpoints don't double-insert
+      _persisted =
+          true; // claim synchronously so concurrent checkpoints don't double-insert
       final id = await finalizer.persist(record);
       if (id == null) {
         // Below the keep threshold (e.g. a sub-2-min Flow end) → nothing stored;
@@ -356,10 +366,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       if (!widget.previewMode) {
         // Immediate sounding "come back" push + a scheduled "session ended" if
         // they don't return in time (fires even with the app closed).
-        _notifs.showGraceAlert(HgNotif.graceLeave, 'Come back to keep your block',
-            'Return within ${_rules.leaveGrace.inSeconds}s or your block ends.');
-        _notifs.scheduleGraceAlert(HgNotif.graceLeave, end, 'Session ended',
-            'You were away too long.');
+        _notifs.showGraceAlert(
+          HgNotif.graceLeave,
+          'Come back to keep your block',
+          'Return within ${_rules.leaveGrace.inSeconds}s or your block ends.',
+        );
+        _notifs.scheduleGraceAlert(
+          HgNotif.graceLeave,
+          end,
+          'Session ended',
+          'You were away too long.',
+        );
       }
     } else if (status == SessionStatus.paused && _pausedAt != null) {
       _leftAt = _now();
@@ -431,12 +448,23 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       final endAt = capAt.add(_rules.capGrace);
       _guard.pauseAway(capAt, endAt);
       if (!widget.previewMode) {
-        _notifs.showGraceAlert(HgNotif.gracePauseUp, 'Paused',
-            'You have ${_rules.pauseCap.inMinutes} min before your block is at risk.');
-        _notifs.scheduleGraceAlert(HgNotif.gracePauseUp, capAt, 'Your pause is up',
-            'Resume within ${_rules.capGrace.inSeconds}s to keep your block.');
-        _notifs.scheduleGraceAlert(HgNotif.gracePauseEnd, endAt, 'Session ended',
-            'Your pause ran out.');
+        _notifs.showGraceAlert(
+          HgNotif.gracePauseUp,
+          'Paused',
+          'You have ${_rules.pauseCap.inMinutes} min before your block is at risk.',
+        );
+        _notifs.scheduleGraceAlert(
+          HgNotif.gracePauseUp,
+          capAt,
+          'Your pause is up',
+          'Resume within ${_rules.capGrace.inSeconds}s to keep your block.',
+        );
+        _notifs.scheduleGraceAlert(
+          HgNotif.gracePauseEnd,
+          endAt,
+          'Session ended',
+          'Your pause ran out.',
+        );
       }
       if (mounted) setState(() {});
     } else {
@@ -455,8 +483,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
 
   void _startPauseWatch() {
     _pauseWatch?.cancel();
-    _pauseWatch =
-        Timer.periodic(const Duration(seconds: 1), (_) => _checkPauseCap());
+    _pauseWatch = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _checkPauseCap(),
+    );
   }
 
   void _clearPause() {
@@ -483,9 +513,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     if (mounted) setState(() {});
   }
 
-  void _openPaywall() => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PaywallScreen()),
-      );
+  void _openPaywall() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => const PaywallScreen()));
 
   /// The Pause/Resume control: a live "return now" countdown when a pause hits
   /// its cap, a locked Pro nudge when free pauses run out, else Pause + a quiet
@@ -535,8 +565,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.lock_outline_rounded,
-                      size: HgSize.iconSm, color: hg.textMuted),
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    size: HgSize.iconSm,
+                    color: hg.textMuted,
+                  ),
                   const SizedBox(width: HgSpacing.xs),
                   Text(
                     'Pause',
@@ -555,7 +588,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               'No pauses left — Pro gives unlimited',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontFamily: HgFont.sans, fontSize: 13, color: hg.accent),
+                fontFamily: HgFont.sans,
+                fontSize: 13,
+                color: hg.accent,
+              ),
             ),
           ],
         ),
@@ -571,7 +607,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           Text(
             '$remaining pause${remaining == 1 ? '' : 's'} left',
             style: TextStyle(
-                fontFamily: HgFont.sans, fontSize: 12, color: hg.textMuted),
+              fontFamily: HgFont.sans,
+              fontSize: 12,
+              color: hg.textMuted,
+            ),
           ),
         ],
       ],
@@ -608,7 +647,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     });
   }
 
-  void _revealTime({Duration hold = const Duration(seconds: 3), bool haptic = true}) {
+  void _revealTime({
+    Duration hold = const Duration(seconds: 3),
+    bool haptic = true,
+  }) {
     if (haptic) HapticFeedback.selectionClick();
     setState(() => _showTime = true);
     _revealTimer?.cancel();
@@ -646,13 +688,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final String confirmLabel = reached ? 'End session' : 'End block';
     final String body;
     if (reached) {
-      body = "You've focused $focusedMinutes min — nicely done. It'll be saved.";
+      body =
+          "You've focused $focusedMinutes min — nicely done. It'll be saved.";
     } else if (isFlow) {
       body = focusedMinutes >= 2
           ? "You've focused $focusedMinutes min. Ending now records this block — "
-              'but a short block lowers your Focus Score. Staying with it builds it.'
+                'but a short block lowers your Focus Score. Staying with it builds it.'
           : 'Less than 2 minutes counts as nothing. A few more and this block '
-              'starts to build your Focus Score.';
+                'starts to build your Focus Score.';
     } else {
       body = "Ending now won't save this session's progress.";
     }
@@ -666,7 +709,11 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       builder: (sheetCtx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-              HgSpacing.lg, HgSpacing.lg, HgSpacing.lg, HgSpacing.md),
+            HgSpacing.lg,
+            HgSpacing.lg,
+            HgSpacing.lg,
+            HgSpacing.md,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -700,7 +747,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                 onPressed: () => Navigator.of(sheetCtx).pop(true),
                 child: Text(
                   confirmLabel,
-                  style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted),
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    color: hg.textMuted,
+                  ),
                 ),
               ),
             ],
@@ -727,91 +777,104 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         builder: (context, setSheet) {
           final mode = ref.read(themeControllerProvider).mode;
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  HgSpacing.lg, HgSpacing.lg, HgSpacing.lg, HgSpacing.md),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Quick settings',
+            // Scrolls if a large font pushes the sheet past its max height.
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  HgSpacing.lg,
+                  HgSpacing.lg,
+                  HgSpacing.lg,
+                  HgSpacing.md,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Quick settings',
                       style: TextStyle(
                         fontFamily: HgFont.sans,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: hg.textPrimary,
-                      )),
-                  const SizedBox(height: HgSpacing.md),
-                  Text('THEME',
+                      ),
+                    ),
+                    const SizedBox(height: HgSpacing.md),
+                    Text(
+                      'THEME',
                       style: TextStyle(
                         fontFamily: HgFont.sans,
                         fontSize: 11,
                         letterSpacing: 2,
                         color: hg.textMuted,
-                      )),
-                  const SizedBox(height: HgSpacing.xs),
-                  Row(
-                    children: [
-                      for (final m in ThemeMode.values)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: HgSpacing.xs),
-                            child: _ModeChip(
-                              label: switch (m) {
-                                ThemeMode.system => 'Auto',
-                                ThemeMode.light => 'Light',
-                                ThemeMode.dark => 'Dark',
-                              },
-                              selected: m == mode,
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                ref
-                                    .read(themeControllerProvider.notifier)
-                                    .setMode(m);
-                                setSheet(() {});
-                              },
+                      ),
+                    ),
+                    const SizedBox(height: HgSpacing.xs),
+                    Row(
+                      children: [
+                        for (final m in ThemeMode.values)
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                right: HgSpacing.xs,
+                              ),
+                              child: _ModeChip(
+                                label: switch (m) {
+                                  ThemeMode.system => 'Auto',
+                                  ThemeMode.light => 'Light',
+                                  ThemeMode.dark => 'Dark',
+                                },
+                                selected: m == mode,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  ref
+                                      .read(themeControllerProvider.notifier)
+                                      .setMode(m);
+                                  setSheet(() {});
+                                },
+                              ),
                             ),
                           ),
-                        ),
+                      ],
+                    ),
+                    // Flow Block → endless toggle (no breaks to auto-advance).
+                    if (isFlow) ...[
+                      const SizedBox(height: HgSpacing.lg),
+                      _QuickToggle(
+                        title: "Don't stop — run until I end",
+                        subtitle: _controller.isEndless
+                            ? 'This block keeps running until you tap End.'
+                            : 'This block stops at its set length.',
+                        value: _controller.isEndless,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          if (v) {
+                            _controller.enableEndless();
+                          } else {
+                            _controller.disableEndless();
+                          }
+                          setSheet(() {});
+                        },
+                      ),
+                    ]
+                    // Pomodoro/Custom with breaks → auto-advance.
+                    else if (hasBreaks) ...[
+                      const SizedBox(height: HgSpacing.lg),
+                      _QuickToggle(
+                        title: 'Auto-start next block',
+                        subtitle: _controller.autoAdvanceBreaks
+                            ? 'Next block begins on its own after a break.'
+                            : 'You tap to start the next block after a break.',
+                        value: _controller.autoAdvanceBreaks,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          _controller.setAutoAdvanceBreaks(v);
+                          setSheet(() {});
+                        },
+                      ),
                     ],
-                  ),
-                  // Flow Block → endless toggle (no breaks to auto-advance).
-                  if (isFlow) ...[
-                    const SizedBox(height: HgSpacing.lg),
-                    _QuickToggle(
-                      title: "Don't stop — run until I end",
-                      subtitle: _controller.isEndless
-                          ? 'This block keeps running until you tap End.'
-                          : 'This block stops at its set length.',
-                      value: _controller.isEndless,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        if (v) {
-                          _controller.enableEndless();
-                        } else {
-                          _controller.disableEndless();
-                        }
-                        setSheet(() {});
-                      },
-                    ),
-                  ]
-                  // Pomodoro/Custom with breaks → auto-advance.
-                  else if (hasBreaks) ...[
-                    const SizedBox(height: HgSpacing.lg),
-                    _QuickToggle(
-                      title: 'Auto-start next block',
-                      subtitle: _controller.autoAdvanceBreaks
-                          ? 'Next block begins on its own after a break.'
-                          : 'You tap to start the next block after a break.',
-                      value: _controller.autoAdvanceBreaks,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        _controller.setAutoAdvanceBreaks(v);
-                        setSheet(() {});
-                      },
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
           );
@@ -840,11 +903,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final s = _controller.state;
     // In preview, ANY ending (the ~10s cap, or give-up) shows the preview
     // prompt, never the real completion/score screen.
-    final previewDone = widget.previewMode &&
+    final previewDone =
+        widget.previewMode &&
         (_previewEnded ||
             s.status == SessionStatus.finished ||
             s.status == SessionStatus.completed);
-    final terminal = previewDone ||
+    final terminal =
+        previewDone ||
         s.status == SessionStatus.completed ||
         s.status == SessionStatus.finished;
     // Ending a session returns all the way to Home (not back to Setup).
@@ -853,29 +918,29 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         ? _previewEndView(goHome)
         : switch (s.status) {
             SessionStatus.finished => _Completion(
-                key: const ValueKey('done'),
-                record: _record,
-                config: widget.config,
-                canKeepGoing: false,
-                onDone: goHome,
-              ),
+              key: const ValueKey('done'),
+              record: _record,
+              config: widget.config,
+              canKeepGoing: false,
+              onDone: goHome,
+            ),
             SessionStatus.completed => _Completion(
-                key: const ValueKey('completed'),
-                record: _record,
-                config: widget.config,
-                // Flow Block → keep going; Pomodoro/Custom (Pro) → continue.
-                canKeepGoing: widget.config.mode == SessionMode.flowBlock,
-                onKeepGoing: _onKeepGoing,
-                onRepeat: widget.config.mode == SessionMode.flowBlock
-                    ? null
-                    : _onRepeatPlan,
-                onAddBlock: widget.config.mode == SessionMode.flowBlock
-                    ? null
-                    : _onAddBlock,
-                blockLength: _continueBlockLen,
-                breakLength: _continueBreakLen,
-                onDone: goHome,
-              ),
+              key: const ValueKey('completed'),
+              record: _record,
+              config: widget.config,
+              // Flow Block → keep going; Pomodoro/Custom (Pro) → continue.
+              canKeepGoing: widget.config.mode == SessionMode.flowBlock,
+              onKeepGoing: _onKeepGoing,
+              onRepeat: widget.config.mode == SessionMode.flowBlock
+                  ? null
+                  : _onRepeatPlan,
+              onAddBlock: widget.config.mode == SessionMode.flowBlock
+                  ? null
+                  : _onAddBlock,
+              blockLength: _continueBlockLen,
+              breakLength: _continueBreakLen,
+              onDone: goHome,
+            ),
             SessionStatus.awaitingResume => _awaitingView(s),
             _ => s.isResting ? _restView(s) : _focusView(s),
           };
@@ -922,65 +987,74 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     return Padding(
       key: const ValueKey('preview-end'),
       padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 140,
-            child: HourglassView(
-              progress: 0.5,
-              animate: false,
-              skin: ref
-                  .watch(activeThemeProvider)
-                  .skinFor(Theme.of(context).brightness),
+      // Scrolls when large font sizes push the copy past the viewport; the
+      // min-height constraint keeps it centered when it fits.
+      child: LayoutBuilder(
+        builder: (context, box) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: box.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 140,
+                  child: HourglassView(
+                    progress: 0.5,
+                    animate: false,
+                    skin: ref
+                        .watch(activeThemeProvider)
+                        .skinFor(Theme.of(context).brightness),
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.xl),
+                Text(
+                  'Enjoying $name?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: HgFont.serif,
+                    fontSize: 24,
+                    color: hg.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                Text(
+                  'This was a quick preview, so nothing was recorded. Unlock the theme '
+                  'to focus in it for real.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 14,
+                    color: hg.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.xl),
+                PrimaryButton(
+                  label: 'Get it',
+                  onPressed: () {
+                    goHome();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ThemesScreen()),
+                    );
+                  },
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                TextButton(
+                  onPressed: () {
+                    ref.read(previewThemeProvider.notifier).clear();
+                    goHome();
+                  },
+                  child: Text(
+                    'Exit preview',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      color: hg.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: HgSpacing.xl),
-          Text(
-            'Enjoying $name?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: HgFont.serif,
-              fontSize: 24,
-              color: hg.textPrimary,
-            ),
-          ),
-          const SizedBox(height: HgSpacing.sm),
-          Text(
-            'This was a quick preview, so nothing was recorded. Unlock the theme '
-            'to focus in it for real.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 14,
-              color: hg.textSecondary,
-            ),
-          ),
-          const SizedBox(height: HgSpacing.xl),
-          PrimaryButton(
-            label: 'Get it',
-            onPressed: () {
-              goHome();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ThemesScreen()),
-              );
-            },
-          ),
-          const SizedBox(height: HgSpacing.sm),
-          TextButton(
-            onPressed: () {
-              ref.read(previewThemeProvider.notifier).clear();
-              goHome();
-            },
-            child: Text(
-              'Exit preview',
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                color: hg.textSecondary,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1053,7 +1127,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                       child: Text(
                         _controller.isEndless ? 'End' : 'Give up',
                         style: TextStyle(
-                            fontFamily: HgFont.sans, color: hg.textMuted),
+                          fontFamily: HgFont.sans,
+                          color: hg.textMuted,
+                        ),
                       ),
                     ),
                   ),
@@ -1093,10 +1169,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                         style: TextStyle(
                           fontFamily: HgFont.sans,
                           fontSize: paused ? 28 : 13,
-                          fontWeight:
-                              paused ? FontWeight.w700 : FontWeight.normal,
-                          fontStyle:
-                              paused ? FontStyle.normal : FontStyle.italic,
+                          fontWeight: paused
+                              ? FontWeight.w700
+                              : FontWeight.normal,
+                          fontStyle: paused
+                              ? FontStyle.normal
+                              : FontStyle.italic,
                           letterSpacing: paused ? 5 : 0,
                           color: hg.accent,
                         ),
@@ -1199,7 +1277,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   /// offers "add a block" on its LAST block, so it flows on without stopping.
   Widget _endlessNudge(SessionState s, HgTokens hg) {
     final remaining = _controller.segmentRemaining.inSeconds;
-    final nearEnd = s.status == SessionStatus.running &&
+    final nearEnd =
+        s.status == SessionStatus.running &&
         !s.isResting &&
         remaining > 0 &&
         remaining <= 60;
@@ -1223,8 +1302,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         label = '+ Keep going — add a block';
         onTap = () {
           HapticFeedback.selectionClick();
-          _controller.extendNow(_continueBlockLen,
-              precedingRest: _continueBreakLen);
+          _controller.extendNow(
+            _continueBlockLen,
+            precedingRest: _continueBreakLen,
+          );
           setState(() {});
         };
       }
@@ -1242,7 +1323,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             side: BorderSide(color: hg.accent.withValues(alpha: 0.6)),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(
-                horizontal: HgSpacing.lg, vertical: HgSpacing.sm),
+              horizontal: HgSpacing.lg,
+              vertical: HgSpacing.sm,
+            ),
           ),
           child: Text(label),
         ),
@@ -1308,13 +1391,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           const SizedBox(height: HgSpacing.xl),
           TextButton(
             onPressed: _controller.skipRest,
-            child: Text('Skip break',
-                style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted)),
+            child: Text(
+              'Skip break',
+              style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted),
+            ),
           ),
           TextButton(
             onPressed: _confirmGiveUp,
-            child: Text('End session',
-                style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted)),
+            child: Text(
+              'End session',
+              style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted),
+            ),
           ),
         ],
       ),
@@ -1344,7 +1431,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           ),
           const SizedBox(height: HgSpacing.md),
           Text(
-            _segmentLabel().isEmpty ? 'Ready for the next block?' : _segmentLabel(),
+            _segmentLabel().isEmpty
+                ? 'Ready for the next block?'
+                : _segmentLabel(),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: HgFont.sans,
@@ -1364,8 +1453,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
           const SizedBox(height: HgSpacing.xs),
           TextButton(
             onPressed: _confirmGiveUp,
-            child: Text('End session',
-                style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted)),
+            child: Text(
+              'End session',
+              style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted),
+            ),
           ),
         ],
       ),
@@ -1424,9 +1515,7 @@ class _ModeChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? hg.accentMuted : Colors.transparent,
           borderRadius: BorderRadius.circular(HgRadius.pill),
-          border: Border.all(
-            color: selected ? hg.accent : hg.hairline,
-          ),
+          border: Border.all(color: selected ? hg.accent : hg.hairline),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -1466,27 +1555,27 @@ class _QuickToggle extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: TextStyle(
-                    fontFamily: HgFont.sans,
-                    fontSize: 15,
-                    color: hg.textPrimary,
-                  )),
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 15,
+                  color: hg.textPrimary,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(subtitle,
-                  style: TextStyle(
-                    fontFamily: HgFont.sans,
-                    fontSize: 12,
-                    color: hg.textMuted,
-                  )),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 12,
+                  color: hg.textMuted,
+                ),
+              ),
             ],
           ),
         ),
-        Switch(
-          value: value,
-          activeThumbColor: hg.accent,
-          onChanged: onChanged,
-        ),
+        Switch(value: value, activeThumbColor: hg.accent, onChanged: onChanged),
       ],
     );
   }
@@ -1541,174 +1630,212 @@ class _Completion extends ConsumerWidget {
     return Padding(
       key: const ValueKey('done-body'),
       padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(color: hg.glow, blurRadius: 60, spreadRadius: 10),
-              ],
-            ),
-            child: SizedBox(
-              width: 140,
-              child: HourglassView(
-                progress: 1,
-                animate: false,
-                skin: ref
-                    .watch(activeThemeProvider)
-                    .skinFor(Theme.of(context).brightness),
-              ),
-            ),
-          ),
-          const SizedBox(height: HgSpacing.xl),
-          if (flowCounts) ...[
-            // Hero = THIS session's score (it visibly changes block to block).
-            Text(
-              'SESSION SCORE',
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 11,
-                letterSpacing: 2,
-                color: hg.textMuted,
-              ),
-            ),
-            const SizedBox(height: HgSpacing.xs),
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: sessionPoints.toDouble()),
-              duration: const Duration(milliseconds: 900),
-              curve: HgMotion.calm,
-              builder: (_, v, _) => Text(
-                '${v.round()}',
-                style: TextStyle(
-                  fontFamily: HgFont.sans,
-                  fontSize: 64,
-                  fontWeight: FontWeight.w600,
-                  color: hg.accent,
+      // Scrolls when large font sizes push the summary past the viewport
+      // (e.g. the sub-2-min callout); centered whenever it fits.
+      child: LayoutBuilder(
+        builder: (context, box) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: box.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: hg.glow,
+                        blurRadius: 60,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(
+                    width: 140,
+                    child: HourglassView(
+                      progress: 1,
+                      animate: false,
+                      skin: ref
+                          .watch(activeThemeProvider)
+                          .skinFor(Theme.of(context).brightness),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: HgSpacing.sm),
-            Text(
-              '${_focusedLabel(focused)} focused',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 15,
-                color: hg.textSecondary,
-              ),
-            ),
-            const SizedBox(height: HgSpacing.xs),
-            // The overall Focus Score (your standing) — updates on Home.
-            Text(
-              score != null
-                  ? 'Focus Score · $score'
-                  : 'Focus Score · …',
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 13,
-                color: hg.textMuted,
-              ),
-            ),
-          ] else ...[
-            Text(
-              hasFocus
-                  ? '${_focusedLabel(focused)} focused'
-                  : (canKeepGoing ? 'Block complete' : 'Session ended'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: HgFont.sans,
-                fontSize: 26,
-                fontWeight: FontWeight.w400,
-                color: hg.textPrimary,
-              ),
-            ),
-            if (subTwoMinFlow) ...[
-              const SizedBox(height: HgSpacing.lg),
-              Container(
-                padding: const EdgeInsets.all(HgSpacing.md),
-                decoration: BoxDecoration(
-                  color: hg.accent.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(HgRadius.md),
-                  border: Border.all(color: hg.accent.withValues(alpha: 0.28)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.info_outline_rounded,
-                            size: 18, color: hg.accent),
-                        const SizedBox(width: HgSpacing.xs),
-                        Text(
-                          'Under 2 minutes',
-                          style: TextStyle(
-                            fontFamily: HgFont.sans,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: hg.accent,
+                const SizedBox(height: HgSpacing.xl),
+                if (flowCounts) ...[
+                  // Hero = THIS session's score (it visibly changes block to block).
+                  Text(
+                    'SESSION SCORE',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 11,
+                      letterSpacing: 2,
+                      color: hg.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: HgSpacing.xs),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: sessionPoints.toDouble()),
+                    duration: const Duration(milliseconds: 900),
+                    curve: HgMotion.calm,
+                    builder: (_, v, _) => Text(
+                      '${v.round()}',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        fontSize: 64,
+                        fontWeight: FontWeight.w600,
+                        color: hg.accent,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: HgSpacing.sm),
+                  Text(
+                    '${_focusedLabel(focused)} focused',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 15,
+                      color: hg.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: HgSpacing.xs),
+                  // The overall Focus Score (your standing) — updates on Home.
+                  Text(
+                    score != null ? 'Focus Score · $score' : 'Focus Score · …',
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 13,
+                      color: hg.textMuted,
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    hasFocus
+                        ? '${_focusedLabel(focused)} focused'
+                        : (canKeepGoing ? 'Block complete' : 'Session ended'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: HgFont.sans,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w400,
+                      color: hg.textPrimary,
+                    ),
+                  ),
+                  if (subTwoMinFlow) ...[
+                    const SizedBox(height: HgSpacing.lg),
+                    Container(
+                      padding: const EdgeInsets.all(HgSpacing.md),
+                      decoration: BoxDecoration(
+                        color: hg.accent.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(HgRadius.md),
+                        border: Border.all(
+                          color: hg.accent.withValues(alpha: 0.28),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                size: 18,
+                                color: hg.accent,
+                              ),
+                              const SizedBox(width: HgSpacing.xs),
+                              Text(
+                                'Under 2 minutes',
+                                style: TextStyle(
+                                  fontFamily: HgFont.sans,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: hg.accent,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: HgSpacing.sm),
+                          const _SummaryPoint(
+                            "This block won't count toward your Focus Score.",
+                          ),
+                          const _SummaryPoint(
+                            "It won't count toward your average focus either.",
+                          ),
+                          const _SummaryPoint(
+                            'Stay a few minutes longer next time and it will.',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+                const SizedBox(height: HgSpacing.xxl),
+                if (onRepeat != null) ...[
+                  // Pomodoro/Custom continue (Pro) — keep the session going.
+                  PrimaryButton(
+                    label: '+ One more block · ${blockLength.inMinutes} min',
+                    onPressed: () => onAddBlock!(blockLength, breakLength),
+                  ),
+                  const SizedBox(height: HgSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: onRepeat,
+                          child: Text(
+                            'Repeat plan',
+                            style: TextStyle(
+                              fontFamily: HgFont.sans,
+                              color: hg.textSecondary,
+                            ),
                           ),
                         ),
-                      ],
+                      ),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () =>
+                              _pickCustomBlock(context, onAddBlock!),
+                          child: Text(
+                            'Custom length',
+                            style: TextStyle(
+                              fontFamily: HgFont.sans,
+                              color: hg.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: HgSpacing.xs),
+                  TextButton(
+                    onPressed: onDone,
+                    child: Text(
+                      'Finish',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        color: hg.textMuted,
+                      ),
                     ),
-                    const SizedBox(height: HgSpacing.sm),
-                    const _SummaryPoint(
-                        "This block won't count toward your Focus Score."),
-                    const _SummaryPoint(
-                        "It won't count toward your average focus either."),
-                    const _SummaryPoint(
-                        'Stay a few minutes longer next time and it will.'),
-                  ],
-                ),
-              ),
-            ],
-          ],
-          const SizedBox(height: HgSpacing.xxl),
-          if (onRepeat != null) ...[
-            // Pomodoro/Custom continue (Pro) — keep the session going.
-            PrimaryButton(
-              label: '+ One more block · ${blockLength.inMinutes} min',
-              onPressed: () => onAddBlock!(blockLength, breakLength),
-            ),
-            const SizedBox(height: HgSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: onRepeat,
-                    child: Text('Repeat plan',
-                        style: TextStyle(
-                            fontFamily: HgFont.sans, color: hg.textSecondary)),
                   ),
-                ),
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => _pickCustomBlock(context, onAddBlock!),
-                    child: Text('Custom length',
-                        style: TextStyle(
-                            fontFamily: HgFont.sans, color: hg.textSecondary)),
+                ] else if (canKeepGoing) ...[
+                  PrimaryButton(label: 'Keep going', onPressed: onKeepGoing),
+                  const SizedBox(height: HgSpacing.xs),
+                  TextButton(
+                    onPressed: onDone,
+                    child: Text(
+                      'Done',
+                      style: TextStyle(
+                        fontFamily: HgFont.sans,
+                        color: hg.textMuted,
+                      ),
+                    ),
                   ),
-                ),
+                ] else
+                  PrimaryButton(label: 'Done', onPressed: onDone),
               ],
             ),
-            const SizedBox(height: HgSpacing.xs),
-            TextButton(
-              onPressed: onDone,
-              child: Text('Finish',
-                  style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted)),
-            ),
-          ] else if (canKeepGoing) ...[
-            PrimaryButton(label: 'Keep going', onPressed: onKeepGoing),
-            const SizedBox(height: HgSpacing.xs),
-            TextButton(
-              onPressed: onDone,
-              child: Text('Done',
-                  style: TextStyle(fontFamily: HgFont.sans, color: hg.textMuted)),
-            ),
-          ] else
-            PrimaryButton(label: 'Done', onPressed: onDone),
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -1717,7 +1844,9 @@ class _Completion extends ConsumerWidget {
 /// A quick "add focus" sheet for the Pomodoro/Custom continue — preset minutes
 /// added as a straight focus block (no break).
 Future<void> _pickCustomBlock(
-    BuildContext context, void Function(Duration, Duration) add) async {
+  BuildContext context,
+  void Function(Duration, Duration) add,
+) async {
   final hg = context.hg;
   const presets = [10, 15, 20, 25, 30, 45];
   await showModalBottomSheet<void>(
@@ -1755,12 +1884,15 @@ Future<void> _pickCustomBlock(
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: HgSpacing.lg, vertical: HgSpacing.sm),
+                        horizontal: HgSpacing.lg,
+                        vertical: HgSpacing.sm,
+                      ),
                       decoration: BoxDecoration(
                         color: hg.accent.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(HgRadius.md),
-                        border:
-                            Border.all(color: hg.accent.withValues(alpha: 0.30)),
+                        border: Border.all(
+                          color: hg.accent.withValues(alpha: 0.30),
+                        ),
                       ),
                       child: Text(
                         '$m min',
@@ -1801,7 +1933,10 @@ class _SummaryPoint extends StatelessWidget {
             child: Container(
               width: 5,
               height: 5,
-              decoration: BoxDecoration(color: hg.accent, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: hg.accent,
+                shape: BoxShape.circle,
+              ),
             ),
           ),
           const SizedBox(width: HgSpacing.sm),

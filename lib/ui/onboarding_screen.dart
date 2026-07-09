@@ -119,16 +119,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   void _onSkip() {
     if (_index < _profileIndex) {
-      _pageCtrl.animateToPage(_profileIndex,
-          duration: _pageTurn, curve: HgMotion.calm);
+      _pageCtrl.animateToPage(
+        _profileIndex,
+        duration: _pageTurn,
+        curve: HgMotion.calm,
+      );
     } else {
       _finish(save: false);
     }
   }
 
   Future<void> _pickPhoto() async {
-    final picked = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, maxWidth: 2048);
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2048,
+    );
     if (picked == null || !mounted) return;
     final bytes = await cropAvatar(context, picked.path);
     if (bytes == null || !mounted) return;
@@ -144,8 +149,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       });
     } on ImageStorageException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -160,10 +166,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     // Persist while the sand drains.
     final name = _nameCtrl.text.trim();
     if (save && (name.isNotEmpty || _pendingPath != null)) {
-      await ref.read(profileRepositoryProvider).update(
-            name: name.isEmpty ? null : name,
-            imagePath: _pendingPath,
-          );
+      await ref
+          .read(profileRepositoryProvider)
+          .update(name: name.isEmpty ? null : name, imagePath: _pendingPath);
     }
     await ref
         .read(settingsRepositoryProvider)
@@ -317,32 +322,41 @@ class _TeachView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          page.headline,
-          style: TextStyle(
-            fontFamily: HgFont.sans,
-            fontSize: 30,
-            fontWeight: FontWeight.w500,
-            height: 1.15,
-            letterSpacing: -0.5,
-            color: hg.textPrimary,
+    // Scrolls when large font sizes push the copy past the viewport; the
+    // min-height constraint keeps it vertically centered when it fits.
+    return LayoutBuilder(
+      builder: (context, box) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: box.maxHeight),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                page.headline,
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w500,
+                  height: 1.15,
+                  letterSpacing: -0.5,
+                  color: hg.textPrimary,
+                ),
+              ),
+              const SizedBox(height: HgSpacing.md),
+              Text(
+                page.subcopy,
+                style: TextStyle(
+                  fontFamily: HgFont.sans,
+                  fontSize: 16,
+                  height: 1.5,
+                  color: hg.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: HgSpacing.md),
-        Text(
-          page.subcopy,
-          style: TextStyle(
-            fontFamily: HgFont.sans,
-            fontSize: 16,
-            height: 1.5,
-            color: hg.textSecondary,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -407,9 +421,9 @@ class _ProfileView extends StatelessWidget {
               fontSize: 16,
               color: hg.textPrimary,
             ),
-            buildCounter: (_,
-                    {required currentLength, required isFocused, maxLength}) =>
-                null,
+            buildCounter:
+                (_, {required currentLength, required isFocused, maxLength}) =>
+                    null,
             decoration: InputDecoration(
               hintText: 'Your name',
               hintStyle: TextStyle(color: hg.textMuted),
@@ -463,13 +477,21 @@ class _AvatarRing extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: hg.hairline),
         ),
-        child: Icon(Icons.add_a_photo_outlined,
-            size: size * 0.42, color: hg.textMuted),
+        child: Icon(
+          Icons.add_a_photo_outlined,
+          size: size * 0.42,
+          color: hg.textMuted,
+        ),
       );
     }
     return ClipOval(
-      child: Image.file(file!,
-          width: size, height: size, fit: BoxFit.cover, gaplessPlayback: true),
+      child: Image.file(
+        file!,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+      ),
     );
   }
 }

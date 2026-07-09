@@ -54,6 +54,7 @@
 - [ ] **Home-screen widgets.**
 - [ ] **Break-time activities** — sudoku, meditation, breathing, light exercise.
 - [ ] **Spotify connect** — focus music during sessions.
+- [ ] **Focus Wrapped** — Spotify-Wrapped-style personalized recap (yearly/seasonal): top stats, milestones, hours focused, streaks, share cards. *Brainstorm later.*
 - [ ] **Notes / journal** — in-app per-session reflections.
 - [ ] **Picture-in-Picture mini-session** — Home-button keeps the session live in a floating hourglass window.
 - [ ] **PC / web versions** with real site/app blocking + monitoring (the actual work-verification) + an allow-list of permitted apps (Pro pillar).

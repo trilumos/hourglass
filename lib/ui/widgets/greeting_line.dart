@@ -61,8 +61,7 @@ class _GreetingLineState extends ConsumerState<GreetingLine> {
   Widget build(BuildContext context) {
     final hg = context.hg;
     final now = ref.watch(clockProvider)();
-    final profileName =
-        ref.watch(profileProvider).value?.name.trim() ?? '';
+    final profileName = ref.watch(profileProvider).value?.name.trim() ?? '';
     final stats = ref.watch(homeStatsProvider).value;
     final greeting = _greetingFor(
       now,
@@ -103,9 +102,10 @@ class _GreetingLineState extends ConsumerState<GreetingLine> {
         ),
         const SizedBox(height: HgSpacing.sm),
         // Fixed height (≈2 lines + slide room) so a longer quote never clips
-        // during the transition and never resizes the hero.
+        // during the transition and never resizes the hero. Follows the user's
+        // font scale so large system fonts don't clip the second line.
         SizedBox(
-          height: 58,
+          height: MediaQuery.textScalerOf(context).scale(15) * 1.45 * 2 + 14,
           width: double.infinity,
           child: Align(
             alignment: Alignment.topLeft,

@@ -57,21 +57,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _begin() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => SetupScreen(mode: _mode)),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => SetupScreen(mode: _mode)));
   }
 
   void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
   }
 
   void _openProfile() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
   }
 
   @override
@@ -85,103 +85,112 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final stats = ref.watch(homeStatsProvider);
 
     return Scaffold(
-      // The preview bar (when previewing a locked theme) sits in the bottom slot
-      // so it reserves real layout space and never covers Begin.
-      bottomNavigationBar: PreviewBar(
-        onGetIt: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ThemesScreen()),
-        ),
-      ),
-      body: ScreenBackground(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: HgSpacing.screen),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: HgSpacing.sm),
-                // ── Top: wordmark (left) + settings gear (right) ───────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          ScreenBackground(
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: HgSpacing.screen,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: _openProfile,
-                          behavior: HitTestBehavior.opaque,
-                          child: const ProfileAvatar(size: 40),
+                    const SizedBox(height: HgSpacing.sm),
+                    // ── Top: wordmark (left) + settings gear (right) ───────────
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: _openProfile,
+                              behavior: HitTestBehavior.opaque,
+                              child: const ProfileAvatar(size: 40),
+                            ),
+                          ),
                         ),
-                      ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'SUSTAIN',
+                              style: TextStyle(
+                                fontFamily: HgFont.sans,
+                                fontSize: 14,
+                                letterSpacing: 3.5,
+                                color: hg.textSecondary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _openSettings,
+                          iconSize: HgSize.iconMd,
+                          color: hg.textSecondary,
+                          icon: const Icon(Icons.settings_outlined),
+                          tooltip: 'Settings',
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: HgSpacing.md),
+                    const GreetingLine(), // greeting (primary, left) + pull-quote
+                    // ── Hero (centered) ────────────────────────────────────────
                     Expanded(
                       child: Center(
-                        child: Text(
-                          'SUSTAIN',
-                          style: TextStyle(
-                            fontFamily: HgFont.sans,
-                            fontSize: 14,
-                            letterSpacing: 3.5,
-                            color: hg.textSecondary,
-                            fontWeight: FontWeight.w700,
+                        child: Padding(
+                          // Minimal breathing room — lets the hourglass use the
+                          // available vertical space without displacing anything.
+                          padding: const EdgeInsets.symmetric(
+                            vertical: HgSpacing.xs,
+                          ),
+                          child: HourglassView(
+                            progress: 0,
+                            ambient: true, // alive idle fall, full top, no pile
+                            heroTag: kHourglassHeroTag,
+                            skin: ref
+                                .watch(activeThemeProvider)
+                                .skinFor(Theme.of(context).brightness),
                           ),
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: _openSettings,
-                      iconSize: HgSize.iconMd,
-                      color: hg.textSecondary,
-                      icon: const Icon(Icons.settings_outlined),
-                      tooltip: 'Settings',
-                      visualDensity: VisualDensity.compact,
+                    const AdaptiveTagline(), // tagline below the hourglass, centered
+                    const SizedBox(height: HgSpacing.lg),
+                    // ── Bottom cluster (centered, as before) ───────────────────
+                    _StatRow(
+                      stats: stats,
+                      focusScore: ref.watch(focusScoreProvider).value,
+                      isPro: ref.watch(entitlementsProvider).pro,
                     ),
-                  ],
-                ),
-                const SizedBox(height: HgSpacing.md),
-                const GreetingLine(), // greeting (primary, left) + pull-quote
-                // ── Hero (centered) ────────────────────────────────────────
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      // Minimal breathing room — lets the hourglass use the
-                      // available vertical space without displacing anything.
-                      padding:
-                          const EdgeInsets.symmetric(vertical: HgSpacing.xs),
-                      child: HourglassView(
-                        progress: 0,
-                        ambient: true, // alive idle fall, full top, no pile
-                        heroTag: kHourglassHeroTag,
-                        skin: ref
-                            .watch(activeThemeProvider)
-                            .skinFor(Theme.of(context).brightness),
+                    const SizedBox(height: HgSpacing.lg),
+                    Center(
+                      child: ModeSelector(
+                        selected: _mode,
+                        onChanged: (m) => setState(() => _mode = m),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: HgSpacing.lg),
+                    PrimaryButton(label: 'Begin', onPressed: _begin),
+                    const SizedBox(height: HgSpacing.xl),
+                  ],
                 ),
-                const AdaptiveTagline(), // tagline below the hourglass, centered
-                const SizedBox(height: HgSpacing.lg),
-                // ── Bottom cluster (centered, as before) ───────────────────
-                _StatRow(
-                  stats: stats,
-                  focusScore: ref.watch(focusScoreProvider).value,
-                  isPro: ref.watch(entitlementsProvider).pro,
-                ),
-                const SizedBox(height: HgSpacing.lg),
-                Center(
-                  child: ModeSelector(
-                    selected: _mode,
-                    onChanged: (m) => setState(() => _mode = m),
-                  ),
-                ),
-                const SizedBox(height: HgSpacing.lg),
-                PrimaryButton(label: 'Begin', onPressed: _begin),
-                const SizedBox(height: HgSpacing.xl),
-              ],
+              ),
             ),
           ),
-        ),
+          // Floating preview pill (when previewing a locked theme) — overlays
+          // the screen and takes no layout space, so the hourglass keeps its
+          // full size; draggable, so it can never block a control.
+          PreviewBar(
+            onGetIt: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ThemesScreen())),
+          ),
+        ],
       ),
     );
   }
@@ -204,19 +213,19 @@ class _StatRow extends StatelessWidget {
     final hg = context.hg;
     final data = stats.value ?? HomeStats.empty;
     Widget divider() => Container(
-          width: 1,
-          height: 28,
-          margin: const EdgeInsets.symmetric(horizontal: HgSpacing.md),
-          color: hg.hairline,
-        );
+      width: 1,
+      height: 28,
+      margin: const EdgeInsets.symmetric(horizontal: HgSpacing.md),
+      color: hg.hairline,
+    );
     // Today / Streak / Avg open Insights; Focus opens the Focus Score detail.
     Widget toInsights(Widget child) => GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const InsightsScreen()),
-          ),
-          child: child,
-        );
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const InsightsScreen())),
+      child: child,
+    );
     // FittedBox keeps all four stats on one line on narrow screens / large fonts.
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -225,9 +234,9 @@ class _StatRow extends StatelessWidget {
         children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const FocusScoreScreen()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const FocusScoreScreen())),
             child: _Stat(
               label: 'Focus',
               value: '${focusScore ?? 0}',
@@ -238,14 +247,15 @@ class _StatRow extends StatelessWidget {
           if (isPro) ...[
             divider(),
             toInsights(
-                _Stat(label: 'Avg', value: _formatFocus(data.avgSession))),
+              _Stat(label: 'Avg', value: _formatFocus(data.avgSession)),
+            ),
           ],
           divider(),
           toInsights(
-              _Stat(label: 'Today', value: _formatFocus(data.todayFocus))),
+            _Stat(label: 'Today', value: _formatFocus(data.todayFocus)),
+          ),
           divider(),
-          toInsights(
-              _Stat(label: 'Streak', value: _formatStreak(data.streak))),
+          toInsights(_Stat(label: 'Streak', value: _formatStreak(data.streak))),
         ],
       ),
     );
