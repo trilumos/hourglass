@@ -15,6 +15,10 @@ class FakeBillingService implements BillingService {
   PurchaseOutcome nextThemePurchase;
   final _controller = StreamController<Entitlements>.broadcast();
 
+  /// Which plan a [RestoreOutcome.restoredPro] restores. Defaults to a
+  /// subscription (no themes) — the conservative case.
+  bool restoredIsLifetime;
+
   FakeBillingService({
     Entitlements initial = Entitlements.free,
     this.offering,
@@ -22,11 +26,14 @@ class FakeBillingService implements BillingService {
     this.nextRestore = RestoreOutcome.nothingToRestore,
     this.themeProductList = const [],
     this.nextThemePurchase = PurchaseOutcome.success,
+    this.restoredIsLifetime = false,
   }) : _current = initial;
 
-  Entitlements get _pro => entitlementsFrom(
+  /// Mirrors the real rule: only Lifetime bundles the themes.
+  Entitlements _proFor({required bool lifetime}) => entitlementsFrom(
         activeEntitlementIds: const {kProEntitlement},
         catalogThemeIds: kCatalogThemeIds,
+        proLifetime: lifetime,
       );
 
   @override
@@ -50,7 +57,7 @@ class FakeBillingService implements BillingService {
     lastPurchased = package;
     if (nextPurchase == PurchaseOutcome.success ||
         nextPurchase == PurchaseOutcome.alreadyOwned) {
-      _current = _pro;
+      _current = _proFor(lifetime: package.plan == ProPlan.lifetime);
       _controller.add(_current);
     }
     return nextPurchase;
@@ -59,7 +66,7 @@ class FakeBillingService implements BillingService {
   @override
   Future<RestoreOutcome> restore() async {
     if (nextRestore == RestoreOutcome.restoredPro) {
-      _current = _pro;
+      _current = _proFor(lifetime: restoredIsLifetime);
       _controller.add(_current);
     }
     return nextRestore;

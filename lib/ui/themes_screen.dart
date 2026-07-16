@@ -115,6 +115,7 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
                           owned: entitlements.ownsTheme(theme.id),
                           active: theme.id == selectedId &&
                               entitlements.ownsTheme(theme.id),
+                          isPro: entitlements.pro,
                           product: _products[theme.id],
                         ),
                       ),
@@ -129,7 +130,10 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
   }
 
   void _openSheet(HgTheme theme,
-      {required bool owned, required bool active, ThemeProduct? product}) {
+      {required bool owned,
+      required bool active,
+      required bool isPro,
+      ThemeProduct? product}) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -138,6 +142,7 @@ class _ThemesScreenState extends ConsumerState<ThemesScreen> {
         theme: theme,
         owned: owned,
         active: active,
+        isPro: isPro,
         product: product,
         onApply: () {
           ref.read(themeControllerProvider.notifier).setTheme(theme.id);
@@ -191,7 +196,9 @@ HgTokens _tokensFor(HgTheme theme, Brightness b) =>
 String _badge(bool owned, ThemeProduct? product) {
   if (owned) return 'Owned';
   if (product != null) return product.priceString;
-  return 'In Pro';
+  // Fallback when à-la-carte products haven't loaded. Themes ship with Lifetime
+  // only — "In Pro" would promise them to Monthly/Yearly, which no longer holds.
+  return 'In Lifetime';
 }
 
 class _ThemeTile extends StatelessWidget {
@@ -349,6 +356,9 @@ class _ThemeSheet extends StatelessWidget {
   final HgTheme theme;
   final bool owned;
   final bool active; // already the applied theme
+  /// Pro is active but this theme is unowned — i.e. a Monthly/Yearly subscriber.
+  /// Themes are Lifetime-only, so we must not offer them "Get Pro" (they have it).
+  final bool isPro;
   final ThemeProduct? product;
   final VoidCallback onApply;
   final VoidCallback onPreview;
@@ -358,6 +368,7 @@ class _ThemeSheet extends StatelessWidget {
     required this.theme,
     required this.owned,
     required this.active,
+    required this.isPro,
     required this.product,
     required this.onApply,
     required this.onPreview,
@@ -456,14 +467,19 @@ class _ThemeSheet extends StatelessWidget {
                 const SizedBox(height: HgSpacing.sm),
               ],
               _QuietButton(
-                label: 'Get Pro',
+                // A Monthly/Yearly subscriber already has Pro — offering it
+                // again is a dead end. Lifetime is what unlocks every theme.
+                label: isPro ? 'Get Lifetime' : 'Get Pro',
                 color: t.textSecondary,
                 onPressed: onGetPro,
               ),
               const SizedBox(height: HgSpacing.sm),
               Text(
-                'Pro unlocks every theme while active. Pro Lifetime keeps them '
-                'forever.',
+                isPro
+                    ? 'Pro Lifetime includes every theme, forever. Or buy this '
+                        'one on its own — it stays yours either way.'
+                    : 'Pro Lifetime includes every theme, forever. Any theme you '
+                        'buy on its own stays yours, even without Pro.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: HgFont.sans,

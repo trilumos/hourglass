@@ -11,7 +11,7 @@ import 'tokens.dart';
 /// Debug-only stand-in à-la-carte products so the per-theme Buy flow is visible
 /// and testable on-device before the real Play Console / RevenueCat products
 /// exist. Compiled out of release (kDebugMode is a const false), where key-less
-/// themes correctly show "In Pro" until the founder configures real products.
+/// themes correctly show "In Lifetime" until the founder configures real products.
 List<ThemeProduct> _devThemeProducts() => [
       for (final id in kCatalogThemeIds)
         ThemeProduct(themeId: id, priceString: r'$1.99', raw: 'dev'),

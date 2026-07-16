@@ -204,6 +204,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   /// Cross-fades + lifts page content as it scrolls past centre (buttery, vs a
   /// rigid horizontal slide).
+  /// How much of the column the hourglass may keep, as a flex against the copy's
+  /// flex of 6. `Expanded` ignores its child's preferred size, so this must react
+  /// to the text scale by hand — nothing else will do it for us (flutter#12311).
+  /// Big text ⇒ smaller ornament, but never tiny: the description scrolls, so the
+  /// hero only has to yield enough for a readable window, not get out of the way.
+  int _heroFlex(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    if (scale >= 1.5) return 3; // extra-large accessibility sizes
+    if (scale >= 1.2) return 4;
+    return 5; // the designed look at normal sizes
+  }
+
   Widget _paged(int i, Widget child) {
     return AnimatedBuilder(
       animation: _pageCtrl,
@@ -248,8 +260,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                 ),
                 // Persistent hero (does not page). Flips upright on finish.
+                //
+                // The flex SHRINKS as the text scale grows. `Expanded` ignores its
+                // child's preferred size, so a fixed flex kept handing the hourglass
+                // ~45% of the column even when the copy needed all of it — the copy
+                // was then squeezed into a slot too short to read (flutter#12311:
+                // text scaling doesn't affect fixed-size widgets). At the largest
+                // accessibility sizes the words matter more than the ornament.
                 Expanded(
-                  flex: 5,
+                  flex: _heroFlex(context),
                   child: Center(
                     child: AnimatedBuilder(
                       // Rebuild ONLY the hero subtree on flip or page scroll —
@@ -322,41 +341,40 @@ class _TeachView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    // Scrolls when large font sizes push the copy past the viewport; the
-    // min-height constraint keeps it vertically centered when it fits.
-    return LayoutBuilder(
-      builder: (context, box) => SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: box.maxHeight),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                page.headline,
-                style: TextStyle(
-                  fontFamily: HgFont.sans,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w500,
-                  height: 1.15,
-                  letterSpacing: -0.5,
-                  color: hg.textPrimary,
-                ),
-              ),
-              const SizedBox(height: HgSpacing.md),
-              Text(
-                page.subcopy,
-                style: TextStyle(
-                  fontFamily: HgFont.sans,
-                  fontSize: 16,
-                  height: 1.5,
-                  color: hg.textSecondary,
-                ),
-              ),
-            ],
+    // The headline is pinned; only the description scrolls. At large accessibility
+    // sizes the copy outgrows its slot, and scrolling the body alone keeps the
+    // headline from sliding out from under it. `Flexible` (not `Expanded`) so the
+    // body still hugs its text at normal sizes instead of stretching.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          page.headline,
+          style: TextStyle(
+            fontFamily: HgFont.sans,
+            fontSize: 30,
+            fontWeight: FontWeight.w500,
+            height: 1.15,
+            letterSpacing: -0.5,
+            color: hg.textPrimary,
           ),
         ),
-      ),
+        const SizedBox(height: HgSpacing.md),
+        Flexible(
+          child: SingleChildScrollView(
+            child: Text(
+              page.subcopy,
+              style: TextStyle(
+                fontFamily: HgFont.sans,
+                fontSize: 16,
+                height: 1.5,
+                color: hg.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -374,88 +392,103 @@ class _ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hg = context.hg;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: HgSpacing.md),
-          Text(
-            'What should we call you?',
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 30,
-              fontWeight: FontWeight.w500,
-              height: 1.15,
-              letterSpacing: -0.5,
-              color: hg.textPrimary,
-            ),
+    // Same rule as the teach pages: the headline is pinned, everything below it
+    // scrolls. At large accessibility sizes the avatar row + field + note outgrow
+    // the slot, and the field must stay reachable rather than be silently clipped.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: HgSpacing.md),
+        Text(
+          'What should we call you?',
+          style: TextStyle(
+            fontFamily: HgFont.sans,
+            fontSize: 30,
+            fontWeight: FontWeight.w500,
+            height: 1.15,
+            letterSpacing: -0.5,
+            color: hg.textPrimary,
           ),
-          const SizedBox(height: HgSpacing.lg),
-          GestureDetector(
-            onTap: onPickPhoto,
-            behavior: HitTestBehavior.opaque,
-            child: Row(
+        ),
+        const SizedBox(height: HgSpacing.lg),
+        Flexible(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _AvatarRing(file: pendingFile),
-                const SizedBox(width: HgSpacing.md),
-                Text(
-                  pendingFile == null ? 'Add a photo' : 'Change photo',
+                GestureDetector(
+                  onTap: onPickPhoto,
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    children: [
+                      _AvatarRing(file: pendingFile),
+                      const SizedBox(width: HgSpacing.md),
+                      Text(
+                        pendingFile == null ? 'Add a photo' : 'Change photo',
+                        style: TextStyle(
+                          fontFamily: HgFont.sans,
+                          fontSize: 15,
+                          color: hg.accent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.lg),
+                TextField(
+                  controller: controller,
+                  maxLength: 40,
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.done,
                   style: TextStyle(
                     fontFamily: HgFont.sans,
-                    fontSize: 15,
-                    color: hg.accent,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: hg.textPrimary,
+                  ),
+                  buildCounter:
+                      (
+                        _, {
+                        required currentLength,
+                        required isFocused,
+                        maxLength,
+                      }) => null,
+                  decoration: InputDecoration(
+                    hintText: 'Your name',
+                    hintStyle: TextStyle(color: hg.textMuted),
+                    filled: true,
+                    fillColor: hg.surfaceRaised,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(HgRadius.sm),
+                      borderSide: BorderSide(color: hg.hairline),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(HgRadius.sm),
+                      borderSide: BorderSide(color: hg.hairline),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(HgRadius.sm),
+                      borderSide: BorderSide(color: hg.accent),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: HgSpacing.sm),
+                Text(
+                  'Optional — change it later in your profile. Your focus data '
+                  'stays on this device; back it up anytime in Settings → Your '
+                  'data.',
+                  style: TextStyle(
+                    fontFamily: HgFont.sans,
+                    fontSize: 13,
+                    height: 1.4,
+                    color: hg.textMuted,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: HgSpacing.lg),
-          TextField(
-            controller: controller,
-            maxLength: 40,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.done,
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 16,
-              color: hg.textPrimary,
-            ),
-            buildCounter:
-                (_, {required currentLength, required isFocused, maxLength}) =>
-                    null,
-            decoration: InputDecoration(
-              hintText: 'Your name',
-              hintStyle: TextStyle(color: hg.textMuted),
-              filled: true,
-              fillColor: hg.surfaceRaised,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(HgRadius.sm),
-                borderSide: BorderSide(color: hg.hairline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(HgRadius.sm),
-                borderSide: BorderSide(color: hg.hairline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(HgRadius.sm),
-                borderSide: BorderSide(color: hg.accent),
-              ),
-            ),
-          ),
-          const SizedBox(height: HgSpacing.sm),
-          Text(
-            'Optional — change it later in your profile. Your focus data stays '
-            'on this device; back it up anytime in Settings → Your data.',
-            style: TextStyle(
-              fontFamily: HgFont.sans,
-              fontSize: 13,
-              height: 1.4,
-              color: hg.textMuted,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

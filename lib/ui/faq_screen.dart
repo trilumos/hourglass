@@ -53,9 +53,13 @@ const _faqs = <_Qa>[
         'heatmap), CSV history export, the Sand look, and session sound cues. Pro '
         'adds the full Insights depth (Focus Score and Stamina over time, your peak '
         'window, follow-through, personal bests, average session, and a PDF Focus '
-        'Report), every color theme, unlimited longer pauses (up to 10 minutes), '
+        'Report), unlimited longer pauses (up to 10 minutes), '
         'keeping a Pomodoro or Custom session going past its end, session reuse, '
-        'and every Pro feature added later.',
+        'and every Pro feature added later.\n\n'
+        'Color themes work differently: Pro Lifetime includes every theme, '
+        'forever. Monthly and Yearly include every Pro feature but no themes — a '
+        'theme is a one-time thing you own, so we do not rent it to you. On any '
+        'plan (or none) you can buy a theme on its own, once, and it stays yours.',
   ),
   _Qa(
     'How do payments work?',

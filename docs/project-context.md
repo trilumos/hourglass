@@ -11,6 +11,39 @@
 > authoritative. (The app is now named **Sustain**; "Hourglass" survives only as the visual motif and
 > some old filenames.)
 
+## ⛔ IRON RULE — RESEARCH FIRST (founder, 2026-07-17, CONFIRMED — never to be violated)
+
+**Always search the internet and read the OFFICIAL DOCS first. Never answer from memory on anything
+that can change.** The assistant's training data has a cutoff; the world does not. A confident,
+obsolete answer is the exact failure this rule exists to prevent.
+
+**Applies to EVERYTHING — including the code itself, not only versions/platforms/APIs/policy.**
+Before writing or fixing code: look up how the framework actually says to do it. Widget behaviour,
+layout/constraint rules, lifecycle, async semantics, idioms, known pitfalls — read `api.flutter.dev`
+and the official cookbook/docs rather than reconstructing them from memory. "I know how `Expanded`
+works" is exactly the thought that ships the bug.
+
+Also applies to: framework/library APIs (Flutter, Dart, Three.js, Firebase, RevenueCat…), platform
+policy (Play Console, Apple, AccessibilityService, billing), pricing (ours, competitors',
+infrastructure), anything with a version number or deprecation, and known bugs — **search GitHub
+issues + Stack Overflow before diagnosing from first principles.** Someone has almost always hit it
+already.
+
+**Order of trust:** official docs → official issue tracker → reputable community (Stack Overflow,
+Codrops) → blogs. **Cite the URLs** so the founder can verify.
+
+**If a search contradicts what the assistant "knows", the search wins** — say so plainly and correct
+the record. If it cannot be verified, say *"I could not verify this"* rather than filling the gap from
+memory. Never present a memory-sourced claim as fact.
+
+**Why (real damage caught on 2026-07-17):** (a) Play's external-billing "arbitrage" was asserted as
+worth 10–25% when Google's 2026-06-30 change had made it a wash; (b) "sync costs real money to run"
+was asserted and was false (~$0.0006/user/month) — and would have been told to *users*; (c) app
+blocking was scoped as buildable until Play's 2026-01-28 AccessibilityService policy turned out to
+forbid it. Each was confident, wrong, and would have shipped.
+
+---
+
 ## Founder / working preferences
 - Solo founder, hopes Hourglass becomes a real company and full-time income ("big break").
 - Self-describes as **non-technical** — wants me to lead with expertise and recommend a clear default rather than hand over abstract option lists. Present concrete, pre-filtered choices.

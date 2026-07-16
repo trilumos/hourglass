@@ -32,15 +32,24 @@ class Entitlements {
 /// The single source of truth for entitlement rules. Pure: plain sets in, an
 /// [Entitlements] out. [activeEntitlementIds] are RevenueCat's active entitlement
 /// identifiers; [catalogThemeIds] is the app's purchasable theme catalog.
+///
+/// **Subscriptions rent features; only a one-time purchase owns one-time goods.**
+/// Themes are one-time goods, so only [proLifetime] bundles them — Monthly and
+/// Yearly grant every Pro *feature* but no themes (buy à-la-carte, owned forever).
+/// [proLifetime] is required, not defaulted: a silent default here either revokes
+/// a Lifetime buyer's themes or gives subscribers themes free, and both are money
+/// bugs. Callers must state it.
 Entitlements entitlementsFrom({
   required Set<String> activeEntitlementIds,
   required Set<String> catalogThemeIds,
+  required bool proLifetime,
 }) {
   final pro = activeEntitlementIds.contains(kProEntitlement);
   final owned = <String>{'sand'};
   for (final id in catalogThemeIds) {
     if (activeEntitlementIds.contains('theme_$id')) owned.add(id);
   }
-  if (pro) owned.addAll(catalogThemeIds);
+  // `pro &&` guards the caller passing proLifetime:true without an active Pro.
+  if (pro && proLifetime) owned.addAll(catalogThemeIds);
   return Entitlements(pro: pro, ownedThemeIds: owned);
 }

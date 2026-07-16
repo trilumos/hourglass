@@ -99,7 +99,8 @@ abstract class BillingService {
   Future<ProStatus?> proStatus();
 
   /// The purchasable themes (à la carte). Empty when unavailable (offline /
-  /// key-less / no products configured). Pro grants all themes regardless.
+  /// key-less / no products configured). Pro **Lifetime** grants all themes;
+  /// Monthly/Yearly do not — themes are one-time goods (see [entitlementsFrom]).
   Future<List<ThemeProduct>> themeProducts();
 
   /// Purchase a single theme. On success the `theme_<id>` entitlement becomes

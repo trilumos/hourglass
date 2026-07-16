@@ -349,7 +349,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget _comparison(HgTokens hg) {
     const rows = <(String, String, String)>[
       ('Insights over time', '—', 'Full'),
-      ('Color themes', 'Sand', 'All 9'),
+      ('Color themes', 'Sand', 'All 9 · Lifetime only'),
       ('Mid-session pauses', '3 × 3 min', 'Unlimited × 10 min'),
       ('PDF Focus Report', '—', 'Yes'),
       ('Average session stat', '—', 'Yes'),
@@ -464,8 +464,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       (
         Icons.palette_outlined,
-        'Every color theme',
-        'All premium themes — now and every one we add — unlocked while Pro is active.'
+        'Every color theme — with Lifetime',
+        'Lifetime includes all 9 premium themes, plus every one we add, yours '
+            'forever. On Monthly and Yearly, themes are sold separately — buy one '
+            'once and you keep it, even if you cancel.'
       ),
       (
         Icons.auto_awesome_rounded,
@@ -533,7 +535,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       const SizedBox(height: HgSpacing.sm),
       Text(
         _selected == ProPlan.lifetime
-            ? 'A one-time payment — no subscription, no renewal. Every Pro feature we add later is included automatically.'
+            ? 'A one-time payment — no subscription, no renewal. Includes every color theme, and every Pro feature we add later. Optional services like cloud backup are separate.'
             : 'Auto-renews until cancelled. Manage or cancel anytime in Google Play.',
         textAlign: TextAlign.center,
         style:
@@ -610,7 +612,10 @@ List<Widget> buildPlanTiles({
       _PlanTile(
           label: 'Lifetime',
           price: lifetime.priceString,
-          badge: 'Own forever',
+          // The one place themes are called out on the tiles: stated positively
+          // on Lifetime only. Monthly/Yearly stay silent by design — the rule is
+          // spelled out in the comparison table and the feature list above.
+          badge: 'Own forever · all themes',
           note: 'One-time payment — no subscription, no renewal',
           selected: selected == ProPlan.lifetime,
           onTap: () => onSelect(ProPlan.lifetime)),

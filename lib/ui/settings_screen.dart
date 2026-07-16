@@ -88,7 +88,7 @@ class SettingsScreen extends ConsumerWidget {
                       : 'Get Sustain Pro',
                   subtitle: ref.watch(entitlementsProvider).pro
                       ? 'Manage your plan and subscription.'
-                      : 'Your full focus story, every theme, and more.',
+                      : 'Your full focus story, deeper insights, and more.',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const PaywallScreen()),
                   ),

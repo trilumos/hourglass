@@ -18,10 +18,18 @@ class RevenueCatBillingService implements BillingService {
   Entitlements _current = Entitlements.free;
   void Function(CustomerInfo)? _listener;
 
-  Entitlements _map(CustomerInfo info) => entitlementsFrom(
-        activeEntitlementIds: info.entitlements.active.keys.toSet(),
-        catalogThemeIds: kCatalogThemeIds,
-      );
+  Entitlements _map(CustomerInfo info) {
+    // Lifetime is a non-subscription purchase: no expiry (mirrors [proStatus]).
+    // The `!= null` check is load-bearing: with no Pro at all, `?.expirationDate`
+    // is also null, which would otherwise read as "lifetime" and hand every theme
+    // to free users.
+    final proEnt = info.entitlements.active[kProEntitlement];
+    return entitlementsFrom(
+      activeEntitlementIds: info.entitlements.active.keys.toSet(),
+      catalogThemeIds: kCatalogThemeIds,
+      proLifetime: proEnt != null && proEnt.expirationDate == null,
+    );
+  }
 
   void _update(CustomerInfo info) {
     _current = _map(info);
