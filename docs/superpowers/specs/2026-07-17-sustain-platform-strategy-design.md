@@ -166,15 +166,39 @@ is the single cross-platform exception, and it should be: it's one service over 
 source of truth, [`lib/domain/entitlements.dart:40-45`](../../../lib/domain/entitlements.dart) —
 `if (pro) owned.addAll(catalogThemeIds);`.
 
-| | What it is | How you buy it | If you stop paying |
-|---|---|---|---|
-| **🎨 Themes** | Cosmetics | À-la-carte (`theme.<id>`), **or** all of them free with Pro | À-la-carte → **yours forever.** Via Pro → you lose them |
-| **⭐ Pro** | What the app *does* — deep Insights, Stamina, unlimited pauses, Keep Going, continue blocks, **DnD** — **+ every theme** | Monthly · Yearly · **Lifetime** | Monthly/Yearly → lose features + themes. **Lifetime → keep forever** |
-| **☁️ Sync** | Where your data *lives* — cloud backup, Sediment permanence, phone + web as one history | Monthly · Yearly. **Never lifetime** | Lose the cloud copy. **Local data stays, free, forever** |
+**The rule (locked 2026-07-17):**
 
-**Pro Lifetime unlocks every theme forever, including unmade ones. This is already shipped — do not
-change it.** It's the promise that makes Lifetime the hero. The à-la-carte path stays: buy one theme, own
-that theme forever, never touch Pro.
+> **Subscriptions rent features. Only a one-time purchase owns one-time goods.**
+
+| | Pro features | Themes |
+|---|---|---|
+| **Monthly / Yearly** | ✅ all, while active | ❌ **never** — buy à-la-carte, owned forever |
+| **Lifetime** | ✅ forever | ✅ **every theme, forever** (incl. unmade ones) |
+| **À-la-carte theme** | — | ✅ that theme, forever, independent of Pro |
+| **☁️ Sync** | *(separate — see below)* | — |
+
+**Why:** renting a theme is incoherent — themes are one-time goods. Under this rule **nobody ever rents a
+theme**, themes keep their value, and **Lifetime is unambiguously the hero** (which is what this category
+buys — Forest, the one one-time-purchase app, is *"the only one that escapes the subscription-resentment
+complaint almost entirely"*). Monthly/Yearly subscribers are arguably better off: buy a theme you love and
+it's yours even if you cancel, instead of losing it.
+
+**Rejected: a "+ all themes" toggle on Pro** (founder's initial proposal). It doesn't solve the problem it
+was for — Pro Monthly + toggle, then cancel: keep the themes (kills à-la-carte sales) or lose them (still
+renting). And **the toggle already exists — it's the theme store**, which is more granular. It would have
+cost a 4th–6th SKU across Play Console *and* RevenueCat to duplicate shipped functionality.
+
+**Change required:** [`lib/domain/entitlements.dart:44`](../../../lib/domain/entitlements.dart) —
+`if (pro) owned.addAll(catalogThemeIds);` → gate on **lifetime**, threading the flag into
+`entitlementsFrom` (RevenueCat already derives it: `isLifetime = exp == null`). Small, but not zero. **Free
+to do now at zero Pro buyers; expensive later.**
+
+**Price consequence (open):** themes are now Lifetime-exclusive, so Lifetime is worth more than it was and
+the subs are worth less. The current $19.99–24.99 Lifetime may be underpriced against that. Revisit when
+pinning prices.
+
+**Sync**: where your data *lives* — cloud backup, Sediment permanence, phone + web as one history.
+Monthly · Yearly, **never lifetime**. Cancel → lose the cloud copy; **local data stays, free, forever**.
 
 **Why Sync sits outside Pro** — one structural reason, not a revenue grab: *Pro Lifetime + Sync = a
 perpetual service sold once = unbounded liability.* Secondarily: Pro is what the app does; Sync is where
@@ -192,6 +216,35 @@ Sync screen (reached from Settings → Your data, and the Sediment view) sells S
 **Sync copy must never claim "servers cost money"** — it's false (§6.2), so it can't be told to users
 either. We owe clarity, not justification. The line that does the real work is *"cancel anytime — your
 focus stays on your phone, free, forever."*
+
+### 6.1.2 Prices — REVISED 2026-07-17
+
+**⚠️ Supersedes the prices locked in
+[`2026-06-22-strict-sessions-and-monetization-design.md`](2026-06-22-strict-sessions-and-monetization-design.md)**
+(₹149/$4.99 · ₹799/$29.99 · ₹1,499/$59.99). Per the doc-map rule, the latest dated spec wins.
+
+| | Old | **New** | Why it moved |
+|---|---|---|---|
+| **Pro Monthly** | $4.99 · ₹149 | **$2.99 · ₹89** | Lost themes (§6.1.1) — buys strictly less than it did. At $4.99, 12 months = $59.88: the whole Lifetime price, for features only, owning nothing at the end. That's the deal that earns one-star reviews. |
+| **Pro Yearly** | $29.99 · ₹799 | **$19.99 · ₹549** | Lost themes. Lifetime now pays back in ~2.5 years — steering toward the plan this category actually buys. |
+| **Pro Lifetime** | $59.99 · ₹1,499 | **$49.99 · ₹1,299** | Founding price. Undercuts Flocus ($99) by half; sits just under Pomofocus ($54). |
+| **Theme à-la-carte** | — | **$2.99 · ₹89** | The free-tier cosmetic path. |
+| **☁️ Sync** | — | **$1.99/mo · $14.99/yr** | Must not collide with Pro Yearly. ~92% margin (§6.2). |
+
+**The two forces, which cut opposite ways:** subs *lost* themes (→ cheaper); Lifetime *gained* exclusivity
+(→ more defensible). But the app has **<100 installs, no reviews, and no web presence — i.e. no pricing
+power yet.** $59.99 was top-of-category for an Android-only app nobody's heard of.
+
+**Raise Lifetime to $59.99 / ₹1,499 when web + Sediment + Sync land.** Early buyers keep everything forever
+at what they paid (§6.4). **Pomofocus proved exactly this mechanic** — research found the same product at
+`$36` and later `$54`. They earned the raise; we haven't yet.
+
+**Honest note on the size of this decision:** at ~$100–700/yr realistic revenue, $49.99 vs $59.99 is about
+**two sales a year**. It is financial noise. It is **not** positioning noise — and positioning is the only
+basis on which it should be decided.
+
+**India ₹ stays PPP-aligned** at the existing ~₹26–30 per USD ratio (not the ~₹83 market rate). ₹89 lands
+exactly on the low end of the ₹89–₹1,499 band already set.
 
 ### 6.2 Sync unit economics (costed 2026-07-17)
 
@@ -521,9 +574,12 @@ real duplicated work — accepted because the 2D path is also the honest **low-e
 
 ## 15. Founder actions (outside the build)
 
-- **🚩 Snapshot the published v1 code** — outstanding **now**, and unrelated to this spec. The app is live;
-  the frozen-folder snapshot for hotfixes was never taken, so a hotfix today ships whatever is in `master`.
-  See §6.5.
+- ✅ ~~Snapshot the published v1 code~~ — **DONE 2026-07-17**: git tag **`v1.0.0+5`** on `25f1b98`, pushed.
+  Hotfix the live app from that tag, never from `master` (which is ~1,900 lines ahead — the unreleased
+  large-font responsiveness fixes).
+- **🚩 Update Play Console prices** to §6.1.2 (Monthly $2.99/₹89 · Yearly $19.99/₹549 · Lifetime
+  $49.99/₹1,299) — and RevenueCat offerings to match. **Do this before the first Pro sale**, alongside the
+  paywall copy fix, so no buyer ever sees the old numbers or the old promise.
 - **Buy the domain** — `sustaintimer.com` ($11/yr, best for the funnel: trusted `.com`, memorable in a
   video, "timer" aids ranking) or `sustain.zone` ($15/yr, more brandable). *All clean `sustain.*` domains
   (`.app/.co/.so`) are taken.*

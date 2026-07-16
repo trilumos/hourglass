@@ -38,13 +38,15 @@ is **complete and historical** — keep it as the record of what was gated, not 
 
 - [x] **Pomodoro / Custom "continue"** — SHIPPED (verified in code: `SessionController.repeatPlan`/`addBlock`/`extendNow` + session-screen UI at completion and near-end nudge, Pro-gated via `allowContinue`).
 - [x] **Launch hardening** — DONE (founder confirmed; real release keystore in place — `android/key.properties`).
-- [ ] **🚩 Snapshot the published v1 — STILL OUTSTANDING, and it's a live risk.** The app is live and
-  **no tag or snapshot exists**, so there is no record in this repo of which commit is on Play — a hotfix
-  today would ship whatever is in `master`. Note `9474281 "backup"` touched `lib/`/`android/` **after** the
-  `1.0.0+5` bump in `25f1b98`, so `master` may not equal the shipped build. **Only the founder knows which
-  commit was built.** Resolution: a `v1.0.0+5` **git tag** on that commit (the *Release process* section
-  below already offers this as the cleaner alternative to a folder copy — and it's free, since we push to
-  GitHub anyway).
+- [x] **Snapshot the published v1 — DONE 2026-07-17** via git tag **`v1.0.0+5`** on `25f1b98` (pushed).
+  Confirmed against Play Console: bundle 5 uploaded Jun 27 09:41 **UTC**; the pubspec bump landed 15:00
+  **IST** the same day — a consistent +5:30 offset across bundles 3, 4 and 5. **Hotfix the live app from
+  this tag, never from `master`.** (Chose the tag over the *Release process* folder-copy below — same
+  intent, cleaner, free.)
+
+> **⚠️ `master` is AHEAD of what users have.** `9474281 "backup"` (Jul 9) changed 8 UI files
+> (**+1123/−818**; `session_screen` alone 903 lines) — the large-font responsiveness fixes — and is
+> **not on Play**. Plus the 07-17 paywall copy fix. These ship with v1.2.
 
 ### Business status (2026-07-17)
 - **Zero Pro buyers so far.** This is a *window*, not a permanent state — see the platform-strategy spec

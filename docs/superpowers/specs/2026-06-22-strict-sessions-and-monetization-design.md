@@ -110,8 +110,12 @@ Monthly/Yearly lead and Lifetime reads as a premium "own it forever" option.
   India-first; Forest itself is one-time). Removing it likely costs revenue, not
   improves retention.
 - **Paywall order:** Yearly (featured, "best value") → Monthly → Lifetime
-  (premium, smaller). Pricing unchanged (LOCKED): Monthly ₹149/$4.99, Yearly
-  ₹799/$29.99, Lifetime ₹1,499/$59.99. Pause-leniency becomes another concrete
+  (premium, smaller). ~~Pricing unchanged (LOCKED): Monthly ₹149/$4.99, Yearly
+  ₹799/$29.99, Lifetime ₹1,499/$59.99.~~ **⚠️ SUPERSEDED 2026-07-17 → Monthly
+  ₹89/$2.99 · Yearly ₹549/$19.99 · Lifetime ₹1,299/$49.99. See
+  [`2026-07-17-sustain-platform-strategy-design.md`](2026-07-17-sustain-platform-strategy-design.md)
+  §6.1.2 — subs lost themes (Lifetime-exclusive now), so they got cheaper; Lifetime
+  became a founding price to be raised later.** Pause-leniency becomes another concrete
   Pro benefit listed on the paywall.
 - No code change to entitlements/pricing — purely paywall presentation order +
   benefit copy (add "Unlimited, longer pauses" to the Pro benefits list).
