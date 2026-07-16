@@ -1,6 +1,23 @@
 # Sustain Web — Design Spec
 
-> **Status:** 🟡 Design locked (founder-approved via brainstorm 2026-07-11), not yet built.
+> # ⚪ SUPERSEDED — design record only
+>
+> **Replaced 2026-07-17 by [`2026-07-17-sustain-platform-strategy-design.md`](2026-07-17-sustain-platform-strategy-design.md).**
+> Do not build from this document. Where the two disagree, the 07-17 spec wins.
+>
+> **What was reversed:**
+> - **§3 "two completely separate ecosystems… no sync between them, ever"** → now **one Firebase project,
+>   one account, one dataset**, with **separate purchases** (the Forest model). Nobody in the category
+>   separates data; and the Sediment centrepiece would otherwise fork a user's focus history in half forever.
+> - **§4 "the web deliberately lacks the progress system"** → progress arrives on web in W2.
+> - **§5 "shipping complete" in one ~1-month launch** → **phased** (W1 funnel → W2 scenic engine → W3 social).
+> - **§6 "Sustain Web Plus" at $3.99/mo · $23.99/yr · $49.99 lifetime** → **withdrawn.** Web v1 is **free**;
+>   money is cosmetics (one-time) + Sustain Sync (the only recurring line).
+>
+> **What survived intact:** the positioning (§2), the hourglass-as-mascot thesis, the free-tier-carries-the-
+> marketing rule, the never-paywall list, the SEO plan (§9), and the OBS Browser-Source → YouTube plan (§10).
+
+> **Status:** ⚪ Superseded. Originally: design locked (founder-approved via brainstorm 2026-07-11), not yet built.
 > **Handoff (2026-07-17):** the Android APP launched on Product Hunt with a good response — the
 > hourglass visual was the standout comment (validates the mascot thesis in §2; a separate PH launch
 > for THIS website is planned post-build — PH's web-first audience suits it far better). Domain not

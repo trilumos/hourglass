@@ -38,35 +38,61 @@
 
 ---
 
-## V1.2 — first post-launch update
+> **⚠️ Restructured 2026-07-17.** The version split below was re-cut by the platform-strategy brainstorm.
+> **Canonical source for scope, phases, brand and money across BOTH products:**
+> [`superpowers/specs/2026-07-17-sustain-platform-strategy-design.md`](superpowers/specs/2026-07-17-sustain-platform-strategy-design.md).
+> It supersedes the 07-11 web spec and **reverses** its "separate ecosystems, no sync ever" decision.
 
-- [ ] **Background soundscapes** — ambient session audio (sand, water, etc.) during focus; picker in Setup/Settings; free-vs-Pro split (à-la-carte like themes). *Signature "sand" loop is the hard sourcing problem (royalty-free / CC0 + CREDITS.md). Deferred from v1 (founder, 2026-06-22).*
-- [ ] **Focus currency + optional rewarded ads** — earn currency per completed session (scaled by completion); spend on themes/cosmetics; **user-initiated** rewarded ads (Forest-style, never auto-played) to save a streak/session or top up. Keeps Pro as "unlock everything". (Founder: V1.2.) *Full design + the brand tension (we currently promise "no ads") + competitor study (Regain/Forest/Opal): [`specs/future/2026-06-24-future-versions-research.md`](superpowers/specs/future/2026-06-24-future-versions-research.md). Decide ads vs coins-only before building.*
+## V1.2 — the polish release *(small, ships fast)*
+
+- [ ] **Background soundscapes** — ambient session audio (sand, water, etc.) during focus; picker in Setup/Settings; free-vs-Pro split (à-la-carte like themes). *Signature "sand" loop is the hard sourcing problem (royalty-free / CC0 + CREDITS.md). Deferred from v1 (founder, 2026-06-22).* **BLOCKED on founder sourcing audio.**
 - [ ] **Native MediaStyle notification** — the "Spotify-shaped" larger branded session notification (big hourglass artwork + colorized background + round controls). Needs Kotlin MediaSession + MediaStyle (~1 focused day + device testing). Parked from the rich-standard pass (founder, 2026-06-22).
 - [ ] **Sand-fall origin realism** (polish) — sand originates from a natural converging neck/aperture with a believable funnel/pile-collapse, not a flat line. Touches the locked hourglass painter — confirm before changing the locked look.
 
 ---
 
-## V2 — built post-launch, shipped as traction grows
+## V1.3 — the big one *(the recurring engine)*
 
-- [ ] **Level / Progression system** — Focus Score → 100 = collectible hourglass + share card + theme unlock + reset + harder next level; collection + level history on Profile. (+ progressive difficulty, streak effects pulling score down, honesty/anti-idle checks.)
-- [ ] **Cloud auth + sync** — Google Sign-In + backup/sync (schema already sync-ready).
-- [ ] **Home-screen widgets.**
-- [ ] **Break-time activities** — sudoku, meditation, breathing, light exercise.
-- [ ] **Spotify connect** — focus music during sessions.
-- [ ] **Focus Wrapped** — Spotify-Wrapped-style personalized recap (yearly/seasonal): top stats, milestones, hours focused, streaks, share cards. *Brainstorm later.*
-- [ ] **Notes / journal** — in-app per-session reflections.
-- [ ] **Picture-in-Picture mini-session** — Home-button keeps the session live in a floating hourglass window.
-- [ ] **PC / web versions** with real site/app blocking + monitoring (the actual work-verification) + an allow-list of permitted apps (Pro pillar).
+- [ ] **Cloud Sync** — Firebase auth + sync (schema already sync-ready; `backup_service.dart` already merges by uuid). **One Firebase project shared with web.** Requires privacy-policy + Play Data Safety updates.
+- [ ] **🏺 Sediment** — every completed session lays a layer in a vessel you keep forever (thickness = duration, colour = theme, texture = focus score). Replaces Levels; absorbs Insights visualization and the share card. *The centrepiece — see the platform-strategy spec §7.*
+- [ ] **Intention** — one line before you flip, recorded with the stratum. *Absorbs the old Notes/journal item.*
+- [ ] **♻️ Sustain Sync** billing — ~$2.99/mo · ~$19.99/yr. **No lifetime Sync, ever.** Existing Pro Lifetime holders get it free forever.
+
+> **Why v1.2 and v1.3 split:** v1.2's soundscapes are blocked on an *asset-sourcing* action, MediaStyle and
+> sand realism are days, and Cloud+Sediment is weeks. Two shippable releases beat one stalled one.
 
 ---
 
-## Adjacent product — Sustain Web (separate ecosystem)
+## V2 — built post-launch, shipped as traction grows
 
-- 🟡 **Sustain Web** — the website timer: marketing funnel + feature playground + its own paywall.
-  **Completely separate accounts/billing from the app (no cross-sync, ever).** Design LOCKED 2026-07-11 →
-  spec: [`superpowers/specs/2026-07-11-sustain-web-design.md`](superpowers/specs/2026-07-11-sustain-web-design.md).
-  Ship complete in one launch (~a month); Web Plus $3.99/mo · $23.99/yr · $49.99 lifetime.
+- [ ] **Home-screen widgets.**
+- [ ] **Picture-in-Picture mini-session** — Home-button keeps the session live in a floating hourglass window.
+- [ ] **Focus Wrapped** — built as **a view of your sediment**, not a separate system.
+
+---
+
+## ❌ CUT (founder-approved, 2026-07-17)
+
+Removed from the roadmap by the platform-strategy brainstorm. Rationale in the spec §11.
+
+- ~~**Focus currency + optional rewarded ads**~~ — contradicts "no ads, ever"; at current volume earns pennies while costing the brand position that makes people trust us.
+- ~~**Level / Progression system**~~ — Sediment *is* the progression, natively. Levels unlocking cosmetics gives away what we sell.
+- ~~**Spotify connect**~~ — requires the user to hold Spotify Premium; real OAuth/API cost for what our own soundscapes serve.
+- ~~**Break-time activities**~~ (sudoku, meditation, breathing) — a second app bolted inside the app.
+- ~~**Leaderboard**~~ — client-computed scores are user-editable; also a pure anxiety mechanic. Replaced by **The Collective** (web).
+- ~~**Browser extension**~~ — Document PiP already gives a floating always-on-top hourglass from the web page.
+- ⏸ **PC / web with site/app blocking + monitoring** — **deferred, not cut.** A separate product with its own store review, permissions story, and maintenance.
+
+---
+
+## Adjacent product — Sustain Web (funnel first, money later)
+
+- 🟢 **Sustain Web** — phased, **free at launch**. One Firebase project + one account + one dataset shared
+  with the app; **separate purchases** (the Forest model). Design LOCKED 2026-07-17 →
+  [`superpowers/specs/2026-07-17-sustain-platform-strategy-design.md`](superpowers/specs/2026-07-17-sustain-platform-strategy-design.md).
+  - **W1 — the funnel** *(next, ~1 month, FREE)*: landing page (persistent-hourglass scroll), timer + all modes, ported 2.5D hourglass, colours + circadian, basic soundscapes, PiP · share links · embed · `/stage`, local "focused today", SEO. Zero billing code — its jobs are **rank** and **convert to install**.
+  - **W2 — the scenic engine** *(after app Sync)*: depth-map photoreal dioramas, 3D glass hourglass, weather modules, custom background upload, full mixer, rare moments, accounts, Sediment on web. Money turns on (à-la-carte cosmetics + lifetime bundle).
+  - **W3 — social**: The Collective, Focus room.
 
 ---
 

@@ -38,7 +38,8 @@ Earlier specs are kept as a **design record** (why we built it this way), not as
 |-----|--------|
 | [`superpowers/plans/2026-06-24-app-wide-audit-plan.md`](superpowers/plans/2026-06-24-app-wide-audit-plan.md) | 🔵 Pre-launch audit checklist. |
 | [`superpowers/plans/2026-06-25-app-audit-findings.md`](superpowers/plans/2026-06-25-app-audit-findings.md) | 🔵 Findings + fixes from the audit. |
-| [`superpowers/specs/2026-07-11-sustain-web-design.md`](superpowers/specs/2026-07-11-sustain-web-design.md) | 🟡 **Sustain Web** — website product design (separate ecosystem, own accounts/billing). LOCKED, not built. |
+| [`superpowers/specs/2026-07-17-sustain-platform-strategy-design.md`](superpowers/specs/2026-07-17-sustain-platform-strategy-design.md) | 🟢 **Platform strategy (web + app)** — brand, phases, platform split, and the money model for **both** products. LOCKED 2026-07-17. **Supersedes the 07-11 web spec** and reverses its "separate ecosystems" decision. |
+| [`superpowers/specs/2026-07-11-sustain-web-design.md`](superpowers/specs/2026-07-11-sustain-web-design.md) | ⚪ **Superseded** by the 07-17 platform strategy. Kept as a design record. |
 
 ---
 
