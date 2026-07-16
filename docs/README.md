@@ -38,6 +38,7 @@ Earlier specs are kept as a **design record** (why we built it this way), not as
 |-----|--------|
 | [`superpowers/plans/2026-06-24-app-wide-audit-plan.md`](superpowers/plans/2026-06-24-app-wide-audit-plan.md) | 🔵 Pre-launch audit checklist. |
 | [`superpowers/plans/2026-06-25-app-audit-findings.md`](superpowers/plans/2026-06-25-app-audit-findings.md) | 🔵 Findings + fixes from the audit. |
+| [`superpowers/specs/2026-07-11-sustain-web-design.md`](superpowers/specs/2026-07-11-sustain-web-design.md) | 🟡 **Sustain Web** — website product design (separate ecosystem, own accounts/billing). LOCKED, not built. |
 
 ---
 

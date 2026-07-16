@@ -31,9 +31,9 @@
 - [x] **Guide** — "How it works" / Sustain 101 chapter guide.
 - [x] **Privacy** — zero third-party analytics/telemetry in v1.
 
-### Remaining before publish
-- [ ] **Pomodoro / Custom "continue"** — let multi-segment sessions add another block on completion + as a near-end nudge: extend by a chosen amount, repeat the configured plan again, or a quick "+5"-style increment. (Flow Block already has Keep going / endless.) *Careful engine change — appendable segments + a completed-but-extendable state.*
-- [ ] **Launch hardening** — work through `docs/v1-launch-checklist.md` (security, legal/privacy, responsiveness, device compat, store listing/assets, monetization sanity).
+### Remaining before publish — ✅ v1 is PUBLISHED (verified 2026-07-11)
+- [x] **Pomodoro / Custom "continue"** — SHIPPED (verified in code: `SessionController.repeatPlan`/`addBlock`/`extendNow` + session-screen UI at completion and near-end nudge, Pro-gated via `allowContinue`).
+- [x] **Launch hardening** — DONE (founder confirmed; real release keystore in place — `android/key.properties`).
 - [ ] **At publish: snapshot the v1 code** into a frozen folder for live hotfixes (see *Release process* below).
 
 ---
@@ -58,6 +58,15 @@
 - [ ] **Notes / journal** — in-app per-session reflections.
 - [ ] **Picture-in-Picture mini-session** — Home-button keeps the session live in a floating hourglass window.
 - [ ] **PC / web versions** with real site/app blocking + monitoring (the actual work-verification) + an allow-list of permitted apps (Pro pillar).
+
+---
+
+## Adjacent product — Sustain Web (separate ecosystem)
+
+- 🟡 **Sustain Web** — the website timer: marketing funnel + feature playground + its own paywall.
+  **Completely separate accounts/billing from the app (no cross-sync, ever).** Design LOCKED 2026-07-11 →
+  spec: [`superpowers/specs/2026-07-11-sustain-web-design.md`](superpowers/specs/2026-07-11-sustain-web-design.md).
+  Ship complete in one launch (~a month); Web Plus $3.99/mo · $23.99/yr · $49.99 lifetime.
 
 ---
 
