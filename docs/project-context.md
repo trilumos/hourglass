@@ -160,6 +160,12 @@ Note: v1 needs **no special permissions** (sessions run foreground; protect-the-
 ## Confirmed rules / decisions (DO NOT break — recheck whenever touching related code)
 > **Meta-rule (founder, 2026-06-16):** When the founder confirms something / gives a rule or decision, RECORD it here. Whenever I touch anything related to a recorded rule, RE-READ the rule first. If a new request contradicts a recorded rule, STOP and CONFIRM with the founder before changing it. Never assume — always confirm.
 
+- **GitHub = ALWAYS the `trilumos` account (founder, 2026-07-17, CONFIRMED).** Every git/GitHub
+  operation for this project uses the **trilumos** account — never ask/prompt which account. Enforced in
+  config (repo-scoped, so the founder's personal repos are unaffected):
+  `credential.https://github.com.username = trilumos` + the `origin` remote URL embeds `trilumos@` —
+  this stops Git Credential Manager's multi-account picker. Repo commit identity stays `Trilumos Dev`.
+  If an account/auth prompt ever reappears, resolve toward trilumos and re-pin — don't ask.
 - **Pricing LOCKED — USD base + India-specific ₹ (founder, 2026-06-26; supersedes the 06-25 USD-only note,
   because exchange-rate auto-convert priced India ~₹470/mo, far above PPP).** Set the **USD** price as the
   base and let Play auto-convert for most countries, BUT **override India with these ₹ values** (PPP-aligned,
