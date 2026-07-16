@@ -160,6 +160,39 @@ is the single cross-platform exception, and it should be: it's one service over 
 
 **YouTube** is not in either model. It is **customer acquisition at ~$0 CAC, never revenue** — see §10.
 
+### 6.1.1 Themes vs Pro vs Sync — what a user actually gets
+
+**Themes and Pro are deliberately entangled. Sync is deliberately not.** Verified against the shipped
+source of truth, [`lib/domain/entitlements.dart:40-45`](../../../lib/domain/entitlements.dart) —
+`if (pro) owned.addAll(catalogThemeIds);`.
+
+| | What it is | How you buy it | If you stop paying |
+|---|---|---|---|
+| **🎨 Themes** | Cosmetics | À-la-carte (`theme.<id>`), **or** all of them free with Pro | À-la-carte → **yours forever.** Via Pro → you lose them |
+| **⭐ Pro** | What the app *does* — deep Insights, Stamina, unlimited pauses, Keep Going, continue blocks, **DnD** — **+ every theme** | Monthly · Yearly · **Lifetime** | Monthly/Yearly → lose features + themes. **Lifetime → keep forever** |
+| **☁️ Sync** | Where your data *lives* — cloud backup, Sediment permanence, phone + web as one history | Monthly · Yearly. **Never lifetime** | Lose the cloud copy. **Local data stays, free, forever** |
+
+**Pro Lifetime unlocks every theme forever, including unmade ones. This is already shipped — do not
+change it.** It's the promise that makes Lifetime the hero. The à-la-carte path stays: buy one theme, own
+that theme forever, never touch Pro.
+
+**Why Sync sits outside Pro** — one structural reason, not a revenue grab: *Pro Lifetime + Sync = a
+perpetual service sold once = unbounded liability.* Secondarily: Pro is what the app does; Sync is where
+data lives.
+
+**Sync is separate on every plan, including Pro Yearly** — even though Yearly is already recurring and
+bundling would cost ~$0.01/user/year. Bundling would make Lifetime the booby prize (contradicting §6.4)
+and turn a clean two-product story into a matrix.
+
+**UI rule (locked): Sync is never a tier on the Pro paywall.** Side by side they read as tiers, Sync
+becomes "Pro+", and "Lifetime = everything forever" becomes a lie in the user's eyes — the same trap as the
+Pro/Plus ladder. Separate surfaces: the Pro paywall sells Pro and *mentions* Sync in one neutral line; the
+Sync screen (reached from Settings → Your data, and the Sediment view) sells Sync.
+
+**Sync copy must never claim "servers cost money"** — it's false (§6.2), so it can't be told to users
+either. We owe clarity, not justification. The line that does the real work is *"cancel anytime — your
+focus stays on your phone, free, forever."*
+
 ### 6.2 Sync unit economics (costed 2026-07-17)
 
 **Sync is profitable from subscriber #1. It is not volume-dependent.**
@@ -191,17 +224,30 @@ only.
 ≈ **120 GB egress ≈ $14/mo** and climbing. That lives in **W2** and is solvable (Cloudflare R2 has zero
 egress fees; CDN caching). Sync is free; pictures aren't.
 
-### 6.3 ⚠️ Where Sync is sold — OPEN, and worth 10–25%
+### 6.3 Where Sync is sold — RESOLVED 2026-07-17
 
-- **Play Billing:** Google takes **15%** (first $1M/yr) to **30%**.
-- **Merchant-of-Record on our own site:** ~**5% + $0.50**.
+**Checked against current Play policy. The arbitrage doesn't exist, so don't build for it.**
 
-Netflix and Spotify sell **nothing in-app** — you subscribe on the web and the app reads your entitlement.
-That structure is proven and would avoid the Play cut entirely.
+Google opened external billing on **2026-06-30** (US, EEA, UK only — **India is not in the rollout**). But
+the service fee applies **regardless of billing method**:
 
-**Do not assume it is permitted.** Play's rules on external payment are a live regulatory question (Epic v.
-Google, the EU DMA, and India's CCI rulings have all been moving this ground). Getting it wrong risks the
-**published** app. **Verify against current Play policy at billing-build time.**
+| Route | Google takes | We also pay | Total |
+|---|---|---|---|
+| **Play Billing** (US/UK/EEA) | 10% service + 5% billing | — | **~15%** |
+| **External web link** | **10% service fee — still** | our MoR ~5% + $0.50 | **~15%+** |
+
+External is a wash, and arguably *worse* once the MoR's fixed $0.50 lands on a $2.99 charge.
+
+**Decision: Play Billing in-app, MoR on the web, no steering games.** Same entitlement either way;
+RevenueCat already does cross-platform entitlements. A purchase made on the website by someone who never
+touches the app carries no Google fee — that's the only real saving, and it needs no policy gymnastics.
+
+> **Risk-model correction (recorded so it isn't repeated):** the downside of violating Play billing policy
+> was never "a few percent" — it is **app removal**. Cost and existential risk are not the same units. This
+> happens to be moot now that Google permits it, but "so what, it's some percent more" was the wrong frame.
+
+**Re-verify at billing-build time** — this ground has moved repeatedly (Epic v. Google, the EU DMA, India's
+CCI rulings) and the India rollout status in particular is likely to change.
 
 ### 6.4 The lifetime promise, kept
 
@@ -240,10 +286,21 @@ launch.
 
 ### 6.5 Adding a subscription to a shipped app — the risks
 
+- **🚨 THE LIVE ONE: the shipped paywall already promises Sync away.** Not a roadmap note — **in-app copy,
+  shown at the point of sale, right now**:
+  - [`lib/ui/paywall_screen.dart:472`](../../../lib/ui/paywall_screen.dart) — *"Everything new, included —
+    Every Pro feature we ship lands in your plan automatically."*
+  - [`lib/ui/paywall_screen.dart:664`](../../../lib/ui/paywall_screen.dart) — *"Yours forever — no renewal.
+    **Every Pro feature we add later is included automatically.**"*
+
+  As of 2026-07-17 there are **zero Pro buyers**, so the window to fix this cleanly is **open and closes on
+  the first sale**. Disclose *before* anyone pays that Pro Lifetime covers every Pro **feature** and that
+  optional **services** (cloud sync) are separate. Disclosed at purchase = honest; discovered after = a
+  betrayal in writing, with a screenshot attached to the review. This is the same carve-out 07-11 §6.2
+  already committed to for YouTube streaming (*"disclosed plainly so no one feels misled"*).
 - **⚠️ Backlash.** The app was sold as *"Pro Lifetime = own-all bundle."* Adding a subscription invites
   one-star reviews. The mitigation is real and must be **said plainly in the release notes**: local data
-  stays free forever, Sync is genuinely optional, nothing anyone bought is removed, and lifetime holders
-  get Sync free.
+  stays free forever, Sync is genuinely optional, and nothing anyone bought is removed.
 - **🚩 Privacy posture changes.** v1 ships *"zero third-party analytics/telemetry"* and *on-device only*.
   The moment Sync exists, the **privacy policy and the Play Data Safety form must be updated.** That is
   compliance, not optional.
@@ -388,7 +445,9 @@ monetization + entitlements, backup/restore, strict sessions, notifications, Gui
 | ~~Break activities (sudoku/breathing/meditation)~~ | A second app bolted inside the app. Nothing to do with focus. |
 | ~~Leaderboard~~ | Client-computed scores are user-editable — cheated via devtools in minutes. Also a pure anxiety mechanic (§2.1). Replaced by **The Collective** (§7.1). |
 | ~~Browser extension~~ | **Document PiP already gives a floating always-on-top hourglass from the web page** — no install, no store review, no maintenance. Forest's extension is valuable because it *blocks*; a pure timer extension has no job. Build it only if/when blocking exists. |
-| ⏸ Site/app blocking + monitoring | Deferred, not cut. A separate product with its own store review, permissions story, and maintenance. |
+| ~~Site/app blocking + monitoring~~ | **❌ Probably never on Android — the platform closed the door.** Play enforced a new **AccessibilityService policy on 2026-01-28** and Android 17 hardened it: *"only apps whose core purpose is accessibility"* may use the API (screen readers, switch input, voice control, Braille). Under **Advanced Protection Mode, Android auto-revokes AccessibilityService access from any app not classified as an accessibility tool.** Sustain's core purpose is not accessibility — we could not honestly declare `isAccessibilityTool="true"`, and it would be revoked regardless. Revisit only if a sanctioned API appears. |
+| ~~"Plus" tier for blocking/DnD~~ | **❌ No tier ladder** (§6.4 — a ladder and lifetime are mutually exclusive). Also: there is no blocking to tier. And the category is explicit — Opal charges **$99.99/yr** and *"draws the most pricing anger… the highest in the category"* for what overlaps free OS Screen Time, while **"Forest, the one app with a one-time purchase, is the only one that escapes the subscription-resentment complaint almost entirely."** Forest is our closest analogue and our closest brand position (§2.1). |
+| **Do-Not-Disturb** ✅ | **KEEP — build it, put it in Pro.** Completely unlike blocking: `NotificationManager.setInterruptionFilter()` + `ACCESS_NOTIFICATION_POLICY` is documented, legitimate, small, and carries no policy risk. It's a session-engine feature, not a new product. |
 
 ## 12. Rendering architecture (W2)
 

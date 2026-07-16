@@ -312,7 +312,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   fontWeight: FontWeight.w600,
                   color: hg.textPrimary)),
           const SizedBox(height: HgSpacing.xs),
-          Text('Unlock everything. Cancel anytime.',
+          Text('Unlock every Pro feature. Cancel anytime.',
               style: TextStyle(
                   fontFamily: HgFont.sans,
                   fontSize: 14,
@@ -469,8 +469,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       (
         Icons.auto_awesome_rounded,
-        'Everything new, included',
-        'Every Pro feature we ship lands in your plan automatically.'
+        'New Pro features, included',
+        'Every Pro feature we ship lands in your plan automatically. '
+            'Optional services like cloud backup are separate.'
       ),
     ];
     return [
@@ -662,7 +663,8 @@ class _StatusCard extends StatelessWidget {
     } else if (s.isLifetime) {
       title = 'Lifetime';
       detail = 'Yours forever — no renewal. Every Pro feature we add later is '
-          'included automatically.';
+          'included automatically. Optional services like cloud backup are '
+          'separate.';
       icon = Icons.all_inclusive_rounded;
     } else {
       title = _planLabel(s.plan);

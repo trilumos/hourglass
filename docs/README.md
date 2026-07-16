@@ -27,7 +27,7 @@ Earlier specs are kept as a **design record** (why we built it this way), not as
 | [`project-context.md`](project-context.md) | Durable project memory: founder preferences, locked decisions, standing rules. |
 | [`design-language.md`](design-language.md) | Look/feel source of truth ("Warm Precision") — tokens, type, motion, voice. |
 | [`brand-design-philosophy.md`](brand-design-philosophy.md) | Distilled brand/design DNA (colours, type, motif, anti-patterns) — for generating on-brand visuals/assets. |
-| [`v1-launch-checklist.md`](v1-launch-checklist.md) | Pre-publish gating: security, legal, store, a11y, perf. |
+| [`v1-launch-checklist.md`](v1-launch-checklist.md) | ✅ **Historical.** The pre-publish audit (security, legal, store, a11y, perf). v1 shipped — this is the record of what was gated, not a todo list. |
 | [`play-console-revenuecat-setup-guide.md`](play-console-revenuecat-setup-guide.md) | Ops: Play Console + RevenueCat setup steps. |
 | [`launch-founder-actions.md`](launch-founder-actions.md) | The founder's launch to-do list. |
 | [`legal/privacy-policy.md`](legal/privacy-policy.md) · [`legal/terms-of-service.md`](legal/terms-of-service.md) | Deployed legal docs. |

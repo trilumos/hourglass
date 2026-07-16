@@ -31,10 +31,24 @@
 - [x] **Guide** — "How it works" / Sustain 101 chapter guide.
 - [x] **Privacy** — zero third-party analytics/telemetry in v1.
 
-### Remaining before publish — ✅ v1 is PUBLISHED (verified 2026-07-11)
+### ✅ v1 is PUBLISHED — live on Play (verified 2026-07-11; Product Hunt launch 2026-07-17)
+
+`pubspec.yaml` = **1.0.0+5**. The pre-publish audit ([`v1-launch-checklist.md`](v1-launch-checklist.md))
+is **complete and historical** — keep it as the record of what was gated, not as a todo list.
+
 - [x] **Pomodoro / Custom "continue"** — SHIPPED (verified in code: `SessionController.repeatPlan`/`addBlock`/`extendNow` + session-screen UI at completion and near-end nudge, Pro-gated via `allowContinue`).
 - [x] **Launch hardening** — DONE (founder confirmed; real release keystore in place — `android/key.properties`).
-- [ ] **At publish: snapshot the v1 code** into a frozen folder for live hotfixes (see *Release process* below).
+- [ ] **🚩 Snapshot the published v1 — STILL OUTSTANDING, and it's a live risk.** The app is live and
+  **no tag or snapshot exists**, so there is no record in this repo of which commit is on Play — a hotfix
+  today would ship whatever is in `master`. Note `9474281 "backup"` touched `lib/`/`android/` **after** the
+  `1.0.0+5` bump in `25f1b98`, so `master` may not equal the shipped build. **Only the founder knows which
+  commit was built.** Resolution: a `v1.0.0+5` **git tag** on that commit (the *Release process* section
+  below already offers this as the cleaner alternative to a folder copy — and it's free, since we push to
+  GitHub anyway).
+
+### Business status (2026-07-17)
+- **Zero Pro buyers so far.** This is a *window*, not a permanent state — see the platform-strategy spec
+  §6.5 for the live paywall-copy problem it lets us fix cleanly.
 
 ---
 

@@ -46,11 +46,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.byType(HomeScreen), findsOneWidget);
 
-    // Stand in a live preview: the bar appears in Home's bottom slot (in layout,
-    // so it never covers Begin).
+    // Stand in a live preview: the floating pill appears over Home ("Get" +
+    // exit, overlay only — no layout space taken).
     container.read(previewThemeProvider.notifier).set('obsidian');
     await tester.pump();
-    expect(find.text('Previewing Obsidian'), findsOneWidget);
+    expect(find.text('Get'), findsOneWidget);
 
     // Now do the factory-reset navigation.
     final navContext = tester.element(find.byType(HomeScreen));
