@@ -179,8 +179,8 @@ source of truth, [`lib/domain/entitlements.dart:40-45`](../../../lib/domain/enti
 
 **Why:** renting a theme is incoherent — themes are one-time goods. Under this rule **nobody ever rents a
 theme**, themes keep their value, and **Lifetime is unambiguously the hero** (which is what this category
-buys — Forest, the one one-time-purchase app, is *"the only one that escapes the subscription-resentment
-complaint almost entirely"*). Monthly/Yearly subscribers are arguably better off: buy a theme you love and
+buys — Flocus $99 LT, Pomofocus $54 LT; and see **§6.4.1** for how badly Forest's move *away* from
+one-time landed in Dec 2025). Monthly/Yearly subscribers are arguably better off: buy a theme you love and
 it's yours even if you cancel, instead of losing it.
 
 **Rejected: a "+ all themes" toggle on Pro** (founder's initial proposal). It doesn't solve the problem it
@@ -336,6 +336,44 @@ friction. MoR webhooks a Firebase Function that flips an entitlement flag.
 
 **India ₹ PPP** mirrors the app's existing strategy — later, once there's traffic. One global USD price at
 launch.
+
+### 6.4.1 ⚠️ CORRECTION — Forest abandoned the one-time model (researched 2026-07-17)
+
+**An earlier claim in this brainstorm was wrong and is corrected here.** It was asserted that *"Forest,
+the one app with a one-time purchase, is the only one that escapes the subscription-resentment complaint
+almost entirely."* That describes a Forest **that no longer exists**:
+
+> Forest launched in 2014 as a paid app. **In December 2025 Seekrtech moved it to a free download backed
+> by a "Forest Plus" subscription** — and took precisely the backlash this spec predicts: longtime
+> one-time buyers "suddenly facing a subscription requirement for premium features… perceived as a
+> reversal of the app's original value proposition."
+
+The 2026 article quoted was describing a model Forest had already left. **The category leader gave up on
+one-time.** (Caught by the research-first rule in `project-context.md`, applied to this spec's own claim.)
+
+**How Forest sustained one-time for 11 years — and why we can't copy it:**
+
+1. **Volume.** Tens of millions of downloads × $1.99–3.99. One-time works only as a *treadmill*: revenue
+   requires an endless supply of NEW users, forever. **We have <100 installs.**
+2. **Consumables (coins).** The same user buys repeatedly — recurring revenue without a subscription.
+3. **An in-app marketplace**, added late "to drive a unique revenue stream."
+4. **Backend cost was never the problem.** Tree records are text — the same arithmetic as our sediment
+   (~$0.0006/user/month, §6.2). **Salaries killed the one-time model, not servers.**
+
+**What it means for us — it validates the design rather than threatening it:**
+
+| Mechanism | Recurring? | Ours? |
+|---|---|---|
+| One-time × volume | ❌ treadmill, needs endless new users | ❌ no volume |
+| Consumables (coins) | ✅ | ❌ cut — brand cost (§2.1, §11) |
+| **Cosmetic drops** (scenes/themes, à-la-carte) | ✅ repeatable | ✅ **the model** |
+| **Service subscription** (Sync) | ✅ honest, anti-churn | ✅ **the model** |
+| Give up → subscription | ✅ | ← what Forest did in Dec 2025 |
+
+**Sync + repeatable à-la-carte cosmetics is where Forest arrived after 11 years and a painful reversal.
+We start there.** And the decisive difference: **Forest is a company with salaries; we are solo with ~$0
+fixed cost.** One-time cannot fund a payroll — it can comfortably fund a founder. That is exactly why Pro
+does **not** need to be recurring (§6.4) and Sync alone carries it.
 
 ### 6.5 Adding a subscription to a shipped app — the risks
 
@@ -499,7 +537,7 @@ monetization + entitlements, backup/restore, strict sessions, notifications, Gui
 | ~~Leaderboard~~ | Client-computed scores are user-editable — cheated via devtools in minutes. Also a pure anxiety mechanic (§2.1). Replaced by **The Collective** (§7.1). |
 | ~~Browser extension~~ | **Document PiP already gives a floating always-on-top hourglass from the web page** — no install, no store review, no maintenance. Forest's extension is valuable because it *blocks*; a pure timer extension has no job. Build it only if/when blocking exists. |
 | ~~Site/app blocking + monitoring~~ | **❌ Probably never on Android — the platform closed the door.** Play enforced a new **AccessibilityService policy on 2026-01-28** and Android 17 hardened it: *"only apps whose core purpose is accessibility"* may use the API (screen readers, switch input, voice control, Braille). Under **Advanced Protection Mode, Android auto-revokes AccessibilityService access from any app not classified as an accessibility tool.** Sustain's core purpose is not accessibility — we could not honestly declare `isAccessibilityTool="true"`, and it would be revoked regardless. Revisit only if a sanctioned API appears. |
-| ~~"Plus" tier for blocking/DnD~~ | **❌ No tier ladder** (§6.4 — a ladder and lifetime are mutually exclusive). Also: there is no blocking to tier. And the category is explicit — Opal charges **$99.99/yr** and *"draws the most pricing anger… the highest in the category"* for what overlaps free OS Screen Time, while **"Forest, the one app with a one-time purchase, is the only one that escapes the subscription-resentment complaint almost entirely."** Forest is our closest analogue and our closest brand position (§2.1). |
+| ~~"Plus" tier for blocking/DnD~~ | **❌ No tier ladder** (§6.4 — a ladder and lifetime are mutually exclusive). Also: there is no blocking to tier. And the category punishes subscription greed — Opal charges **$99.99/yr** and *"draws the most pricing anger… the highest in the category"* for what overlaps free OS Screen Time. **NB:** the "Forest escapes subscription resentment" line once cited here is **stale — Forest itself moved to a subscription in Dec 2025 and took the backlash** (§6.4.1). The lesson stands, inverted: resentment is real and Forest wore it. Ours is avoided by keeping Pro one-time and putting recurring only on a *service* (Sync). |
 | **Do-Not-Disturb** ✅ | **KEEP — build it, put it in Pro.** Completely unlike blocking: `NotificationManager.setInterruptionFilter()` + `ACCESS_NOTIFICATION_POLICY` is documented, legitimate, small, and carries no policy risk. It's a session-engine feature, not a new product. |
 
 ## 12. Rendering architecture (W2)
