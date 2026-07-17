@@ -9,7 +9,9 @@ const String kRevenueCatAndroidKey = 'goog_qvcafNNwzocZLDKSJFfVqqRPmgW';
 const String kProEntitlement = 'pro';
 
 /// Purchasable theme ids (the app catalog minus the always-free 'sand'). Pro
-/// grants all of these; each is also sellable à la carte (see kThemeProductId).
+/// **Lifetime** grants all of these — Monthly/Yearly do not, since a theme is a
+/// one-time good (see entitlementsFrom). Each is also sellable à la carte
+/// (see kThemeProductId).
 const Set<String> kCatalogThemeIds = <String>{
   'obsidian', 'sage', 'rose', 'indigo', 'dusk', 'tide', 'noir', 'mocha', 'aurora',
 };
