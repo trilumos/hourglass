@@ -72,7 +72,8 @@ is **complete and historical** — keep it as the record of what was gated, not 
 - [ ] **Cloud Sync** — Firebase auth + sync (schema already sync-ready; `backup_service.dart` already merges by uuid). **One Firebase project shared with web.** Requires privacy-policy + Play Data Safety updates.
 - [ ] **🏺 Sediment** — every completed session lays a layer in a vessel you keep forever (thickness = duration, colour = theme, texture = focus score). Replaces Levels; absorbs Insights visualization and the share card. *The centrepiece — see the platform-strategy spec §7.*
 - [ ] **Intention** — one line before you flip, recorded with the stratum. *Absorbs the old Notes/journal item.*
-- [ ] **♻️ Sustain Sync** billing — ~$2.99/mo · ~$19.99/yr. **No lifetime Sync, ever.** Existing Pro Lifetime holders get it free forever.
+- [ ] **♻️ Sustain Sync** billing — ~$2.99/mo · ~$19.99/yr. **No lifetime Sync, ever.**
+- [ ] **Manage screen shows BOTH Pro and Sync** (founder flag 2026-07-17) — today the Pro screen renders a single `ProStatus`. Once Sync exists, a Lifetime holder must see *Pro: forever* **and** *Sync: not subscribed (+price)*; a Sync subscriber must see it listed **as a subscription** with its renewal date + Manage link, like Monthly/Yearly are now. Two independent lines, two renewal dates. Restore must recover both. *A subscription the user pays for and can't find in-app is a refund.* See platform-strategy spec §6.4.2.
 
 > **Why v1.2 and v1.3 split:** v1.2's soundscapes are blocked on an *asset-sourcing* action, MediaStyle and
 > sand realism are days, and Cloud+Sediment is weeks. Two shippable releases beat one stalled one.

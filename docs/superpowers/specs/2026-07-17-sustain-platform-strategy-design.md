@@ -375,6 +375,30 @@ We start there.** And the decisive difference: **Forest is a company with salari
 fixed cost.** One-time cannot fund a payroll — it can comfortably fund a founder. That is exactly why Pro
 does **not** need to be recurring (§6.4) and Sync alone carries it.
 
+### 6.4.2 The manage/subscription screen must show BOTH lines (v1.3 requirement)
+
+**Founder flag, 2026-07-17 — a real gap.** Today the Pro screen renders a single `ProStatus`
+(`lib/ui/paywall_screen.dart` — "Lifetime · Yours forever", or a renewal date). The moment Sync exists
+that is **wrong for everyone**, including existing buyers:
+
+- A **Pro Lifetime** holder must see: *Pro — Lifetime, yours forever* **and** *Sync — not subscribed* (with
+  its price and a way to subscribe).
+- A **Sync subscriber** must see Sync listed **as a subscription**, with its renewal date and a Manage
+  link into Google Play — exactly as Monthly/Yearly are today. A subscription the user pays for and cannot
+  find in-app is a support ticket and a refund.
+- A **Pro Monthly/Yearly + Sync** user has **two** independent lines with **two** renewal dates.
+
+**Required in v1.3, alongside Sync itself:**
+1. A `SyncStatus` alongside `ProStatus` (active, renewal date, willRenew) from the same billing service.
+2. The manage screen renders **two rows**: Pro (plan + expiry/forever) and Sync (active/inactive + renewal).
+3. The Sync row appears **whether or not** it's subscribed — inactive shows the price and the buy path
+   (that's where the Sync screen is reached from, per §6.1.1's "never a tier on the Pro paywall" rule).
+4. Restore must recover **both** entitlements.
+
+**Why this matters beyond tidiness:** §6.1.1 keeps Sync off the Pro paywall so the two never read as
+tiers. That's correct for *buying* — but it must not leak into *managing*, where a user's honest question
+is "what am I paying for and when does it renew?" Both answers belong on one screen.
+
 ### 6.5 Adding a subscription to a shipped app — the risks
 
 - **🚨 THE LIVE ONE: the shipped paywall already promises Sync away.** Not a roadmap note — **in-app copy,
