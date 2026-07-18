@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sustain — hybrid: sand inside the baked hourglass + star glitter</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; overflow:hidden; background:#0a1a2a;
+              font-family: ui-sans-serif, system-ui, sans-serif; }
+  #stage { position:fixed; inset:0; display:grid; place-items:center; }
+  #frame { position:relative; }
+  #glitter, #sand { position:absolute; inset:0; display:block; }
+  #sand { pointer-events:none; }
+  #ui { position:fixed; top:0; right:0; bottom:0; width:250px; padding:14px;
+        background:rgba(8,10,16,.85); backdrop-filter:blur(12px); color:#dfe3ea;
+        font-size:12px; overflow-y:auto; z-index:20;
+        border-left:1px solid rgba(255,255,255,.08); }
+  #ui.hidden { display:none; }
+  h3 { font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:#7d8798;
+       margin:12px 0 6px; font-weight:600; } h3:first-child { margin-top:0; }
+  label { display:flex; justify-content:space-between; margin:7px 0 2px; color:#aab3c2; }
+  label b { color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
+  input[type=range] { width:100%; accent-color:#EACA78; height:15px; }
+  .hint { color:#5d6879; margin-top:12px; line-height:1.5; }
+  kbd { background:rgba(255,255,255,.12); border-radius:3px; padding:1px 5px; }
+</style>
+</head>
+<body>
+
+<div id="stage"><div id="frame">
+  <canvas id="glitter"></canvas>
+  <canvas id="sand"></canvas>
+</div></div>
+
+<div id="ui">
+  <h3>Session</h3>
+  <label>Progress <b id="vProg">0.35</b></label>
+  <input type="range" id="prog" min="0" max="1" step="0.005" value="0.35">
+
+  <h3>Glass fit (align sand to the baked glass)</h3>
+  <label>Center X <b id="vCx">0.500</b></label>
+  <input type="range" id="cx" min="0.4" max="0.6" step="0.001" value="0.500">
+  <label>Top Y <b id="vTop">0.360</b></label>
+  <input type="range" id="top" min="0.25" max="0.45" step="0.001" value="0.360">
+  <label>Neck Y <b id="vNeck">0.638</b></label>
+  <input type="range" id="neck" min="0.55" max="0.70" step="0.001" value="0.638">
+  <label>Bottom Y <b id="vBot">0.840</b></label>
+  <input type="range" id="bot" min="0.75" max="0.90" step="0.001" value="0.840">
+  <label>Max half <b id="vMax">0.092</b></label>
+  <input type="range" id="max" min="0.04" max="0.15" step="0.001" value="0.092">
+  <label>Neck half <b id="vNh">0.009</b></label>
+  <input type="range" id="nh" min="0.003" max="0.02" step="0.0005" value="0.009">
+  <label>Show glass edge <b id="vDbg">1</b></label>
+  <input type="range" id="dbg" min="0" max="1" step="1" value="1">
+
+  <h3>Sand</h3>
+  <label>Hue <b id="vSHue">36</b></label>
+  <input type="range" id="shue" min="20" max="55" step="1" value="36">
+  <label>Lightness <b id="vSLit">0.66</b></label>
+  <input type="range" id="slit" min="0.45" max="0.85" step="0.01" value="0.66">
+
+  <h3>Star glitter (old-anime)</h3>
+  <label>Amount <b id="vGl">0.6</b></label>
+  <input type="range" id="gl" min="0" max="3" step="0.02" value="0.6">
+  <label>Density <b id="vGd">0.32</b></label>
+  <input type="range" id="gd" min="0" max="1" step="0.01" value="0.32">
+  <label>Speed <b id="vGs">1.0</b></label>
+  <input type="range" id="gs" min="0.2" max="3" step="0.05" value="1.0">
+  <label>Horizon Y <b id="vHor">0.42</b></label>
+  <input type="range" id="hor" min="0.3" max="0.55" step="0.005" value="0.42">
+  <label>Sill Y <b id="vSill">0.17</b></label>
+  <input type="range" id="sill" min="0.08" max="0.28" step="0.005" value="0.17">
+
+  <p class="hint"><kbd>H</kbd> panel · The two tests:
+    does sand in the baked glass look real, and does the star-glitter feel like old anime?</p>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const IMG = 'plates/Empty hourglass midday.png';
+const IMG_W = 1671, IMG_H = 941, AR = IMG_W / IMG_H;
+const $ = id => document.getElementById(id);
+
+// ── layout: letterbox the image, size both canvases to the displayed rect ────
+const frame = $('frame'), glitterCv = $('glitter'), sandCv = $('sand');
+let DW = 0, DH = 0;
+function fit(){
+  const vw = innerWidth, vh = innerHeight;
+  if (vw/vh > AR) { DH = vh; DW = vh*AR; } else { DW = vw; DH = vw/AR; }
+  frame.style.width = DW+'px'; frame.style.height = DH+'px';
+  const dpr = Math.min(devicePixelRatio, 2);
+  for (const cv of [glitterCv, sandCv]) {
+    cv.width = DW*dpr; cv.height = DH*dpr; cv.style.width = DW+'px'; cv.style.height = DH+'px';
+  }
+  renderer.setSize(DW, DH);
+  sctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+// ── Layer 0: WebGL — the image + old-anime star glitter on the water ────────
+const renderer = new THREE.WebGLRenderer({ canvas: glitterCv, antialias:true, alpha:false });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+// Identity colour pipeline: no input decode, no output encode. The texture's
+// sRGB bytes pass straight through to the sRGB canvas, so the background looks
+// EXACTLY like the PNG (no saturation/warm shift). Sparkle is added in the same
+// space — fine for a simple additive white glint.
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+const tex = new THREE.TextureLoader().load(IMG);
+tex.colorSpace = THREE.NoColorSpace;
+
+const U = {
+  uTex:{value:tex}, uTime:{value:0}, uGl:{value:0.6}, uGd:{value:0.32}, uGs:{value:1},
+  uHor:{value:0.42}, uSill:{value:0.17},
+};
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), new THREE.ShaderMaterial({
+  uniforms:U, depthTest:false,
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }`,
+  fragmentShader:`
+    precision highp float; varying vec2 vUv;
+    uniform sampler2D uTex; uniform float uTime,uGl,uGd,uGs,uHor,uSill;
+    float hash(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
+
+    // one twinkling 4-point star per grid cell — smooth pop in/out, old-anime.
+    float starLayer(vec2 uv, float cells, float seed){
+      vec2 gp = uv*vec2(cells*1.9, cells);   // wider cells (water is wide)
+      vec2 id = floor(gp), f = fract(gp)-0.5;
+      float on = step(1.0-uGd, hash(id+seed));           // only some cells sparkle
+      vec2 jit = (vec2(hash(id+seed+3.1), hash(id+seed+7.2))-0.5)*0.7;
+      vec2 d = f - jit;
+      // life: mostly dark, quick bright flash, gentle fade (eased, smooth)
+      float per = 1.6 + 2.6*hash(id+seed+5.5);
+      float ph = fract(uTime*uGs/per + hash(id+seed+9.9));
+      float life = smoothstep(0.0,0.12,ph) * (1.0-smoothstep(0.12,0.55,ph));
+      // 4-point star: sharp along axes, soft falloff
+      float ax = smoothstep(0.30,0.0,abs(d.x)) * smoothstep(0.05,0.0,abs(d.y));
+      float ay = smoothstep(0.30,0.0,abs(d.y)) * smoothstep(0.05,0.0,abs(d.x));
+      float core = smoothstep(0.09,0.0,length(d));
+      return (max(ax,ay)*0.8 + core) * life * on;
+    }
+    void main(){
+      vec4 col = texture2D(uTex, vUv);   // faithful — no saturation boost
+      // water band: between sill (low) and horizon (high), vUv.y from bottom.
+      float band = smoothstep(uSill-0.01,uSill+0.03,vUv.y) * (1.0-smoothstep(uHor-0.03,uHor,vUv.y));
+      // ONLY on bluish water pixels — keeps sparkle off the wood, rocks, glass.
+      float isWater = smoothstep(0.0,0.10, col.b - col.r);
+      float water = band * isWater;
+      float g = starLayer(vUv,26.0,0.0) + starLayer(vUv,40.0,13.7)*0.7;
+      // faint, additive white — a glint, not a glow.
+      col.rgb += g * uGl * water * 0.55 * vec3(1.0,0.99,0.94);
+      gl_FragColor = col;
+    }`,
+}));
+const scene = new THREE.Scene(); scene.add(quad);
+const cam = new THREE.Camera();
+
+// ── Layer 1: 2D canvas — sand inside the baked glass ────────────────────────
+const sctx = sandCv.getContext('2d');
+const S = { prog:0.35, cx:0.499, top:0.346, neck:0.629, bot:0.889, max:0.067, nh:0.004,
+            dbg:1, shue:36, slit:0.66, gl:0.6, gd:0.32, gs:1, hor:0.42, sill:0.17 };
+
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const smooth=x=>{const c=clamp(x,0,1);return c*c*(3-2*c);};
+function sandCol(dl){ // hsl -> css, dl = lightness delta
+  return `hsl(${S.shue}, 46%, ${Math.round((S.slit+dl)*100)}%)`;
+}
+
+// A tiling GRAIN texture — the single thing that turns a flat fill into sand.
+// Fine per-pixel brightness jitter; overlaid with 'overlay' blend so the mass
+// reads as thousands of matte grains catching light, not smooth liquid.
+const grainCv = document.createElement('canvas'); grainCv.width = grainCv.height = 160;
+(() => {
+  const gx = grainCv.getContext('2d');
+  const im = gx.createImageData(160, 160);
+  for (let i = 0; i < im.data.length; i += 4) {
+    // bimodal: mostly mid, occasional bright fleck + dark speck = visible grain.
+    let v = 128 + (Math.random() * 2 - 1) * 46;
+    if (Math.random() < 0.06) v += 70;      // catch-light flecks
+    if (Math.random() < 0.06) v -= 70;      // shadow specks
+    im.data[i] = im.data[i+1] = im.data[i+2] = clamp(v, 0, 255); im.data[i+3] = 255;
+  }
+  gx.putImageData(im, 0, 0);
+})();
+let grainPat = null;
+
+// Fill a sand region: base vertical gradient for form, then grain overlay
+// clipped to the same path, then a soft top-edge catch-light.
+function fillSand(path, topY, botY, edgeLight){
+  if (!grainPat) grainPat = sctx.createPattern(grainCv, 'repeat');
+  const g = sctx.createLinearGradient(0, topY, 0, botY);
+  g.addColorStop(0.0, sandCol(edgeLight ? 0.13 : 0.06));
+  g.addColorStop(0.45, sandCol(0));
+  g.addColorStop(1.0, sandCol(-0.16));   // shadowed base gives it volume
+  sctx.save();
+  sctx.clip(path);
+  sctx.fillStyle = g; sctx.fill(path);
+  // grain
+  sctx.globalCompositeOperation = 'overlay';
+  sctx.globalAlpha = 0.55;
+  sctx.fillStyle = grainPat; sctx.fillRect(0, 0, DW, DH);
+  sctx.globalAlpha = 1; sctx.globalCompositeOperation = 'source-over';
+  sctx.restore();
+}
+
+// Build the glass interior path in DISPLAYED pixels (so sand clips to the glass).
+function glassPath(){
+  const cx=S.cx*DW, mx=S.max*DW, nh=S.nh*DW;
+  const yT=S.top*DH, yN=S.neck*DH, yB=S.bot*DH;
+  const p=new Path2D();
+  // top bulb: rim -> widest -> neck   (bezier, mirrors the app painter's feel)
+  p.moveTo(cx, yT);
+  p.bezierCurveTo(cx+mx*0.9, yT, cx+mx, yT+(yN-yT)*0.12, cx+mx, yT+(yN-yT)*0.42);
+  p.bezierCurveTo(cx+mx, yN-(yN-yT)*0.32, cx+nh, yN-(yN-yT)*0.10, cx+nh, yN);
+  // bottom bulb: neck -> widest -> base
+  p.bezierCurveTo(cx+nh, yN+(yB-yN)*0.14, cx+mx, yN+(yB-yN)*0.42, cx+mx, yN+(yB-yN)*0.72);
+  p.bezierCurveTo(cx+mx, yB-(yB-yN)*0.08, cx+mx*0.7, yB, cx, yB);
+  p.bezierCurveTo(cx-mx*0.7, yB, cx-mx, yB-(yB-yN)*0.08, cx-mx, yN+(yB-yN)*0.72);
+  p.bezierCurveTo(cx-mx, yN+(yB-yN)*0.42, cx-nh, yN+(yB-yN)*0.14, cx-nh, yN);
+  p.bezierCurveTo(cx-nh, yN-(yN-yT)*0.10, cx-mx, yN-(yN-yT)*0.32, cx-mx, yT+(yN-yT)*0.42);
+  p.bezierCurveTo(cx-mx, yT+(yN-yT)*0.12, cx-mx*0.9, yT, cx, yT);
+  p.closePath();
+  return {p,cx,mx,nh,yT,yN,yB};
+}
+
+function drawSand(t){
+  sctx.clearRect(0,0,DW,DH);
+  const G = glassPath();
+  const d = S.prog, {cx,mx,nh,yT,yN,yB} = G;
+
+  // OUTLINE-ONLY mode: trace the glass interior, NO sand, to fit it 100% first.
+  if (S.dbg){
+    sctx.save();
+    sctx.strokeStyle='rgba(255,45,95,0.95)'; sctx.lineWidth=2; sctx.stroke(G.p);
+    sctx.restore();
+    return;
+  }
+
+  // ONE glass clip wraps everything. Each region only draws its TOP SURFACE and
+  // fills downward; the glass clip forms the bulb sides. (Canvas clips intersect,
+  // so fillSand's own region clip = glass ∩ region.)
+  sctx.save();
+  sctx.clip(G.p);
+
+  // TOP sand — surface line down to the neck. Flat, shallow central dip to the hole.
+  if (d < 1){
+    const surf = yT + (yN-yT)*(0.06 + 0.86*d);
+    const dip = Math.min((yN-surf)*0.28, mx*0.4);
+    const p = new Path2D();
+    p.moveTo(0, surf);
+    p.lineTo(cx-mx*0.55, surf);
+    p.quadraticCurveTo(cx, surf + dip, cx+mx*0.55, surf);
+    p.lineTo(DW, surf);
+    p.lineTo(DW, yN); p.lineTo(0, yN); p.closePath();
+    fillSand(p, surf, yN, true);
+    sctx.strokeStyle=sandCol(0.20); sctx.globalAlpha=0.5; sctx.lineWidth=1.3;
+    sctx.beginPath(); sctx.moveTo(cx-mx, surf); sctx.lineTo(cx-mx*0.55, surf);
+    sctx.quadraticCurveTo(cx, surf+dip, cx+mx*0.55, surf); sctx.lineTo(cx+mx, surf);
+    sctx.stroke(); sctx.globalAlpha=1;
+  }
+
+  // BOTTOM pile — a cone at the angle of repose, growing.
+  const baseRise=(yB-yN)*0.52*smooth(Math.max(0,(d-0.22)/0.78));
+  const coneH=(yB-yN)*(0.12+0.40*smooth(d));
+  const pileW=mx*1.15;
+  const pileTopAt=(x)=>{ const dr=Math.abs(x-cx);
+    const bump=dr>=pileW?0:coneH*Math.pow(Math.cos(dr/pileW*Math.PI/2),1.35);
+    return yB-baseRise-bump; };
+  if (d>0){
+    const p=new Path2D(); const N=56;
+    for(let i=0;i<=N;i++){ const x=cx-pileW+(pileW*2)*i/N; const y=pileTopAt(x);
+      i===0?p.moveTo(x,y):p.lineTo(x,y); }
+    p.lineTo(DW,yB); p.lineTo(0,yB); p.closePath();
+    fillSand(p, yB-coneH-baseRise, yB, true);
+    sctx.strokeStyle=sandCol(0.20); sctx.globalAlpha=0.42; sctx.lineWidth=1.2;
+    sctx.beginPath();
+    for(let i=0;i<=24;i++){ const x=cx-pileW*0.85+(pileW*1.7)*i/24; const y=pileTopAt(x)+0.5;
+      i===0?sctx.moveTo(x,y):sctx.lineTo(x,y); }
+    sctx.stroke(); sctx.globalAlpha=1;
+  }
+
+  // FALLING stream — fine accelerating grains through the neck.
+  if (d>0.001 && d<0.999){
+    const holeY=yN, landY=pileTopAt(cx);
+    const gap=landY-holeY, colW=nh*1.6;
+    const rng=mulberry(7);
+    for(let i=0;i<90;i++){
+      const off=rng(),sp=0.8+0.4*rng(),lane=rng()*2-1,sz=rng(),shade=rng();
+      const ph=((t/(0.5*sp))+off)%1; const fall=0.1*ph+0.9*ph*ph;
+      const py=holeY+fall*gap; if(py>=landY) continue;
+      const px=cx+lane*Math.abs(lane)*colW+Math.sin(ph*6.28+i)*0.4;
+      const r=clamp((1.0-0.35*fall)*(0.45+0.4*sz),0.4,1.15);
+      const l=S.slit+(shade-0.5)*0.22;
+      sctx.fillStyle=`hsla(${S.shue},46%,${Math.round(l*100)}%,${clamp(1-0.15*fall,0,1)})`;
+      sctx.beginPath(); sctx.arc(px,py,r,0,7); sctx.fill();
+    }
+  }
+
+  sctx.restore();
+}
+function mulberry(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// ── wiring ──────────────────────────────────────────────────────────────────
+const bind=(id,out,key,fmt=v=>v.toFixed(3),fn=()=>{})=>{const el=$(id);
+  const run=()=>{S[key]=parseFloat(el.value);$(out).textContent=fmt(S[key]);fn();};
+  el.addEventListener('input',run);run();};
+bind('prog','vProg','prog',v=>v.toFixed(2));
+bind('cx','vCx','cx'); bind('top','vTop','top'); bind('neck','vNeck','neck');
+bind('bot','vBot','bot'); bind('max','vMax','max'); bind('nh','vNh','nh');
+bind('dbg','vDbg','dbg',v=>String(v|0));
+bind('shue','vSHue','shue',v=>String(v|0)); bind('slit','vSLit','slit',v=>v.toFixed(2));
+bind('gl','vGl','gl',v=>v.toFixed(2),()=>U.uGl.value=S.gl);
+bind('gd','vGd','gd',v=>v.toFixed(2),()=>U.uGd.value=S.gd);
+bind('gs','vGs','gs',v=>v.toFixed(2),()=>U.uGs.value=S.gs);
+bind('hor','vHor','hor',v=>v.toFixed(2),()=>U.uHor.value=S.hor);
+bind('sill','vSill','sill',v=>v.toFixed(2),()=>U.uSill.value=S.sill);
+addEventListener('keydown',e=>{if(e.key==='h'||e.key==='H')$('ui').classList.toggle('hidden');});
+addEventListener('resize',fit);
+
+fit();
+let t0=performance.now(), tSec=0;
+function loop(now){ tSec+=(now-t0)/1000; t0=now;
+  U.uTime.value=tSec; renderer.render(scene,cam);
+  drawSand(tSec); requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

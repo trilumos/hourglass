@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sustain — living painting test</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; background:#000;
+               font-family: ui-sans-serif, system-ui, sans-serif; }
+  canvas { display:block; position:fixed; inset:0; }
+  /* The 2.5D painter overlay (Option A) — hidden unless toggled. */
+  #painter { z-index:5; pointer-events:none; display:none; }
+  #ui { position:fixed; top:0; right:0; bottom:0; width:250px; padding:14px;
+        background:rgba(8,10,16,.84); backdrop-filter:blur(12px); color:#dfe3ea;
+        font-size:12px; overflow-y:auto; z-index:20;
+        border-left:1px solid rgba(255,255,255,.08); }
+  #ui.hidden { display:none; }
+  h3 { font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+       color:#7d8798; margin:13px 0 7px; font-weight:600; }
+  h3:first-child { margin-top:0; }
+  label { display:flex; justify-content:space-between; margin:8px 0 2px; color:#aab3c2; }
+  label b { color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
+  input[type=range] { width:100%; accent-color:#EACA78; height:16px; }
+  .tag { position:fixed; left:14px; top:12px; z-index:20; color:#fff;
+         font-size:13px; font-weight:600; letter-spacing:.02em;
+         text-shadow:0 1px 8px rgba(0,0,0,.6); }
+  .tag span { color:#EACA78; }
+  .hint { color:#5d6879; margin-top:12px; line-height:1.5; }
+  kbd { background:rgba(255,255,255,.12); border-radius:3px; padding:1px 5px; }
+</style>
+</head>
+<body>
+
+<div class="tag">Renderer: <span id="mode">3D glass (B)</span> &nbsp;·&nbsp; <kbd>2</kbd> swap &nbsp; <kbd>H</kbd> panel</div>
+
+<div id="ui">
+  <h3>Time of day</h3>
+  <label>Golden → Dusk <b id="vTod">0.00</b></label>
+  <input type="range" id="tod" min="0" max="1" step="0.005" value="0">
+
+  <h3>Sea (the 5% motion)</h3>
+  <label>Shimmer <b id="vShim">0.55</b></label>
+  <input type="range" id="shim" min="0" max="2" step="0.01" value="0.55">
+  <label>Ripple <b id="vRip">0.5</b></label>
+  <input type="range" id="rip" min="0" max="2" step="0.01" value="0.5">
+  <label>Horizon <b id="vHor">0.52</b></label>
+  <input type="range" id="hor" min="0.3" max="0.75" step="0.005" value="0.52">
+
+  <h3>Place the hourglass</h3>
+  <label>Scale <b id="vScl">1.00</b></label>
+  <input type="range" id="scl" min="0.3" max="2.5" step="0.01" value="1">
+  <label>X <b id="vX">0.0</b></label>
+  <input type="range" id="hx" min="-6" max="6" step="0.05" value="0">
+  <label>Y <b id="vY">0.0</b></label>
+  <input type="range" id="hy" min="-4" max="4" step="0.05" value="0">
+
+  <h3>Session</h3>
+  <label>Progress <b id="vProg">0.35</b></label>
+  <input type="range" id="prog" min="0" max="1" step="0.005" value="0.35">
+
+  <h3>Look</h3>
+  <label>Bloom <b id="vBloom">0.55</b></label>
+  <input type="range" id="bloom" min="0" max="1.5" step="0.01" value="0.55">
+  <label>Env reflect <b id="vEnv">1.0</b></label>
+  <input type="range" id="env" min="0" max="2" step="0.02" value="1">
+
+  <p class="hint">
+    The load-bearing test: does the hourglass <b>belong</b> in the painting?<br>
+    <kbd>2</kbd> compares 3D glass vs the 2.5D painter on the same scene.
+  </p>
+</div>
+
+<canvas id="painter"></canvas>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }     from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass }from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { paintHourglass, SKINS } from './hourglass.js';
+
+const $ = (id) => document.getElementById(id);
+
+// ── renderer / scene ────────────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 0, 14);
+
+const loader = new THREE.TextureLoader();
+const plateGolden = loader.load('plates/plate-golden.png');
+const plateDusk   = loader.load('plates/plate-dusk.png');
+[plateGolden, plateDusk].forEach(t => { t.colorSpace = THREE.SRGBColorSpace; });
+
+// ── Layer 1+2: the painting, with a horizon-masked water shimmer shader ──────
+// This is the key correction to the architecture: we DON'T put 3D water on the
+// painting — we DISPLACE THE PAINTED WATER in image space. It stays anime because
+// it's literally the painted sea moving. 95% still, 5% moving.
+const bgGeo = new THREE.PlaneGeometry(2, 2);
+const bgMat = new THREE.ShaderMaterial({
+  depthTest: false, depthWrite: false,
+  uniforms: {
+    uGolden: { value: plateGolden },
+    uDusk:   { value: plateDusk },
+    uTod:    { value: 0 },
+    uTime:   { value: 0 },
+    uShim:   { value: 0.55 },
+    uRip:    { value: 0.5 },
+    uHorizon:{ value: 0.52 },
+    uAspect: { value: innerWidth / innerHeight },
+    uImgAspect:{ value: 1916 / 821 },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.999, 1.0); }
+  `,
+  fragmentShader: `
+    precision highp float;
+    varying vec2 vUv;
+    uniform sampler2D uGolden, uDusk;
+    uniform float uTod, uTime, uShim, uRip, uHorizon, uAspect, uImgAspect;
+
+    // cover-fit the image to the viewport
+    vec2 coverUv(vec2 uv){
+      float s = uAspect / uImgAspect;
+      vec2 c = vec2(0.5);
+      if (s > 1.0) return vec2((uv.x-0.5)/s + 0.5, uv.y);
+      else         return vec2(uv.x, (uv.y-0.5)*s + 0.5);
+    }
+    // cheap value noise
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1)))*43758.5); }
+    float noise(vec2 p){
+      vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+      return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+                 mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y);
+    }
+    void main(){
+      vec2 uv = coverUv(vUv);
+      // vUv.y: 0 bottom, 1 top. Water is BELOW the horizon line.
+      float belowHorizon = smoothstep(uHorizon+0.02, uHorizon-0.14, vUv.y);
+      // depth: 0 at horizon, 1 at the near shore — motion grows toward camera.
+      float depth = clamp((uHorizon - vUv.y) / uHorizon, 0.0, 1.0);
+
+      // ripple: displace the sampled row by animated noise, scaled by depth.
+      float n = noise(vec2(uv.x*22.0, uv.y*60.0 - uTime*0.35));
+      float disp = (n - 0.5) * 0.006 * uRip * depth * belowHorizon;
+      vec2 wuv = uv + vec2(disp, disp*0.4);
+
+      vec4 g = texture2D(uGolden, wuv);
+      vec4 d = texture2D(uDusk,   wuv);
+      vec4 col = mix(g, d, uTod);
+
+      // shimmer: sparse animated highlights riding the water, brightest where the
+      // sun's glitter already is (i.e. where the plate is already bright).
+      float sparkle = noise(vec2(uv.x*90.0 + uTime*0.6, uv.y*140.0 - uTime*0.9));
+      sparkle = pow(max(0.0, sparkle-0.72)/0.28, 2.0);
+      float lum = dot(col.rgb, vec3(0.299,0.587,0.114));
+      col.rgb += sparkle * uShim * belowHorizon * (0.25 + lum) * vec3(1.0,0.95,0.8);
+
+      gl_FragColor = col;
+    }
+  `,
+});
+const bg = new THREE.Mesh(bgGeo, bgMat);
+bg.frustumCulled = false;
+const bgScene = new THREE.Scene();          // drawn first, own ortho pass
+bgScene.add(bg);
+const bgCam = new THREE.Camera();
+
+// ── env map: the plate itself, so the glass reflects the PAINTED world ───────
+function makeEnv(tex){
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  return tex;
+}
+const envGolden = makeEnv(plateGolden.clone());
+const envDusk   = makeEnv(plateDusk.clone());
+scene.environment = envGolden;
+
+// ── lights (match the painted sun: warm, low, from the left) ─────────────────
+const key = new THREE.DirectionalLight(0xffd9a0, 2.2);
+key.position.set(-5, 2, 4);
+scene.add(key);
+const fill = new THREE.HemisphereLight(0xbcd8ff, 0x20304a, 0.5);
+scene.add(fill);
+
+// ── Layer 3 (Option B): the 3D lathe-glass hourglass ────────────────────────
+// Surface of revolution -> LatheGeometry from a profile. No .glb, no modelling;
+// the profile is the same idea as the app's neckWidth. Built entirely in code so
+// it stays tweakable and I can iterate it myself.
+const HG = new THREE.Group();
+scene.add(HG);
+
+function latheProfile(){
+  // half-width (x) at each height (y), y from -3 (base) to +3 (top).
+  const pts = [];
+  const add = (x,y) => pts.push(new THREE.Vector2(x, y));
+  add(0.02, -3.0);
+  add(1.55, -3.0);      // bottom bulb widest
+  add(1.62, -2.2);
+  add(1.35, -1.2);
+  add(0.55, -0.5);
+  add(0.10,  0.0);      // neck
+  add(0.55,  0.5);
+  add(1.35,  1.2);
+  add(1.62,  2.2);
+  add(1.55,  3.0);      // top bulb
+  add(0.02,  3.0);
+  return pts;
+}
+const glassGeo = new THREE.LatheGeometry(latheProfile(), 64);
+const glassMat = new THREE.MeshPhysicalMaterial({
+  transmission: 1.0, thickness: 1.2, ior: 1.5, roughness: 0.06,
+  metalness: 0.0, clearcoat: 0.4, envMapIntensity: 1.0,
+  transparent: true, opacity: 1.0,
+  attenuationColor: new THREE.Color(0xdfe9ff), attenuationDistance: 6.0,
+});
+const glass = new THREE.Mesh(glassGeo, glassMat);
+HG.add(glass);
+
+// warm wooden caps + posts (reads "handcrafted", not "museum")
+const woodMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2c, roughness: 0.6, metalness: 0.05 });
+const capGeo = new THREE.CylinderGeometry(1.75, 1.75, 0.35, 48);
+const capTop = new THREE.Mesh(capGeo, woodMat); capTop.position.y = 3.15; HG.add(capTop);
+const capBot = new THREE.Mesh(capGeo, woodMat); capBot.position.y = -3.15; HG.add(capBot);
+for (let i=0;i<3;i++){
+  const a = i/3*Math.PI*2;
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,6.4,12), woodMat);
+  post.position.set(Math.cos(a)*1.6, 0, Math.sin(a)*1.6);
+  HG.add(post);
+}
+
+// sand: a shrinking top cone, a growing bottom pile, a thin falling column.
+const sandMat = new THREE.MeshStandardMaterial({ color: 0xEACA78, roughness: 0.9, emissive: 0x2a1e08, emissiveIntensity: 0.3 });
+const topSand = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.2, 32), sandMat);
+topSand.rotation.x = Math.PI; topSand.position.y = 1.0; HG.add(topSand);
+const botSand = new THREE.Mesh(new THREE.ConeGeometry(1.3, 0.8, 32), sandMat);
+botSand.position.y = -2.6; HG.add(botSand);
+const streamGeo = new THREE.CylinderGeometry(0.04, 0.06, 5.6, 8);
+const stream = new THREE.Mesh(streamGeo, sandMat); stream.position.y = -0.2; HG.add(stream);
+
+HG.scale.setScalar(1.0);
+
+// ── Layer 4 stand-in: bloom post ────────────────────────────────────────────
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.6, 0.85);
+composer.addPass(bloom);
+
+// ── Option A: the 2.5D painter, drawn to an overlay canvas ───────────────────
+const pcv = $('painter');
+const pctx = pcv.getContext('2d');
+let showPainter = false;
+
+// ── state / wiring ──────────────────────────────────────────────────────────
+const S = { tod:0, shim:0.55, rip:0.5, hor:0.52, scl:1, hx:0, hy:0, prog:0.35, bloom:0.55, env:1 };
+const bind = (id,out,key,fmt,fn=()=>{}) => {
+  const el=$(id); const run=()=>{ S[key]=parseFloat(el.value); $(out).textContent=fmt(S[key]); fn(); };
+  el.addEventListener('input',run); run();
+};
+bind('tod','vTod','tod',v=>v.toFixed(2),()=>{ bgMat.uniforms.uTod.value=S.tod;
+  scene.environment = S.tod<0.5?envGolden:envDusk;
+  key.color.setHSL(0.09 - 0.06*S.tod, 0.8, 0.55 - 0.2*S.tod);
+  key.intensity = 2.2 - 1.1*S.tod; });
+bind('shim','vShim','shim',v=>v.toFixed(2),()=>bgMat.uniforms.uShim.value=S.shim);
+bind('rip','vRip','rip',v=>v.toFixed(2),()=>bgMat.uniforms.uRip.value=S.rip);
+bind('hor','vHor','hor',v=>v.toFixed(3),()=>bgMat.uniforms.uHorizon.value=S.hor);
+bind('scl','vScl','scl',v=>v.toFixed(2),place);
+bind('hx','vX','hx',v=>v.toFixed(1),place);
+bind('hy','vY','hy',v=>v.toFixed(1),place);
+bind('prog','vProg','prog',v=>v.toFixed(2),updateSand);
+bind('bloom','vBloom','bloom',v=>v.toFixed(2),()=>bloom.strength=S.bloom);
+bind('env','vEnv','env',v=>v.toFixed(2),()=>glassMat.envMapIntensity=S.env);
+
+function place(){ HG.scale.setScalar(S.scl); HG.position.set(S.hx, S.hy, 0); }
+function updateSand(){
+  const d = S.prog;                 // 0 top full -> 1 bottom full
+  topSand.scale.set(1-d, 1-d, 1-d);
+  topSand.position.y = 1.0 - 0.4*d;
+  botSand.scale.set(0.5+0.5*d, d, 0.5+0.5*d);
+  stream.visible = d>0.001 && d<0.999;
+}
+place(); updateSand();
+
+addEventListener('keydown',(e)=>{
+  if(e.key==='h'||e.key==='H') $('ui').classList.toggle('hidden');
+  if(e.key==='2'){ showPainter=!showPainter;
+    pcv.style.display = showPainter?'block':'none';
+    HG.visible = !showPainter;
+    $('mode').textContent = showPainter?'2.5D painter (A)':'3D glass (B)';
+  }
+});
+addEventListener('resize', resize);
+function resize(){
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight); composer.setSize(innerWidth,innerHeight);
+  bgMat.uniforms.uAspect.value = innerWidth/innerHeight;
+  pcv.width=innerWidth; pcv.height=innerHeight;
+}
+resize();
+
+// ?tod= & ?mode=A for headless capture
+const q = new URLSearchParams(location.search);
+if(q.get('tod')!==null){ S.tod=parseFloat(q.get('tod')); $('tod').value=S.tod; bgMat.uniforms.uTod.value=S.tod; }
+if(q.get('mode')==='A'){ showPainter=true; pcv.style.display='block'; HG.visible=false; $('mode').textContent='2.5D painter (A)'; }
+
+// ── loop ────────────────────────────────────────────────────────────────────
+let last=performance.now(), tSec=0;
+renderer.setAnimationLoop(()=>{
+  const now=performance.now(), dt=(now-last)/1000; last=now; tSec+=dt;
+  bgMat.uniforms.uTime.value = tSec;
+
+  // draw painting first (own ortho pass), then the 3D scene, then bloom.
+  renderer.autoClear = true;
+  renderer.render(bgScene, bgCam);
+  renderer.autoClear = false;
+  if(!showPainter) composer.render();
+
+  if(showPainter){
+    // 2.5D painter overlay, sized to roughly match the 3D glass footprint.
+    const h = innerHeight * 0.42 * S.scl;
+    const w = h * 0.42;
+    pctx.clearRect(0,0,pcv.width,pcv.height);
+    pctx.save();
+    const cxp = innerWidth*0.5 + S.hx*innerWidth*0.04;
+    const cyp = innerHeight*0.52 - S.hy*innerHeight*0.04;
+    pctx.translate(cxp - w/2, cyp - h/2);
+    // paint into a sub-region by translating; painter fills (0,0,w,h)
+    const tmp = document.createElement('canvas'); tmp.width=w; tmp.height=h;
+    paintHourglass(tmp.getContext('2d'), w, h, { progress:S.prog, time:tSec, skin:SKINS.classic });
+    pctx.drawImage(tmp,0,0);
+    pctx.restore();
+  }
+});
+</script>
+</body>
+</html>

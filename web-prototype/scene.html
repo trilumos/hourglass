@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sustain — coded scene (step 1: the world)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; background:#000;
+               font-family: ui-sans-serif, system-ui, sans-serif; }
+  canvas { display:block; }
+  #ui { position:fixed; top:0; left:0; bottom:0; width:270px; padding:16px;
+        background:rgba(8,10,16,.86); backdrop-filter:blur(12px); color:#dfe3ea;
+        font-size:12px; overflow-y:auto; z-index:10;
+        border-right:1px solid rgba(255,255,255,.08); }
+  #ui.hidden { display:none; }
+  h3 { font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+       color:#7d8798; margin:14px 0 8px; font-weight:600; }
+  h3:first-child { margin-top:0; }
+  label { display:flex; justify-content:space-between; margin:9px 0 3px; color:#aab3c2; }
+  label b { color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
+  input[type=range] { width:100%; accent-color:#EACA78; height:18px; }
+  .hint { color:#5d6879; margin-top:14px; line-height:1.5; }
+  kbd { background:rgba(255,255,255,.1); border-radius:3px; padding:1px 4px; }
+  #clock { font-size:26px; color:#fff; font-variant-numeric:tabular-nums;
+           margin:2px 0 10px; letter-spacing:.02em; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h3>Time of day</h3>
+  <div id="clock">18:30</div>
+  <input type="range" id="tod" min="0" max="24" step="0.02" value="18.5">
+  <label>Auto-run <b id="vSpeed">0×</b></label>
+  <input type="range" id="speed" min="0" max="2000" step="10" value="0">
+
+  <h3>Sky</h3>
+  <label>Turbidity <b id="vTurb">2.5</b></label>
+  <input type="range" id="turb" min="0" max="20" step="0.1" value="2.5">
+  <label>Rayleigh <b id="vRay">2.0</b></label>
+  <input type="range" id="ray" min="0" max="4" step="0.01" value="2">
+  <label>Mie <b id="vMie">0.005</b></label>
+  <input type="range" id="mie" min="0" max="0.1" step="0.001" value="0.005">
+  <label>Mie dir <b id="vMieG">0.8</b></label>
+  <input type="range" id="mieg" min="0" max="0.99" step="0.01" value="0.8">
+  <label>Exposure <b id="vExp">0.42</b></label>
+  <input type="range" id="exp" min="0.05" max="1.2" step="0.01" value="0.42">
+
+  <h3>Sea</h3>
+  <label>Wave size <b id="vDist">2.4</b></label>
+  <input type="range" id="dist" min="0" max="8" step="0.1" value="2.4">
+  <label>Speed <b id="vWSpd">0.6</b></label>
+  <input type="range" id="wspd" min="0" max="3" step="0.05" value="0.6">
+  <label>Water hue <b id="vHue">0.19</b></label>
+  <input type="range" id="hue" min="0" max="1" step="0.005" value="0.19">
+
+  <h3>Camera</h3>
+  <label>Height <b id="vCamY">6.0</b></label>
+  <input type="range" id="camy" min="1" max="40" step="0.5" value="6">
+  <label>FOV <b id="vFov">50</b></label>
+  <input type="range" id="fov" min="20" max="90" step="1" value="50">
+
+  <p class="hint">
+    <kbd>H</kbd> hide panel<br><br>
+    Step 1: the world alone, no hourglass.<br>
+    <b>Can code make a sea and sky worth staring at?</b>
+  </p>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { Sky }   from 'three/addons/objects/Sky.js';
+import { Water } from 'three/addons/objects/Water.js';
+
+const $ = (id) => document.getElementById(id);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.42;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1, 20000);
+camera.position.set(0, 6, 40);
+camera.lookAt(0, 4, 0);
+
+// ---- Sea: the official Water shader. Takes the sun's direction + colour, so it
+// glitters wherever the sun actually is. That path is real, not painted.
+const waterNormals = new THREE.TextureLoader().load(
+  'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/textures/waternormals.jpg',
+  (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
+);
+const water = new Water(new THREE.PlaneGeometry(20000, 20000), {
+  textureWidth: 512, textureHeight: 512,
+  waterNormals,
+  sunDirection: new THREE.Vector3(),
+  sunColor: 0xffffff,
+  waterColor: 0x1a4a6e,
+  distortionScale: 2.4,
+  fog: false,
+});
+water.rotation.x = -Math.PI / 2;
+scene.add(water);
+
+// ---- Sky: the official Preetham sky. `elevation` IS the time of day.
+const sky = new Sky();
+sky.scale.setScalar(20000);
+scene.add(sky);
+const skyU = sky.material.uniforms;
+skyU.turbidity.value = 2.5;
+skyU.rayleigh.value = 2.0;
+skyU.mieCoefficient.value = 0.005;
+skyU.mieDirectionalG.value = 0.8;
+
+const sun = new THREE.Vector3();
+const pmrem = new THREE.PMREMGenerator(renderer);
+let envRT = null;
+
+// A hemisphere light so anything we add later is lit by the same sky.
+const hemi = new THREE.HemisphereLight(0xbcd8ff, 0x2a2418, 0.6);
+scene.add(hemi);
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+scene.add(sunLight);
+
+const S = { tod: 18.5, speed: 0, camY: 6 };
+
+const SUNRISE = 6, SUNSET = 19.5; // a long, generous golden hour
+
+/**
+ * Map hour-of-day -> sun elevation/azimuth on a fixed arc.
+ * Deliberately stylised, not astronomical: no location, no permission asked.
+ * Rises east at 06:00, peaks ~58deg, sets west at 19:30; below the horizon at
+ * night (elevation goes negative, which is what makes the sky go dark).
+ */
+function sunForHour(h) {
+  const span = SUNSET - SUNRISE;
+  const dayT = (h - SUNRISE) / span;          // 0 at sunrise, 1 at sunset
+  const elevation = Math.sin(dayT * Math.PI) * 60;
+  const azimuth = -90 + dayT * 180;           // east -> west
+  return { elevation, azimuth };
+}
+
+function updateSun() {
+  const { elevation, azimuth } = sunForHour(S.tod);
+  const phi = THREE.MathUtils.degToRad(90 - elevation);
+  const theta = THREE.MathUtils.degToRad(azimuth);
+  sun.setFromSphericalCoords(1, phi, theta);
+
+  skyU.sunPosition.value.copy(sun);
+  water.material.uniforms.sunDirection.value.copy(sun).normalize();
+
+  // Night: kill the key light, lean on the hemisphere for moonlight-ish ambient.
+  const above = Math.max(0, Math.sin(THREE.MathUtils.degToRad(elevation)));
+  sunLight.position.copy(sun).multiplyScalar(100);
+  sunLight.intensity = 1.6 * above;
+  // Warm at the horizon, white overhead — the cheapest honest light cue there is.
+  const warm = 1 - Math.min(1, above * 2.2);
+  sunLight.color.setRGB(1, 1 - 0.35 * warm, 1 - 0.62 * warm);
+  hemi.intensity = 0.15 + 0.5 * above;
+
+  // The sea's glitter takes the sun's colour, so it warms with it.
+  water.material.uniforms.sunColor.value.copy(sunLight.color);
+
+  if (envRT) envRT.dispose();
+  envRT = pmrem.fromScene(sky);
+  scene.environment = envRT.texture;
+
+  const hh = Math.floor(S.tod), mm = Math.floor((S.tod % 1) * 60);
+  $('clock').textContent = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+
+// ---- wiring
+const bind = (id, out, fmt, fn) => {
+  const el = $(id);
+  const run = () => { const v = parseFloat(el.value); $(out).textContent = fmt(v); fn(v); };
+  el.addEventListener('input', run); run();
+};
+
+bind('tod', 'clock', () => $('clock').textContent, (v) => { S.tod = v; updateSun(); });
+bind('speed', 'vSpeed', (v) => `${v|0}×`, (v) => S.speed = v);
+bind('turb', 'vTurb', (v) => v.toFixed(1), (v) => { skyU.turbidity.value = v; updateSun(); });
+bind('ray',  'vRay',  (v) => v.toFixed(2), (v) => { skyU.rayleigh.value = v; updateSun(); });
+bind('mie',  'vMie',  (v) => v.toFixed(3), (v) => { skyU.mieCoefficient.value = v; updateSun(); });
+bind('mieg', 'vMieG', (v) => v.toFixed(2), (v) => { skyU.mieDirectionalG.value = v; updateSun(); });
+bind('exp',  'vExp',  (v) => v.toFixed(2), (v) => renderer.toneMappingExposure = v);
+bind('dist', 'vDist', (v) => v.toFixed(1), (v) => water.material.uniforms.distortionScale.value = v);
+bind('wspd', 'vWSpd', (v) => v.toFixed(2), (v) => S.wspd = v);
+bind('hue',  'vHue',  (v) => v.toFixed(3), (v) => water.material.uniforms.waterColor.value.setHSL(v, 0.62, 0.24));
+bind('camy', 'vCamY', (v) => v.toFixed(1), (v) => { camera.position.y = v; camera.lookAt(0, v * 0.6, 0); });
+bind('fov',  'vFov',  (v) => String(v|0), (v) => { camera.fov = v; camera.updateProjectionMatrix(); });
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'h' || e.key === 'H') $('ui').classList.toggle('hidden');
+});
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// Allow ?tod=12 for headless capture at a specific hour.
+const qTod = new URLSearchParams(location.search).get('tod');
+if (qTod !== null) { S.tod = parseFloat(qTod); $('tod').value = S.tod; }
+
+S.wspd = 0.6;
+updateSun();
+
+let last = performance.now();
+renderer.setAnimationLoop(() => {
+  const now = performance.now(), dt = (now - last) / 1000; last = now;
+  water.material.uniforms.time.value += dt * S.wspd;
+  if (S.speed > 0) {
+    S.tod = (S.tod + dt * S.speed / 3600) % 24;
+    $('tod').value = S.tod;
+    updateSun();
+  }
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

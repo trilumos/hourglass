@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sustain — hourglass on plate (prototype)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; background:#05070d; overflow:hidden;
+               font-family: ui-sans-serif, system-ui, sans-serif; }
+
+  /* The world: both plates stacked, crossfaded by time-of-day. */
+  #stage { position:fixed; inset:0; overflow:hidden; }
+  .plate { position:absolute; inset:0; width:100%; height:100%;
+           object-fit:cover; object-position:center 60%; }
+  #plateDusk { opacity:0; }
+
+  /* The object: its own canvas, parked on the rock. */
+  #glassWrap { position:absolute; transform:translate(-50%,-100%);
+               transform-origin:bottom center; pointer-events:none; }
+  #glass { display:block; }
+
+  /* Contact shadow — the single strongest grounding cue. Sits UNDER the glass. */
+  #contact { position:absolute; transform:translate(-50%,-50%);
+             border-radius:50%; pointer-events:none;
+             background:radial-gradient(ellipse at center,
+               rgba(0,0,0,.55) 0%, rgba(0,0,0,.28) 45%, rgba(0,0,0,0) 72%); }
+
+  /* Controls */
+  #ui { position:fixed; top:0; left:0; bottom:0; width:290px; padding:16px;
+        background:rgba(8,10,16,.86); backdrop-filter:blur(12px);
+        color:#dfe3ea; font-size:12px; overflow-y:auto;
+        border-right:1px solid rgba(255,255,255,.08); z-index:10; }
+  #ui.hidden { display:none; }
+  h3 { font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+       color:#7d8798; margin:14px 0 8px; font-weight:600; }
+  h3:first-child { margin-top:0; }
+  label { display:flex; justify-content:space-between; margin:9px 0 3px;
+          color:#aab3c2; }
+  label b { color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
+  input[type=range] { width:100%; accent-color:#EACA78; height:18px; }
+  .row { display:flex; gap:8px; margin-top:8px; }
+  button { flex:1; padding:7px; border-radius:6px; cursor:pointer;
+           border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06);
+           color:#dfe3ea; font-size:11px; }
+  button:hover { background:rgba(255,255,255,.12); }
+  button.on { background:#EACA78; color:#1b1200; border-color:#EACA78; }
+  .hint { color:#5d6879; margin-top:14px; line-height:1.5; font-size:11px; }
+  kbd { background:rgba(255,255,255,.1); border-radius:3px; padding:1px 4px;
+        font-family:ui-monospace, monospace; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <img id="plateGolden" class="plate" src="plates/plate-golden.png" alt="">
+  <img id="plateDusk"   class="plate" src="plates/plate-dusk.png"   alt="">
+  <div id="contact"></div>
+  <div id="glassWrap"><canvas id="glass"></canvas></div>
+</div>
+
+<div id="ui">
+  <h3>Session</h3>
+  <label>Progress <b id="vProg">0.35</b></label>
+  <input type="range" id="prog" min="0" max="1" step="0.005" value="0.35">
+  <div class="row">
+    <button id="play" class="on">Pause</button>
+    <button id="ambient">Ambient</button>
+  </div>
+
+  <h3>Time of day</h3>
+  <label>Golden → Dusk <b id="vTod">0.00</b></label>
+  <input type="range" id="tod" min="0" max="1" step="0.005" value="0">
+
+  <h3>Placing the glass</h3>
+  <label>Height <b id="vH">360</b>px</label>
+  <input type="range" id="hgH" min="180" max="900" step="2" value="360">
+  <label>X <b id="vX">52.0</b>%</label>
+  <input type="range" id="hgX" min="20" max="80" step="0.1" value="52">
+  <label>Y (base) <b id="vY">78</b>%</label>
+  <input type="range" id="hgY" min="40" max="95" step="0.1" value="78">
+
+  <h3>Grounding</h3>
+  <label>Contact shadow <b id="vSh">0.75</b></label>
+  <input type="range" id="sh" min="0" max="1.4" step="0.01" value="0.75">
+  <label>Shadow width <b id="vShW">0.82</b></label>
+  <input type="range" id="shw" min="0.3" max="1.6" step="0.01" value="0.82">
+
+  <h3>Light match</h3>
+  <label>Warmth <b id="vWarm">0.00</b></label>
+  <input type="range" id="warm" min="-1" max="1" step="0.01" value="0">
+  <label>Brightness <b id="vBri">1.00</b></label>
+  <input type="range" id="bri" min="0.4" max="1.6" step="0.01" value="1">
+  <label>Glow <b id="vGlow">0.00</b></label>
+  <input type="range" id="glow" min="0" max="1" step="0.01" value="0">
+
+  <p class="hint">
+    <kbd>H</kbd> hide this panel · <kbd>Space</kbd> play/pause<br>
+    The point of this page: does the app's real hourglass belong in this world?
+  </p>
+</div>
+
+<script type="module">
+import { paintHourglass, SKINS } from './hourglass.js';
+
+const $ = (id) => document.getElementById(id);
+const cv = $('glass');
+const ctx = cv.getContext('2d');
+const wrap = $('glassWrap');
+const contact = $('contact');
+
+const S = {
+  prog: 0.35, tod: 0, h: 360, x: 52, y: 78,
+  sh: 0.75, shw: 0.82, warm: 0, bri: 1, glow: 0,
+  playing: true, ambient: false,
+};
+
+// The glass is 0.42 as wide as it is tall (matches the app's aspect).
+const ASPECT = 0.42;
+
+function layout() {
+  const dpr = window.devicePixelRatio || 1;
+  const h = S.h, w = Math.round(h * ASPECT);
+  cv.width = w * dpr; cv.height = h * dpr;
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  wrap.style.left = S.x + '%';
+  wrap.style.top = S.y + '%';
+
+  // Contact shadow: an ellipse at the glass's base, scaled to its width.
+  const sw = w * 1.5 * S.shw, shh = sw * 0.20;
+  contact.style.width = sw + 'px';
+  contact.style.height = shh + 'px';
+  contact.style.left = S.x + '%';
+  contact.style.top = S.y + '%';
+  contact.style.opacity = S.sh;
+}
+
+function applyLook() {
+  // Stand-in for "the key light follows the sun": warmth + brightness + bloom.
+  const sep = S.warm > 0 ? S.warm * 18 : 0;      // toward gold
+  const hue = S.warm < 0 ? S.warm * 22 : 0;      // toward cool blue
+  const filters = [
+    `brightness(${S.bri})`,
+    `sepia(${sep}%)`,
+    `hue-rotate(${hue}deg)`,
+    S.glow > 0 ? `drop-shadow(0 0 ${18 * S.glow}px rgba(255,214,140,${0.5 * S.glow}))` : '',
+  ].filter(Boolean);
+  cv.style.filter = filters.join(' ');
+  $('plateDusk').style.opacity = S.tod;
+}
+
+let t0 = performance.now(), tSec = 0;
+function frame(now) {
+  if (S.playing) tSec += (now - t0) / 1000;
+  t0 = now;
+  paintHourglass(ctx, cv.width / (window.devicePixelRatio || 1),
+                      cv.height / (window.devicePixelRatio || 1), {
+    progress: S.prog, time: tSec, skin: SKINS.classic, ambient: S.ambient,
+  });
+  requestAnimationFrame(frame);
+}
+
+// ---- wiring ----
+const bind = (id, key, out, fmt = (v) => v.toFixed(2), after = () => {}) => {
+  const el = $(id);
+  el.addEventListener('input', () => {
+    S[key] = parseFloat(el.value);
+    $(out).textContent = fmt(S[key]);
+    after();
+  });
+  $(out).textContent = fmt(S[key]);
+};
+
+bind('prog', 'prog', 'vProg');
+bind('tod', 'tod', 'vTod', (v) => v.toFixed(2), applyLook);
+bind('hgH', 'h', 'vH', (v) => String(v | 0), layout);
+bind('hgX', 'x', 'vX', (v) => v.toFixed(1), layout);
+bind('hgY', 'y', 'vY', (v) => v.toFixed(1), layout);
+bind('sh', 'sh', 'vSh', (v) => v.toFixed(2), layout);
+bind('shw', 'shw', 'vShW', (v) => v.toFixed(2), layout);
+bind('warm', 'warm', 'vWarm', (v) => v.toFixed(2), applyLook);
+bind('bri', 'bri', 'vBri', (v) => v.toFixed(2), applyLook);
+bind('glow', 'glow', 'vGlow', (v) => v.toFixed(2), applyLook);
+
+$('play').addEventListener('click', () => {
+  S.playing = !S.playing;
+  $('play').textContent = S.playing ? 'Pause' : 'Play';
+  $('play').classList.toggle('on', S.playing);
+});
+$('ambient').addEventListener('click', () => {
+  S.ambient = !S.ambient;
+  $('ambient').classList.toggle('on', S.ambient);
+});
+addEventListener('keydown', (e) => {
+  if (e.key === 'h' || e.key === 'H') $('ui').classList.toggle('hidden');
+  if (e.code === 'Space') { e.preventDefault(); $('play').click(); }
+});
+addEventListener('resize', layout);
+
+layout(); applyLook(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>
