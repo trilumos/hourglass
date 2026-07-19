@@ -104,10 +104,15 @@ simpler sand renderer inside `hybrid.html` (grain-textured, flat-top, no wave �
 the wave "looked like water").
 
 ### `hybrid.html` — current state & exact tuning
-- **Founder tuned the glass-fit to ~98%.** Baked-in defaults (normalised 0–1 of the image):
-  `cx:0.499, top:0.346, neck:0.629, bot:0.889, max:0.067, nh:0.004`.
-- **"Show glass edge" = 1 (outline-only mode)** currently ON: draws just the red glass-interior outline,
-  NO sand, for fitting. Set it to 0 to see sand.
+- **OUTLINE LOCKED (founder, "99.99%").** The last 2% was *curve shape*, so `glassPath()` was refactored:
+  every bezier handle is now a live slider (UI "Curve — top/bottom bulb"), left mirrors right. Founder
+  tuned the full silhouette; the locked defaults are baked into the `S` object:
+  - frame: `cx:0.499, top:0.347, neck:0.629, bot:0.892, max:0.069, nh:0.004`
+  - top bulb: `rimK:0.79, wTop:0.370, aTop:0.075, bTop:0.345, cTop:0.080`
+  - bottom bulb: `mxBot:0.960, wBot:0.660, aBot:0.150, bBot:0.375, cBot:0.110, baseK:0.91`
+  - sand hue `shue:27`. (`mxBot` = bottom-bulb width vs top; solved the "bottom too wide" issue.)
+- **"Show glass edge" now defaults to 0 (sand ON)** — outline fitting is done. Slide it to 1 to re-trace
+  the red glass-interior outline and re-verify the lock.
 - **Colour pipeline is identity passthrough** (`renderer.outputColorSpace = LinearSRGBColorSpace`,
   `tex.colorSpace = NoColorSpace`) — fixed an over-saturation/warm-shift bug. Background now matches the PNG.
 - **Star glitter**: GLSL, twinkles only on bluish water pixels within a sill↔horizon band, faint
@@ -115,18 +120,73 @@ the wave "looked like water").
 - **Sand**: grain-textured (offscreen noise canvas overlaid 'overlay' blend = looks like sand not liquid),
   flat top surface with a shallow central funnel dip, cone pile at angle of repose, fine falling stream.
 
-### ⏳ IMMEDIATE NEXT STEP (where we stopped)
-**Get the glass outline to 100% (currently ~98%), THEN turn sand back on.** Founder's instruction: fit the
-outline exactly before finalising sand. The remaining 2% is **bezier curve shape** (not slider values) in
-`glassPath()` inside `hybrid.html`:
-- **Bottom bulb** outline is slightly **wider** than the baked glass — pull the bottom-bulb width in a touch
-  (the `cx±mx` control points in the bottom-bulb bezier), and make the very bottom rounder/lower.
-- Neck crossing sits a hair high; outline stops just short of the true glass bottom.
-- Use "Show glass edge" = 1 and nudge; screenshot-compare against `Empty hourglass midday.png`.
+### ✅ ALL LOCKED (2026-07-18, later session) — outline · sand · optics · water
+Everything below is founder-approved on GPU and baked as the defaults in `hybrid.html`.
+**The `S` literal AND the HTML `value=` attributes must always agree** — the sliders' HTML values
+overwrite `S` at load, so changing only one silently loses the tuning. `check-wiring.py` verifies this.
 
-Once outline = 100%: set dbg 0, refine sand shape to match the close-up reference the founder sent (warm
-muted tan, flat top with gentle centre dip, clean cone pile), confirm on GPU, then **generate the other 7
-empty-hourglass phase plates** and wire the 24h crossfade + rendered sun/moon.
+**Glass outline — pen tool.** The curve sliders now only SEED an editable node list; the founder dragged
+it to 100%. `LOCKED_NODES` (7 nodes/side, mirrored about `cx`) is the source of truth; `custom` starts
+`true` so sliders can't clobber it. `R` restores it, `Shift+R` reverts to slider-driven. Nodes are
+draggable on either side, handles move freely in 2D (the old sliders forced them axis-aligned, which is
+why some shoulder curves were literally unreachable). Drag off a point = move the whole hourglass.
+
+**Sand — real granular physics, not shaped by hand.** Volume-CONSERVING: solves for the surface height
+that holds exactly the sand that has fallen (bisection), so it reads true at every fill, not just one
+tuned value. Pile = a cone at the angle of repose clipped by the glass wall; below the contact ring the
+glass is simply full. Verified: volume conserved to 0.00%, flank at the set angle, pile monotonic.
+- Dry sand's real angle of repose is 34° (tan 0.675) — but the anime reference measures **28° (0.53)**;
+  the artist drew a deliberately broader pile. Founder settled on **0.545**.
+- Eye level is at the NECK: the top sand is ABOVE the viewer so its top surface is INVISIBLE — no
+  ellipse, and above all no funnel crater (only visible looking *down* into one). The bottom pile IS
+  below eye level, so it gets the elliptical top. That asymmetry is why it finally read right.
+- Colour is per-half (top is one flat shadowed tone, bottom is half lit). Measured from
+  `plates/sand-anime.png`: bottom carries 1.34× the lightness range and is far more saturated
+  (57% vs 32%) — shadow desaturates. Founder took the top fully flat (`litT=shdT=0`).
+- Texture is soft MOTTLING, not film grain. Measured: neighbours differ 5.2/255 vs a 16.7 spread, 51%
+  of variance survives 16×16, luminance-only. Octave mix was solved against the reference's
+  autocorrelation curve; a white per-pixel octave was essential (r1 .96 → .78).
+- Edges are crooked, separately for top (settled, near-flat) and bottom (freshly poured, slumping).
+
+**Water — glitter ONLY.** Ripple displacement, swell drift and white wave-lines were all built, judged,
+and **cut** — drifting glints alone read as advancing crests. Glints are horizontal dashes (not 4-point
+stars); each is born, slides a little shoreward over its own life, then dies, with position re-seeded per
+cycle so nothing looks fixed.
+- **Sea region is a hand-drawn mask** (`SEA`, 13 markers, Catmull-Rom through every point, per-node
+  straight/curve flag). A colour test could never separate sea from blue shadow on the cliffs.
+- One texture carries both masks: **R = sea, G = glass**. Glitter is killed inside the hourglass (a
+  mirror-angle specular can't survive curved glass) while water's own appearance passes through.
+
+**Bare coded glass was tried and REJECTED** — it floated with no stand or contact shadow and could not
+compete with the AI-painted glass. The refraction code (real u² rim displacement, Fresnel, absorption)
+is still in the file, inert unless `glassOn=1`. Delete it if it's still unused next session.
+
+**Tooling added:** `check-wiring.py` (every `S` key has a default, every bind is wired, no dead
+controls, S↔HTML agree) and a red on-screen error banner. Two separate silent-blank bugs happened this
+session — a collapsed neck index and an undefined `S` key throwing inside `addColorStop` — plus a bulk
+regex edit that broke the `S` literal. **Run `python check-wiring.py` after every edit to this file.**
+
+### ✅ PHASE PLATES DONE + PIXEL-LOCKED (2026-07-18, later session)
+Founder delivered **6** phase plates (not 8): Pre-Dawn · Sunrise · Mid Day · Sunset · Twilight · Mid Night,
+in `web-prototype/final hourglass plates/`. They were within ±2px of each other; a Python integer-shift
+align pass (`plates-phases/`, pure copy — nothing resampled) locked all 6 to Mid Day at **0px residual**,
+verified by edge cross-correlation. `hybrid.html` now loads all 6 (`PLATES`/`PHASE_NAMES`) and a visible
+**Time of day** slider (0–5) crossfades — wait, SWAPS — the background. Because the hourglass renders on a
+SEPARATE canvas from the plate, switching phase never moves the glass by a pixel (founder's hard rule).
+The bare-glass "Plate: baked⇄bare" control is gone (that path was rejected); `Scene` group is now just the
+inert bare-glass refraction knobs, still hidden behind the lock.
+
+### ⏳ IMMEDIATE NEXT STEP
+Phase SWAP works but it's a hard cut. Next: (1) **crossfade** between adjacent phases driven by the local
+clock (blend two textures in the shader by time-of-day), and (2) the **rendered sun/moon** on a clock arc.
+Also: the sand colour is still DAY-locked — night phases show day-coloured sand until time-of-day drives it.
+Two hooks are already waiting:
+- `Light-path X` should stop being a slider and be driven by the sun's real position.
+- The per-half sand colour is the time-of-day hook: a sunset can warm the lit bottom flank while the
+  shadowed top goes cool and grey — they must NOT move in lockstep.
+
+NOTE: the outline is fitted to *this* plate. If a relit plate's glass drifts, the pen tool makes
+re-fitting quick — but keeping the glass pixel-identical across relights is better.
 
 ---
 
@@ -142,7 +202,8 @@ empty-hourglass phase plates** and wire the 24h crossfade + rendered sun/moon.
 - Iron rule (original): founder owns look/feel + on-device testing; I own correctness end-to-end.
 
 ## 5. Open threads / TODO
-- [ ] Finish hybrid hourglass outline → sand (immediate, above).
+- [x] Hybrid hourglass **outline LOCKED** (curve sliders added, founder-tuned "99.99%", baked into `S`).
+- [ ] Refine hybrid hourglass **sand** shape to the founder's close-up reference (immediate, above).
 - [ ] Generate 8 sunless empty-hourglass phase plates (founder; noon master → 7 relight edits).
 - [ ] Build rendered sun/moon on a clock arc (they light the hourglass) + glitter path.
 - [ ] Build 24h phase crossfade driven by local clock.
@@ -150,3 +211,97 @@ empty-hourglass phase plates** and wire the 24h crossfade + rendered sun/moon.
 - [ ] THEN: write the full W1 design spec proper, and `writing-plans` → build in Astro.
 - [ ] App: founder hit Publish when approved + promo-code verify lifetime→themes.
 - [ ] Founder: buy domain (`sustaintimer.com` rec.), separate/shared Firebase, pick MoR (W2).
+
+---
+
+# SESSION 2026-07-19 — sun, moon and day cycle LOCKED
+
+## Locked state (all baked into `web-prototype/hybrid.html`)
+
+**Day schedule** — `SEG` holds each plate then crossfades into the next, the fade
+*completing* on the boundary hour so the change eases in while the sun is still
+moving. Every transition is >= 1.3h; fastest rate 1.15/h (a 0.5h fade read as two
+images dissolving, which the founder caught).
+
+| | |
+|---|---|
+| midnight | 23:00 -> 04:24 |
+| pre-dawn | 04:24 |
+| sunrise  | 06:00 (disc breaks the water ~06:15) |
+| midday   | 08:00 |
+| sunset   | 18:30 |
+| twilight | 20:36 |
+
+**Sun/moon motion** — `SUN_ALT` / `MOON_ALT` are altitude keyframes in real hours,
+replacing `sin(pi*u)`. A sine peaked for an instant then fell steadily, so the sun
+sat near the horizon by 16:00 while midday was still showing. Now the high hours are
+a PLATEAU and the descent runs over the same span as the sunset crossfade. Both
+windows open BELOW the horizon (-0.46) so the disc rises through the water instead
+of half-popping into existence.
+
+- Sun up 06:00->18:30, afterglow dead 20:24. Moon 21:45 -> 05:30 (gone before the
+  sunrise glow). They are never both up — asserted per-minute in `check-schedule.js`.
+
+**SUN — locked by founder.** Three keys (sunrise/midday/sunset) blended by the sun's
+own height: rising = sunrise->midday, setting = midday->sunset. All three keys are
+`sunSize=0.09 coreW=8 coreA=6 nearW=3 nearA=0 farW=0.01 farA=0`; only the colours
+differ. **The near/far glow layers are deliberately OFF** — the look is one steep
+bright core. Do not "restore" them.
+
+**MOON — locked by founder.** A PAINTED texture, `plates/moon-tex.png`, cropped from
+the founder's `plates/Moon.png` to the opaque disc only (588x584 @ (520,714)); the
+artwork's own bloom is dropped so the shader halo is the single tunable glow.
+`moonR=0.04 moonK=1.2 moonSoft=0.07 moonTexAmt=1 moonGlowW=1.3 moonGlowA=1.5
+moonFarW=0.54 moonFarA=0.16 moonCol=#ffffff moonGlowCol=#cfe4ff moonFarCol=#6f8fd0`
+
+## Things that cost time — do not repeat them
+
+- **Procedural moons do not work at ~60px.** Selenographic maria (accurate, 30%
+  coverage) read as a stain; ring craters read as pimples. Artwork wins. Two
+  attempts too many before switching.
+- **Blend operator decides apparent size.** An ADDITIVE sun tracked the plate behind
+  it — 120% of frame width on sunrise (sky already 0.99 in red) vs 1.4% on midnight.
+  The body is now a `mix`, so size is a pure function of radius. Wide glow layers
+  screen; the body mixes.
+- **`clamp()` on the body alpha created a visible border** — it plateaued at exactly
+  1.0 then fell, and that shoulder was the edge. `1 - exp(-x)` has no shoulder.
+- **Backticks inside the shader template literal truncate the module** and blank the
+  page. Hit three times; now a named check in `check-wiring.py`.
+
+## Verification (run all four after editing hybrid.html)
+- `python check-wiring.py` — every S key has a default, every bind live, no backticks
+- `node check-schedule.js` — sun/moon ordering, plate windows, crossfade rate, rise shape
+- `python check-glow.py` — sun body size + plate-independence
+- `node --check` on the extracted module
+
+## Sand — bottom pile (LOCKED 2026-07-19)
+
+The bottom cone has **no light/shadow split**. A fixed terminator read as painted-on;
+driving it from the sun/moon was tried and cut as more machinery than the shot needs
+(`celSplit`, `LIT`, `updateSandLight` and five sliders all deleted). The cone is now
+graded exactly like the top pile — colour comes from the per-phase grade alone, so it
+shifts through the day the same way.
+
+Four deltas keep the raised cone readable against the flat sand behind it:
+`coneLift:-0.040 coneTopShd:0.085 coneBotShd:0.180 bedLift:-0.300`
+-> apex -0.125, body -0.040, base -0.220, bed -0.300. Controls live in the SESSION
+block, NOT under Locked — they are judged against the moving sun/moon.
+
+**Bug worth remembering:** the cone's front ellipse bulges `rC*k` BELOW `yC`. Running
+its gradient only to `yC` clamped that whole lobe to the last colour stop and painted
+a hard dark slab across the base. Gradients must span the full path, not the
+construction line.
+
+## Moon — low-altitude treatment
+A cold blue-white moon in a peach dawn sky is what reads as pasted on. Two effects,
+both strongest at the horizon and gone by `moonWarmH`:
+- **extinction** — the disc reddens toward `moonWarmCol`, a FIXED warm colour. Tinting
+  by the sampled sky was tried first and is WRONG: measured at the moon's own
+  position the night sky is deep blue (hue R-B of -1.9 to -3.7), so it turned the
+  moon blue.
+- **haze** — it also loses contrast, mixed toward the plate sampled at its position
+  (clamped to just above the horizon, or the sea colour bleeds in).
+
+## STILL THE GAP
+`Progress` is a manual slider. There is no countdown, no Start/Pause/Reset, no
+completion. The scene is done; **the timer is the product** and it is not built.
