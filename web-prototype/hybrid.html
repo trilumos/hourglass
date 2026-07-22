@@ -53,13 +53,13 @@
   <button id="lockToggle">▸ Locked — DAY plate (all params)</button>
 
   <h3>Session</h3>
-  <label>Progress <b id="vProg">0.35</b></label>
-  <input type="range" id="prog" min="0" max="1" step="0.0005" value="0.35">
   <label>Live clock <b id="vLive">0</b></label>
   <input type="range" id="live" min="0" max="1" step="1" value="0">
   <label>Day time <b id="vDaytime">12:00</b></label>
   <input type="range" id="daytime" min="0" max="23.99" step="0.0166666" value="12">
   <div class="lockgrp hid">
+  <label>Progress (debug) <b id="vProg">0.35</b></label>
+  <input type="range" id="prog" min="0" max="1" step="0.0005" value="0.35">
   <p class="hint" style="margin-top:12px"><b>SAND.</b> Bottom pile is graded like the
     top one — no light/shadow split; its colour follows the time of day. Cone lift is
     what separates the raised pile from the flat bed behind it.</p>
@@ -611,6 +611,7 @@
     }</script>
 <script type="module">
 import * as THREE from 'three';
+import { createSession } from './timer.js';
 
 // The 6 time-of-day plates, PIXEL-LOCKED to Mid Day (built in plates-phases/ by
 // an integer-shift align pass — verified 0px residual). Because the hourglass
@@ -757,6 +758,10 @@ const S = { prog:0.35, cx:0.498850, top:0.347, neck:0.627, bot:0.888, max:0.065,
             // drifting glints already read as advancing crests.
             persp2:1.20, pathX:0.500, pathW:1.00,
             glen:0.40, gthk:0.030, gdrift:0.200, seaEdit:0, seaFeather:6 };
+
+// ── The focus timer. Session state lives here, never in S (which is the
+// slider-bound render-param object). The loop samples this and writes S.prog.
+const session = createSession();
 
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const smooth=x=>{const c=clamp(x,0,1);return c*c*(3-2*c);};
@@ -2182,8 +2187,14 @@ let t0=performance.now(), tSec=0;
 // A throw inside drawSand used to blank the canvas with no clue why (twice: a
 // bad neck index, then an undefined S key -> addColorStop(NaN)). Surface it.
 let lastErr='';
+function updateSession(){
+  const r = session.sample();
+  if (r.kind !== 'idle') S.prog = r.prog;   // idle leaves the debug slider in control
+  if (typeof updateSessionUI === 'function') updateSessionUI(r);   // wired in Tasks 5–7
+}
 function loop(now){ tSec+=(now-t0)/1000; t0=now;
   updateDayCycle();
+  updateSession();
   U.uTime.value=tSec; renderer.render(scene,cam);
   try {
     drawSand(tSec);
