@@ -10,7 +10,8 @@
   #stage { position:fixed; inset:0; display:grid; place-items:center; }
   #frame { position:relative; }
   #glitter, #sand { position:absolute; inset:0; display:block; }
-  #sand { pointer-events:none; }
+  #sand { pointer-events:none; transition:opacity .4s ease; }
+  #sand.refill { opacity:0; }
   #ui { position:fixed; top:0; right:0; bottom:0; width:250px; padding:14px;
         background:rgba(8,10,16,.85); backdrop-filter:blur(12px); color:#dfe3ea;
         font-size:12px; overflow-y:auto; z-index:20;
@@ -64,6 +65,7 @@
   #mm { right:calc(50% + 90px); }
   #ss { left:calc(50% + 90px); }
   #frame.show-nums .clocknum { opacity:.92; }
+  #focused-today { font-size:12px; color:#9fb0c8; min-height:14px; }
 </style>
 </head>
 <body>
@@ -78,6 +80,7 @@
 <div id="err"></div>
 
 <div id="session-ui">
+  <div id="focused-today"></div>
   <div class="modes">
     <button class="mode on" data-mode="flow">Flow</button>
     <button class="mode" data-mode="pomodoro">Pomodoro</button>
@@ -2266,9 +2269,12 @@ function togglePause(){
   else { session.resume(); $('pauseBtn').textContent = 'Pause'; }
 }
 function resetSession(){
-  session.reset(); S.prog = 0;
+  const r = session.sample();
+  if (r.kind !== 'idle' && !r.done) bumpFocusedToday(r.focusSec);   // credit focus done so far
+  session.reset(); S.prog = 0; wasDone = false;
   sUI.classList.remove('running');
-  $('beginBtn').hidden = false; $('pauseBtn').hidden = true; $('resetBtn').hidden = true;
+  $('beginBtn').hidden = false; $('beginBtn').textContent = 'Begin';
+  $('pauseBtn').hidden = true; $('resetBtn').hidden = true;
 }
 $('beginBtn').addEventListener('click', startSession);
 $('pauseBtn').addEventListener('click', togglePause);
@@ -2277,7 +2283,6 @@ syncDurFields('flow');
 S.prog = 0;   // idle = full glass, ready to begin
 
 // ── The [min] · hourglass · [secs] readout (hidden, fades in on move) ────────
-const frameEl = $('frame');
 let timerVis = 'hover', hideTimer = 0;
 const pad = n => String(Math.max(0, n | 0)).padStart(2, '0');
 function updateSessionUI(r){
@@ -2285,28 +2290,61 @@ function updateSessionUI(r){
   $('mm').textContent = pad(secs / 60 | 0);
   $('ss').textContent = pad(secs % 60);
   if (r.done) revealNums();   // always show the final 00 · drained glass
+  onSampleExtras(r);
 }
 function revealNums(){
-  frameEl.classList.add('show-nums');
+  frame.classList.add('show-nums');
   if (timerVis === 'hover') {
     clearTimeout(hideTimer);
-    hideTimer = setTimeout(() => frameEl.classList.remove('show-nums'), 1600);
+    hideTimer = setTimeout(() => frame.classList.remove('show-nums'), 1600);
   }
 }
 function applyVis(){
-  if (timerVis === 'always') { clearTimeout(hideTimer); frameEl.classList.add('show-nums'); }
-  else frameEl.classList.remove('show-nums');
+  if (timerVis === 'always') { clearTimeout(hideTimer); frame.classList.add('show-nums'); }
+  else frame.classList.remove('show-nums');
 }
 window.addEventListener('mousemove', () => { if (timerVis === 'hover') revealNums(); });
 setInterval(() => {
   if (timerVis === 'flash' && session.state.running) {
-    revealNums(); setTimeout(() => frameEl.classList.remove('show-nums'), 1600);
+    revealNums(); setTimeout(() => frame.classList.remove('show-nums'), 1600);
   }
 }, 60000);
 sUI.querySelectorAll('.visbtn').forEach(btn => btn.addEventListener('click', () => {
   sUI.querySelectorAll('.visbtn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on'); timerVis = btn.dataset.vis; applyVis();
 }));
+
+// ── "Focused today" (localStorage, resets on date change) + completion + refill ─
+function focusedTodayKey(){ return 'sustain.focusedToday.' + new Date().toDateString(); }
+function bumpFocusedToday(sec){
+  const k = focusedTodayKey();
+  localStorage.setItem(k, (+localStorage.getItem(k) || 0) + Math.round(sec));
+  renderFocusedToday();
+}
+function renderFocusedToday(){
+  const v = +localStorage.getItem(focusedTodayKey()) || 0;
+  $('focused-today').textContent = v >= 60 ? `Focused today · ${Math.round(v/60)} min` : '';
+}
+renderFocusedToday();
+
+let wasDone = false, lastProg = 0;
+function onSampleExtras(r){
+  // Endless refill: prog just wrapped high→low → a brief fade so it reads as a flip.
+  if (r.endless && r.prog < lastProg - 0.5) {
+    sandCv.classList.add('refill');
+    setTimeout(() => sandCv.classList.remove('refill'), 420);
+  }
+  lastProg = r.prog;
+  // Completion fires once, on the done edge — credit FOCUS time (never breaks).
+  if (r.done && !wasDone) {
+    wasDone = true;
+    bumpFocusedToday(r.focusSec);
+    sUI.classList.remove('running');
+    $('pauseBtn').hidden = true; $('resetBtn').hidden = true;
+    $('beginBtn').hidden = false; $('beginBtn').textContent = 'Begin again';
+  }
+  if (!r.done) wasDone = false;
+}
 
 fit();
 dumpNodes(); dumpSea();

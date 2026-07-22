@@ -75,6 +75,18 @@ function planFocus(plan) {
   return plan.filter(s => s.kind === 'focus').reduce((a, s) => a + s.dur, 0);
 }
 
+// Focus seconds actually elapsed so far (rest segments excluded). This is what
+// "focused today" credits — never break time.
+export function focusDone(plan, elapsedSec) {
+  let acc = 0, focus = 0;
+  for (const seg of plan) {
+    if (elapsedSec <= acc) break;
+    if (seg.kind === 'focus') focus += Math.min(elapsedSec - acc, seg.dur);
+    acc += seg.dur;
+  }
+  return focus;
+}
+
 // Stateful controller. `now` is injectable for tests (defaults to Date.now).
 export function createSession(now = Date.now) {
   const st = {
@@ -98,12 +110,12 @@ export function createSession(now = Date.now) {
     reset() { st.startedAt = null; st.pausedAt = null; st.pausedAccumMs = 0; st.running = false; },
     sample() {
       if (st.startedAt == null) {
-        return { prog: 0, kind: 'idle', remainingSec: planFocus(st.plan), totalFocusSec: 0, done: false, endless: st.mode === 'endless' };
+        return { prog: 0, kind: 'idle', remainingSec: planFocus(st.plan), totalFocusSec: 0, focusSec: 0, done: false, endless: st.mode === 'endless' };
       }
       const elapsed = elapsedSeconds(st, now());
       if (st.mode === 'endless') {
         const block = st.plan[0].dur;
-        return { prog: (elapsed % block) / block, kind: 'focus', remainingSec: block - (elapsed % block), totalFocusSec: elapsed, done: false, endless: true };
+        return { prog: (elapsed % block) / block, kind: 'focus', remainingSec: block - (elapsed % block), totalFocusSec: elapsed, focusSec: elapsed, done: false, endless: true };
       }
       const p = progressAt(st.plan, elapsed);
       if (p.done) st.running = false;
@@ -112,6 +124,7 @@ export function createSession(now = Date.now) {
         kind: p.done ? 'done' : p.kind,
         remainingSec: p.segRemainingSec,
         totalFocusSec: elapsed,
+        focusSec: focusDone(st.plan, elapsed),
         done: p.done,
         endless: false,
       };

@@ -10,7 +10,7 @@ const assert = require('assert');
 const src = fs.readFileSync(__dirname + '/timer.js', 'utf8').replace(/\bexport\s+/g, '');
 const ctx = { module: { exports: {} }, Math, Number, Error, Date, console };
 vm.runInNewContext(src, ctx);
-const { buildPlan, planDuration, progressAt, elapsedSeconds, createSession } = ctx;
+const { buildPlan, planDuration, progressAt, elapsedSeconds, createSession, focusDone } = ctx;
 
 let n = 0;
 const ok = (c, m) => { assert.ok(c, m); n++; };
@@ -105,6 +105,20 @@ const ok = (c, m) => { assert.ok(c, m); n++; };
   s.configure('flow', { workMin: 1 }); t = 0; s.start(); t = 120000;
   const r = s.sample();
   ok(r.done && r.kind === 'done' && Math.abs(r.prog - 1) < 1e-9, 'flow finished: done, drained');
+}
+
+// focusDone — credits focus only, never break time
+{
+  const p = buildPlan('pomodoro', { workMin: 25, breakMin: 5, rounds: 2 }); // F1500 R300 F1500
+  ok(focusDone(p, 1500 + 300 + 750) === 1500 + 750, 'focusDone excludes the break');
+  ok(focusDone(p, 1500 + 150) === 1500, 'mid-break: focus capped at the first block');
+}
+// sample.focusSec — excludes breaks for pomodoro
+{
+  let t = 0; const s = createSession(() => t);
+  s.configure('pomodoro', { workMin: 25, breakMin: 5, rounds: 2 });
+  t = 0; s.start(); t = (1500 + 300 + 600) * 1000; // 600s into the 2nd focus block
+  ok(Math.abs(s.sample().focusSec - (1500 + 600)) < 1e-9, 'focusSec = both focus blocks, no break');
 }
 
 console.log(`OK — ${n} timer assertions passed.`);
