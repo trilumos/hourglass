@@ -41,11 +41,10 @@ const assert = require('assert');
 
 const src = fs.readFileSync(__dirname + '/timer.js', 'utf8').replace(/\bexport\s+/g, '');
 const ctx = { module: { exports: {} }, Math, Number, Error, Date, console };
-vm.runInNewContext(
-  src + '\nmodule.exports = { MODES, buildPlan, planDuration, progressAt, elapsedSeconds, createSession };',
-  ctx
-);
-const { buildPlan, planDuration, progressAt, elapsedSeconds, createSession } = ctx.module.exports;
+vm.runInNewContext(src, ctx);
+// top-level `function` declarations attach to the sandbox global; ones not yet
+// added in this task just read back as undefined instead of throwing.
+const { buildPlan, planDuration, progressAt, elapsedSeconds, createSession } = ctx;
 
 let n = 0;
 const ok = (c, m) => { assert.ok(c, m); n++; };
@@ -138,7 +137,7 @@ export function planDuration(plan) {
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `cd web-prototype && node check-timer.js`
-Expected: PASS — `OK — 6 timer assertions passed.`
+Expected: PASS — `OK — 9 timer assertions passed.`
 
 - [ ] **Step 5: Commit**
 
