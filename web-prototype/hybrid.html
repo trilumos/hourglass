@@ -38,6 +38,21 @@
   #err { display:none; position:fixed; left:14px; top:12px; z-index:30; max-width:52vw;
          background:#b3143c; color:#fff; padding:8px 12px; border-radius:6px;
          font:12px/1.4 ui-monospace, monospace; }
+  #session-ui { position:fixed; left:50%; bottom:5%; transform:translateX(-50%);
+                z-index:15; display:flex; flex-direction:column; gap:10px; align-items:center;
+                font-size:13px; color:#e6ebf2; text-align:center; }
+  #session-ui .modes { display:flex; gap:6px; }
+  #session-ui .mode { width:auto; margin:0; padding:6px 12px; background:rgba(8,10,16,.6);
+                      color:#aab3c2; border:1px solid rgba(255,255,255,.14); font-weight:600; }
+  #session-ui .mode.on { background:#EACA78; color:#141414; border-color:#EACA78; }
+  #session-ui .durs { display:flex; gap:14px; align-items:center; }
+  #session-ui .durs label { display:inline-flex; gap:6px; align-items:center; color:#c3ccda; }
+  #session-ui .durs input { width:52px; background:rgba(8,10,16,.6); color:#fff;
+                            border:1px solid rgba(255,255,255,.16); border-radius:5px; padding:4px 6px;
+                            font:inherit; text-align:center; }
+  #session-ui .ctrls { display:flex; gap:8px; }
+  #session-ui .ctrls button { width:auto; margin:0; padding:8px 22px; }
+  #session-ui.running .durs, #session-ui.running .modes { display:none; }
 </style>
 </head>
 <body>
@@ -48,6 +63,25 @@
 </div></div>
 
 <div id="err"></div>
+
+<div id="session-ui">
+  <div class="modes">
+    <button class="mode on" data-mode="flow">Flow</button>
+    <button class="mode" data-mode="pomodoro">Pomodoro</button>
+    <button class="mode" data-mode="custom">Custom</button>
+    <button class="mode" data-mode="endless">Endless</button>
+  </div>
+  <div class="durs">
+    <label id="wWrap">Focus <input type="number" id="workMin" min="1" max="180" value="25"> min</label>
+    <label id="bWrap">Break <input type="number" id="breakMin" min="1" max="60" value="5"> min</label>
+    <label id="rWrap">Rounds <input type="number" id="rounds" min="1" max="12" value="4"></label>
+  </div>
+  <div class="ctrls">
+    <button id="beginBtn">Begin</button>
+    <button id="pauseBtn" hidden>Pause</button>
+    <button id="resetBtn" hidden>Reset</button>
+  </div>
+</div>
 
 <div id="ui">
   <button id="lockToggle">▸ Locked — DAY plate (all params)</button>
@@ -2180,6 +2214,49 @@ addEventListener('keydown',e=>{
   }
 });
 addEventListener('resize',fit);
+
+// ── Session setup UI ────────────────────────────────────────────────────────
+const cfg = { workMin:25, breakMin:5, longBreakMin:15, rounds:4 };
+const sUI = $('session-ui');
+function syncDurFields(mode){
+  // Flow/Endless: focus only. Pomodoro/Custom: focus + break + rounds.
+  const many = (mode === 'pomodoro' || mode === 'custom');
+  $('bWrap').style.display = many ? '' : 'none';
+  $('rWrap').style.display = many ? '' : 'none';
+  $('wWrap').firstChild.textContent = mode === 'endless' ? 'Block ' : 'Focus ';
+}
+let curMode = 'flow';
+sUI.querySelectorAll('.mode').forEach(btn => btn.addEventListener('click', () => {
+  sUI.querySelectorAll('.mode').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  curMode = btn.dataset.mode;
+  syncDurFields(curMode);
+}));
+$('workMin').addEventListener('input', e => { cfg.workMin = +e.target.value || 1; });
+$('breakMin').addEventListener('input', e => { cfg.breakMin = +e.target.value || 1; });
+$('rounds').addEventListener('input', e => { cfg.rounds = +e.target.value || 1; });
+
+function startSession(){
+  session.configure(curMode, cfg);
+  session.start();
+  sUI.classList.add('running');
+  $('beginBtn').hidden = true; $('pauseBtn').hidden = false; $('resetBtn').hidden = false;
+  $('pauseBtn').textContent = 'Pause';
+}
+function togglePause(){
+  if (session.state.running) { session.pause(); $('pauseBtn').textContent = 'Resume'; }
+  else { session.resume(); $('pauseBtn').textContent = 'Pause'; }
+}
+function resetSession(){
+  session.reset(); S.prog = 0;
+  sUI.classList.remove('running');
+  $('beginBtn').hidden = false; $('pauseBtn').hidden = true; $('resetBtn').hidden = true;
+}
+$('beginBtn').addEventListener('click', startSession);
+$('pauseBtn').addEventListener('click', togglePause);
+$('resetBtn').addEventListener('click', resetSession);
+syncDurFields('flow');
+S.prog = 0;   // idle = full glass, ready to begin
 
 fit();
 dumpNodes(); dumpSea();
