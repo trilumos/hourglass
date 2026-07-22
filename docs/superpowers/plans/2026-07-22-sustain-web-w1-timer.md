@@ -233,7 +233,7 @@ export function elapsedSeconds(st, nowMs) {
 - [ ] **Step 4: Run to verify it passes**
 
 Run: `cd web-prototype && node check-timer.js`
-Expected: PASS — `OK — 11 timer assertions passed.`
+Expected: PASS — `OK — 14 timer assertions passed.`
 
 - [ ] **Step 5: Commit**
 

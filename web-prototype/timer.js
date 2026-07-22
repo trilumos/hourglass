@@ -40,3 +40,33 @@ export function buildPlan(mode, opts = {}) {
 export function planDuration(plan) {
   return plan.reduce((a, s) => a + s.dur, 0);
 }
+
+// Where a plan is at `elapsedSec`. Past the end of the last segment → done.
+// Returns { index, kind, segProg (0..1), segRemainingSec, done }.
+export function progressAt(plan, elapsedSec) {
+  let acc = 0;
+  for (let i = 0; i < plan.length; i++) {
+    const seg = plan[i];
+    if (elapsedSec < acc + seg.dur || i === plan.length - 1) {
+      const into = Math.min(Math.max(elapsedSec - acc, 0), seg.dur);
+      const done = i === plan.length - 1 && elapsedSec >= acc + seg.dur;
+      return {
+        index: i,
+        kind: seg.kind,
+        segProg: seg.dur ? into / seg.dur : 1,
+        segRemainingSec: Math.max(seg.dur - into, 0),
+        done,
+      };
+    }
+    acc += seg.dur;
+  }
+  return { index: 0, kind: 'focus', segProg: 1, segRemainingSec: 0, done: true };
+}
+
+// Wall-clock elapsed for a running/paused session, in seconds. `st` carries the
+// start timestamp, the pause timestamp (or null), and total paused ms.
+export function elapsedSeconds(st, nowMs) {
+  if (st.startedAt == null) return 0;
+  const ref = st.pausedAt != null ? st.pausedAt : nowMs;
+  return Math.max(0, (ref - st.startedAt - st.pausedAccumMs) / 1000);
+}

@@ -45,4 +45,31 @@ const ok = (c, m) => { assert.ok(c, m); n++; };
      'planDuration sums segments');
 }
 
+// progressAt — halfway through a single Flow block
+{
+  const r = progressAt(buildPlan('flow', { workMin: 10 }), 300); // 600s block
+  ok(Math.abs(r.segProg - 0.5) < 1e-9 && r.kind === 'focus' && !r.done, 'flow half → segProg 0.5');
+}
+// progressAt — inside the rest segment resolves to that rest
+{
+  const p = buildPlan('pomodoro', { workMin: 25, breakMin: 5, rounds: 2 }); // F1500 R300 F1500
+  const r = progressAt(p, 1500 + 150);
+  ok(r.index === 1 && r.kind === 'rest' && Math.abs(r.segProg - 0.5) < 1e-9, 'mid-break → rest seg');
+}
+// progressAt — past the end → done, glass fully drained
+{
+  const r = progressAt(buildPlan('flow', { workMin: 1 }), 120); // 60s block, 120s in
+  ok(r.done === true && Math.abs(r.segProg - 1) < 1e-9, 'past end → done, segProg 1');
+}
+// elapsedSeconds — wall-clock, correct across a background gap with zero ticks
+{
+  const st = { startedAt: 1000, pausedAt: null, pausedAccumMs: 0 };
+  ok(Math.abs(elapsedSeconds(st, 1000 + 90000) - 90) < 1e-9, '90s wall-clock, no frames');
+}
+// elapsedSeconds — paused clock is frozen
+{
+  const st = { startedAt: 0, pausedAt: 30000, pausedAccumMs: 0 };
+  ok(Math.abs(elapsedSeconds(st, 999999) - 30) < 1e-9, 'paused at 30s stays 30s');
+}
+
 console.log(`OK — ${n} timer assertions passed.`);
