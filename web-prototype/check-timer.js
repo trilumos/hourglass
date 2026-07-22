@@ -72,4 +72,39 @@ const ok = (c, m) => { assert.ok(c, m); n++; };
   ok(Math.abs(elapsedSeconds(st, 999999) - 30) < 1e-9, 'paused at 30s stays 30s');
 }
 
+// createSession — start/pause/resume with an injected clock; pause is not counted
+{
+  let t = 0; const s = createSession(() => t);
+  s.configure('flow', { workMin: 10 });
+  ok(s.sample().kind === 'idle' && s.sample().prog === 0, 'idle before start: glass full');
+  t = 0; s.start();
+  t = 20000; ok(Math.abs(s.sample().totalFocusSec - 20) < 1e-9, '20s in');
+  s.pause(); t = 120000; ok(Math.abs(s.sample().totalFocusSec - 20) < 1e-9, 'paused: still 20s');
+  s.resume(); t = 125000; ok(Math.abs(s.sample().totalFocusSec - 25) < 1e-9, 'resumed: 25s, pause skipped');
+}
+// createSession — rest segment shows a full glass (prog 0)
+{
+  let t = 0; const s = createSession(() => t);
+  s.configure('pomodoro', { workMin: 25, breakMin: 5, rounds: 2 });
+  t = 0; s.start(); t = (1500 + 150) * 1000; // 150s into the break
+  const r = s.sample();
+  ok(r.kind === 'rest' && r.prog === 0, 'during rest: glass full');
+}
+// createSession — Endless wraps (refills) and never finishes
+{
+  let t = 0; const s = createSession(() => t);
+  s.configure('endless', { workMin: 1 }); // 60s block
+  t = 0; s.start(); t = 90000; // 1.5 blocks
+  const r = s.sample();
+  ok(!r.done && r.endless && Math.abs(r.prog - 0.5) < 1e-6, 'endless wraps to 0.5, not done');
+  ok(Math.abs(r.totalFocusSec - 90) < 1e-9, 'endless counts total focus');
+}
+// createSession — a finished plan reports done and a drained glass
+{
+  let t = 0; const s = createSession(() => t);
+  s.configure('flow', { workMin: 1 }); t = 0; s.start(); t = 120000;
+  const r = s.sample();
+  ok(r.done && r.kind === 'done' && Math.abs(r.prog - 1) < 1e-9, 'flow finished: done, drained');
+}
+
 console.log(`OK — ${n} timer assertions passed.`);

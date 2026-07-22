@@ -355,7 +355,7 @@ export function createSession(now = Date.now) {
 - [ ] **Step 4: Run to verify it passes**
 
 Run: `cd web-prototype && node check-timer.js`
-Expected: PASS — `OK — 17 timer assertions passed.`
+Expected: PASS — `OK — 22 timer assertions passed.`
 
 - [ ] **Step 5: Commit**
 

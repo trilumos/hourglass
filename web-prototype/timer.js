@@ -70,3 +70,51 @@ export function elapsedSeconds(st, nowMs) {
   const ref = st.pausedAt != null ? st.pausedAt : nowMs;
   return Math.max(0, (ref - st.startedAt - st.pausedAccumMs) / 1000);
 }
+
+function planFocus(plan) {
+  return plan.filter(s => s.kind === 'focus').reduce((a, s) => a + s.dur, 0);
+}
+
+// Stateful controller. `now` is injectable for tests (defaults to Date.now).
+export function createSession(now = Date.now) {
+  const st = {
+    mode: 'flow', opts: {}, plan: buildPlan('flow'),
+    startedAt: null, pausedAt: null, pausedAccumMs: 0, running: false,
+  };
+  return {
+    get state() { return st; },
+    get mode() { return st.mode; },
+    configure(mode, opts = {}) {
+      st.mode = mode; st.opts = opts; st.plan = buildPlan(mode, opts);
+      st.startedAt = null; st.pausedAt = null; st.pausedAccumMs = 0; st.running = false;
+    },
+    start() { st.startedAt = now(); st.pausedAt = null; st.pausedAccumMs = 0; st.running = true; },
+    pause() { if (st.running && st.pausedAt == null) { st.pausedAt = now(); st.running = false; } },
+    resume() {
+      if (!st.running && st.pausedAt != null) {
+        st.pausedAccumMs += now() - st.pausedAt; st.pausedAt = null; st.running = true;
+      }
+    },
+    reset() { st.startedAt = null; st.pausedAt = null; st.pausedAccumMs = 0; st.running = false; },
+    sample() {
+      if (st.startedAt == null) {
+        return { prog: 0, kind: 'idle', remainingSec: planFocus(st.plan), totalFocusSec: 0, done: false, endless: st.mode === 'endless' };
+      }
+      const elapsed = elapsedSeconds(st, now());
+      if (st.mode === 'endless') {
+        const block = st.plan[0].dur;
+        return { prog: (elapsed % block) / block, kind: 'focus', remainingSec: block - (elapsed % block), totalFocusSec: elapsed, done: false, endless: true };
+      }
+      const p = progressAt(st.plan, elapsed);
+      if (p.done) st.running = false;
+      return {
+        prog: p.kind === 'focus' ? p.segProg : 0,   // rest → full glass
+        kind: p.done ? 'done' : p.kind,
+        remainingSec: p.segRemainingSec,
+        totalFocusSec: elapsed,
+        done: p.done,
+        endless: false,
+      };
+    },
+  };
+}
