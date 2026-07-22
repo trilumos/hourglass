@@ -53,6 +53,17 @@
   #session-ui .ctrls { display:flex; gap:8px; }
   #session-ui .ctrls button { width:auto; margin:0; padding:8px 22px; }
   #session-ui.running .durs, #session-ui.running .modes { display:none; }
+  #session-ui .vis { display:flex; gap:6px; }
+  #session-ui .visbtn { width:auto; margin:0; padding:4px 10px; font-size:11px; font-weight:600;
+                        background:rgba(8,10,16,.5); color:#8b95a6; border:1px solid rgba(255,255,255,.12); }
+  #session-ui .visbtn.on { color:#EACA78; border-color:rgba(234,202,120,.5); }
+  .clocknum { position:absolute; top:50%; transform:translateY(-50%); z-index:14;
+              font-size:clamp(28px,5vw,64px); font-weight:200; color:#f2f5fa;
+              font-variant-numeric:tabular-nums; letter-spacing:.02em; pointer-events:none;
+              text-shadow:0 2px 18px rgba(0,0,0,.45); opacity:0; transition:opacity .6s ease; }
+  #mm { right:calc(50% + 90px); }
+  #ss { left:calc(50% + 90px); }
+  #frame.show-nums .clocknum { opacity:.92; }
 </style>
 </head>
 <body>
@@ -60,6 +71,8 @@
 <div id="stage"><div id="frame">
   <canvas id="glitter"></canvas>
   <canvas id="sand"></canvas>
+  <span id="mm" class="clocknum">25</span>
+  <span id="ss" class="clocknum">00</span>
 </div></div>
 
 <div id="err"></div>
@@ -80,6 +93,11 @@
     <button id="beginBtn">Begin</button>
     <button id="pauseBtn" hidden>Pause</button>
     <button id="resetBtn" hidden>Reset</button>
+  </div>
+  <div class="vis">
+    <button class="visbtn on" data-vis="hover">Show on hover</button>
+    <button class="visbtn" data-vis="always">Always</button>
+    <button class="visbtn" data-vis="flash">Flash / min</button>
   </div>
 </div>
 
@@ -2257,6 +2275,38 @@ $('pauseBtn').addEventListener('click', togglePause);
 $('resetBtn').addEventListener('click', resetSession);
 syncDurFields('flow');
 S.prog = 0;   // idle = full glass, ready to begin
+
+// ── The [min] · hourglass · [secs] readout (hidden, fades in on move) ────────
+const frameEl = $('frame');
+let timerVis = 'hover', hideTimer = 0;
+const pad = n => String(Math.max(0, n | 0)).padStart(2, '0');
+function updateSessionUI(r){
+  const secs = (r.endless ? r.totalFocusSec : r.remainingSec) | 0;
+  $('mm').textContent = pad(secs / 60 | 0);
+  $('ss').textContent = pad(secs % 60);
+  if (r.done) revealNums();   // always show the final 00 · drained glass
+}
+function revealNums(){
+  frameEl.classList.add('show-nums');
+  if (timerVis === 'hover') {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => frameEl.classList.remove('show-nums'), 1600);
+  }
+}
+function applyVis(){
+  if (timerVis === 'always') { clearTimeout(hideTimer); frameEl.classList.add('show-nums'); }
+  else frameEl.classList.remove('show-nums');
+}
+window.addEventListener('mousemove', () => { if (timerVis === 'hover') revealNums(); });
+setInterval(() => {
+  if (timerVis === 'flash' && session.state.running) {
+    revealNums(); setTimeout(() => frameEl.classList.remove('show-nums'), 1600);
+  }
+}, 60000);
+sUI.querySelectorAll('.visbtn').forEach(btn => btn.addEventListener('click', () => {
+  sUI.querySelectorAll('.visbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on'); timerVis = btn.dataset.vis; applyVis();
+}));
 
 fit();
 dumpNodes(); dumpSea();
