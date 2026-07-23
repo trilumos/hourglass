@@ -6,7 +6,7 @@ import base64, io, os
 from PIL import Image
 
 ROOT = r"D:\Dev\Trilumos\hourglass\web-prototype\plates-phases"
-OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\42202-1784791162\content\hero-v11.html"
+OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\42202-1784791162\content\hero-v12.html"
 
 GRAIN = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E"
          "%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' "
@@ -19,8 +19,8 @@ bg = "data:image/jpeg;base64," + base64.b64encode(b.getvalue()).decode()
 
 Q = "Discipline is choosing between what you want now and what you want most."
 
-html = f"""<h2>Hero v11 &mdash; alignment, single-line copy, better numbers, glass bar, blur-halo quote</h2>
-<p class="subtitle"><b>Depth of field:</b> the two lower-side zones are gently blurred while the nav strip + centre stem stay sharp &mdash; a clear <b>T</b>. The hourglass pops and both text areas get a soft bed. Plus: left edge aligns to Sustain, subheadline is one line, numbers reset to clean Jost tabular, progress bar is subtle glass.</p>
+html = f"""<h2>Hero v12 &mdash; subtle blur HALOS around the text (not zones)</h2>
+<p class="subtitle">Blur dialled right down: <b>3px</b> (was 7), and shaped as a soft <b>halo hugging each text block</b> rather than big zones &mdash; it fades out in every direction, so there are no edges and the scene stays clear everywhere else. Nav gets its own faint wide halo. Description shortened.</p>
 
 <!-- shared liquid-glass refraction filter (small elements only) -->
 <svg style="position:absolute;width:0;height:0" aria-hidden="true">
@@ -47,24 +47,20 @@ html = f"""<h2>Hero v11 &mdash; alignment, single-line copy, better numbers, gla
   .grain {{ position:absolute; inset:0; pointer-events:none; z-index:3;
             background-image:url("{GRAIN}"); background-size:220px 220px; opacity:.12; mix-blend-mode:overlay; }}
 
-  /* ===== DEPTH OF FIELD: the clear "T" =====
-     Two masked backdrop-blur zones sit over the LOWER-LEFT and LOWER-RIGHT.
-     Horizontal mask fades the blur out before centre (hourglass stays sharp);
-     vertical mask removes the top strip (navbar stays sharp). Result: a clear T. */
+  /* ===== SUBTLE BLUR HALOS around each text block =====
+     3px only, masked to a soft ellipse that hugs the text and fades out in every
+     direction — no edges, no rectangles. Centre + everything else stays CLEAR. */
   .blur {{ position:absolute; inset:0; z-index:1; pointer-events:none;
-           backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); }}
-  .blur.l {{ mask:linear-gradient(90deg,#000 0%,#000 14%,transparent 36%),
-                  linear-gradient(180deg,transparent 0,transparent 11%,#000 24%);
-             mask-composite:intersect;
-             -webkit-mask:linear-gradient(90deg,#000 0%,#000 14%,transparent 36%),
-                          linear-gradient(180deg,transparent 0,transparent 11%,#000 24%);
-             -webkit-mask-composite:source-in; }}
-  .blur.r {{ mask:linear-gradient(270deg,#000 0%,#000 14%,transparent 36%),
-                  linear-gradient(180deg,transparent 0,transparent 11%,#000 24%);
-             mask-composite:intersect;
-             -webkit-mask:linear-gradient(270deg,#000 0%,#000 14%,transparent 36%),
-                          linear-gradient(180deg,transparent 0,transparent 11%,#000 24%);
-             -webkit-mask-composite:source-in; }}
+           backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }}
+  /* thin, wide halo behind the navbar text only */
+  .blur.nav {{ mask:radial-gradient(60% 9% at 50% 5%, #000 45%, transparent 100%);
+               -webkit-mask:radial-gradient(60% 9% at 50% 5%, #000 45%, transparent 100%); }}
+  /* halo around the left hero text */
+  .blur.l {{ mask:radial-gradient(30% 40% at 20% 47%, #000 52%, transparent 100%);
+             -webkit-mask:radial-gradient(30% 40% at 20% 47%, #000 52%, transparent 100%); }}
+  /* halo around the right stat + quote */
+  .blur.r {{ mask:radial-gradient(25% 34% at 82% 48%, #000 52%, transparent 100%);
+             -webkit-mask:radial-gradient(25% 34% at 82% 48%, #000 52%, transparent 100%); }}
 
   /* ===== GLASS TOKENS (calibrated to the hourglass) ===== */
   /* .glass — clear frost + bright specular edge; for panels (cheap) */
@@ -171,14 +167,14 @@ html = f"""<h2>Hero v11 &mdash; alignment, single-line copy, better numbers, gla
   <div class="card">
     <div class="hero">
       <img class="scene" src="{bg}" alt="">
-      <div class="blur l"></div><div class="blur r"></div>
+      <div class="blur nav"></div><div class="blur l"></div><div class="blur r"></div>
       <div class="vign"></div><div class="grain"></div>
       <div class="nav"><span class="wm">sustain</span>
         <span class="links"><span>About</span><span>Themes</span><span>Get the app</span><span class="ico">&#9881;</span></span></div>
       <div class="left">
         <h1 class="brand">Sustain</h1>
         <p class="tagline">Time flows. You focus.</p>
-        <p class="clarity">A calm focus timer that moves with your day. Free &middot; no login.</p>
+        <p class="clarity">A calm focus timer that moves with your day.</p>
         <div class="ctas"><a class="cta glass-liquid"><span>Begin Focus</span><span class="arw">&#8594;</span></a></div>
         <a class="play glass-liquid"><svg class="gp" viewBox="0 0 26 30" width="1.25em" height="1.42em" aria-hidden="true"><polygon points="3,4 23,15 3,15" fill="#12B5FF"/><polygon points="3,15 23,15 3,26" fill="#00D26A"/><polygon points="23,15 15,10.6 15,15" fill="#FF424B"/><polygon points="23,15 15,19.4 15,15" fill="#FFC400"/></svg><span class="pl"><small>GET IT ON</small>Google&nbsp;Play</span></a>
       </div>
