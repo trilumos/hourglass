@@ -4,9 +4,13 @@
 > (page architecture, money model, schedule) and
 > [`2026-07-22-sustain-web-w1-first-push-design.md`](2026-07-22-sustain-web-w1-first-push-design.md) (W1 scope).
 >
-> **Status:** hero design + glass system converged after ~11 mock iterations. Not yet built in code.
-> Mockup generators live in `scratchpad/gen_hero_v9.py` (latest = v11 output). Companion mockups are in
-> `.superpowers/brainstorm/` (gitignored, ephemeral — regenerate from the script).
+> **Status:** hero **LOCKED (v22)** after ~22 mock iterations. Not yet built in code.
+> Generator: **`web-prototype/gen_hero_mockup.py`** (repo-synced; scratchpad twin `gen_hero_v9.py`).
+> Companion mockups are in `.superpowers/brainstorm/` (gitignored, ephemeral — regenerate from the script).
+>
+> **Type stack (locked):** **Cormorant Garamond** display heading · **Jost** numbers + UI
+> (`weight 200, tabular-nums lining-nums`) · **Newsreader** italic quote (`weight 340, opsz 60, ~23px,
+> line-height 1.52` — elegant = light + airy, chosen over Fraunces/Playfair/Baskerville on an on-scene test).
 
 ---
 
@@ -112,8 +116,8 @@ The shared SVG filter (from ex 9 / lucasromerodb):
 
 ## 5. Still open / next steps (in order)
 
-1. **Founder verdict on v11** (the T-blur depth-of-field, Jost numbers, glass progress bar, one-line
-   subheadline, left alignment). Then the hero is locked.
+1. ~~Founder verdict on v11~~ — **DONE. Hero LOCKED at v22** (halo legibility + baked outward-feathered
+   blur boxes, Jost numbers, glass progress bar, one-line subheadline, left alignment, Newsreader quote).
 2. **Per-phase adaptive scrim** — measured left-third luminance: **midnight 22 · sunset 99 · midday 129**
    (~6× spread). A scrim tuned on sunset breaks at midday. Fix: measure each plate **once at build time**,
    bake a per-phase `--scrim` into the theme JSON. Slots into the "theme = plates + config" contract.
