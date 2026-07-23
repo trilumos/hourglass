@@ -6,7 +6,7 @@ import base64, io, os
 from PIL import Image
 
 ROOT = r"D:\Dev\Trilumos\hourglass\web-prototype\plates-phases"
-OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\42202-1784791162\content\hero-v12.html"
+OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\2436-1784803145\content\hero-v16.html"
 
 GRAIN = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E"
          "%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' "
@@ -19,8 +19,41 @@ bg = "data:image/jpeg;base64," + base64.b64encode(b.getvalue()).decode()
 
 Q = "Discipline is choosing between what you want now and what you want most."
 
-html = f"""<h2>Hero v12 &mdash; subtle blur HALOS around the text (not zones)</h2>
-<p class="subtitle">Blur dialled right down: <b>3px</b> (was 7), and shaped as a soft <b>halo hugging each text block</b> rather than big zones &mdash; it fades out in every direction, so there are no edges and the scene stays clear everywhere else. Nav gets its own faint wide halo. Description shortened.</p>
+BLURS = ''  # no scene blur — readability comes from the per-glyph text halo
+
+BODY = f"""      <div class="nav"><span class="wm">sustain</span>
+        <span class="links"><span>About</span><span>Themes</span><span>Get the app</span><span class="ico">&#9881;</span></span></div>
+      <div class="left">
+        <h1 class="brand">Sustain</h1>
+        <p class="tagline">Time flows. You focus.</p>
+        <p class="clarity">A calm focus timer that moves with your day.</p>
+        <div class="ctas"><a class="cta glass-liquid"><span>Begin Focus</span><span class="arw">&#8594;</span></a></div>
+        <a class="play glass-liquid"><svg class="gp" viewBox="0 0 26 30" width="1.25em" height="1.42em" aria-hidden="true"><polygon points="3,4 23,15 3,15" fill="#12B5FF"/><polygon points="3,15 23,15 3,26" fill="#00D26A"/><polygon points="23,15 15,10.6 15,15" fill="#FF424B"/><polygon points="23,15 15,19.4 15,15" fill="#FFC400"/></svg><span class="pl"><small>GET IT ON</small>Google&nbsp;Play</span></a>
+      </div>
+      <div class="right">
+        <div class="ftlabel">Focused Today</div>
+        <div class="ftbig">2<span class="u">h</span> 45<span class="u">m</span></div>
+        <div class="goalbar"><i></i></div>
+        <div class="goal">Daily goal 8h</div>
+        <div class="qdiv"></div>
+        <div class="qwrap"><span class="qmark">&ldquo;</span><p class="quote">{Q}</p></div>
+      </div>
+      <div class="dock glass-liquid"><span class="ico">&#9834;</span><span>Ocean Breeze</span>
+        <span class="wv"><i></i><i></i><i></i><i></i><i></i></span></div>"""
+
+def card(choice, label, blurs, desc):
+    return f'''  <div class="card" data-choice="{choice}" onclick="toggleSelect(this)" style="cursor:pointer">
+    <div class="hero">
+      <img class="scene" src="{bg}" alt="">
+      {blurs}
+      <div class="vign"></div><div class="grain"></div>
+{BODY}
+    </div>
+    <div class="lbl"><span class="k">{label}</span><span class="d">{desc}</span></div>
+  </div>'''
+
+html = f"""<h2>Hero v16 &mdash; per-glyph text halo (done right, scene untouched)</h2>
+<p class="subtitle"><b>All scene-blur removed.</b> Readability is now a layered <code>text-shadow</code> that hugs <b>every letter</b> of every string &mdash; a soft dark contour that follows the glyph outlines (which <code>backdrop-filter</code> physically can't do; it only blurs a rectangle, so it showed in the gaps). The painting stays fully sharp. Quote + description get a slightly stronger halo (busiest backdrops).</p>
 
 <!-- shared liquid-glass refraction filter (small elements only) -->
 <svg style="position:absolute;width:0;height:0" aria-hidden="true">
@@ -47,20 +80,16 @@ html = f"""<h2>Hero v12 &mdash; subtle blur HALOS around the text (not zones)</h
   .grain {{ position:absolute; inset:0; pointer-events:none; z-index:3;
             background-image:url("{GRAIN}"); background-size:220px 220px; opacity:.12; mix-blend-mode:overlay; }}
 
-  /* ===== SUBTLE BLUR HALOS around each text block =====
-     3px only, masked to a soft ellipse that hugs the text and fades out in every
-     direction — no edges, no rectangles. Centre + everything else stays CLEAR. */
-  .blur {{ position:absolute; inset:0; z-index:1; pointer-events:none;
-           backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }}
-  /* thin, wide halo behind the navbar text only */
-  .blur.nav {{ mask:radial-gradient(60% 9% at 50% 5%, #000 45%, transparent 100%);
-               -webkit-mask:radial-gradient(60% 9% at 50% 5%, #000 45%, transparent 100%); }}
-  /* halo around the left hero text */
-  .blur.l {{ mask:radial-gradient(30% 40% at 20% 47%, #000 52%, transparent 100%);
-             -webkit-mask:radial-gradient(30% 40% at 20% 47%, #000 52%, transparent 100%); }}
-  /* halo around the right stat + quote */
-  .blur.r {{ mask:radial-gradient(25% 34% at 82% 48%, #000 52%, transparent 100%);
-             -webkit-mask:radial-gradient(25% 34% at 82% 48%, #000 52%, transparent 100%); }}
+  /* ===== PER-GLYPH TEXT HALO (the correct tool) =====
+     backdrop-filter blurs a RECTANGLE, so behind text it only ever shows in the
+     gaps between glyphs — it physically cannot hug letters. A layered text-shadow
+     DOES follow each glyph's outline: stacked 0-offset dark shadows build a soft
+     contour that hugs every letter, subtle and free, everywhere. Tuned for the
+     small text (the hard case); on big text the same px is proportionally tiny. */
+  .hero {{ --halo: 0 0 1px rgba(6,8,16,.7), 0 0 2px rgba(6,8,16,.58), 0 0 4px rgba(6,8,16,.42),
+                   0 0 8px rgba(6,8,16,.26), 0 1px 2px rgba(6,8,16,.55);
+           --halo-strong: 0 0 1px rgba(6,8,16,.85), 0 0 2px rgba(6,8,16,.74), 0 0 4px rgba(6,8,16,.58),
+                          0 0 8px rgba(6,8,16,.44), 0 0 15px rgba(6,8,16,.3), 0 1px 2px rgba(6,8,16,.62); }}
 
   /* ===== GLASS TOKENS (calibrated to the hourglass) ===== */
   /* .glass — clear frost + bright specular edge; for panels (cheap) */
@@ -88,22 +117,18 @@ html = f"""<h2>Hero v12 &mdash; subtle blur HALOS around the text (not zones)</h
   .nav {{ position:absolute; top:0; left:0; right:0; height:11%; z-index:5; display:flex; align-items:center;
           justify-content:space-between; padding:0 4.2%; font-family:Jost,sans-serif; }}
   .nav.glass-quiet {{ border:none; border-bottom:1px solid rgba(255,255,255,.12); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); }}
-  .wm {{ font-weight:400; letter-spacing:.4em; text-transform:uppercase; font-size:clamp(9px,1.15cqi,14px); color:#f6efe2; }}
+  .wm {{ font-weight:400; letter-spacing:.4em; text-transform:uppercase; font-size:clamp(9px,1.15cqi,14px); color:#f6efe2; text-shadow:var(--halo); }}
   .links {{ display:flex; align-items:center; gap:clamp(11px,2.3cqi,30px); font-weight:300; letter-spacing:.06em;
-            font-size:clamp(8px,.98cqi,13px); color:#eef0f6; opacity:.86; }}
+            font-size:clamp(8px,.98cqi,13px); color:#eef0f6; opacity:.86; text-shadow:var(--halo); }}
   .links .ico {{ opacity:.7; font-size:1.15em; }}
 
   .left {{ position:absolute; left:6.3%; top:46%; transform:translateY(-50%); width:37%; z-index:4; }}
   .brand {{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:300; margin:0 0 0 -.045em; line-height:.92;
-            font-size:clamp(46px,6.9cqi,126px); color:#f8eedb; letter-spacing:.004em; text-shadow:0 2px 40px rgba(5,7,16,.5); }}
-  /* readable halo: tight dark contour (light-on-light) + soft lift */
-  .rs {{ text-shadow:0 0 2px rgba(5,7,15,.66), 0 1px 3px rgba(5,7,15,.6), 0 3px 24px rgba(5,7,15,.42); }}
+            font-size:clamp(46px,6.9cqi,126px); color:#f8eedb; letter-spacing:.004em; text-shadow:var(--halo); }}
   .tagline {{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:300; font-style:italic; margin:.22em 0 0;
-             font-size:clamp(15px,2cqi,35px); color:#f4ead6; opacity:.96; text-wrap:pretty;
-             text-shadow:0 0 2px rgba(5,7,15,.5), 0 1px 3px rgba(5,7,15,.5), 0 3px 24px rgba(5,7,15,.4); }}
+             font-size:clamp(15px,2cqi,35px); color:#f4ead6; opacity:.96; text-wrap:pretty; text-shadow:var(--halo); }}
   .clarity {{ font-family:Jost,sans-serif; font-weight:300; letter-spacing:.02em; white-space:nowrap;
-              font-size:clamp(8px,1.02cqi,14px); color:#eef1f7; opacity:.9; margin:1.1em 0 1.7em;
-              text-shadow:0 0 2px rgba(5,7,15,.6), 0 1px 2px rgba(5,7,15,.5), 0 2px 16px rgba(5,7,15,.4); }}
+              font-size:clamp(8px,1.02cqi,14px); color:#eef1f7; opacity:.92; margin:1.1em 0 1.7em; text-shadow:var(--halo-strong); }}
   /* buttons = glass-liquid */
   .cta {{ display:inline-flex; align-items:center; gap:.75em; padding:.82em 1.6em; border-radius:100px;
           font-family:Jost,sans-serif; font-weight:400; letter-spacing:.11em; text-transform:uppercase;
@@ -123,7 +148,8 @@ html = f"""<h2>Hero v12 &mdash; subtle blur HALOS around the text (not zones)</h
             font-family:Jost,sans-serif; color:#f4ecdd; }}
   .right::before {{ content:''; position:absolute; inset:-24% -30% -18% -48%; z-index:-1; pointer-events:none;
                     background:radial-gradient(64% 60% at 76% 46%, rgba(4,6,14,.5), rgba(4,6,14,.18) 52%, transparent 76%); filter:blur(28px); }}
-  .right .ftlabel, .right .ftbig, .right .goal, .right .quote {{ text-shadow:0 0 2px rgba(5,7,15,.6), 0 1px 3px rgba(5,7,15,.55), 0 3px 22px rgba(5,7,15,.42); }}
+  .right .ftlabel, .right .ftbig, .right .goal {{ text-shadow:var(--halo); }}
+  .right .quote, .right .qmark {{ text-shadow:var(--halo-strong); }}
   .ftlabel {{ font-weight:300; letter-spacing:.3em; text-transform:uppercase; font-size:clamp(7px,.84cqi,11px); opacity:.82; position:relative; z-index:1; }}
   .ftbig {{ font-family:Jost,sans-serif; font-weight:200; line-height:1; font-variant-numeric:tabular-nums lining-nums;
             letter-spacing:.005em; font-size:clamp(26px,4cqi,66px); margin:.24em 0 .6em; position:relative; z-index:1; }}
@@ -147,7 +173,7 @@ html = f"""<h2>Hero v12 &mdash; subtle blur HALOS around the text (not zones)</h
   /* ambient dock = glass-liquid */
   .dock {{ position:absolute; left:50%; bottom:5.5%; transform:translateX(-50%); z-index:4;
            display:flex; align-items:center; gap:clamp(8px,1.4cqi,18px); padding:.6em 1.15em; border-radius:100px;
-           font-family:Jost,sans-serif; color:#f4ecdd; font-weight:300; letter-spacing:.04em; font-size:clamp(8px,1cqi,13px); }}
+           font-family:Jost,sans-serif; color:#f4ecdd; font-weight:300; letter-spacing:.04em; font-size:clamp(8px,1cqi,13px); text-shadow:var(--halo); }}
   .dock > * {{ position:relative; z-index:1; }}
   .dock .wv {{ display:flex; align-items:flex-end; gap:2px; height:1em; }}
   .dock .wv i {{ width:2px; background:rgba(255,220,170,.85); border-radius:2px; animation:wv 1.4s ease-in-out infinite; }}
@@ -164,36 +190,10 @@ html = f"""<h2>Hero v12 &mdash; subtle blur HALOS around the text (not zones)</h
 </style>
 
 <div class="cards" style="grid-template-columns:1fr;">
-  <div class="card">
-    <div class="hero">
-      <img class="scene" src="{bg}" alt="">
-      <div class="blur nav"></div><div class="blur l"></div><div class="blur r"></div>
-      <div class="vign"></div><div class="grain"></div>
-      <div class="nav"><span class="wm">sustain</span>
-        <span class="links"><span>About</span><span>Themes</span><span>Get the app</span><span class="ico">&#9881;</span></span></div>
-      <div class="left">
-        <h1 class="brand">Sustain</h1>
-        <p class="tagline">Time flows. You focus.</p>
-        <p class="clarity">A calm focus timer that moves with your day.</p>
-        <div class="ctas"><a class="cta glass-liquid"><span>Begin Focus</span><span class="arw">&#8594;</span></a></div>
-        <a class="play glass-liquid"><svg class="gp" viewBox="0 0 26 30" width="1.25em" height="1.42em" aria-hidden="true"><polygon points="3,4 23,15 3,15" fill="#12B5FF"/><polygon points="3,15 23,15 3,26" fill="#00D26A"/><polygon points="23,15 15,10.6 15,15" fill="#FF424B"/><polygon points="23,15 15,19.4 15,15" fill="#FFC400"/></svg><span class="pl"><small>GET IT ON</small>Google&nbsp;Play</span></a>
-      </div>
-      <div class="right">
-        <div class="ftlabel">Focused Today</div>
-        <div class="ftbig">2<span class="u">h</span> 45<span class="u">m</span></div>
-        <div class="goalbar"><i></i></div>
-        <div class="goal">Daily goal 8h</div>
-        <div class="qdiv"></div>
-        <div class="qwrap"><span class="qmark">&ldquo;</span><p class="quote">{Q}</p></div>
-      </div>
-      <div class="dock glass-liquid"><span class="ico">&#9834;</span><span>Ocean Breeze</span>
-        <span class="wv"><i></i><i></i><i></i><i></i><i></i></span></div>
-    </div>
-    <div class="lbl"><span class="k">One Glass</span><span class="d">Right panel now BOXLESS (glass was the testbed). Glass lives on the buttons + dock (.glass-liquid, real refraction) and nav (.glass-quiet) &mdash; thinner rim now, not thick.</span></div>
-  </div>
+{card("halo", "Per-glyph text halo &mdash; no scene blur", BLURS, "Each letter carries its own soft dark contour (layered text-shadow). The scene is 100% sharp. Check the quote over the cherry blossoms.")}
 </div>
 
-<p class="subtitle" style="margin-top:18px">Rim brightness cut so the glass reads thin, not slabby. Right panel is boxless again over a soft halo. The perfected recipe &mdash; <code>.glass</code> (panels) / <code>.glass-liquid</code> (small, real refraction) / <code>.glass-quiet</code> (nav + session) &mdash; is now ready to drop into the <b>setup page</b> untouched. Google Play now has its real 4-colour mark.</p>
+<p class="subtitle" style="margin-top:18px"><b>Look at the scene, not the text</b> &mdash; both are readable. The real question is whether the blur costs you more in scene quality than it buys in legibility. My read: <b>B</b>. The per-glyph halo already solves light-on-light, and blurring the plate directly contradicts the HD goal &mdash; the painting is the product. If you want a whisper of it back, we can run the halos at 1px instead of removing them.</p>
 """
 with open(OUT, "w", encoding="utf-8") as f: f.write(html)
 print("wrote", OUT)
