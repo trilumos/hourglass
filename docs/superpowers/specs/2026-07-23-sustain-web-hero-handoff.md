@@ -87,11 +87,12 @@ The shared SVG filter (from ex 9 / lucasromerodb):
 
 ## 4. Text legibility over the scene — the system
 
-1. **Depth-of-field "clear T"** *(founder's idea, the unifying fix)* — two masked `backdrop-filter: blur(7px)`
-   zones over the **lower-left and lower-right**; horizontal mask fades before centre, vertical mask removes
-   the top strip. Result: **nav strip + centre stem stay sharp (a T), the two text beds go softly out of
-   focus.** Makes the hourglass pop *and* gives text a clean bed. Implemented with two gradients +
-   `mask-composite: intersect`.
+1. **Subtle blur halos around each text block** *(founder's idea, the unifying fix)* — `backdrop-filter:
+   blur(3px)` masked to a **soft radial ellipse hugging each text block**, fading out in every direction so
+   there are no edges and the rest of the scene stays clear. One halo for the left hero text, one for the
+   right stat+quote, one faint wide one behind the navbar.
+   **⚠️ Two rejected attempts, do not repeat:** (a) 7px blur = *"TOO TOO MUCH"* — 3px is the ceiling;
+   (b) rectangular "clear T" zones (masked side-bands) read as heavy blocks — **halos beat zones.**
 2. **Per-glyph dark halo** — `text-shadow: 0 0 2px rgba(5,7,15,.66), 0 1px 3px …, 0 3px 24px …`. The tight
    `0 0 2px` contour is what makes **light text readable on light backgrounds** with no visible box.
 3. **Cinematic vignette** — darkens edges/corners where UI lives, keeps centre real.
