@@ -6,7 +6,7 @@ import base64, io, os
 from PIL import Image
 
 ROOT = r"D:\Dev\Trilumos\hourglass\web-prototype\plates-phases"
-OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\2436-1784803145\content\hero-v16.html"
+OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\2436-1784803145\content\hero-v20.html"
 
 GRAIN = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E"
          "%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' "
@@ -19,7 +19,19 @@ bg = "data:image/jpeg;base64," + base64.b64encode(b.getvalue()).decode()
 
 Q = "Discipline is choosing between what you want now and what you want most."
 
-BLURS = ''  # no scene blur — readability comes from the per-glyph text halo
+# Founder-drawn boxes (from the interactive editor), blur 1px, no darken.
+# Feather OUTWARD: grow each box by margin m so the drawn area stays FULLY blurred and
+# the fade lands just past the edge (boundary imperceptible, blur unchanged inside).
+FB = [(67.9, 28.5, 29.5, 55.2),   # right panel (Focused Today + quote)
+      (5.4, 25.1, 23.0, 46.7),    # left column (Sustain -> Google Play)
+      (0.4, 0.7, 98.4, 5.9)]      # navbar strip
+def _grow(x, y, w, h, m=3.0):
+    gx, gy, gw, gh = x - m, y - m, w + 2*m, h + 2*m
+    return gx, gy, gw, gh, m/gw*100, m/gh*100
+BB_CSS = "\n".join(
+    f"  .bb{i+1} {{ left:{gx:.2f}%; top:{gy:.2f}%; width:{gw:.2f}%; height:{gh:.2f}%; --fx:{fx:.1f}%; --fy:{fy:.1f}%; }}"
+    for i, (gx, gy, gw, gh, fx, fy) in enumerate(_grow(*b) for b in FB))
+FINAL_BOXES = "".join(f'<div class="blurbox bb{i+1}"></div>' for i in range(len(FB)))
 
 BODY = f"""      <div class="nav"><span class="wm">sustain</span>
         <span class="links"><span>About</span><span>Themes</span><span>Get the app</span><span class="ico">&#9881;</span></span></div>
@@ -52,8 +64,38 @@ def card(choice, label, blurs, desc):
     <div class="lbl"><span class="k">{label}</span><span class="d">{desc}</span></div>
   </div>'''
 
-html = f"""<h2>Hero v16 &mdash; per-glyph text halo (done right, scene untouched)</h2>
-<p class="subtitle"><b>All scene-blur removed.</b> Readability is now a layered <code>text-shadow</code> that hugs <b>every letter</b> of every string &mdash; a soft dark contour that follows the glyph outlines (which <code>backdrop-filter</code> physically can't do; it only blurs a rectangle, so it showed in the gaps). The painting stays fully sharp. Quote + description get a slightly stronger halo (busiest backdrops).</p>
+SCRIPT = r'''
+(function(){
+  const hero=document.getElementById('hero'), boxesEl=document.getElementById('boxes'),
+        draw=document.getElementById('draw'), prev=document.getElementById('prev'),
+        sB=document.getElementById('sB'), sD=document.getElementById('sD'), sF=document.getElementById('sF'),
+        vB=document.getElementById('vB'), vD=document.getElementById('vD'), vF=document.getElementById('vF'),
+        list=document.getElementById('bblist'), out=document.getElementById('bb-out');
+  let boxes=[], sel=-1, drag=null;
+  const P=e=>{const r=hero.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*100,y:(e.clientY-r.top)/r.height*100};};
+  function render(){
+    boxesEl.innerHTML='';
+    boxes.forEach((b,i)=>{const d=document.createElement('div');d.className='blurbox'+(i===sel?' sel':'');
+      d.style.left=b.x+'%';d.style.top=b.y+'%';d.style.width=b.w+'%';d.style.height=b.h+'%';
+      d.style.setProperty('--bl',b.blur+'px');d.style.setProperty('--br',b.br);d.style.setProperty('--ft',b.ft+'%');
+      boxesEl.appendChild(d);});
+    let h=boxes.map((b,i)=>'<button data-i="'+i+'" class="'+(i===sel?'on':'')+'">Box '+(i+1)+'</button>').join('');
+    if(boxes.length) h+='<button id="delbx">Delete</button><button id="clrbx">Clear all</button>';
+    list.innerHTML=h;
+    out.textContent=boxes.length?boxes.map((b,i)=>'.bb'+(i+1)+'{left:'+b.x.toFixed(1)+'%;top:'+b.y.toFixed(1)+'%;width:'+b.w.toFixed(1)+'%;height:'+b.h.toFixed(1)+'%}  /* blur '+b.blur+'px  darken '+b.br+'  feather '+b.ft+'% */').join('\n'):'(drag on the hero to draw a box)';
+  }
+  function sync(){ if(sel<0)return; const b=boxes[sel]; sB.value=b.blur;vB.textContent=b.blur; sD.value=Math.round(b.br*100);vD.textContent=Math.round(b.br*100); sF.value=b.ft;vF.textContent=b.ft; }
+  draw.addEventListener('mousedown',e=>{const p=P(e);drag={ox:p.x,oy:p.y,box:null};});
+  window.addEventListener('mousemove',e=>{ if(!drag)return; const p=P(e); const x=Math.min(p.x,drag.ox),y=Math.min(p.y,drag.oy),w=Math.abs(p.x-drag.ox),h=Math.abs(p.y-drag.oy); drag.box={x,y,w,h}; prev.style.cssText='display:block;left:'+x+'%;top:'+y+'%;width:'+w+'%;height:'+h+'%'; });
+  window.addEventListener('mouseup',()=>{ if(!drag)return; const b=drag.box; prev.style.display='none'; drag=null; if(b&&b.w>1.5&&b.h>1.5){ boxes.push({x:b.x,y:b.y,w:b.w,h:b.h,blur:+sB.value,br:+sD.value/100,ft:+sF.value}); sel=boxes.length-1; render(); } });
+  [sB,sD,sF].forEach(s=>s.addEventListener('input',()=>{ vB.textContent=sB.value;vD.textContent=sD.value;vF.textContent=sF.value; if(sel>=0){boxes[sel].blur=+sB.value;boxes[sel].br=+sD.value/100;boxes[sel].ft=+sF.value;render();} }));
+  list.addEventListener('click',e=>{ const t=e.target; if(t.dataset.i!=null){sel=+t.dataset.i;sync();render();return;} if(t.id==='delbx'&&sel>=0){boxes.splice(sel,1);sel=Math.min(sel,boxes.length-1);sync();render();} if(t.id==='clrbx'){boxes=[];sel=-1;render();} });
+  render();
+})();
+'''
+
+html = f"""<h2>Hero v20 &mdash; your 3 boxes baked, outward feather, bolder quote</h2>
+<p class="subtitle">Baked your exact rectangles (right panel, left column, navbar) at <b>blur 1px, no darken</b>. The feather now works <b>outward</b> &mdash; the drawn area stays fully blurred and the soft fade sits in a thin margin just past the edge, so the boundary is imperceptible. Quote nudged a touch bolder.</p>
 
 <!-- shared liquid-glass refraction filter (small elements only) -->
 <svg style="position:absolute;width:0;height:0" aria-hidden="true">
@@ -80,16 +122,39 @@ html = f"""<h2>Hero v16 &mdash; per-glyph text halo (done right, scene untouched
   .grain {{ position:absolute; inset:0; pointer-events:none; z-index:3;
             background-image:url("{GRAIN}"); background-size:220px 220px; opacity:.12; mix-blend-mode:overlay; }}
 
-  /* ===== PER-GLYPH TEXT HALO (the correct tool) =====
-     backdrop-filter blurs a RECTANGLE, so behind text it only ever shows in the
-     gaps between glyphs — it physically cannot hug letters. A layered text-shadow
-     DOES follow each glyph's outline: stacked 0-offset dark shadows build a soft
-     contour that hugs every letter, subtle and free, everywhere. Tuned for the
-     small text (the hard case); on big text the same px is proportionally tiny. */
-  .hero {{ --halo: 0 0 1px rgba(6,8,16,.7), 0 0 2px rgba(6,8,16,.58), 0 0 4px rgba(6,8,16,.42),
-                   0 0 8px rgba(6,8,16,.26), 0 1px 2px rgba(6,8,16,.55);
-           --halo-strong: 0 0 1px rgba(6,8,16,.85), 0 0 2px rgba(6,8,16,.74), 0 0 4px rgba(6,8,16,.58),
-                          0 0 8px rgba(6,8,16,.44), 0 0 15px rgba(6,8,16,.3), 0 1px 2px rgba(6,8,16,.62); }}
+  /* ===== RECTANGLE BLUR BEHIND A TEXT BLOCK — block by block =====
+     A positioned box; backdrop-filter blurs (and slightly darkens for contrast)
+     exactly its rectangle; its four edges are feathered via a two-gradient mask so
+     it's a SOFT rectangle, not a hard box. Text sits on top, sharp. Per-letter halo
+     is OFF (--halo: none). Tune left/top/width/height per block. */
+  .hero {{ --halo: none; --halo-strong: none; }}
+  #boxes {{ position:absolute; inset:0; z-index:1; pointer-events:none; }}
+  .blurbox {{ position:absolute; z-index:1; pointer-events:none;
+              backdrop-filter:blur(var(--bl,1px)) brightness(var(--br,1));
+              -webkit-backdrop-filter:blur(var(--bl,1px)) brightness(var(--br,1));
+              mask:linear-gradient(90deg, transparent 0, #000 var(--fx,8%), #000 calc(100% - var(--fx,8%)), transparent 100%),
+                   linear-gradient(180deg, transparent 0, #000 var(--fy,8%), #000 calc(100% - var(--fy,8%)), transparent 100%);
+              mask-composite:intersect;
+              -webkit-mask:linear-gradient(90deg, transparent 0, #000 var(--fx,8%), #000 calc(100% - var(--fx,8%)), transparent 100%),
+                           linear-gradient(180deg, transparent 0, #000 var(--fy,8%), #000 calc(100% - var(--fy,8%)), transparent 100%);
+              -webkit-mask-composite:source-in; }}
+{BB_CSS}
+  #draw {{ position:absolute; inset:0; z-index:9; cursor:crosshair; }}
+  #prev {{ position:absolute; z-index:9; display:none; pointer-events:none;
+           border:1px dashed rgba(255,255,255,.85); background:rgba(255,255,255,.08); }}
+  #bbpanel {{ position:fixed; right:14px; top:14px; z-index:100; width:290px; background:rgba(10,12,18,.94);
+              color:#e8ecf3; padding:14px 16px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,.5);
+              font:12px/1.5 ui-sans-serif,system-ui,sans-serif; }}
+  #bbpanel h4 {{ margin:0 0 10px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.8; }}
+  #bbpanel label {{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:7px 0; }}
+  #bbpanel input[type=range] {{ flex:1; }}
+  #bbpanel .v {{ width:44px; text-align:right; font-variant-numeric:tabular-nums; opacity:.85; }}
+  #bblist {{ display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 0; }}
+  #bblist button {{ font:11px/1 ui-sans-serif; padding:5px 9px; border-radius:6px; border:1px solid rgba(255,255,255,.18);
+                    background:rgba(255,255,255,.06); color:#e8ecf3; cursor:pointer; width:auto; margin:0; }}
+  #bblist button.on {{ background:#EACA78; color:#141414; border-color:#EACA78; }}
+  #bb-out {{ white-space:pre-wrap; word-break:break-word; font:10.5px/1.5 ui-monospace,monospace;
+             background:rgba(0,0,0,.35); padding:8px; border-radius:6px; margin-top:10px; max-height:150px; overflow:auto; }}
 
   /* ===== GLASS TOKENS (calibrated to the hourglass) ===== */
   /* .glass — clear frost + bright specular edge; for panels (cheap) */
@@ -167,7 +232,7 @@ html = f"""<h2>Hero v16 &mdash; per-glyph text halo (done right, scene untouched
   .qwrap {{ position:relative; z-index:1; }}
   .qmark {{ display:block; font-family:'Cormorant Garamond',serif; font-size:clamp(28px,3.5cqi,58px);
             line-height:.42; opacity:.34; margin-bottom:.22em; }}
-  .quote {{ font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:300; margin:0; line-height:1.44; text-wrap:pretty;
+  .quote {{ font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:400; margin:0; line-height:1.44; text-wrap:pretty;
             font-size:clamp(11px,1.5cqi,24px); color:#f2ece1; opacity:.94; }}
 
   /* ambient dock = glass-liquid */
@@ -190,10 +255,18 @@ html = f"""<h2>Hero v16 &mdash; per-glyph text halo (done right, scene untouched
 </style>
 
 <div class="cards" style="grid-template-columns:1fr;">
-{card("halo", "Per-glyph text halo &mdash; no scene blur", BLURS, "Each letter carries its own soft dark contour (layered text-shadow). The scene is 100% sharp. Check the quote over the cherry blossoms.")}
+  <div class="card">
+    <div class="hero">
+      <img class="scene" src="{bg}" alt="">
+      {FINAL_BOXES}
+      <div class="vign"></div><div class="grain"></div>
+{BODY}
+    </div>
+    <div class="lbl"><span class="k">Baked</span><span class="d">Your 3 boxes at blur 1px, feathered OUTWARD (drawn area fully blurred, edge fades just past it). Quote a touch bolder (400).</span></div>
+  </div>
 </div>
 
-<p class="subtitle" style="margin-top:18px"><b>Look at the scene, not the text</b> &mdash; both are readable. The real question is whether the blur costs you more in scene quality than it buys in legibility. My read: <b>B</b>. The per-glyph halo already solves light-on-light, and blurring the plate directly contradicts the HD goal &mdash; the painting is the product. If you want a whisper of it back, we can run the halos at 1px instead of removing them.</p>
+<p class="subtitle" style="margin-top:16px">The blurred region now fills each box you drew and the fade lands in a thin margin <i>outside</i> the edge, so the boundary is imperceptible while the blur inside is unchanged. Quote bumped 300&rarr;400. Want the quote a different font instead, or the blur/margin nudged? The editor is still in <code>gen_hero_mockup.py</code> if you want to redraw.</p>
 """
 with open(OUT, "w", encoding="utf-8") as f: f.write(html)
 print("wrote", OUT)
