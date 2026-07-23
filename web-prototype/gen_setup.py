@@ -21,16 +21,16 @@ im = im.resize((1600, round(im.height * 1600 / im.width)), Image.LANCZOS)
 b = io.BytesIO(); im.save(b, "JPEG", quality=82, subsampling=0)
 bg = "data:image/jpeg;base64," + base64.b64encode(b.getvalue()).decode()
 
-PANEL = """    <div class="setup glass">
-      <div class="s-top"><button class="s-back">&#8592;</button>
-        <div class="s-modes">
-          <button class="mode on" data-m="flow">Flow</button
-          ><button class="mode" data-m="pomodoro">Pomodoro</button
-          ><button class="mode" data-m="custom">Custom</button
-          ><button class="mode" data-m="endless">Endless</button>
-        </div>
+PANEL = """    <button class="s-backbtn glass-liquid" id="backBtn" aria-label="Back">&#8592;</button>
+    <button class="s-resume glass-liquid" id="resumeBtn"><span>Begin Focus &#8594;</span></button>
+    <div class="s-stack" id="stack">
+      <div class="s-modes glass">
+        <button class="mode on" data-m="flow">Flow</button
+        ><button class="mode" data-m="pomodoro">Pomodoro</button
+        ><button class="mode" data-m="custom">Custom</button
+        ><button class="mode" data-m="endless">Endless</button>
       </div>
-
+      <div class="setup glass">
       <div class="s-lbl">Intention</div>
       <input class="s-intent" placeholder="What are you focusing on?" />
 
@@ -50,6 +50,7 @@ PANEL = """    <div class="setup glass">
 
       <div class="s-desc" id="modeDesc"></div>
       <button class="s-begin glass-liquid"><span>Begin</span></button>
+      </div>
     </div>"""
 
 SCRIPT = r"""
@@ -235,6 +236,10 @@ SCRIPT = r"""
       if(k==='customBreaks' && +dir>0 && Math.floor(st.customWork/(st.customBreaks+2))<5) return;
       st[k]=Math.min(c.max,Math.max(c.min,v)); return render(); }
     if(t.id==='endlessSw'){ st.endless=!st.endless; return render(); }
+    // Back dismisses setup (right-to-left, matching the train). In the real flow this
+    // returns to the hero; standalone here, so a Begin Focus pill brings it back.
+    if(t.id==='backBtn'){ $('#stack').classList.add('gone'); $('#resumeBtn').style.display='block'; return; }
+    if(t.id==='resumeBtn'){ $('#stack').classList.remove('gone'); $('#resumeBtn').style.display='none'; return; }
   });
   render();
 })();
@@ -280,17 +285,27 @@ Everything is live: switch modes, step values, toggle Endless.</p>
   .glass-liquid::after {{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
                           box-shadow:inset 1px 1px 0 0 rgba(255,255,255,.34); }}
 
-  .setup {{ position:absolute; left:4.6%; top:50%; transform:translateY(-50%); width:42%; max-height:92%;
-            overflow-y:auto; z-index:5; padding:clamp(13px,1.9cqi,26px) clamp(15px,2.1cqi,28px);
+  /* Centred stack: mode chooser floats ABOVE the panel as its own element. */
+  .s-stack {{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;
+              width:40%; max-height:94%; display:flex; flex-direction:column; align-items:center;
+              gap:clamp(8px,1.1cqi,15px); transition:opacity .42s cubic-bezier(.4,0,.2,1),
+              transform .42s cubic-bezier(.4,0,.2,1); }}
+  .s-stack.gone {{ opacity:0; transform:translate(-50%,-50%) translateX(-26%); pointer-events:none; }}
+  .setup {{ width:100%; overflow-y:auto; padding:clamp(13px,1.9cqi,26px) clamp(15px,2.1cqi,28px);
             border-radius:20px; font-family:Jost,sans-serif; color:#f3ecdd; }}
   .setup::-webkit-scrollbar {{ width:5px; }}
   .setup::-webkit-scrollbar-thumb {{ background:rgba(255,255,255,.18); border-radius:9px; }}
-  .s-top {{ display:flex; align-items:center; gap:clamp(8px,1.2cqi,14px); margin-bottom:1.1em; }}
-  .s-back {{ background:transparent; border:none; color:#efe7d8; opacity:.7; cursor:pointer;
-             font-size:clamp(13px,1.5cqi,20px); padding:0; line-height:1; }}
-  .s-back:hover {{ opacity:1; }}
-  .s-modes {{ display:flex; gap:0; background:rgba(255,255,255,.06); border-radius:100px; padding:3px;
-              border:1px solid rgba(255,255,255,.1); }}
+  /* Glass back button — top-left of the SCREEN, fully separate from the panel. */
+  .s-backbtn {{ position:absolute; left:2.6%; top:4.6%; z-index:6; width:clamp(26px,3cqi,42px); aspect-ratio:1;
+                border-radius:50%; cursor:pointer; color:#f6efe2; font-size:clamp(11px,1.25cqi,18px);
+                line-height:1; display:flex; align-items:center; justify-content:center; padding:0; }}
+  .s-backbtn:hover {{ background:rgba(255,255,255,.13); }}
+  .s-resume {{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5; display:none;
+               padding:.85em 1.9em; border-radius:100px; cursor:pointer; font-family:Jost,sans-serif;
+               font-weight:400; letter-spacing:.13em; text-transform:uppercase; color:#fff8ec;
+               font-size:clamp(8px,.98cqi,13px); border:none; background:transparent; }}
+  .s-resume span {{ position:relative; z-index:1; }}
+  .s-modes {{ display:flex; gap:0; border-radius:100px; padding:3px; }}
   .mode {{ font-family:Jost,sans-serif; font-weight:400; font-size:clamp(7.5px,.92cqi,12px); letter-spacing:.04em;
            color:#e7e0d2; cursor:pointer; padding:.5em 1.05em; border-radius:100px; background:transparent;
            border:none; opacity:.72; white-space:nowrap; }}
