@@ -6,7 +6,7 @@ import base64, io, os
 from PIL import Image
 
 ROOT = r"D:\Dev\Trilumos\hourglass\web-prototype\plates-phases"
-OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\2436-1784803145\content\hero-v20.html"
+OUT  = r"D:\Dev\Trilumos\hourglass\.superpowers\brainstorm\2436-1784803145\content\hero-v21.html"
 
 GRAIN = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E"
          "%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' "
@@ -94,7 +94,7 @@ SCRIPT = r'''
 })();
 '''
 
-html = f"""<h2>Hero v20 &mdash; your 3 boxes baked, outward feather, bolder quote</h2>
+html = f"""<h2>Hero v21 &mdash; quote in Fraunces, size +2</h2>
 <p class="subtitle">Baked your exact rectangles (right panel, left column, navbar) at <b>blur 1px, no darken</b>. The feather now works <b>outward</b> &mdash; the drawn area stays fully blurred and the soft fade sits in a thin margin just past the edge, so the boundary is imperceptible. Quote nudged a touch bolder.</p>
 
 <!-- shared liquid-glass refraction filter (small elements only) -->
@@ -107,7 +107,7 @@ html = f"""<h2>Hero v20 &mdash; your 3 boxes baked, outward feather, bolder quot
 </svg>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&family=Jost:wght@200;300;400;500&display=swap');
   .hero {{ position:relative; width:100%; aspect-ratio:16/9; border-radius:16px; overflow:hidden;
            box-shadow:0 18px 60px rgba(0,0,0,.45); margin:12px 0 8px; isolation:isolate; container-type:inline-size; }}
   .hero * {{ box-sizing:border-box; }}
@@ -230,10 +230,10 @@ html = f"""<h2>Hero v20 &mdash; your 3 boxes baked, outward feather, bolder quot
   .goal {{ font-weight:300; letter-spacing:.04em; font-size:clamp(7px,.88cqi,12px); opacity:.7; margin-top:.5em; position:relative; z-index:1; }}
   .qdiv {{ height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22)); margin:1.1em 0 1em; position:relative; z-index:1; }}
   .qwrap {{ position:relative; z-index:1; }}
-  .qmark {{ display:block; font-family:'Cormorant Garamond',serif; font-size:clamp(28px,3.5cqi,58px);
-            line-height:.42; opacity:.34; margin-bottom:.22em; }}
-  .quote {{ font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:400; margin:0; line-height:1.44; text-wrap:pretty;
-            font-size:clamp(11px,1.5cqi,24px); color:#f2ece1; opacity:.94; }}
+  .qmark {{ display:block; font-family:'Fraunces',Georgia,serif; font-style:italic; font-size:clamp(30px,3.7cqi,60px);
+            line-height:.42; opacity:.32; margin-bottom:.2em; }}
+  .quote {{ font-family:'Fraunces',Georgia,serif; font-optical-sizing:auto; font-style:italic; font-weight:400; margin:0; line-height:1.42; text-wrap:pretty;
+            font-size:clamp(13px,1.66cqi,26px); color:#f4efe6; opacity:.95; }}
 
   /* ambient dock = glass-liquid */
   .dock {{ position:absolute; left:50%; bottom:5.5%; transform:translateX(-50%); z-index:4;
