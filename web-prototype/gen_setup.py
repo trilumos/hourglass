@@ -21,16 +21,16 @@ im = im.resize((1600, round(im.height * 1600 / im.width)), Image.LANCZOS)
 b = io.BytesIO(); im.save(b, "JPEG", quality=82, subsampling=0)
 bg = "data:image/jpeg;base64," + base64.b64encode(b.getvalue()).decode()
 
-PANEL = """    <button class="s-backbtn glass-liquid" id="backBtn" aria-label="Back">&#8592;</button>
+PANEL = """    <button class="s-backbtn frost" id="backBtn" aria-label="Back">&#8592;</button>
     <button class="s-resume glass-liquid" id="resumeBtn"><span>Begin Focus &#8594;</span></button>
     <div class="s-stack" id="stack">
-      <div class="s-modes glass">
+      <div class="s-modes frost">
         <button class="mode on" data-m="flow">Flow</button
         ><button class="mode" data-m="pomodoro">Pomodoro</button
         ><button class="mode" data-m="custom">Custom</button
         ><button class="mode" data-m="endless">Endless</button>
       </div>
-      <div class="setup glass">
+      <div class="setup frost">
       <div class="s-lbl">Intention</div>
       <input class="s-intent" placeholder="What are you focusing on?" />
 
@@ -490,6 +490,28 @@ Everything is live: switch modes, step values, toggle Endless.</p>
   .s-desc {{ text-align:center; font-weight:300; font-size:clamp(7.5px,.9cqi,12.5px);
              line-height:1.35; opacity:.62; margin-bottom:.9em; }}
 {IRID}
+  /* ===== FROSTED GLASS (founder-supplied) — setup panel, mode chooser, back, controls.
+     Dark translucent + heavy blur + a hairline double rim (inset AND outer), instead of
+     the hero's light 5px frost. Deliberately a different material to the landing glass. */
+  .frost {{ background:#35353566; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+            box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55;
+            border:none; color:#e5e5e5; }}
+  .setup.frost {{ border-radius:clamp(18px,2.6cqi,40px); }}
+  .s-modes.frost {{ border-radius:100px; }}
+  /* Kill the .glass/.glass-liquid sheen layers so only the frost reads. */
+  .frost::before, .frost::after {{ content:none; }}
+
+  /* Controls inherit the same frosted material; selected states go solid white
+     with dark ink, matching the reference's .button. */
+  .chip, .stp-b, .sub2, .sw {{ background:#35353566; border:none;
+      box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55; }}
+  .chip:hover, .stp-b:hover {{ background:#3535358c; }}
+  .chip.out {{ background:transparent; box-shadow: inset 0 0 4px -2px #ffffff55; }}
+  .mode.on, .chip.on, .sub2 button.on {{ background:#fff; color:#151515; font-weight:500;
+      box-shadow:0 1px 6px rgba(0,0,0,.18); }}
+  .sw.on {{ background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.18); }}
+  .sw.on i {{ background:#151515; }}
+  .s-intent {{ color:#f2f2f2; }}
   .lbl {{ display:flex; align-items:baseline; gap:10px; margin-top:14px; }}
   .lbl .k {{ font-weight:700; }} .lbl .d {{ color:var(--muted,#8891a3); font-size:13px; }}
 </style>
