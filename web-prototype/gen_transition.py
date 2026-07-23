@@ -311,10 +311,13 @@ this screen proves the <b>morph and the flow</b>.</p>
   /* ===== the View Transitions morph ===== */
   /* Scene + vignette + grain are IDENTICAL across states -> freeze root so nothing flickers. */
   ::view-transition-old(root), ::view-transition-new(root) {{ animation:none; }}
-  /* TRAIN: everything that changes travels LEFT -> RIGHT. Outgoing slides out to the right,
-     incoming slides in from the left behind it. Fade rides along so nothing escapes the frame. */
-  @keyframes train-out {{ from {{opacity:1; transform:translateX(0)}}   to {{opacity:0; transform:translateX(38%)}} }}
-  @keyframes train-in  {{ from {{opacity:0; transform:translateX(-38%)}} to {{opacity:1; transform:translateX(0)}} }}
+  /* TRAIN: everything that changes travels RIGHT -> LEFT. Outgoing slides out to the left,
+     incoming follows in from the right behind it. Fade rides along so nothing escapes the frame.
+     NOTE: named groups are promoted to a flat tree at the document root, so .hero's
+     overflow:hidden does NOT clip them. Harmless once the hero is full-viewport (real site);
+     if it ever needs clipping inside a box, use nested ::view-transition-group. */
+  @keyframes train-out {{ from {{opacity:1; transform:translateX(0)}}   to {{opacity:0; transform:translateX(-38%)}} }}
+  @keyframes train-in  {{ from {{opacity:0; transform:translateX(38%)}} to {{opacity:1; transform:translateX(0)}} }}
   ::view-transition-old(hero), ::view-transition-old(setup), ::view-transition-old(session) {{
     animation:train-out .62s cubic-bezier(.5,0,.2,1) both; }}
   ::view-transition-new(hero), ::view-transition-new(setup), ::view-transition-new(session) {{
