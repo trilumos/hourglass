@@ -103,10 +103,12 @@ SCRIPT = r"""
       else clearInterval(tick); };
     if(document.startViewTransition) document.startViewTransition(apply); else apply();
   }
+  // Nav model: Home -> Begin Focus -> Setup -> Begin -> Session.
+  // Back from Setup returns HOME; ending a session returns to SETUP (not home).
   begin.addEventListener('click',e=>{ e.preventDefault(); go('setup'); });
   back.addEventListener('click',()=>go('hero'));
   startBtn.addEventListener('click',()=>go('session'));
-  end.addEventListener('click',()=>go('hero'));
+  end.addEventListener('click',()=>go('setup'));
   pause.addEventListener('click',()=>{ paused=!paused; pause.querySelector('span').textContent=paused?'Resume':'Pause'; if(paused)clearInterval(tick); else run(); });
   document.querySelectorAll('.mode').forEach(m=>m.addEventListener('click',()=>{ const c=document.querySelector('.mode.on'); if(c)c.classList.remove('on'); m.classList.add('on'); }));
   const setMins=v=>{ mins=Math.max(5,Math.min(180,v)); dnum.textContent=mins; document.querySelectorAll('.preset').forEach(p=>p.classList.toggle('on',+p.dataset.m===mins)); };
