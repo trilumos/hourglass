@@ -87,12 +87,23 @@ The shared SVG filter (from ex 9 / lucasromerodb):
 
 ## 4. Text legibility over the scene — the system
 
-1. **Subtle blur halos around each text block** *(founder's idea, the unifying fix)* — `backdrop-filter:
-   blur(3px)` masked to a **soft radial ellipse hugging each text block**, fading out in every direction so
-   there are no edges and the rest of the scene stays clear. One halo for the left hero text, one for the
-   right stat+quote, one faint wide one behind the navbar.
-   **⚠️ Two rejected attempts, do not repeat:** (a) 7px blur = *"TOO TOO MUCH"* — 3px is the ceiling;
-   (b) rectangular "clear T" zones (masked side-bands) read as heavy blocks — **halos beat zones.**
+1. **Per-glyph text halo — LOCKED, scene stays 100% sharp** (v16, `e5357f6`). A layered `text-shadow`
+   token on `.hero`:
+   ```css
+   --halo:        0 0 1px rgba(6,8,16,.7), 0 0 2px rgba(6,8,16,.58), 0 0 4px rgba(6,8,16,.42),
+                  0 0 8px rgba(6,8,16,.26), 0 1px 2px rgba(6,8,16,.55);
+   --halo-strong: /* same, higher alphas + a 15px layer */  /* quote + description (busiest backdrops) */
+   ```
+   Applied to every scene-overlaid text element (`text-shadow: var(--halo)`). If a spot still washes,
+   the only knob is `--halo-strong`'s alphas — no structural change.
+   **⚠️ THE BIG LESSON — do NOT re-attempt scene blur.** We burned ~6 rounds trying `backdrop-filter`
+   halos to soften the busy backdrop behind text. **It cannot work:** `backdrop-filter` blurs a
+   *rectangle*, so behind text the blur only ever shows *in the gaps between glyphs*, never hugging the
+   letters — and any masked region leaves a visible seam/"box", or blurs the scene the founder explicitly
+   wants sharp (HD goal). Rejected in order: 7px T-zones (*"TOO TOO MUCH"*), 3px radial region halos (box
+   around Sustain), per-block ellipses (blurred the gaps, skipped the quote). **The answer is
+   `text-shadow` (follows glyph outlines) — full stop.** If a *scene* softening is ever truly wanted, bake
+   a subtle darken into the plate itself, never a runtime blur.
 2. **Per-glyph dark halo** — `text-shadow: 0 0 2px rgba(5,7,15,.66), 0 1px 3px …, 0 3px 24px …`. The tight
    `0 0 2px` contour is what makes **light text readable on light backgrounds** with no visible box.
 3. **Cinematic vignette** — darkens edges/corners where UI lives, keeps centre real.
