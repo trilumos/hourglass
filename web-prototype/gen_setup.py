@@ -49,9 +49,125 @@ PANEL = """    <button class="s-backbtn glass-liquid" id="backBtn" aria-label="B
       </div>
 
       <div class="s-desc" id="modeDesc"></div>
-      <button class="s-begin glass-liquid"><span>Begin</span></button>
       </div>
-    </div>"""
+    </div>
+    <button class="s-begin" id="beginBtn">Begin<span class="drop-shadow"></span></button>"""
+
+# Iridescent "Refract" button — adapted from Simey's CodePen (after Wojciech Zieliński).
+# Kept as a plain string (not an f-string) so the brace-heavy CSS needs no escaping.
+# Adapted: Jost instead of Amaranth (MUJI rule), container-query sizing, bottom-centre float.
+IRID = r"""
+  .hero { --cubic-in:cubic-bezier(0.32,0,0.67,0); --cubic-out:cubic-bezier(0.33,1,0.68,1); }
+  .s-begin {
+    position:absolute; left:50%; bottom:4.6%; translate:-50% 0; z-index:6;
+    font-family:Jost,sans-serif; font-weight:500; letter-spacing:.13em; text-transform:uppercase;
+    font-size:clamp(8px,1.02cqi,14px); color:#818e9e;
+    min-width:9em; height:3.1em; line-height:1;
+    display:inline-grid; justify-content:center; align-items:center;
+    position:absolute; padding:0.5em 1.5em; cursor:pointer;
+    outline:max(2px, calc(var(--brdr) * 0.75)) solid transparent;
+    outline-offset:max(2px, var(--brdr));
+    border-radius:99vw;
+    transition:all 0.33s var(--cubic-out);
+    --brdr:0.15em;
+    border:max(2px, var(--brdr)) solid transparent;
+    background:
+      linear-gradient( to bottom,
+        oklch(0.95 0.01 257),
+        oklch(0.92 0.0175 257 / 80%) 33%,
+        oklch(0.99 0.01 257 / 80%)) padding-box,
+      linear-gradient( 165deg,
+        oklch(0.94 0.025 257 / 80%) 25%,
+        oklch(0.99 0.01 257 / 80%)) border-box;
+    --inset-shadow:
+      inset 0 0 0 0 oklch(1 0.02 257 / 0),
+      inset -0.35em -0.35em 0.25em -0.25em oklch(0.99 0.02 257),
+      inset -0.33em -1em 0.75em -0.75em oklch(0.99 0.01 257);
+    --outer-shadow:
+      oklch(0.35 0.1 257 / 0.12) 0px max(4px, 0.3em) 0.3em 0px,
+      oklch(0.35 0.1 257 / 0.12) 0px max(2px, 0.18em) 0.18em 0px,
+      oklch(0.35 0.1 257 / 0.1) 0px max(1px, 0.05em) max(2px, 0.05em) 0px;
+    box-shadow: var(--inset-shadow), var(--outer-shadow);
+  }
+  .s-begin:has(.drop-shadow) { box-shadow: var(--inset-shadow); }
+  .s-begin::before, .s-begin::after, .s-begin .drop-shadow,
+  .s-begin .drop-shadow::after, .s-begin .drop-shadow::before {
+    content:""; position:absolute; inset:min(-2px, calc(var(--brdr) * -1));
+    border-radius:inherit; pointer-events:none; transition:all 0.6s var(--cubic-in);
+  }
+  .s-begin:hover::before, .s-begin:hover::after, .s-begin:hover .drop-shadow,
+  .s-begin:hover .drop-shadow::after, .s-begin:hover .drop-shadow::before,
+  .s-begin.shine::before, .s-begin.shine::after, .s-begin.shine .drop-shadow,
+  .s-begin.shine .drop-shadow::after, .s-begin.shine .drop-shadow::before {
+    transition-duration:0.3s; transition-timing-function:var(--cubic-out);
+  }
+  .s-begin::after {
+    opacity:0.3; background:transparent;
+    box-shadow:
+      inset 0 -0.3em 2px 1px oklch(0.99 0.01 257),
+      inset 0 -0.3em 0.25em oklch(0.99 0.01 257),
+      inset 0 -0.3em 0.5em oklch(0.99 0.01 257),
+      inset 0 -0.3em 0.75em oklch(0.99 0.01 257),
+      inset 0 -0.3em 1em oklch(0.99 0.01 257);
+    mix-blend-mode:lighten; z-index:2;
+  }
+  .s-begin .drop-shadow { box-shadow: var(--outer-shadow); z-index:-2; }
+  .s-begin::before, .s-begin .drop-shadow::after {
+    opacity:0; translate:1.1em 0em; scale:0.8;
+    background:linear-gradient(98deg in oklab,
+      oklch(0.8 0.1348 355.91) -5%, oklch(0.8 0.2 280), oklch(0.98 0.22 200) 160%);
+    -webkit-mask:linear-gradient(166deg, transparent 60%, black);
+            mask:linear-gradient(166deg, transparent 60%, black);
+    filter:blur(5px) brightness(1) contrast(1.3);
+    box-shadow:
+      inset 0 max(-2px, calc(var(--brdr) * -1)) 0 min(2px, var(--brdr)) oklch(0.99 0.01 257 / 20%),
+      inset 0 -0.25em 0.25em 0.125em oklch(0.99 0.01 257 / 40%);
+    z-index:3;
+  }
+  .s-begin .drop-shadow::after {
+    opacity:0; translate:-0.25em 1.2em; filter:blur(8px) brightness(1.2) contrast(1.05);
+    mix-blend-mode:lighten; background-position:center;
+    -webkit-mask:radial-gradient(closest-side, #fff 0%, rgba(255,255,255,.55) 47%, rgba(255,255,255,.175) 71%, rgba(255,255,255,0) 100%);
+            mask:radial-gradient(closest-side, #fff 0%, rgba(255,255,255,.55) 47%, rgba(255,255,255,.175) 71%, rgba(255,255,255,0) 100%);
+    z-index:-2;
+  }
+  .s-begin .drop-shadow::before {
+    opacity:1; translate:1.2em 1.1em; scale:1.5 0.8; background:oklch(0.98 0.03 257);
+    -webkit-mask:radial-gradient(closest-side, #fff 0%, rgba(255,255,255,.55) 47%, rgba(255,255,255,.175) 71%, rgba(255,255,255,0) 100%);
+            mask:radial-gradient(closest-side, #fff 0%, rgba(255,255,255,.55) 47%, rgba(255,255,255,.175) 71%, rgba(255,255,255,0) 100%);
+    z-index:-1;
+  }
+  .s-begin:hover, .s-begin.shine, .s-begin:focus-visible {
+    opacity:1; color:#3c5a80;
+    box-shadow: var(--inset-shadow), var(--outer-shadow);
+  }
+  .s-begin:hover:has(.drop-shadow), .s-begin.shine:has(.drop-shadow),
+  .s-begin:focus-visible:has(.drop-shadow) { box-shadow: var(--inset-shadow); }
+  .s-begin:hover::after, .s-begin.shine::after, .s-begin:focus-visible::after,
+  .s-begin:hover .drop-shadow::after, .s-begin.shine .drop-shadow::after,
+  .s-begin:focus-visible .drop-shadow::after { opacity:0.8; }
+  .s-begin:hover::before, .s-begin.shine::before, .s-begin:focus-visible::before {
+    opacity:0.6; translate:0em; scale:1;
+  }
+  .s-begin:hover .drop-shadow::after, .s-begin.shine .drop-shadow::after,
+  .s-begin:focus-visible .drop-shadow::after { opacity:0.65; translate:0.33em 1.2em; scale:1.3 0.66; }
+  .s-begin:focus-visible {
+    border-color:oklch(0.99 0.01 257 / 70%); outline-color:oklch(0.3 0.12 257 / 50%);
+  }
+  .s-begin:active {
+    transition:all 0.1s var(--cubic-out); translate:-50% max(1px, 0.05em);
+    border-color:oklch(0.99 0.01 257 / 70%);
+    --outer-shadow:
+      oklch(0.35 0.1 257 / 0.12) 0px max(2px, 0.15em) 0.15em 0px,
+      oklch(0.35 0.1 257 / 0.12) 0px max(1px, 0.09em) 0.09em 0px,
+      oklch(0.35 0.1 257 / 0.1) 0px max(0.5px, 0.025em) max(1px, 0.025em) 0px;
+    --inset-shadow:
+      inset 0 0.25em 0.66em 0em oklch(1 0.02 257 / 0.66),
+      inset -0.35em -0.35em 0.25em -0.25em oklch(0.99 0.02 257),
+      inset -0.33em -1em 0.75em -0.75em oklch(0.99 0.01 257);
+  }
+  .s-begin:active::after { transition:all 0.1s var(--cubic-out); opacity:1; }
+"""
 
 SCRIPT = r"""
 (function(){
@@ -238,10 +354,16 @@ SCRIPT = r"""
     if(t.id==='endlessSw'){ st.endless=!st.endless; return render(); }
     // Back dismisses setup (right-to-left, matching the train). In the real flow this
     // returns to the hero; standalone here, so a Begin Focus pill brings it back.
-    if(t.id==='backBtn'){ $('#stack').classList.add('gone'); $('#resumeBtn').style.display='block'; return; }
-    if(t.id==='resumeBtn'){ $('#stack').classList.remove('gone'); $('#resumeBtn').style.display='none'; return; }
+    if(t.id==='backBtn'){ $('#stack').classList.add('gone'); $('#beginBtn').style.display='none';
+      $('#resumeBtn').style.display='block'; return; }
+    if(t.id==='resumeBtn'){ $('#stack').classList.remove('gone'); $('#beginBtn').style.display='inline-grid';
+      $('#resumeBtn').style.display='none'; return; }
   });
   render();
+  // One-shot shine so the refraction is visible without hovering (as in the original demo).
+  const bb=$('#beginBtn');
+  setTimeout(()=>bb.classList.add('shine'),600);
+  setTimeout(()=>bb.classList.remove('shine'),3100);
 })();
 """
 
@@ -286,8 +408,9 @@ Everything is live: switch modes, step values, toggle Endless.</p>
                           box-shadow:inset 1px 1px 0 0 rgba(255,255,255,.34); }}
 
   /* Centred stack: mode chooser floats ABOVE the panel as its own element. */
-  .s-stack {{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;
-              width:40%; max-height:94%; display:flex; flex-direction:column; align-items:center;
+  /* shifted up + shorter so the floating Begin button has clear air beneath it */
+  .s-stack {{ position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); z-index:5;
+              width:40%; max-height:80%; display:flex; flex-direction:column; align-items:center;
               gap:clamp(8px,1.1cqi,15px); transition:opacity .42s cubic-bezier(.4,0,.2,1),
               transform .42s cubic-bezier(.4,0,.2,1); }}
   .s-stack.gone {{ opacity:0; transform:translate(-50%,-50%) translateX(-26%); pointer-events:none; }}
@@ -366,10 +489,7 @@ Everything is live: switch modes, step values, toggle Endless.</p>
 
   .s-desc {{ text-align:center; font-weight:300; font-size:clamp(7.5px,.9cqi,12.5px);
              line-height:1.35; opacity:.62; margin-bottom:.9em; }}
-  .s-begin {{ display:block; width:100%; padding:.85em 1.6em; border-radius:100px; cursor:pointer;
-              font-family:Jost,sans-serif; font-weight:400; letter-spacing:.14em; text-transform:uppercase;
-              font-size:clamp(8px,.98cqi,13px); color:#fff8ec; border:none; background:transparent; }}
-  .s-begin span {{ position:relative; z-index:1; }}
+{IRID}
   .lbl {{ display:flex; align-items:baseline; gap:10px; margin-top:14px; }}
   .lbl .k {{ font-weight:700; }} .lbl .d {{ color:var(--muted,#8891a3); font-size:13px; }}
 </style>
