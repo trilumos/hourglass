@@ -62,3 +62,12 @@ android/key.properties
 
 # Superpowers brainstorm visual-companion mockups (local, ephemeral)
 .superpowers/
+
+# Web: raw source/reference material (kept local; processed assets live in site/assets/)
+/Ocean waves.mp3
+/Sand Sound.m4a
+/*-seconds-*.mp3
+/dammafra-*.mp3
+/freesound_community-*.mp3
+/claude images to give/
+/glass UI examples/
