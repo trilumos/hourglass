@@ -154,7 +154,7 @@ is the single cross-platform exception, and it should be: it's one service over 
 | Layer | What | Price | Rails |
 |---|---|---|---|
 | **W1 — everything** | Timer, all modes, hourglass, colours, circadian, sounds, PiP, share, embed, `/stage` | **$0** | **none — zero billing code** |
-| **W2 — web cosmetics** | Scenes, 3D glass, weather, glass layer, custom upload, full mixer, hourglass shapes, sand flows | à-la-carte, or a **web lifetime bundle** | Merchant-of-Record + Firebase Function |
+| **W2 — web cosmetics** | Scenes/worlds (each ships with its own ambience — §6.1.3), 3D glass, weather, glass layer, custom upload, hourglass shapes, sand flows. ~~music~~ (dropped, §6.1.3) | à-la-carte, or a **web lifetime bundle** | Merchant-of-Record + Firebase Function |
 | **♻️ Sustain Sync** | The same one subscription | same price | Merchant-of-Record |
 | ~~Ads~~ | — | **never** | — |
 
@@ -245,6 +245,60 @@ basis on which it should be decided.
 
 **India ₹ stays PPP-aligned** at the existing ~₹26–30 per USD ratio (not the ~₹83 market rate). ₹89 lands
 exactly on the low end of the ₹89–₹1,499 band already set.
+
+### 6.1.3 Sound — REVISED 2026-07-25 (founder-locked). **No in-house music.**
+
+**⚠️ Supersedes the 2026-07-24 version of this section. We do NOT build, license, host or sell music.**
+
+There is no music layer. Two sources of sound, both free:
+
+| Source | What | Concurrency | Price |
+|---|---|---|---|
+| **World ambience** | ships *inside* each world — natural soundscape (Seascape → Sand · Ocean · Shore breeze · Seabirds) | **unlimited, all at once** | included with the world |
+| **Spotify** | the user's own music, via the **embed iframe** (never the Web Playback SDK) | — | **free, never paywalled** (§6.1.4) |
+
+**Why no music.** Music is a licensing and cost sink with no path to a product we own: royalty-free
+libraries forbid resale, AI-generated tracks likely can't be copyrighted (so we'd own nothing to sell),
+Lyria was unreliable in practice, and commissioning a pack costs $1k+ before there is any traffic to
+justify it. The ambience already gives the scene its feel; Spotify covers anyone who wants a beat. So the
+music slot is **removed, not deferred to a paid tier.** (Revisit only if the product grows enough to
+commission or self-produce owned tracks — years out, per §7.)
+
+**How ambience monetises — the ONLY sound money model (locked):**
+
+> **You never buy a sound. You buy a world, and its sounds come with it.**
+
+- **The free world (Seascape) ships free with all four of its sounds** — uncapped, mix freely.
+- **A paid world ships with its own soundscape** inside the pack (e.g. a Fireplace world → fire crackle,
+  hearth room-tone). Buying the world grants those sounds **forever**.
+- **Owned sounds play anywhere.** Buy the Fireplace world and you may run its fire *inside Seascape* — you
+  own it, it plays in any scene. Without owning that world, its sounds stay locked.
+- **No à-la-carte sound sales.** You cannot buy "just the fire." More sounds = **buy the world that carries
+  them.** This is also the licence guard: we never sell a standalone sound file (which Pixabay/CC0 forbid),
+  only **integrate** it into an owned experience — exactly how the free tier already works.
+
+Ambience is **never sold separately and never capped**; a world without its sounds is half-built. A
+technical ceiling (~4–6 simultaneous streams, for performance) may exist — if so it is stated as technical,
+never dressed as a paywall.
+
+**Supersedes** the "basic soundscapes + 2-layer mixing free / full mixer paid" split in
+[`2026-07-22-sustain-web-w1-first-push-design.md`](2026-07-22-sustain-web-w1-first-push-design.md) §2.1,
+and the 2-layer cap / binaural / paid-track model of the prior §6.1.3. The binaural synth and music-slot
+UI built on 2026-07-24 were removed from `site/setup.html`. W1 remains **$0 with zero billing code**.
+
+### 6.1.4 Spotify — free convenience, never a sellable feature (locked 2026-07-25)
+
+Spotify is offered **free and unpaywalled**, via the **Embed iframe only**. Spotify's developer terms are
+explicit: *"charging users for a Spotify player with the Web Playback SDK is not allowed"* and *"the
+Platform cannot be used to develop commercial streaming integrations"* — so Spotify **cannot** be a paid
+feature, and we never use the SDK.
+
+Compliance stance (why the embed is safe): the iframe is Spotify's own sandboxed player. We have **no access
+to the audio stream** — cannot decode, gain, filter, duck or crossfade it — so we are technically incapable
+of the prohibited "mix/segue/overlap Spotify with other audio." Our ambience runs in a separate Web Audio
+graph; the OS sums both at the speaker, same as two browser tabs. Guardrails: embed only, never route or
+analyse its audio, never sync visuals/timer to it, and **describe it as "play your own music," never "mix
+Spotify with your ambience."** The paid tier stays on **worlds/scenes** — cosmetics we own (§6.1.1).
 
 ### 6.2 Sync unit economics (costed 2026-07-17)
 
