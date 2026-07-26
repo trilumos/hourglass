@@ -1,0 +1,14 @@
+{
+  "_note": "LOCKED per-mode timer settings for the Sustain session screen. 'locked' fields are fixed by design; 'userChoosable' are the end-user's picks. All four modes verified in number-lab.html on the viewport-cover plate (matches Home/Setup).",
+  "userChoosable": {
+    "font": ["'Newsreader',serif", "'Jost',sans-serif"],
+    "fill": ["solid", "glass", "outline"],
+    "separator": ["colon", "dot", "none"],
+    "color": "any (colour picker)"
+  },
+  "_centerNote": "Top/Middle/Ledge X is locked to the HOURGLASS axis via CSS --hg-cx: 49.79% (posts' midpoint), so their xPct is 0 and they only carry a vertical offset. Horizon is free-positioned (xPct -30). yPct/xPct are % of the scene box (= viewport, since the plate fills it).",
+  "horizon": { "size": "20cqh", "gap": "3cqw",  "weight": 550, "stretch": 1, "xPct": -30, "yPct": -4.2  },
+  "middle":  { "size": "25cqh", "gap": "15cqw", "weight": 550, "stretch": 1, "xPct": 0,   "yPct": 4.84  },
+  "top":     { "size": "25cqh", "gap": "3cqw",  "weight": 550, "stretch": 1, "xPct": 0,   "yPct": -2.59 },
+  "ledge":   { "size": "25cqh", "gap": "15cqw", "weight": 550, "stretch": 1, "xPct": 0,   "yPct": 11.96 }
+}

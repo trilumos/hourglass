@@ -1,0 +1,426 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sustain — Number Treatment Lab</title>
+<!--
+  THROWAWAY design lab for the Session-screen timer numbers.
+  Judge live: 4 modes (Horizon/Middle/Ledge/Top) × fill (solid/glass/outline) ×
+  font/weight/color/size/stretch/gap, depth-occlusion on/off, draggable position,
+  visibility, hourglass on/off, all 6 plates. Parallax/tracer dropped per founder decision.
+  Techniques (all Baseline, no libs): CSS masks for occlusion, background/text fills,
+  native pointer drag. ponytail: hourglass matte is a ROUGH silhouette — refine
+  against the real plate once we pick winners.
+-->
+<style>
+  /* Self-hosted, overlap-REMOVED static weights (fontTools removeOverlaps). This is why the outline
+     (-webkit-text-stroke) traces ONLY the true glyph boundary — no variable-font internal seam lines. */
+  @font-face{font-family:'Jost';font-weight:400;font-display:swap;src:url('assets/fonts/jost-400.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:500;font-display:swap;src:url('assets/fonts/jost-500.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:550;font-display:swap;src:url('assets/fonts/jost-550.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:600;font-display:swap;src:url('assets/fonts/jost-600.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:700;font-display:swap;src:url('assets/fonts/jost-700.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:400;font-display:swap;src:url('assets/fonts/newsreader-400.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:500;font-display:swap;src:url('assets/fonts/newsreader-500.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:550;font-display:swap;src:url('assets/fonts/newsreader-550.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:600;font-display:swap;src:url('assets/fonts/newsreader-600.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:700;font-display:swap;src:url('assets/fonts/newsreader-700.woff2') format('woff2')}
+  :root{
+    --plate: url("../site/assets/plates/midday.jpg");
+    --num-font: 'Newsreader', serif;
+    --num-weight: 500;
+    --num-color: #ffffff;
+    --num-size: 34;          /* in cqh, applied to the scene box */
+    --num-scaleX: 1;
+    --dx: 0px; --dy: 0px;    /* drag offset for the number block */
+    --gap: 1.5cqw;           /* inline digit spacing (mm : ss) */
+    --frost-bg:#35353566;    /* Setup's frost material — identical */
+  }
+  /* Parallax removed per founder decision — bg/fg stay static; only the numbers (#nums) move,
+     via drag (--dx/--dy). Occluders (.fg-glass/.fg-horizon/.fg-ledge) are static masked copies
+     of the same plate, so they can never desync from the (also static) background. */
+  *{ box-sizing:border-box; margin:0; padding:0 }
+  html,body{ height:100%; background:#05080d; overflow:hidden;
+    font-family:'Jost',system-ui,sans-serif; color:#e7ecf3 }
+
+  /* ---- SITE-WIDE LOCKED PLATE RULE — identical to Home & Setup: the plate FILLS the viewport,
+       background cover, position 50% 50% (= object-fit:cover; object-position:50% 50%). No letterbox,
+       no transform, no zoom. The plate's fit/position/zoom must never deviate across the three pages. */
+  #stage{ position:fixed; inset:0; container-type:size; overflow:hidden }
+  #scene{ position:absolute; inset:0; container-type:size; overflow:hidden }
+  .layer{ position:absolute; inset:0; width:100%; height:100%;
+    background:var(--plate) center/cover no-repeat; pointer-events:none }
+  .bg{ z-index:0 }
+
+  /* ---- numbers live BETWEEN bg and the foreground occluders ---- */
+  #nums{ position:absolute; inset:0; z-index:1; cursor:grab; touch-action:none; will-change:transform;
+    transform:translate3d(var(--dx,0px),var(--dy,0px),0);
+    transition:opacity .5s ease }
+  #nums.dragging{ cursor:grabbing }
+  .num{ position:absolute; left:50%; top:50%; line-height:1; white-space:nowrap;
+    text-box:trim-both cap alphabetic;   /* centre by cap-height/baseline → font-metric-independent */
+    font-family:var(--num-font); font-weight:var(--num-weight);
+    font-size:calc(var(--num-size)*1cqh); color:var(--num-color);
+    -webkit-text-fill-color:var(--num-color);
+    transform:translate(-50%,-50%) scaleX(var(--num-scaleX));
+    font-variant-numeric:tabular-nums; letter-spacing:-.01em }
+
+  /* ---- foreground occluders: plate-copies masked to the occluding shape ---- */
+  .fg{ z-index:2; opacity:0; transition:opacity .25s ease }
+  .fg.active{ opacity:1 }
+  /* ledge = bottom ~11.3% of the plate, a straight cut */
+  .fg-ledge{ -webkit-mask-image:linear-gradient(to top,#000 0 11.3%,transparent 11.3%);
+             mask-image:linear-gradient(to top,#000 0 11.3%,transparent 11.3%) }
+  /* hourglass = real silhouette matte (segmentation-extracted from the plate) */
+  .fg-glass{ -webkit-mask-image:url(assets/hourglass-matte.png); mask-image:url(assets/hourglass-matte.png);
+             -webkit-mask-size:cover; mask-size:cover;
+             -webkit-mask-position:center; mask-position:center;
+             -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat }
+  /* horizon = founder's flat sea-horizon matte, opaque below ~55% */
+  .fg-horizon{ -webkit-mask-image:url(assets/skyline-matte.png); mask-image:url(assets/skyline-matte.png);
+             -webkit-mask-size:cover; mask-size:cover;
+             -webkit-mask-position:center; mask-position:center;
+             -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat }
+
+  /* ================= FILLS ================= */
+  #scene[data-fill="solid"] .num{
+    text-shadow:0 2px 26px rgba(0,0,0,.38), 0 1px 3px rgba(0,0,0,.30) }
+  #scene[data-fill="glass"] .num{      /* translucent liquid-glass */
+    color:rgba(255,255,255,.26); -webkit-text-fill-color:rgba(255,255,255,.26);
+    -webkit-text-stroke:1px rgba(255,255,255,.5);
+    text-shadow:0 1px 1px rgba(255,255,255,.35), 0 6px 34px rgba(0,0,0,.28) }
+  #scene[data-fill="outline"] .num{      /* true hollow (text-stroke). NOTE: variable fonts draw faint
+       internal overlap lines here — perfectly clean hollow needs a static (non-variable) weight. */
+    color:transparent; -webkit-text-fill-color:transparent;
+    -webkit-text-stroke:1.5px var(--num-color); text-shadow:none; paint-order:stroke }
+
+  /* ================= SEPARATOR (sectioning between mm and ss) ================= */
+  #sep::before{ content:":" }                                      /* colon (default) */
+  #scene[data-sep="dot"]  #sep::before{ content:"·" }              /* middle dot */
+  #scene[data-sep="none"] #sep{ display:none }                     /* gap only */
+  #scene[data-sep="line"] #sep::before{ content:""; display:inline-block; align-self:center;
+    width:.08em; height:.58em; border-radius:99px; background:var(--num-color) }   /* hairline rule */
+
+  /* ================= PLACEMENTS — 4 modes; only vertical position (--tb-top) differs =================
+     mm anchored right-of-centre, ss anchored left-of-centre, sep floated dead-centre. So the position
+     is INDEPENDENT of font width AND separator choice — a wider font just extends outward, and the
+     inner edges stay put. --gap = half-gap (distance from centre to each inner edge). */
+  .tb{ position:absolute; inset:0 }
+  /* centre axis = --hg-cx: the HOURGLASS axis (49% = its posts' midpoint) for Top/Middle/Ledge so the
+     flanking numbers are symmetric to the GLASS, not the plate. Horizon keeps 50% (it's free-dragged). */
+  #mm{ right:calc((100% - var(--hg-cx,50%)) + var(--gap)); left:auto; top:var(--tb-top,50%);
+       transform:translateY(-50%) scaleX(var(--num-scaleX)) }
+  #ss{ left:calc(var(--hg-cx,50%) + var(--gap));  right:auto; top:var(--tb-top,50%);
+       transform:translateY(-50%) scaleX(var(--num-scaleX)) }
+  #sep{ left:var(--hg-cx,50%); right:auto; top:var(--tb-top,50%);
+        transform:translate(-50%,-50%) scaleX(var(--num-scaleX)) }
+  #scene[data-place="top"]     { --tb-top:15%; --hg-cx:49.79% }   /* X locked to the hourglass axis */
+  #scene[data-place="middle"]  { --tb-top:48%; --hg-cx:49.79% }
+  #scene[data-place="horizon"] { --tb-top:55% }
+  #scene[data-place="ledge"]   { --tb-top:78%; --hg-cx:49.79% }
+
+  /* ================= VISIBILITY ================= */
+  #scene[data-vis="hover"] #nums{ opacity:0 }
+  #scene[data-vis="hover"]:hover #nums{ opacity:1 }
+  #scene[data-vis="flash"] #nums{ animation:flash 12s ease-in-out infinite }
+  @keyframes flash{ 0%,78%,100%{opacity:0} 84%,94%{opacity:1} }
+  @media (prefers-reduced-motion:reduce){
+    .bg,#nums,.fg{ transform:none !important }
+    #scene[data-vis="flash"] #nums{ animation:none; opacity:1 } }
+
+  /* ================= CONTROL PANEL ================= */
+  /* Frost material — identical to the Setup page (.frost) */
+  #panel{ position:fixed; top:0; right:0; height:100%; width:270px; z-index:10;
+    background:var(--frost-bg);
+    -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+    box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55, 0 22px 55px rgba(0,0,0,.34);
+    border-left:1px solid rgba(255,255,255,.06); padding:14px 14px 40px; overflow-y:auto;
+    font-size:12px; transition:transform .3s ease }
+  #panel.hidden{ transform:translateX(100%) }
+  #panelToggle{ position:fixed; top:12px; right:12px; z-index:11; width:34px; height:34px;
+    border:1px solid rgba(255,255,255,.06); border-radius:8px; cursor:pointer; font-size:15px;
+    color:#e7ecf3; background:var(--frost-bg);
+    box-shadow: inset 0 0 4px -2px #ffffff55, 0 8px 22px rgba(0,0,0,.3);
+    -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px) }
+  @media (prefers-reduced-transparency:reduce){
+    #panel,#panelToggle{ background:#1a1d26f2; -webkit-backdrop-filter:none; backdrop-filter:none } }
+  h1{ font-size:12px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+    color:#EACA78; margin:2px 0 12px }
+  .grp{ margin-bottom:14px }
+  .grp>label{ display:block; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    color:#8794a6; margin-bottom:6px }
+  .row{ display:flex; flex-wrap:wrap; gap:5px }
+  .chip{ padding:6px 9px; border-radius:7px; cursor:pointer; font-size:11px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09); color:#cdd5e0;
+    font-family:inherit }
+  .chip:hover{ background:rgba(255,255,255,.12) }
+  .chip.on{ background:#EACA78; border-color:#EACA78; color:#141414; font-weight:600 }
+  .chip[disabled]{ opacity:.32; cursor:not-allowed }
+  .sw{ width:24px; height:24px; border-radius:6px; padding:0; border:2px solid rgba(255,255,255,.15); cursor:pointer }
+  .sw.on{ border-color:#EACA78 }
+  input[type=range]{ width:100%; accent-color:#EACA78 }
+  .val{ float:right; color:#EACA78; font-variant-numeric:tabular-nums }
+  .hint{ color:#6b7688; font-size:10px; line-height:1.5; margin-top:10px }
+</style>
+
+<!-- hourglass frame matte (white = occludes) — rough silhouette, refine later -->
+<svg width="0" height="0" aria-hidden="true">
+  <defs>
+    <mask id="hgMatte" maskContentUnits="objectBoundingBox">
+      <ellipse cx=".5" cy=".305" rx=".135" ry=".038" fill="#fff"/>
+      <rect x=".37" y=".28" width=".26" height=".045" rx=".01" fill="#fff"/>
+      <rect x=".404" y=".31" width=".03" height=".575" rx=".012" fill="#fff"/>
+      <rect x=".566" y=".31" width=".03" height=".575" rx=".012" fill="#fff"/>
+      <rect x=".47" y=".545" width=".06" height=".02" fill="#fff"/>
+      <ellipse cx=".5" cy=".93" rx=".155" ry=".05" fill="#fff"/>
+      <rect x=".355" y=".885" width=".29" height=".05" rx=".01" fill="#fff"/>
+    </mask>
+  </defs>
+</svg>
+
+<div id="stage">
+  <div id="scene" data-place="middle" data-fill="solid" data-vis="always"
+                  data-depth="on" data-hourglass="on" data-sep="colon">
+    <div class="layer bg"></div>
+    <div id="nums">
+      <span class="tb">
+        <span class="num" id="mm">25</span>
+        <span class="num" id="sep"></span>
+        <span class="num" id="ss">00</span>
+      </span>
+    </div>
+    <div class="layer fg fg-glass"></div>
+    <div class="layer fg fg-horizon"></div>
+    <div class="layer fg fg-ledge"></div>
+  </div>
+</div>
+
+<button id="panelToggle" title="Toggle panel">⚙</button>
+<aside id="panel">
+  <h1>Number Lab</h1>
+
+  <div class="grp"><label>Mode</label><div class="row" data-k="place">
+    <button class="chip" data-v="horizon">Horizon</button>
+    <button class="chip on" data-v="middle">Middle</button>
+    <button class="chip" data-v="ledge">Ledge</button>
+    <button class="chip" data-v="top">Top</button>
+  </div></div>
+
+  <div class="grp"><label>Fill</label><div class="row" data-k="fill">
+    <button class="chip on" data-v="solid">Solid</button>
+    <button class="chip" data-v="glass">Glass</button>
+    <button class="chip" data-v="outline">Outline</button>
+  </div></div>
+
+  <div class="grp"><label>Separator (user-choosable)</label><div class="row" data-k="sep">
+    <button class="chip on" data-v="colon">Colon</button>
+    <button class="chip" data-v="dot">Dot</button>
+    <button class="chip" data-v="none">None</button>
+  </div></div>
+
+  <div class="grp"><label>Font</label><div class="row" data-k="font">
+    <button class="chip on" data-v="'Newsreader',serif">Serif</button>
+    <button class="chip" data-v="'Jost',sans-serif">Jost</button>
+  </div></div>
+
+  <div class="grp"><label>Colour (any — picker)</label><div class="row" data-k="color">
+    <button class="sw on" data-v="#ffffff" style="background:#fff"></button>
+    <button class="sw" data-v="#EACA78" style="background:#EACA78"></button>
+    <button class="sw" data-v="#1a1a1a" style="background:#1a1a1a"></button>
+    <input type="color" id="colorPick" value="#ffffff" title="Pick any colour"
+      style="width:36px;height:26px;padding:0;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:none;cursor:pointer">
+  </div></div>
+
+  <div class="grp"><label>Weight <b class="val" id="vW">500</b></label>
+    <input type="range" id="rW" min="200" max="800" step="10" value="500"></div>
+  <div class="grp"><label>Size <b class="val" id="vS">34</b></label>
+    <input type="range" id="rS" min="7" max="120" step="1" value="34"></div>
+  <div class="grp"><label>Stretch <b class="val" id="vX">1.00</b></label>
+    <input type="range" id="rX" min="0.6" max="1.8" step="0.02" value="1"></div>
+  <div class="grp"><label>Gap <b class="val" id="vGap">1.5</b></label>
+    <input type="range" id="rGap" min="0" max="40" step="0.5" value="1.5"></div>
+
+  <div class="grp"><label>Plate / phase</label><div class="row" data-k="phase">
+    <button class="chip" data-v="0">Pre-dawn</button>
+    <button class="chip" data-v="1">Sunrise</button>
+    <button class="chip on" data-v="2">Midday</button>
+    <button class="chip" data-v="3">Sunset</button>
+    <button class="chip" data-v="4">Twilight</button>
+    <button class="chip" data-v="5">Midnight</button>
+  </div></div>
+
+  <div class="grp"><label>Toggles</label><div class="row">
+    <button class="chip on" id="tDepth">Depth</button>
+    <button class="chip on" id="tGlass">Hourglass</button>
+    <button class="chip on" id="tLive">Live</button>
+  </div></div>
+
+  <div class="grp"><label>Numbers show</label><div class="row" data-k="vis">
+    <button class="chip on" data-v="always">Always</button>
+    <button class="chip" data-v="hover">On hover</button>
+    <button class="chip" data-v="flash">Flash</button>
+  </div></div>
+
+  <div class="grp"><label>Parameters — click to select, copy, paste to me</label>
+    <textarea id="jsonBox" readonly spellcheck="false" onclick="this.select()"
+      style="width:100%;height:200px;background:rgba(8,10,16,.6);color:#cfe3b8;
+             border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:8px;
+             font:11px/1.5 ui-monospace,Consolas,monospace;resize:vertical"></textarea></div>
+
+  <p class="hint"><b>Drag the numbers</b> to reposition (Horizon = free; Top/Middle/Ledge = up/down only).
+    The box above updates live — tune a mode, click it to select all, copy, and paste it to me.</p>
+</aside>
+
+<script>
+(() => {
+  const S = document.getElementById('scene'), nums = document.getElementById('nums');
+  const mm = document.getElementById('mm'), ss = document.getElementById('ss');
+
+  const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
+  const NOHG   = ['pre%20dawn','sunrise','Mid%20Day','sunset','twilight','Mid%20Night'];
+  const withHG = i => `../site/assets/plates/${PHASES[i]}.jpg`;
+  const noHG   = i => `../plates%20without%20hourglass/${NOHG[i]}.png`;
+  let phase = 2, hourglass = true;
+  const setPlate = () => document.documentElement.style.setProperty('--plate',
+    `url("${(hourglass?withHG:noHG)(phase)}")`);   // root: reaches #stage::before + scene layers
+
+  // occluders are position-specific: the hourglass matte occludes in every mode, the horizon/ledge
+  // mattes only occlude the mode they belong to (middle & top are hourglass-only)
+  const refreshFG = () => {
+    const depth = S.dataset.depth === 'on', place = S.dataset.place;
+    document.querySelector('.fg-glass').classList.toggle('active', depth && hourglass);
+    document.querySelector('.fg-horizon').classList.toggle('active', depth && place === 'horizon');
+    document.querySelector('.fg-ledge').classList.remove('active');   // Ledge mode: numbers rest ON the ledge (no depth)
+  };
+
+  // generic chip groups (data-k on the .row, data-v on each chip)
+  document.querySelectorAll('.row[data-k]').forEach(row => {
+    const k = row.dataset.k;
+    row.addEventListener('click', e => {
+      const b = e.target.closest('[data-v]'); if (!b || b.disabled) return;
+      row.querySelectorAll('.chip,.sw').forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      if (k === 'phase') { phase = +b.dataset.v; setPlate(); }
+      else if (k === 'font')  S.style.setProperty('--num-font',  b.dataset.v);
+      else if (k === 'color') S.style.setProperty('--num-color', b.dataset.v);
+      else S.dataset[k] = b.dataset.v;               // place / fill / vis
+      if (k === 'place') { localStorage.setItem('sustain.mode', b.dataset.v); applyMode(b.dataset.v); }
+      refreshFG(); updateJSON();
+    });
+  });
+
+  // sliders
+  const slide = (id, vId, prop, fmt, unit) => {
+    const r = document.getElementById(id), v = document.getElementById(vId);
+    r.addEventListener('input', () => { S.style.setProperty(prop, r.value + (unit||''));
+      v.textContent = fmt ? fmt(r.value) : r.value; saveMode(S.dataset.place); updateJSON(); });
+  };
+  slide('rW','vW','--num-weight');
+  slide('rS','vS','--num-size');
+  slide('rX','vX','--num-scaleX', v => parseFloat(v).toFixed(2));
+  slide('rGap','vGap','--gap', null, 'cqw');
+
+  // colour picker — any colour; deselects the quick swatches
+  document.getElementById('colorPick').addEventListener('input', e => {
+    S.style.setProperty('--num-color', e.target.value);
+    document.querySelectorAll('[data-k="color"] .sw').forEach(c => c.classList.remove('on'));
+    updateJSON();
+  });
+
+  // boolean toggles
+  const toggle = (id, fn) => { const b = document.getElementById(id);
+    b.addEventListener('click', () => { b.classList.toggle('on'); fn(b.classList.contains('on')); }); };
+  toggle('tDepth', on => { S.dataset.depth = on?'on':'off'; refreshFG(); });
+  toggle('tGlass', on => { hourglass = on; S.dataset.hourglass = on?'on':'off';
+    setPlate(); refreshFG(); });
+  toggle('tLive',  on => { live = on; if (!on){ mm.textContent='25'; ss.textContent='00'; } });
+
+  // draggable numbers — pointerdown on #nums repositions the whole block anywhere in the scene;
+  // .fg occluders are pointer-events:none so the drag still grabs #nums even behind the hourglass
+  let dragging = false, dragX0 = 0, dragY0 = 0, dxBase = 0, dyBase = 0;
+  nums.addEventListener('pointerdown', e => {
+    dragging = true;
+    nums.setPointerCapture(e.pointerId);
+    nums.classList.add('dragging');
+    dragX0 = e.clientX; dragY0 = e.clientY;
+    dxBase = parseFloat(S.style.getPropertyValue('--dx')) || 0;
+    dyBase = parseFloat(S.style.getPropertyValue('--dy')) || 0;
+  });
+  nums.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    if (S.dataset.place === 'horizon')                 // Horizon: free X+Y. Others: X locked to the
+      S.style.setProperty('--dx', (dxBase + e.clientX - dragX0) + 'px');   // hourglass axis, Y-only drag
+    S.style.setProperty('--dy', (dyBase + e.clientY - dragY0) + 'px');
+    updateJSON();
+  });
+  const endDrag = () => { dragging = false; nums.classList.remove('dragging'); saveMode(S.dataset.place); };
+  nums.addEventListener('pointerup', endDrag);
+  nums.addEventListener('pointercancel', endDrag);
+
+  // live parameters box — the current mode's settings as JSON, to copy and paste back to me
+  const jsonBox = document.getElementById('jsonBox');
+  const cs = p => getComputedStyle(S).getPropertyValue(p).trim();
+  function updateJSON(){
+    const r = S.getBoundingClientRect();
+    jsonBox.value = JSON.stringify({
+      mode: S.dataset.place, fill: S.dataset.fill, separator: S.dataset.sep,
+      font: cs('--num-font'), color: cs('--num-color'), weight: cs('--num-weight'),
+      size: cs('--num-size'), stretch: cs('--num-scaleX'), gap: cs('--gap'),
+      xPct: +((parseFloat(S.style.getPropertyValue('--dx'))||0) / r.width  * 100).toFixed(2),
+      yPct: +((parseFloat(S.style.getPropertyValue('--dy'))||0) / r.height * 100).toFixed(2),
+    }, null, 2);
+  }
+  updateJSON();
+
+  // ---- per-mode memory: LOCKED modes snap back to their locked values; tuned modes persist ----
+  const LOCKED = {
+    horizon: { xPct:-30, yPct:-4.2,  size:'20', gap:'3cqw',  weight:'550', stretch:'1' },
+    middle:  { xPct:0,   yPct:4.84,  size:'25', gap:'15cqw', weight:'550', stretch:'1' },
+    top:     { xPct:0,   yPct:-2.59, size:'25', gap:'3cqw',  weight:'550', stretch:'1' },
+    ledge:   { xPct:0,   yPct:11.96, size:'25', gap:'15cqw', weight:'550', stretch:'1' },
+  };
+  let modePresets = {}; try { modePresets = JSON.parse(localStorage.getItem('sustain.modePresets')||'{}'); } catch(e){}
+  const syncSlider = (id, val, disp) => { const el=document.getElementById(id), lab=document.getElementById('v'+id.slice(1));
+    if (el && val!=null){ el.value = parseFloat(val); if (lab) lab.textContent = disp!=null ? disp : val; } };
+  function applyMode(mode){
+    const p = LOCKED[mode] || modePresets[mode], r = S.getBoundingClientRect();
+    if (p){
+      if (p.size!=null){   S.style.setProperty('--num-size', p.size);     syncSlider('rS', p.size); }
+      if (p.gap!=null){    S.style.setProperty('--gap', p.gap);           syncSlider('rGap', parseFloat(p.gap)); }
+      if (p.weight!=null){ S.style.setProperty('--num-weight', p.weight); syncSlider('rW', p.weight); }
+      if (p.stretch!=null){S.style.setProperty('--num-scaleX', p.stretch);syncSlider('rX', p.stretch, (+p.stretch).toFixed(2)); }
+      S.style.setProperty('--dx', (mode==='horizon' && p.xPct!=null ? p.xPct/100*r.width : 0) + 'px');
+      S.style.setProperty('--dy', (p.yPct!=null ? p.yPct/100*r.height : 0) + 'px');
+    } else { S.style.setProperty('--dx','0px'); S.style.setProperty('--dy','0px'); }
+    updateJSON();
+  }
+  function saveMode(mode){
+    if (LOCKED[mode]) return;                          // locked modes are never overwritten
+    const r = S.getBoundingClientRect();
+    modePresets[mode] = { size:cs('--num-size'), gap:cs('--gap'), weight:cs('--num-weight'), stretch:cs('--num-scaleX'),
+      xPct:+((parseFloat(S.style.getPropertyValue('--dx'))||0)/r.width*100).toFixed(2),
+      yPct:+((parseFloat(S.style.getPropertyValue('--dy'))||0)/r.height*100).toFixed(2) };
+    localStorage.setItem('sustain.modePresets', JSON.stringify(modePresets));
+  }
+  // restore last mode + apply its (locked or saved) settings on load
+  const savedMode = localStorage.getItem('sustain.mode') || S.dataset.place;
+  S.dataset.place = savedMode;
+  document.querySelectorAll('[data-k="place"] .chip').forEach(c => c.classList.toggle('on', c.dataset.v===savedMode));
+  applyMode(savedMode);
+
+  // panel toggle
+  const panel = document.getElementById('panel');
+  document.getElementById('panelToggle').addEventListener('click',
+    () => panel.classList.toggle('hidden'));
+
+  // demo ticker
+  const fmt = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  console.assert(fmt(1500) === '25:00' && fmt(65) === '01:05' && fmt(9) === '00:09', 'fmt broken');
+  let live = true, left = 1500;
+  setInterval(() => { if (!live) return;
+    left = left > 0 ? left - 1 : 1500;
+    mm.textContent = fmt(left).slice(0,2); ss.textContent = fmt(left).slice(3);
+  }, 1000);
+
+  refreshFG();
+  setPlate();
+})();
+</script>
