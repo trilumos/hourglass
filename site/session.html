@@ -381,7 +381,7 @@
   var focusMin = Plan.totalFocusOf(plan), shownDone = false, lastSegIndex = 0;
   var doneEl = document.getElementById('done'), doneMinEl = document.getElementById('doneMin');
   function bumpFocusedToday(min) {
-    var k = 'sustain.focusedToday', today = new Date().toDateString();
+    var k = 'sustain.focusedToday', today = new Date().toISOString().slice(0,10);
     var o = JSON.parse(localStorage.getItem(k) || 'null');
     if (!o || o.date !== today) o = { date: today, min: 0 };
     o.min += min;
