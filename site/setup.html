@@ -577,13 +577,32 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
       </div>
     </div>
 
+    <!-- Number look — placement/font/separator/colour of the on-scene timer numerals.
+         Values are the EXACT tokens session.html reads (place/font/sep/color). -->
     <div class="sec">
-      <span class="mini-lbl">Where the time sits</span>
-      <div class="mini-seg" data-seg="timerpos" style="margin-top:.5em">
-        <button data-v="above">Above</button><button class="on" data-v="on">On the glass</button
-        ><button data-v="below">Below</button>
+      <span class="mini-lbl">Number placement</span>
+      <div class="mini-seg" data-seg="place" style="margin-top:.5em">
+        <button data-v="horizon">Horizon</button><button class="on" data-v="middle">Middle</button
+        ><button data-v="ledge">Ledge</button><button data-v="top">Top</button>
       </div>
-      <p class="set-desc" id="posDesc"></p>
+    </div>
+    <div class="sec">
+      <span class="mini-lbl">Numeral font</span>
+      <div class="mini-seg" data-seg="font" style="margin-top:.5em">
+        <button class="on" data-v="'Newsreader',serif">Serif</button><button data-v="'Jost',sans-serif">Jost</button>
+      </div>
+    </div>
+    <div class="sec">
+      <span class="mini-lbl">Separator</span>
+      <div class="mini-seg" data-seg="sep" style="margin-top:.5em">
+        <button data-v="colon">Colon</button><button data-v="dot">Dot</button
+        ><button class="on" data-v="none">None</button>
+      </div>
+    </div>
+    <div class="sec">
+      <span class="mini-lbl">Number colour</span>
+      <input type="color" id="numColor" value="#ffffff" aria-label="Number colour"
+        style="margin-top:.5em;width:3em;height:1.8em;padding:0;border:0;background:none;cursor:pointer;display:block">
     </div>
 
     <div class="sec w2">
@@ -981,8 +1000,10 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     todSel=b.dataset.tod; renderTod(); applyScene();
   });
 
-  // ── Generic mini-segments (sun/moon, timer show, timer pos, cycle) ─────────
-  var segState={ sunmoon:'show', timershow:'always', timerpos:'on', cycChange:'once', cycBy:'cycles' };
+  // ── Generic mini-segments (sun/moon, timer show, number-look, cycle) ───────
+  var segState={ sunmoon:'show', timershow:'always',
+    place:'middle', font:"'Newsreader',serif", sep:'none',   // number-look picker
+    cycChange:'once', cycBy:'cycles' };
   // Plain-words explanation of the chosen timer-display option.
   var TIMER_DESC={
     always:'The time stays on screen for the whole session.',
@@ -990,24 +1011,29 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     hover:'The time appears when you move the cursor, then fades away.',
     never:'No time on screen — just the hourglass and the scene.'
   };
-  var POS_DESC={
-    above:'The time floats in the air above the hourglass.',
-    on:'The time sits on the glass itself, part of the scene.',
-    below:'The time rests below the hourglass, on the sill.'
-  };
   function fadeText(el,txt){
     if(!el || el.textContent===txt) return;
     el.style.opacity='0';                       // wording changes fade; numbers never do
     setTimeout(function(){ el.textContent=txt; el.style.opacity=''; },140);
   }
   function renderTimerDesc(){ fadeText(qs('#timerDesc'), TIMER_DESC[segState.timershow]); }
-  function renderPosDesc(){ fadeText(qs('#posDesc'), POS_DESC[segState.timerpos]); }
+  // Per-mode separator rule (mirrors session.html applySepForMode): Middle & Ledge carry
+  // no separator, so force 'none' and disable colon/dot; Horizon & Top disable 'none'.
+  function applySepForMode(){
+    var noSep=(segState.place==='middle'||segState.place==='ledge');
+    if(noSep) segState.sep='none'; else if(segState.sep==='none') segState.sep='colon';
+    qsa('[data-seg="sep"] button').forEach(function(c){
+      var isNone=c.dataset.v==='none';
+      c.disabled = noSep ? !isNone : isNone;
+      c.classList.toggle('on', c.dataset.v===segState.sep);
+    });
+  }
   document.addEventListener('click',function(e){
     var btn=e.target.closest('.mini-seg button'); if(!btn) return;
     var seg=btn.parentElement.dataset.seg; segState[seg]=btn.dataset.v;
     qsa('button',btn.parentElement).forEach(function(x){ x.classList.toggle('on',x===btn); });
     if(seg==='timershow') renderTimerDesc();
-    if(seg==='timerpos') renderPosDesc();
+    if(seg==='place'||seg==='sep') applySepForMode();
     if(seg==='cycChange'||seg==='cycBy'){ cycPreset='custom';   // editing the rules makes it yours
       qs('#loopByRow').style.display= segState.cycChange==='loop'?'flex':'none'; renderCycle(); }
   });
@@ -1241,7 +1267,28 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
   qs('#back').addEventListener('click',function(){ qs('#stage').style.transition='opacity .3s'; qs('#stage').style.opacity='.4';
     setTimeout(function(){ qs('#stage').style.opacity='1'; },320); });
   qs('#begin').addEventListener('click',function(){ this.textContent='Focusing…'; var b=this;
-    setTimeout(function(){ b.textContent='Begin'; },900); });
+    setTimeout(function(){ b.textContent='Begin'; },900);
+    // Persist the full config so session.html runs the user's Setup choices.
+    // Plan fields come straight from `st` (the SAME object Setup feeds Plan.buildPlan);
+    // the rest are the look/scene/sound fields session.html reads — exact value formats.
+    var VIS={ always:'always', '5min':'always', hover:'hover', never:'hidden' };   // 5min→always for v1
+    var pi=PHASES.map(function(p){return p.id;}).indexOf(todSel);
+    var cfg={};
+    for(var k in st) cfg[k]=st[k];                                   // mode + all mode-specific plan fields
+    cfg.place = segState.place;                                      // horizon|middle|ledge|top
+    cfg.font  = segState.font;                                       // 'Newsreader',serif | 'Jost',sans-serif
+    cfg.sep   = segState.sep;                                        // colon|dot|none (per-mode rule already applied)
+    cfg.color = qs('#numColor').value;                              // #rrggbb
+    cfg.vis   = VIS[segState.timershow] || 'always';               // Themes timer-display → always|hover|hidden
+    cfg.followDay = (todSel==='follow');
+    cfg.phase = cfg.followDay ? 2 : (pi<0 ? 2 : pi);                // 0-5, matches session's phase order
+    cfg.autoContrast = true;                                         // no Setup control → default on
+    cfg.sounds = SOUNDS.filter(function(s){return s.on;}).map(function(s){return s.id;});
+    cfg.vol = masterPos;                                             // master 0-100
+    cfg.soundVol = { sand:SOUND_VOL.sand, ocean:SOUND_VOL.ocean, breeze:SOUND_VOL.breeze, birds:SOUND_VOL.birds };
+    localStorage.setItem('sustain.session', JSON.stringify(cfg));
+    location.href='session.html';
+  });
 
   // ── Master render ──────────────────────────────────────────────────────────
   function renderAll(){ renderReadout(); renderCanvas(); }
@@ -1257,7 +1304,7 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
 
   renderTokens(); renderSoundNote(); renderTod(); applyScene(); qs('#themeImg').src=plateURL('midday');
   qs('#timerDesc').textContent=TIMER_DESC[segState.timershow];
-  qs('#posDesc').textContent=POS_DESC[segState.timerpos];
+  applySepForMode();   // seed sep enable/disable + on-state for the default placement
   renderCyclePalette(); renderCycPresets();
   qs('#vol').style.setProperty('--fill','100%');
   renderAll();
