@@ -333,6 +333,10 @@
     <div class="chips" data-k="font" style="margin-bottom:var(--sp-in)">
       <button class="chip" data-v="'Newsreader',serif">Serif</button><button class="chip" data-v="'Jost',sans-serif">Jost</button>
     </div>
+    <div class="chips" data-k="fill" style="margin-bottom:var(--sp-in)">
+      <button class="chip" data-v="solid">Solid</button><button class="chip" data-v="glass">Glass</button
+      ><button class="chip" data-v="outline">Outline</button>
+    </div>
     <div class="chips" data-k="sep" style="margin-bottom:var(--sp-in)">
       <button class="chip" data-v="colon">Colon</button><button class="chip" data-v="dot">Dot</button
       ><button class="chip" data-v="none">None</button>
@@ -366,7 +370,7 @@
 (function () {
   var S = document.getElementById('scene'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
   var cfg = JSON.parse(localStorage.getItem('sustain.session') || 'null')
-         || { mode:'flow', flowMin:25, place:'middle', phase:2, sounds:[], vol:100, soundVol:{sand:100,ocean:100,breeze:100,birds:100}, sep:'none', font:"'Newsreader',serif", color:'#ffffff', vis:'always', followDay:true, autoContrast:true };
+         || { mode:'flow', flowMin:25, place:'middle', fill:'solid', phase:2, sounds:[], vol:100, soundVol:{sand:100,ocean:100,breeze:100,birds:100}, sep:'none', font:"'Newsreader',serif", color:'#ffffff', vis:'always', followDay:true, autoContrast:true };
   var plan = Plan.buildPlan(cfg);
   var timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });
   timer.start();
@@ -587,6 +591,7 @@
   function applyLook(cfg) {
     S.dataset.place = cfg.place;
     S.dataset.sep = cfg.sep;
+    S.dataset.fill = cfg.fill || 'solid';
     S.style.setProperty('--num-font', cfg.font);
     S.style.setProperty('--num-color', cfg.color);
     applyMode(cfg.place);
@@ -843,6 +848,7 @@
       var v=b.dataset.v;
       if(k==='place'){ cfg.place=v; applyLook(cfg); refreshFG(); applySepForMode(cfg.place); }
       else if(k==='font'){ cfg.font=v; applyLook(cfg); }
+      else if(k==='fill'){ cfg.fill=v; applyLook(cfg); }
       else if(k==='sep'){ cfg.sep=v; S.dataset.sep=v; applySepForMode(cfg.place); }   // per-mode rule enforced
       else if(k==='scene'){
         if(v==='follow'){ cfg.followDay=true; phase=phaseFromClock(); }
@@ -878,7 +884,7 @@
   renderMixRows();
   function selChips(k,val){ setSheet.querySelectorAll('.chips[data-k="'+k+'"] .chip').forEach(function(c){
     c.classList.toggle('on', c.dataset.v===String(val)); }); }
-  selChips('place', cfg.place); selChips('font', cfg.font); selChips('sep', cfg.sep);
+  selChips('place', cfg.place); selChips('font', cfg.font); selChips('fill', cfg.fill || 'solid'); selChips('sep', cfg.sep);
   selChips('scene', cfg.followDay ? 'follow' : (cfg.phase|0));
   function selSeg(name,val){ setSheet.querySelectorAll('.mini-seg[data-seg="'+name+'"] button').forEach(function(b){
     b.classList.toggle('on', b.dataset.v===val); }); }
