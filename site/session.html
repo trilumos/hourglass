@@ -29,6 +29,22 @@
     --gap: 1.5cqw;           /* inline digit spacing (mm : ss) */
     --frost-bg:#35353566;    /* Setup's frost material — identical */
     --ink:#f2ecdd;           /* Setup's ink colour — used by the #gear icon + done-card text (Task 5) */
+    /* ── Task 7: Setup's control-scale tokens, imported VERBATIM (setup.html :root, L16-52) so the
+         ported settings sheet + chips + steppers + mixer match Setup pixel-for-pixel. Setup's type/
+         spacing scale is panel-relative (--sq); brought in full because every --t-*/--ctrl-* derives
+         from it. Page-layout tokens Setup uses only for its constellation are NOT brought. */
+    --sq:      clamp(320px, 64cqh, 640px);
+    --sp-in:   calc(var(--sq) * .018);
+    --sp-grp:  calc(var(--sq) * .048);
+    --t-xs:    calc(var(--sq) * .0205);
+    --t-sm:    calc(var(--sq) * .0256);
+    --t-md:    calc(var(--sq) * .032);
+    --ctrl-y:  calc(var(--sq) * .023);
+    --ctrl-x:  calc(var(--sq) * .046);
+    --ink-dim: #cfc7b6;
+    --gold:    #EACA78;
+    --track:   rgba(255,255,255,.16);
+    --e-std:   cubic-bezier(.4,0,.2,1);
   }
   /* Parallax removed per founder decision — bg/fg stay static; only the numbers (#nums) move,
      via drag (--dx/--dy). Occluders (.fg-glass/.fg-horizon/.fg-ledge) are static masked copies
@@ -115,6 +131,7 @@
   /* ================= VISIBILITY ================= */
   #scene[data-vis="hover"] #nums{ opacity:0 }
   #scene[data-vis="hover"]:hover #nums{ opacity:1 }
+  #scene[data-vis="hidden"] #nums{ opacity:0 }     /* Task 7: settings "Hidden" — numbers off, scene only */
   #scene[data-vis="flash"] #nums{ animation:flash 12s ease-in-out infinite }
   @keyframes flash{ 0%,78%,100%{opacity:0} 84%,94%{opacity:1} }
   @media (prefers-reduced-motion:reduce){
@@ -189,6 +206,80 @@
   #seglabel.show{ opacity:1 }
   /* full-screen fade-through-black for Endless's user-triggered "flip" (reset the count, no sand anim in v1) */
   #flip{ position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .5s; z-index:7 }
+
+  /* ================= ⚙ SETTINGS SHEET (Task 7) — Setup's frost sheet + controls, ported VERBATIM ================= */
+  /* Sheet shell — copied byte-for-byte from setup.html (~L393-409). */
+  .sheet-scrim{ position:absolute; inset:0; z-index:8; background:rgba(4,6,12,.5);
+     -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); opacity:0; pointer-events:none;
+     transition:opacity .3s var(--e-std); }
+  .sheet-scrim.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:absolute; z-index:9; left:50%; top:50%; transform:translate(-50%,-46%) scale(.98);
+    width:min(560px,86cqi); max-height:84cqh; overflow-y:auto; border-radius:clamp(20px,2.4cqi,32px);
+    padding:clamp(20px,2.6cqi,36px); opacity:0; pointer-events:none;
+    transition:opacity .3s var(--e-std), transform .3s var(--e-std);
+  }
+  .sheet.open{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-grp); }
+  .sheet-head h3{ font-weight:400; font-size:clamp(13px,1.5cqi,20px); letter-spacing:.02em; }
+  .sheet-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.08); border:none;
+                color:var(--ink); font-size:18px; cursor:pointer; }
+  .sec{ margin-bottom:var(--sp-grp); }
+  .sec>.mini-lbl{ display:block; margin-bottom:.7em; }
+
+  /* mini-lbl (setup.html ~L179) */
+  .mini-lbl{ font-weight:500; letter-spacing:.2em; text-transform:uppercase; font-size:var(--t-sm); opacity:.8; }
+
+  /* chips + chip rows (setup.html ~L225, L261-268) — sound toggles, mode/font/sep/scene groups */
+  .chips{ display:flex; flex-wrap:wrap; gap:var(--sp-in); }
+  .chip{
+    font-family:inherit; font-weight:400; font-size:var(--t-md); color:var(--ink);
+    cursor:pointer; padding:var(--ctrl-y) var(--ctrl-x); border-radius:100px; background:var(--frost-bg);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); border:none;
+    transition:background .18s,color .18s; white-space:nowrap;
+  }
+  .chip:hover{ background:rgba(255,255,255,.16); }
+  .chip.on{ background:#fff; color:#181a20; font-weight:500; box-shadow:0 1px 6px rgba(0,0,0,.18); }
+  .chip:disabled{ opacity:.32; cursor:not-allowed; }
+
+  /* mini segmented control (setup.html ~L361-366) — timer visibility + auto-contrast */
+  .mini-seg{ display:flex; background:rgba(255,255,255,.06); border-radius:100px;
+             padding:calc(var(--sq)*.005); flex:none; }
+  .mini-seg button{ font-family:inherit; font-size:var(--t-sm); color:var(--ink-dim);
+                    cursor:pointer; padding:calc(var(--ctrl-y)*.75) .85em; border-radius:100px;
+                    background:none; border:none; white-space:nowrap; }
+  .mini-seg button.on{ color:#181a20; background:#fff; font-weight:500; }
+
+  /* range slider (setup.html ~L297-305) — master volume + per-sound mixer */
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:calc(var(--sq)*.009);
+     border-radius:99px;
+     background:linear-gradient(to right,var(--gold) var(--fill,100%),var(--track) var(--fill,100%)); outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:calc(var(--sq)*.032);
+     height:calc(var(--sq)*.032); border-radius:50%;
+     background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:pointer; }
+  input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var(--sq)*.032);
+     border:none; border-radius:50%;
+     background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:pointer; }
+
+  /* volume head + per-sound mixer (setup.html ~L293-296, L317-322) */
+  .sound-vol{ margin-top:var(--sp-grp); }
+  .vol-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6em; }
+  .vol-head .mini-lbl{ opacity:.6; }
+  .vol-head .pct{ font-variant-numeric:tabular-nums; font-size:var(--t-md); opacity:.9; }
+  .mix-row{ display:flex; align-items:center; gap:.7em; margin-top:.6em; }
+  .mix-row .mr-k{ width:6.2em; flex:none; font-size:var(--t-sm); color:#fff; }
+  .mix-row input[type=range]{ flex:1; }
+  .mix-row .mr-v{ width:2.8em; flex:none; text-align:right; font-variant-numeric:tabular-nums;
+                  font-size:var(--t-xs); opacity:.7; }
+  .mix-empty{ font-size:var(--t-sm); opacity:.6; margin-top:.6em; }
+  #mixRows{ margin-top:var(--sp-in); }
+
+  /* number-look Colour swatch — native picker (brief C.3) */
+  .set-row{ display:flex; align-items:center; gap:var(--sp-in); flex-wrap:wrap; }
+  .color-pick{ width:calc(var(--sq)*.09); height:calc(var(--sq)*.06); padding:0; cursor:pointer;
+               border:1px solid rgba(255,255,255,.2); border-radius:10px; background:none; }
+  .set-lbl{ font-size:var(--t-sm); color:var(--ink-dim); }
+  .sec-row2{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-in); margin-top:var(--sp-in); }
 </style>
 </head>
 <body>
@@ -209,6 +300,63 @@
   <div class="frost donecard">
     <p class="donecard-total">Focused <b id="doneMin">0m</b> today</p>
     <div class="donecard-btns"><button id="again">Again</button><button id="doneEnd">End</button></div>
+  </div>
+</div>
+<!-- ⚙ Settings (Task 7) — Setup's frost sheet, four live sections -->
+<div class="sheet-scrim" id="setScrim"></div>
+<div class="sheet frost" id="setSheet" role="dialog" aria-modal="true" aria-label="Settings">
+  <div class="sheet-head"><h3>Settings</h3><button class="sheet-close" id="setClose" aria-label="Close">&times;</button></div>
+
+  <div class="sec">
+    <span class="mini-lbl">Sound</span>
+    <div class="chips" id="tokens"></div>
+    <div class="sound-vol">
+      <div class="vol-head"><span class="mini-lbl">Volume</span><span class="pct" id="volPct">100%</span></div>
+      <input type="range" id="vol" min="0" max="100" value="100" aria-label="Volume">
+    </div>
+    <div id="mixRows"></div>
+  </div>
+
+  <div class="sec">
+    <span class="mini-lbl">Timer</span>
+    <div class="mini-seg" data-seg="vis">
+      <button data-v="always">Always</button><button data-v="hover">On hover</button><button data-v="hidden">Hidden</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <span class="mini-lbl">Number look</span>
+    <div class="chips" data-k="place" style="margin-bottom:var(--sp-in)">
+      <button class="chip" data-v="horizon">Horizon</button><button class="chip" data-v="middle">Middle</button
+      ><button class="chip" data-v="ledge">Ledge</button><button class="chip" data-v="top">Top</button>
+    </div>
+    <div class="chips" data-k="font" style="margin-bottom:var(--sp-in)">
+      <button class="chip" data-v="'Newsreader',serif">Serif</button><button class="chip" data-v="'Jost',sans-serif">Jost</button>
+    </div>
+    <div class="chips" data-k="sep" style="margin-bottom:var(--sp-in)">
+      <button class="chip" data-v="colon">Colon</button><button class="chip" data-v="dot">Dot</button
+      ><button class="chip" data-v="none">None</button>
+    </div>
+    <div class="set-row">
+      <span class="set-lbl">Colour</span>
+      <input type="color" class="color-pick" id="colorPick" value="#ffffff" aria-label="Number colour">
+    </div>
+  </div>
+
+  <div class="sec">
+    <span class="mini-lbl">Scene</span>
+    <div class="chips" data-k="scene">
+      <button class="chip" data-v="follow">Follow my day</button
+      ><button class="chip" data-v="0">Pre-dawn</button><button class="chip" data-v="1">Sunrise</button
+      ><button class="chip" data-v="2">Midday</button><button class="chip" data-v="3">Sunset</button
+      ><button class="chip" data-v="4">Twilight</button><button class="chip" data-v="5">Midnight</button>
+    </div>
+    <div class="sec-row2">
+      <span class="set-lbl">Auto-contrast</span>
+      <div class="mini-seg" data-seg="auto">
+        <button data-v="on">On</button><button data-v="off">Off</button>
+      </div>
+    </div>
   </div>
 </div>
 </div>
@@ -298,7 +446,7 @@
     lastSegIndex = 0;
     doneEl.hidden = true;
   });
-  // #gear: click intentionally unwired — the settings panel it opens is Task 7.
+  // #gear → opens the settings sheet (wired in the Task 7 block below).
 
   // ================= Endless fade-flip (Task 6) — user-triggered reset, fade through black =================
   function fadeFlip(reset) {
@@ -442,6 +590,289 @@
   applyLook(cfg);
   refreshFG();
   applySepForMode(cfg.place);
+
+  // ================= ⚙ SETTINGS PANEL (Task 7) =================
+  // Persist: every control updates cfg.<field> → its apply fn → saveCfg().
+  function saveCfg(){ localStorage.setItem('sustain.session', JSON.stringify(cfg)); }
+
+  // ---- Audio engine: ported from setup.html (~L659-965). The audio GRAPH (K-weighted gains,
+  //      masking-duck, brickwall limiter, crossfade-stacking gapless loop) is copied VERBATIM — the
+  //      founder tuned it, not re-derived here. Only the DOM bindings are rewired to this settings
+  //      sheet, and Setup's preview-gating is REMOVED: in-session, sound plays LIVE once the
+  //      AudioContext is unlocked on the first user gesture. cfg.sounds / cfg.vol feed initial state.
+  var SOUNDS=[
+    {id:'sand',  label:'Sand',        on:0},
+    {id:'ocean', label:'Ocean',       on:0},
+    {id:'breeze',label:'Shore breeze',on:0},
+    {id:'birds', label:'Seabirds',    on:0}
+  ];
+  SOUNDS.forEach(function(s){ s.on = (cfg.sounds||[]).indexOf(s.id)>=0 ? 1 : 0; });   // seed from cfg.sounds
+  var masterPos = (cfg.vol==null?100:cfg.vol), unlocked=false;
+  function gainFor(){ return Math.pow((masterPos/100),2.5); }   // audio taper, one master level
+
+  var tokensEl=document.getElementById('tokens'), mixRowsEl=document.getElementById('mixRows'),
+      volEl=document.getElementById('vol'), volPctEl=document.getElementById('volPct');
+  // 4 sound toggles rendered as Setup chips (data-on → .chip.on)
+  function renderTokens(){
+    tokensEl.innerHTML = SOUNDS.map(function(s){
+      return '<button class="chip'+(s.on?' on':'')+'" data-snd="'+s.id+'">'+s.label+'</button>';
+    }).join('');
+  }
+  tokensEl.addEventListener('click',function(e){
+    var b=e.target.closest('.chip'); if(!b) return;
+    var s=SOUNDS.filter(function(x){return x.id===b.dataset.snd;})[0];
+    s.on = s.on?0:1; b.classList.toggle('on', !!s.on);
+    cfg.sounds = SOUNDS.filter(function(x){return x.on;}).map(function(x){return x.id;});
+    saveCfg(); renderMixRows(); syncAudio();          // toggle → start/stop that sound live
+  });
+  // ── Per-sound mixer (setup ~L695-710) — only SELECTED sounds, each at its set volume ──
+  function renderMixRows(){
+    var on=SOUNDS.filter(function(s){ return s.on; });
+    mixRowsEl.innerHTML = on.length ? on.map(function(s){
+      var v=SOUND_VOL[s.id]==null?100:SOUND_VOL[s.id];
+      return '<div class="mix-row"><span class="mr-k">'+s.label+'</span>'
+        +'<input type="range" min="0" max="100" value="'+v+'" data-mix="'+s.id+'" style="--fill:'+v+'%" aria-label="'+s.label+' volume">'
+        +'<span class="mr-v" data-mixv="'+s.id+'">'+v+'%</span></div>';
+    }).join('') : '<div class="mix-empty">No sounds on — pick one above first.</div>';
+  }
+  mixRowsEl.addEventListener('input',function(e){
+    var r=e.target.closest('[data-mix]'); if(!r) return;
+    var id=r.dataset.mix, v=+r.value;
+    SOUND_VOL[id]=v; r.style.setProperty('--fill',v+'%');
+    document.querySelector('[data-mixv="'+id+'"]').textContent=v+'%';
+    applyVol(id);
+  });
+  volEl.addEventListener('input',function(e){
+    masterPos=+e.target.value; volPctEl.textContent=masterPos+'%';
+    e.target.style.setProperty('--fill',masterPos+'%');
+    cfg.vol=masterPos; saveCfg(); syncAudio();        // → engine master
+  });
+
+  // ── Audio engine core — VERBATIM from setup.html (~L745-943) ──
+  var AUDIO_FILE={ sand:'sand.m4a', ocean:'ocean.mp3', breeze:'breeze.mp3', birds:'birds.mp3' };
+  var LOOP_POINTS={ sand:[0.15,13.20], ocean:[0.35,70.0], breeze:[0.35,97.846], birds:[0.0,22.5] };
+  var SOUND_GAIN={ sand:30, ocean:2.2, breeze:0.40, birds:8.0 };
+  var SOUND_VOL={ sand:100, ocean:100, breeze:100, birds:100 };   // user 0-100 per sound (session-runtime)
+  var DUCK={ sand:{ ocean:0.20 }, breeze:{ ocean:0.60 } };
+  function isOn(id){ for(var i=0;i<SOUNDS.length;i++) if(SOUNDS[i].id===id) return !!SOUNDS[i].on; return false; }
+  function duckFactor(id){ var d=DUCK[id], f=1; if(d) for(var k in d) if(isOn(k)) f*=d[k]; return f; }
+  function userMult(id){ return Math.pow((SOUND_VOL[id]==null?100:SOUND_VOL[id])/100, 2.5); }
+  function baseGain(id){ return (SOUND_GAIN[id]||1)*userMult(id)*duckFactor(id); }   // calibrated x user x duck
+  var TONE_HZ={ breeze:10870, sand:16970, birds:10853, ocean:19450 };
+  var LOWPASS_HZ={ sand:12000, ocean:16000, breeze:9000, birds:9000 };
+  var HIGHPASS_HZ={ birds:220 };
+  var BIRD_TIDE=[1.0, 0.06, 12];
+  var AC=null, master=null, A={};                             // A[id] = {buffer, src, gain, dead}
+
+  function ensureAudio(){
+    if(AC) return;
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    sharedCtx = AC;                                           // Task 6 contract: softCue() shares this ctx
+    var lim=AC.createDynamicsCompressor();
+    lim.threshold.value=-1.5; lim.knee.value=0; lim.ratio.value=20;
+    lim.attack.value=0.003; lim.release.value=0.15;
+    master=AC.createGain(); master.gain.value=0;
+    master.connect(lim); lim.connect(AC.destination);
+  }
+  function fileFor(id){ return 'assets/audio/'+(AUDIO_FILE[id]||id+'.mp3'); }   // relative — matches session's asset paths
+  function loadBuffer(id){
+    var n=A[id]=A[id]||{};
+    if(n.buffer) return Promise.resolve(n.buffer);
+    if(n.dead)   return Promise.resolve(null);               // file not sourced yet — skip quietly
+    if(n.loading) return n.loading;
+    n.loading=fetch(fileFor(id))
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); })
+      .then(function(b){ return AC.decodeAudioData(b); })
+      .then(function(buf){ n.buffer=buf; n.loading=null; return buf; })
+      .catch(function(){ n.dead=true; n.loading=null; return null; });  // missing file must not break the rest
+    return n.loading;
+  }
+  function filterChain(id,from){
+    var tail=from, made=[];
+    if(TONE_HZ[id]){
+      [ [TONE_HZ[id],8,-30], [TONE_HZ[id],20,-24] ].forEach(function(p){   // wide + narrow
+        var b=AC.createBiquadFilter(); b.type='peaking';
+        b.frequency.value=p[0]; b.Q.value=p[1]; b.gain.value=p[2];
+        tail.connect(b); tail=b; made.push(b);
+      });
+    }
+    if(HIGHPASS_HZ[id]){
+      for(var h=0;h<2;h++){
+        var hpf=AC.createBiquadFilter(); hpf.type='highpass';
+        hpf.frequency.value=HIGHPASS_HZ[id]; hpf.Q.value=0.707;
+        tail.connect(hpf); tail=hpf; made.push(hpf);
+      }
+    }
+    for(var i=0;i<2;i++){                                        // 2 poles = 24 dB/oct
+      var l=AC.createBiquadFilter(); l.type='lowpass';
+      l.frequency.value=(LOWPASS_HZ[id]||9000); l.Q.value=0.707;
+      tail.connect(l); tail=l; made.push(l);
+    }
+    return { tail:tail, nodes:made };
+  }
+  function attachBirdTide(n){
+    var p=BIRD_TIDE, G=baseGain('birds');
+    n.bus.gain.value=(p[0]+p[1])/2*G;
+    n.lfo=AC.createOscillator(); n.lfo.type='sine'; n.lfo.frequency.value=1/p[2];
+    n.lfoGain=AC.createGain(); n.lfoGain.gain.value=(p[0]-p[1])/2*G;
+    n.lfo.connect(n.lfoGain); n.lfoGain.connect(n.bus.gain);   // adds to the bus level
+    n.lfo.start();
+  }
+  function applyVol(id){
+    var n=A[id]; if(!n||!n.bus) return;
+    var t=AC.currentTime;
+    if(id==='birds'){
+      var p=BIRD_TIDE, G=baseGain('birds');
+      n.bus.gain.setTargetAtTime((p[0]+p[1])/2*G, t, 0.08);
+      if(n.lfoGain) n.lfoGain.gain.setTargetAtTime((p[0]-p[1])/2*G, t, 0.08);
+    } else {
+      n.bus.gain.setTargetAtTime(baseGain(id), t, 0.08);
+    }
+  }
+  var XFADE={ sand:0.4, ocean:4.0, breeze:4.0, birds:5.0 };
+  var WIN_N=512;
+  function sineWindow(scale){
+    var w=new Float32Array(WIN_N);
+    for(var i=0;i<WIN_N;i++) w[i]=scale*Math.sin(Math.PI*i/(WIN_N-1));
+    w[0]=w[WIN_N-1]=0.0001;
+    return w;
+  }
+  var FADE_N=64, FADE_IN=new Float32Array(FADE_N), FADE_OUT=new Float32Array(FADE_N);
+  (function(){ for(var i=0;i<FADE_N;i++){ var th=i/(FADE_N-1)*Math.PI/2;
+      FADE_IN[i]=Math.sin(th); FADE_OUT[i]=Math.cos(th); } })();
+  function pumpLoop(id){
+    var n=A[id]; if(!n||!n.seg) return;
+    var horizon=AC.currentTime+1.2;                          // schedule a little ahead
+    while(n.next<horizon){
+      var t=n.next, S=n.seg;                                 // (local S = segment; shadows scene S, unused here)
+      var src=AC.createBufferSource(); src.buffer=n.buffer;
+      var g=AC.createGain();
+      if(S.win){
+        g.gain.setValueCurveAtTime(S.win,t,S.d);             // one sine window over the pass
+      } else {
+        g.gain.setValueCurveAtTime(FADE_IN,t,S.xf);          // in
+        g.gain.setValueCurveAtTime(FADE_OUT,t+S.d-S.xf,S.xf);// out (holds at 1 between)
+      }
+      src.connect(g); g.connect(n.bus);
+      src.start(t,S.s,S.d+0.02); src.stop(t+S.d+0.02);
+      (function(a,b){ a.onended=function(){ try{ a.disconnect(); b.disconnect(); }catch(e){} }; })(src,g);
+      n.live.push(src); if(n.live.length>8) n.live.shift();
+      n.next = t + S.hop;                                    // next pass starts here
+    }
+  }
+  function startSound(id){
+    var n=A[id]=A[id]||{};
+    if(!n.buffer||n.bus) return;
+    var lp=LOOP_POINTS[id]||[0,n.buffer.duration];
+    var d=lp[1]-lp[0];
+    n.bus=AC.createGain(); n.bus.gain.value=baseGain(id);
+    if(id==='birds') attachBirdTide(n);                       // level rides a slow tide
+    var ch=filterChain(id,n.bus); ch.tail.connect(master); n.chain=ch;
+    var spec=XFADE[id]||2;
+    if(spec<=1){
+      n.seg={ s:lp[0], d:d, hop:d*spec, win:sineWindow(Math.sqrt(2*spec)) };
+    } else {
+      var xf=Math.min(spec, d/2);
+      n.seg={ s:lp[0], d:d, hop:d-xf, xf:xf };
+    }
+    n.next=AC.currentTime+0.06; n.live=[];
+    n.pump=setInterval(function(){ pumpLoop(id); },300);
+    pumpLoop(id);
+  }
+  function stopSound(id){
+    var n=A[id]; if(!n||!n.bus) return;
+    clearInterval(n.pump); n.pump=null;
+    if(n.lfo){ try{ n.lfo.stop(); n.lfo.disconnect(); n.lfoGain.disconnect(); }catch(e){}   // bird tide
+               n.lfo=null; n.lfoGain=null; }
+    (n.live||[]).forEach(function(s){ try{ s.stop(); s.disconnect(); }catch(e){} });
+    try{ n.bus.disconnect(); }catch(e){}
+    if(n.chain) n.chain.nodes.forEach(function(f){ try{ f.disconnect(); }catch(e){} });
+    n.bus=null; n.chain=null; n.seg=null; n.live=null;
+  }
+  // live mix — start/stop wanted sounds, re-balance ducking, ramp master (setup ~L944-965, preview-gate removed)
+  function syncAudio(){
+    if(!unlocked) return;                       // autoplay policy: no context before the first user gesture
+    ensureAudio();
+    if(AC.state==='suspended') AC.resume();
+    var wanted=SOUNDS.filter(function(s){ return s.on; }).map(function(s){ return s.id; });
+    Promise.all(wanted.map(loadBuffer)).then(function(){
+      SOUNDS.forEach(function(s){ if(s.on) startSound(s.id); else stopSound(s.id); });
+      SOUNDS.forEach(function(s){ if(s.on) applyVol(s.id); });   // ducking glides in/out live
+      var t=AC.currentTime;
+      master.gain.cancelScheduledValues(t);
+      master.gain.setTargetAtTime(gainFor(), t, 0.08);           // click-free ramp
+    });
+  }
+  // autoplay unlock — create/resume the AudioContext on the first gesture, then start cfg.sounds live
+  function unlock(){
+    if(unlocked) return; unlocked=true;
+    ensureAudio(); if(AC.state==='suspended') AC.resume();
+    syncAudio();
+  }
+  window.addEventListener('pointerdown', unlock);
+  window.addEventListener('keydown', unlock);
+  window.addEventListener('touchstart', unlock, { passive:true });
+
+  // ---- Sheet open/close ----
+  var setSheet=document.getElementById('setSheet'), setScrim=document.getElementById('setScrim');
+  document.getElementById('gear').addEventListener('click', function(){
+    setScrim.classList.add('open'); setSheet.classList.add('open');
+  });
+  function closeSheet(){ setScrim.classList.remove('open'); setSheet.classList.remove('open'); }
+  setScrim.addEventListener('click', closeSheet);
+  document.getElementById('setClose').addEventListener('click', closeSheet);
+
+  // ---- Single-select chip groups: Number look (place/font/sep) + Scene ----
+  setSheet.querySelectorAll('.chips[data-k]').forEach(function(row){
+    var k=row.dataset.k;
+    row.addEventListener('click', function(e){
+      var b=e.target.closest('.chip'); if(!b||b.disabled) return;
+      row.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('on'); });
+      b.classList.add('on');
+      var v=b.dataset.v;
+      if(k==='place'){ cfg.place=v; applyLook(cfg); refreshFG(); applySepForMode(cfg.place); }
+      else if(k==='font'){ cfg.font=v; applyLook(cfg); }
+      else if(k==='sep'){ cfg.sep=v; S.dataset.sep=v; applySepForMode(cfg.place); }   // per-mode rule enforced
+      else if(k==='scene'){
+        if(v==='follow'){ cfg.followDay=true; phase=phaseFromClock(); }
+        else { cfg.followDay=false; cfg.phase=+v; phase=+v; }
+        setPlate();
+      }
+      saveCfg();
+    });
+  });
+
+  // ---- Mini-segments: Timer visibility + Auto-contrast ----
+  setSheet.querySelectorAll('.mini-seg').forEach(function(seg){
+    seg.addEventListener('click', function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      seg.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); });
+      var v=b.dataset.v, name=seg.dataset.seg;
+      if(name==='vis'){ cfg.vis=v; S.dataset.vis=v; }
+      else if(name==='auto'){ autoContrast=(v==='on'); cfg.autoContrast=autoContrast; setTone(); }
+      saveCfg();
+    });
+  });
+
+  // ---- Colour picker (any colour) ----
+  var colorPick=document.getElementById('colorPick');
+  colorPick.value = cfg.color || '#ffffff';
+  colorPick.addEventListener('input', function(){
+    cfg.color=colorPick.value; applyLook(cfg); setTone(); saveCfg();
+  });
+
+  // ---- Reflect current cfg on the controls (initial state) ----
+  renderTokens();
+  volEl.value=masterPos; volPctEl.textContent=masterPos+'%'; volEl.style.setProperty('--fill',masterPos+'%');
+  renderMixRows();
+  function selChips(k,val){ setSheet.querySelectorAll('.chips[data-k="'+k+'"] .chip').forEach(function(c){
+    c.classList.toggle('on', c.dataset.v===String(val)); }); }
+  selChips('place', cfg.place); selChips('font', cfg.font); selChips('sep', cfg.sep);
+  selChips('scene', cfg.followDay ? 'follow' : (cfg.phase|0));
+  function selSeg(name,val){ setSheet.querySelectorAll('.mini-seg[data-seg="'+name+'"] button').forEach(function(b){
+    b.classList.toggle('on', b.dataset.v===val); }); }
+  selSeg('vis', cfg.vis); selSeg('auto', autoContrast?'on':'off');
+  applySepForMode(cfg.place);   // final authority on sep chip enable/disable + on-state for the current mode
 })();
 </script>
 </body>
