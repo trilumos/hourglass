@@ -38,7 +38,7 @@
 })(typeof window !== 'undefined' ? window : this);
 
 // (place at bottom of file, after the module — written first for TDD)
-if (typeof require !== 'undefined' && require.main === module) {
+if (typeof process !== 'undefined' && process.argv && process.argv.indexOf('--test') !== -1) {
   var T = module.exports, n = 0, clock = 0, now = function () { return clock; };
   function ok(c, m) { n++; if (!c) { console.error('FAIL: ' + m); process.exit(1); } }
   var segs = [{kind:'focus',min:25},{kind:'rest',min:5},{kind:'focus',min:25}]; // 25+5+25 = 55 min
@@ -69,6 +69,23 @@ if (typeof require !== 'undefined' && require.main === module) {
   clock = 0; e = T.create([{kind:'focus',min:0}], {now:now, endless:true}); e.start();
   clock = 999*60000; p = e.progress();
   ok(p.done===false && p.kind==='focus' && p.elapsedMs===999*60000, 'endless counts up, never done');
+
+  // totalMs
+  clock = 0; e = T.create(segs, {now:now});
+  ok(e.totalMs() === 55*60000, 'totalMs sums segment durations (55 min)');
+  var ee = T.create([{kind:'focus',min:0}], {now:now, endless:true});
+  ok(ee.totalMs() === 0, 'endless totalMs is 0');
+
+  // isPaused transitions
+  clock = 0; e = T.create(segs, {now:now}); e.start();
+  ok(e.isPaused() === false, 'not paused initially');
+  clock = 1000; e.pause();  ok(e.isPaused() === true,  'paused after pause()');
+  clock = 2000; e.resume(); ok(e.isPaused() === false, 'not paused after resume()');
+
+  // elapsed is frozen while paused (live-pause query)
+  clock = 0; e = T.create(segs, {now:now}); e.start();
+  clock = 5000; e.pause(); clock = 9999;
+  ok(e.elapsedMs() === 5000, 'elapsed frozen while paused (query mid-pause)');
 
   console.log('session-timer: ' + n + ' checks passed');
 }
