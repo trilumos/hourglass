@@ -193,6 +193,29 @@
                 0 22px 55px rgba(0,0,0,.34), 0 0 0 1.5px var(--gold);
   }
 
+  /* paused overlay — glass scrim above the scene+numbers (z0-2), below chrome (z5), so the blur
+     sits UNDER Settings/Give-up/the Resume circle but ABOVE the plate + timer. Tapping it resumes. */
+  #paused{
+    position:absolute; inset:0; z-index:3; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:.6em; opacity:0; pointer-events:none;
+    transition:opacity .45s var(--e-std);
+    -webkit-backdrop-filter:blur(16px) saturate(.9); backdrop-filter:blur(16px) saturate(.9);
+    background:rgba(8,12,20,.18);
+  }
+  #paused.show{ opacity:1; pointer-events:auto; }
+  @media (prefers-reduced-transparency: reduce){
+    #paused{ background:rgba(20,24,32,.86); -webkit-backdrop-filter:none; backdrop-filter:none; }
+  }
+  .paused-word{
+    font-family:'Jost',sans-serif; font-weight:500; text-transform:uppercase; letter-spacing:.28em;
+    font-size:clamp(34px,9cqh,104px); color:#fff; line-height:1;
+  }
+  .paused-grace{
+    font-family:'Jost',sans-serif; font-weight:500; font-size:clamp(12px,1.5cqi,16px);
+    letter-spacing:.06em; color:var(--gold); opacity:0; transition:opacity .3s var(--e-std);
+  }
+  .paused-grace.show{ opacity:1; }
+
   /* Endless "Flip" — quiet secondary like Give-up, centred just above the pause circle. */
   #flipBtn{
     position:absolute; left:50%; transform:translateX(-50%); z-index:5;
@@ -330,6 +353,7 @@
   <div class="layer fg fg-horizon"></div>
   <div class="layer fg fg-ledge"></div>
 </div>
+<div id="paused" aria-hidden="true"><div class="paused-word">Paused</div><div class="paused-grace" id="pauseGrace"></div></div>
 <div id="seglabel" class="frost"></div>
 <div id="flip"></div>
 <button id="gear" class="frost" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="15" cy="7" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="9" cy="12" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="17" cy="17" r="2.3" fill="currentColor" stroke="none"/></svg></button>
@@ -493,19 +517,51 @@
   tick(); setInterval(tick, 250);   // 250ms so the seconds flip crisply; engine is wall-clock, not tick-accumulated
 
   var pauseBtn = document.getElementById('pause');
+  var pausedEl = document.getElementById('paused'), pauseGrace = document.getElementById('pauseGrace');
   var PAUSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="5" x2="8" y2="19"/><line x1="16" y1="5" x2="16" y2="19"/></svg>';
   var PLAY_SVG  = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
-  pauseBtn.addEventListener('click', function () {
-    if (timer.isPaused()) {
-      timer.resume();
-      pauseBtn.innerHTML = PAUSE_SVG; pauseBtn.classList.remove('paused');
-      pauseBtn.setAttribute('aria-pressed', 'false'); pauseBtn.setAttribute('aria-label', 'Pause session');
+
+  // ---- pause cap — app parity: 3min + 15s grace, then auto-abandon. Wall-clock (Date.now()), not
+  // tick-accumulated, so it survives tab-backgrounding (checkPauseCap re-derives elapsed each tick).
+  var PAUSE_CAP = 180000, PAUSE_GRACE = 15000;
+  var pausedAt = null, pauseWatch = null;
+  function checkPauseCap() {
+    var el = Date.now() - pausedAt;
+    if (el >= PAUSE_CAP + PAUSE_GRACE) { clearInterval(pauseWatch); pauseWatch = null; endSession(); return; }
+    if (el >= PAUSE_CAP) {
+      var left = Math.ceil((PAUSE_CAP + PAUSE_GRACE - el) / 1000);
+      pauseGrace.textContent = 'Resume now · ' + left + 's to keep your session';
+      pauseGrace.classList.add('show');
     } else {
-      timer.pause();
-      pauseBtn.innerHTML = PLAY_SVG; pauseBtn.classList.add('paused');
-      pauseBtn.setAttribute('aria-pressed', 'true'); pauseBtn.setAttribute('aria-label', 'Resume session');
+      pauseGrace.classList.remove('show');
     }
+  }
+  function pauseSession() {
+    timer.pause();
+    pauseBtn.innerHTML = PLAY_SVG; pauseBtn.classList.add('paused');
+    pauseBtn.setAttribute('aria-pressed', 'true'); pauseBtn.setAttribute('aria-label', 'Resume session');
+    pausedEl.classList.add('show');
+    if (master) {                      // fade theme sounds to silence — master only; sources keep running
+      var t = AC.currentTime;
+      master.gain.cancelScheduledValues(t);
+      master.gain.setTargetAtTime(0, t, 0.15);
+    }
+    pausedAt = Date.now();
+    pauseWatch = setInterval(checkPauseCap, 500);
+  }
+  function resumeSession() {
+    timer.resume();
+    pauseBtn.innerHTML = PAUSE_SVG; pauseBtn.classList.remove('paused');
+    pauseBtn.setAttribute('aria-pressed', 'false'); pauseBtn.setAttribute('aria-label', 'Pause session');
+    pausedEl.classList.remove('show');
+    syncAudio();                       // re-ramps master back to gainFor() — gapless, sources never stopped
+    clearInterval(pauseWatch); pauseWatch = null; pausedAt = null;
+    pauseGrace.classList.remove('show');
+  }
+  pauseBtn.addEventListener('click', function () {
+    if (timer.isPaused()) resumeSession(); else pauseSession();
   });
+  pausedEl.addEventListener('click', resumeSession);   // tap the blurred scene to resume
   document.getElementById('giveup').addEventListener('click', endSession);
   document.getElementById('doneEnd').addEventListener('click', endSession);
   document.getElementById('again').addEventListener('click', function () {
