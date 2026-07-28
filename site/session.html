@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sustain — Session</title>
+<style>
+  /* Self-hosted, overlap-REMOVED static weights (fontTools removeOverlaps). This is why the outline
+     (-webkit-text-stroke) traces ONLY the true glyph boundary — no variable-font internal seam lines. */
+  @font-face{font-family:'Jost';font-weight:400;font-display:swap;src:url('assets/fonts/jost-400.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:500;font-display:swap;src:url('assets/fonts/jost-500.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:550;font-display:swap;src:url('assets/fonts/jost-550.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:600;font-display:swap;src:url('assets/fonts/jost-600.woff2') format('woff2')}
+  @font-face{font-family:'Jost';font-weight:700;font-display:swap;src:url('assets/fonts/jost-700.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:400;font-display:swap;src:url('assets/fonts/newsreader-400.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:500;font-display:swap;src:url('assets/fonts/newsreader-500.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:550;font-display:swap;src:url('assets/fonts/newsreader-550.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:600;font-display:swap;src:url('assets/fonts/newsreader-600.woff2') format('woff2')}
+  @font-face{font-family:'Newsreader';font-weight:700;font-display:swap;src:url('assets/fonts/newsreader-700.woff2') format('woff2')}
+  :root{
+    --plate: url("assets/plates/midday.jpg");
+    --num-font: 'Newsreader', serif;
+    --num-weight: 500;
+    --num-color: #ffffff;
+    --num-eff: #ffffff;   /* effective colour = --num-color lifted toward white on dark plates (setTone) */
+    --num-size: 34;          /* in cqh, applied to the scene box */
+    --num-scaleX: 1;
+    --dx: 0px; --dy: 0px;    /* drag offset for the number block */
+    --gap: 1.5cqw;           /* inline digit spacing (mm : ss) */
+    --frost-bg:#35353566;    /* Setup's frost material — identical */
+  }
+  /* Parallax removed per founder decision — bg/fg stay static; only the numbers (#nums) move,
+     via drag (--dx/--dy). Occluders (.fg-glass/.fg-horizon/.fg-ledge) are static masked copies
+     of the same plate, so they can never desync from the (also static) background. */
+  *{ box-sizing:border-box; margin:0; padding:0 }
+  html,body{ height:100%; background:#05080d; overflow:hidden;
+    font-family:'Jost',system-ui,sans-serif; color:#e7ecf3 }
+
+  /* ---- SITE-WIDE LOCKED PLATE RULE — identical to Home & Setup: the plate FILLS the viewport,
+       background cover, position 50% 50% (= object-fit:cover; object-position:50% 50%). No letterbox,
+       no transform, no zoom. The plate's fit/position/zoom must never deviate across the three pages. */
+  #stage{ position:fixed; inset:0; container-type:size; overflow:hidden }
+  #scene{ position:absolute; inset:0; container-type:size; overflow:hidden }
+  .layer{ position:absolute; inset:0; width:100%; height:100%;
+    background:var(--plate) center/cover no-repeat; pointer-events:none }
+  .bg{ z-index:0 }
+
+  /* ---- numbers live BETWEEN bg and the foreground occluders ---- */
+  #nums{ position:absolute; inset:0; z-index:1; cursor:grab; touch-action:none; will-change:transform;
+    transform:translate3d(var(--dx,0px),var(--dy,0px),0);
+    transition:opacity .5s ease }
+  #nums.dragging{ cursor:grabbing }
+  .num{ position:absolute; left:50%; top:50%; line-height:1; white-space:nowrap;
+    text-box:trim-both cap alphabetic;   /* centre by cap-height/baseline → font-metric-independent */
+    font-family:var(--num-font); font-weight:var(--num-weight);
+    font-size:calc(var(--num-size)*1cqh); color:var(--num-eff,var(--num-color));
+    -webkit-text-fill-color:var(--num-eff,var(--num-color));
+    transform:translate(-50%,-50%) scaleX(var(--num-scaleX));
+    font-variant-numeric:tabular-nums; letter-spacing:-.01em }
+
+  /* ---- foreground occluders: plate-copies masked to the occluding shape ---- */
+  .fg{ z-index:2; opacity:0; transition:opacity .25s ease }
+  .fg.active{ opacity:1 }
+  /* ledge = bottom ~11.3% of the plate, a straight cut */
+  .fg-ledge{ -webkit-mask-image:linear-gradient(to top,#000 0 11.3%,transparent 11.3%);
+             mask-image:linear-gradient(to top,#000 0 11.3%,transparent 11.3%) }
+  /* hourglass = real silhouette matte (segmentation-extracted from the plate) */
+  .fg-glass{ -webkit-mask-image:url(assets/hourglass-matte.png); mask-image:url(assets/hourglass-matte.png);
+             -webkit-mask-size:cover; mask-size:cover;
+             -webkit-mask-position:center; mask-position:center;
+             -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat }
+  /* horizon = founder's flat sea-horizon matte, opaque below ~55% */
+  .fg-horizon{ -webkit-mask-image:url(assets/skyline-matte.png); mask-image:url(assets/skyline-matte.png);
+             -webkit-mask-size:cover; mask-size:cover;
+             -webkit-mask-position:center; mask-position:center;
+             -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat }
+
+  /* ================= FILLS ================= */
+  #scene[data-fill="solid"] .num{     /* colour lifts toward white on dark plates (setTone); a subtle
+       dark drop grounds it on bright plates */
+    text-shadow:0 1px 2px rgb(0 0 0 / 32%), 0 2px 22px rgb(0 0 0 / 20%) }
+  #scene[data-fill="glass"] .num{      /* translucent liquid-glass */
+    color:rgba(255,255,255,.26); -webkit-text-fill-color:rgba(255,255,255,.26);
+    -webkit-text-stroke:1px rgba(255,255,255,.5);
+    text-shadow:0 1px 1px rgba(255,255,255,.35), 0 6px 34px rgba(0,0,0,.28) }
+  #scene[data-fill="outline"] .num{      /* hollow border (overlap-removed static fonts); stroke lifts at night */
+    color:transparent; -webkit-text-fill-color:transparent;
+    -webkit-text-stroke:1.5px var(--num-eff,var(--num-color)); text-shadow:none; paint-order:stroke }
+
+  /* ================= SEPARATOR (sectioning between mm and ss) ================= */
+  #sep::before{ content:":" }                                      /* colon (default) */
+  #scene[data-sep="dot"]  #sep::before{ content:"·" }              /* middle dot */
+  #scene[data-sep="none"] #sep{ display:none }                     /* gap only */
+  #scene[data-sep="line"] #sep::before{ content:""; display:inline-block; align-self:center;
+    width:.08em; height:.58em; border-radius:99px; background:var(--num-color) }   /* hairline rule */
+
+  /* ================= PLACEMENTS — 4 modes; only vertical position (--tb-top) differs =================
+     mm anchored right-of-centre, ss anchored left-of-centre, sep floated dead-centre. So the position
+     is INDEPENDENT of font width AND separator choice — a wider font just extends outward, and the
+     inner edges stay put. --gap = half-gap (distance from centre to each inner edge). */
+  .tb{ position:absolute; inset:0 }
+  /* centre axis = --hg-cx: the HOURGLASS axis (49% = its posts' midpoint) for Top/Middle/Ledge so the
+     flanking numbers are symmetric to the GLASS, not the plate. Horizon keeps 50% (it's free-dragged). */
+  #mm{ right:calc((100% - var(--hg-cx,50%)) + var(--gap)); left:auto; top:var(--tb-top,50%);
+       transform:translateY(-50%) scaleX(var(--num-scaleX)) }
+  #ss{ left:calc(var(--hg-cx,50%) + var(--gap));  right:auto; top:var(--tb-top,50%);
+       transform:translateY(-50%) scaleX(var(--num-scaleX)) }
+  #sep{ left:var(--hg-cx,50%); right:auto; top:var(--tb-top,50%);
+        transform:translate(-50%,-50%) scaleX(var(--num-scaleX)) }
+  #scene[data-place="top"]     { --tb-top:15%; --hg-cx:49.79% }   /* X locked to the hourglass axis */
+  #scene[data-place="middle"]  { --tb-top:48%; --hg-cx:49.79% }
+  #scene[data-place="horizon"] { --tb-top:55% }
+  #scene[data-place="ledge"]   { --tb-top:78%; --hg-cx:49.79% }
+
+  /* ================= VISIBILITY ================= */
+  #scene[data-vis="hover"] #nums{ opacity:0 }
+  #scene[data-vis="hover"]:hover #nums{ opacity:1 }
+  #scene[data-vis="flash"] #nums{ animation:flash 12s ease-in-out infinite }
+  @keyframes flash{ 0%,78%,100%{opacity:0} 84%,94%{opacity:1} }
+  @media (prefers-reduced-motion:reduce){
+    .bg,#nums,.fg{ transform:none !important }
+    #scene[data-vis="flash"] #nums{ animation:none; opacity:1 } }
+</style>
+</head>
+<body>
+<div id="stage"><div id="scene">
+  <div class="layer bg"></div>
+  <div id="nums"><span class="tb">
+    <span class="num" id="mm">25</span><span class="num" id="sep"></span><span class="num" id="ss">00</span>
+  </span></div>
+  <div class="layer fg fg-glass"></div>
+  <div class="layer fg fg-horizon"></div>
+  <div class="layer fg fg-ledge"></div>
+</div></div>
+<script src="js/plan.js"></script>
+<script src="js/session-timer.js"></script>
+<script>
+(function () {
+  var S = document.getElementById('scene'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
+  var cfg = JSON.parse(localStorage.getItem('sustain.session') || 'null')
+         || { mode:'flow', flowMin:25, place:'middle', phase:2, sounds:[], vol:100, sep:'none', font:"'Newsreader',serif", color:'#ffffff', vis:'always', followDay:true, autoContrast:true };
+  var plan = Plan.buildPlan(cfg);
+  var timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });
+  timer.start();
+  var fmt2 = function (n) { return String(n).padStart(2,'0'); };
+  function tick() {
+    var p = timer.progress();
+    var totalSec = cfg.mode === 'endless' ? Math.floor(p.elapsedMs/1000) : Math.ceil(p.remainingMs/1000);
+    mm.textContent = fmt2(Math.floor(totalSec/60) % 100);
+    ss.textContent = fmt2(totalSec % 60);
+  }
+  tick(); setInterval(tick, 250);   // 250ms so the seconds flip crisply; engine is wall-clock, not tick-accumulated
+  // apply the static plate for cfg.phase (see Task 4 for setPlate); default midday for now:
+  document.documentElement.style.setProperty('--plate', 'url("assets/plates/midday.jpg")');
+})();
+</script>
+</body>
+</html>
