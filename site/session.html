@@ -46,10 +46,9 @@
   .bg{ z-index:0 }
 
   /* ---- numbers live BETWEEN bg and the foreground occluders ---- */
-  #nums{ position:absolute; inset:0; z-index:1; cursor:grab; touch-action:none; will-change:transform;
+  #nums{ position:absolute; inset:0; z-index:1; touch-action:none; will-change:transform;
     transform:translate3d(var(--dx,0px),var(--dy,0px),0);
     transition:opacity .5s ease }
-  #nums.dragging{ cursor:grabbing }
   .num{ position:absolute; left:50%; top:50%; line-height:1; white-space:nowrap;
     text-box:trim-both cap alphabetic;   /* centre by cap-height/baseline → font-metric-independent */
     font-family:var(--num-font); font-weight:var(--num-weight);
@@ -123,7 +122,7 @@
 </style>
 </head>
 <body>
-<div id="stage"><div id="scene">
+<div id="stage"><div id="scene" data-fill="solid">
   <div class="layer bg"></div>
   <div id="nums"><span class="tb">
     <span class="num" id="mm">25</span><span class="num" id="sep"></span><span class="num" id="ss">00</span>
@@ -150,8 +149,119 @@
     ss.textContent = fmt2(totalSec % 60);
   }
   tick(); setInterval(tick, 250);   // 250ms so the seconds flip crisply; engine is wall-clock, not tick-accumulated
-  // apply the static plate for cfg.phase (see Task 4 for setPlate); default midday for now:
-  document.documentElement.style.setProperty('--plate', 'url("assets/plates/midday.jpg")');
+
+  // ================= number treatment — ported VERBATIM from web-prototype/number-lab.html =================
+  // (founder-LOCKED design; logic not re-derived, only paths/vars adapted for site/ + cfg-driven wiring)
+
+  // PHASES/withHG plate helper (lab ~281-287). Only with-hourglass plates exist under site/assets/plates/,
+  // and v1 has no hourglass on/off toggle — the wooden hourglass is the scene hero, always shown.
+  var PHASES = ['pre-dawn', 'sunrise', 'midday', 'sunset', 'twilight', 'midnight'];
+  function withHG(i) { return 'assets/plates/' + PHASES[i] + '.jpg'; }
+  function setPlate() {
+    document.documentElement.style.setProperty('--plate', 'url("' + withHG(phase) + '")');
+    sampleBg();   // re-sample bg luminance for auto-contrast
+  }
+
+  // phase resolver (brief Step 2, verbatim): local clock hour -> phase index when cfg.followDay
+  function phaseFromClock() {
+    var h = new Date().getHours();
+    return h < 5 ? 0 : h < 8 ? 1 : h < 16 ? 2 : h < 19 ? 3 : h < 21 ? 4 : 5;
+  }
+  var phase = cfg.followDay ? phaseFromClock() : (cfg.phase | 0);
+
+  // occluders are position-specific (lab refreshFG, ~292-296). Depth-toggle and hourglass-toggle dropped —
+  // neither exists in session v1 (no settings UI yet, hourglass always in-scene) — occlusion is just always on.
+  function refreshFG() {
+    var place = S.dataset.place;
+    document.querySelector('.fg-glass').classList.add('active');
+    document.querySelector('.fg-horizon').classList.toggle('active', place === 'horizon');
+    document.querySelector('.fg-ledge').classList.remove('active');   // Ledge: numbers rest ON the ledge (no depth)
+  }
+
+  // locked per-mode geometry (lab LOCKED, ~382-387) — byte-for-byte site/js/timer-modes.json / web-prototype/timer-modes.json
+  var LOCKED = {
+    horizon: { xPct: -30, yPct: -4.2,  size: '20', gap: '3cqw',  weight: '550', stretch: '1' },
+    middle:  { xPct: 0,   yPct: 4.84,  size: '25', gap: '15cqw', weight: '550', stretch: '1' },
+    top:     { xPct: 0,   yPct: -2.59, size: '25', gap: '3cqw',  weight: '550', stretch: '1' },
+    ledge:   { xPct: 0,   yPct: 11.96, size: '25', gap: '15cqw', weight: '550', stretch: '1' }
+  };
+  // lab applyMode (~391-402), minus slider-sync + tuned-preset fallback — no authoring controls in the session
+  function applyMode(mode) {
+    var p = LOCKED[mode]; if (!p) return;
+    var r = S.getBoundingClientRect();
+    S.style.setProperty('--num-size', p.size);
+    S.style.setProperty('--gap', p.gap);
+    S.style.setProperty('--num-weight', p.weight);
+    S.style.setProperty('--num-scaleX', p.stretch);
+    S.style.setProperty('--dx', (mode === 'horizon' ? p.xPct / 100 * r.width : 0) + 'px');
+    S.style.setProperty('--dy', p.yPct / 100 * r.height + 'px');
+  }
+
+  // auto-contrast (lab rgbOf/setTone/sampleBg, ~414-438, verbatim — overall-luminance version)
+  var bgLuma = 0.5, autoContrast = !!cfg.autoContrast, liftK = 1;
+  function rgbOf(c) {
+    c = (c || '#ffffff').trim(); var r = 255, g = 255, b = 255;
+    if (c[0] === '#') {
+      var h = c.slice(1); if (h.length === 3) h = h.split('').map(function (x) { return x + x; }).join('');
+      r = parseInt(h.slice(0, 2), 16); g = parseInt(h.slice(2, 4), 16); b = parseInt(h.slice(4, 6), 16);
+    } else { var m = c.match(/\d+/g); if (m) { r = +m[0]; g = +m[1]; b = +m[2]; } }
+    return [r, g, b];
+  }
+  function setTone() {
+    var chosen = getComputedStyle(S).getPropertyValue('--num-color').trim();
+    if (!autoContrast) { S.style.setProperty('--num-eff', chosen); return; }
+    var rgb = rgbOf(chosen), r = rgb[0], g = rgb[1], b = rgb[2];
+    var cL = (0.299 * r + 0.587 * g + 0.114 * b) / 255, t = 0;
+    if (cL < 0.5) {                                     // dark colour: lift toward white on DARK scenes only
+      var s = Math.min(1, Math.max(0, (0.46 - bgLuma) / 0.08));
+      var targetL = cL + (0.9 - cL) * s;
+      t = Math.min(1, ((targetL - cL) / (1 - cL)) * liftK);
+    }
+    r = r + (255 - r) * t; g = g + (255 - g) * t; b = b + (255 - b) * t;
+    S.style.setProperty('--num-eff', 'rgb(' + Math.round(r) + ' ' + Math.round(g) + ' ' + Math.round(b) + ')');
+  }
+  function sampleBg() {                                 // OVERALL plate luminance (day vs night) — same for all modes
+    var img = new Image();
+    img.onload = function () {
+      var W = 48, H = 27, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      var g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, W, H);
+      try {
+        var d = g.getImageData(0, 0, W, H).data, sum = 0, n = 0;
+        for (var i = 0; i < d.length; i += 4) { sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; n++; }
+        bgLuma = n ? sum / n / 255 : 0.5;
+      } catch (e) { bgLuma = 0.5; }
+      setTone();
+    };
+    img.onerror = function () { setTone(); };
+    img.src = withHG(phase);
+  }
+
+  // per-mode separator (lab applySepForMode, ~440-444, verbatim). The chip-list update is authoring UI that
+  // doesn't exist yet (Task 7) — querySelectorAll returns an empty NodeList now, so forEach already no-ops.
+  function applySepForMode(mode) {
+    var noSep = (mode === 'middle' || mode === 'ledge');
+    if (noSep) S.dataset.sep = 'none'; else if (S.dataset.sep === 'none') S.dataset.sep = 'colon';
+    document.querySelectorAll('[data-k="sep"] .chip').forEach(function (c) {
+      var isNone = c.dataset.v === 'none';
+      c.disabled = noSep ? !isNone : isNone;
+      c.classList.toggle('on', c.dataset.v === S.dataset.sep);
+    });
+  }
+
+  // wiring (brief Steps 1-2): the locked look for cfg, then phase-driven plate + occluders
+  function applyLook(cfg) {
+    S.dataset.place = cfg.place;
+    S.dataset.sep = cfg.sep;
+    S.style.setProperty('--num-font', cfg.font);
+    S.style.setProperty('--num-color', cfg.color);
+    applyMode(cfg.place);
+    S.dataset.vis = cfg.vis;
+  }
+
+  setPlate();
+  applyLook(cfg);
+  refreshFG();
+  applySepForMode(cfg.place);
 })();
 </script>
 </body>
