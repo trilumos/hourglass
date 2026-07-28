@@ -532,6 +532,26 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
         </div>
         <p class="set-desc" id="timerDesc"></p>
       </div>
+      <div class="sec">
+        <span class="mini-lbl">Number placement</span>
+        <div class="mini-seg" data-seg="place" style="margin-top:.5em">
+          <button data-v="horizon">Horizon</button><button class="on" data-v="middle">Middle</button
+          ><button data-v="ledge">Ledge</button><button data-v="top">Top</button>
+        </div>
+      </div>
+      <div class="sec">
+        <span class="mini-lbl">Numeral fill</span>
+        <div class="mini-seg" data-seg="fill" style="margin-top:.5em">
+          <button class="on" data-v="solid">Solid</button><button data-v="glass">Glass</button
+          ><button data-v="outline">Outline</button>
+        </div>
+      </div>
+      <div class="sec">
+        <span class="mini-lbl">Numeral font</span>
+        <div class="mini-seg" data-seg="font" style="margin-top:.5em">
+          <button class="on" data-v="'Newsreader',serif">Serif</button><button data-v="'Jost',sans-serif">Jost</button>
+        </div>
+      </div>
       <button class="advanced-btn" id="advBtn">Advanced settings</button>
       </div>
     </section>
@@ -577,21 +597,8 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
       </div>
     </div>
 
-    <!-- Number look — placement/font/separator/colour of the on-scene timer numerals.
-         Values are the EXACT tokens session.html reads (place/font/sep/color). -->
-    <div class="sec">
-      <span class="mini-lbl">Number placement</span>
-      <div class="mini-seg" data-seg="place" style="margin-top:.5em">
-        <button data-v="horizon">Horizon</button><button class="on" data-v="middle">Middle</button
-        ><button data-v="ledge">Ledge</button><button data-v="top">Top</button>
-      </div>
-    </div>
-    <div class="sec">
-      <span class="mini-lbl">Numeral font</span>
-      <div class="mini-seg" data-seg="font" style="margin-top:.5em">
-        <button class="on" data-v="'Newsreader',serif">Serif</button><button data-v="'Jost',sans-serif">Jost</button>
-      </div>
-    </div>
+    <!-- Number look — separator/colour of the on-scene timer numerals (placement/fill/font
+         live in the Themes panel). Values are the EXACT tokens session.html reads (sep/color). -->
     <div class="sec">
       <span class="mini-lbl">Separator</span>
       <div class="mini-seg" data-seg="sep" style="margin-top:.5em">
@@ -603,17 +610,6 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
       <span class="mini-lbl">Number colour</span>
       <input type="color" id="numColor" value="#ffffff" aria-label="Number colour"
         style="margin-top:.5em;width:3em;height:1.8em;padding:0;border:0;background:none;cursor:pointer;display:block">
-    </div>
-
-    <div class="sec w2">
-      <span class="mini-lbl">Numeral style <span class="tagw2">· soon</span></span>
-      <div class="style-swatches" style="margin-top:.5em">
-        <span class="sm">25</span><span class="sm" style="font-weight:200">25</span><span class="sm" style="letter-spacing:.1em">25</span>
-      </div>
-    </div>
-    <div class="sec w2">
-      <span class="mini-lbl">Scene focus blur <span class="tagw2">· soon</span></span>
-      <input type="range" min="0" max="100" value="0" disabled style="margin-top:.6em">
     </div>
   </div>
 </div>
@@ -1002,7 +998,7 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
 
   // ── Generic mini-segments (sun/moon, timer show, number-look, cycle) ───────
   var segState={ sunmoon:'show', timershow:'always',
-    place:'middle', font:"'Newsreader',serif", sep:'none',   // number-look picker
+    place:'middle', fill:'solid', font:"'Newsreader',serif", sep:'none',   // number-look picker
     cycChange:'once', cycBy:'cycles' };
   // Plain-words explanation of the chosen timer-display option.
   var TIMER_DESC={
@@ -1266,8 +1262,7 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
   // ── Nav stubs (Home / Session come later) ──────────────────────────────────
   qs('#back').addEventListener('click',function(){ qs('#stage').style.transition='opacity .3s'; qs('#stage').style.opacity='.4';
     setTimeout(function(){ qs('#stage').style.opacity='1'; },320); });
-  qs('#begin').addEventListener('click',function(){ this.textContent='Focusing…'; var b=this;
-    setTimeout(function(){ b.textContent='Begin'; },900);
+  qs('#begin').addEventListener('click',function(){ this.textContent='Focusing…';
     // Persist the full config so session.html runs the user's Setup choices.
     // Plan fields come straight from `st` (the SAME object Setup feeds Plan.buildPlan);
     // the rest are the look/scene/sound fields session.html reads — exact value formats.
@@ -1276,6 +1271,7 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     var cfg={};
     for(var k in st) cfg[k]=st[k];                                   // mode + all mode-specific plan fields
     cfg.place = segState.place;                                      // horizon|middle|ledge|top
+    cfg.fill  = segState.fill;                                       // solid|glass|outline
     cfg.font  = segState.font;                                       // 'Newsreader',serif | 'Jost',sans-serif
     cfg.sep   = segState.sep;                                        // colon|dot|none (per-mode rule already applied)
     cfg.color = qs('#numColor').value;                              // #rrggbb
