@@ -231,7 +231,7 @@
   .mini-lbl{ font-weight:500; letter-spacing:.2em; text-transform:uppercase; font-size:var(--t-sm); opacity:.8; }
 
   /* chips + chip rows (setup.html ~L225, L261-268) — sound toggles, mode/font/sep/scene groups */
-  .chips{ display:flex; flex-wrap:wrap; gap:var(--sp-in); }
+  .chips{ display:flex; flex-wrap:wrap; gap:var(--sp-in); justify-content:center; }
   .chip{
     font-family:inherit; font-weight:400; font-size:var(--t-md); color:var(--ink);
     cursor:pointer; padding:var(--ctrl-y) var(--ctrl-x); border-radius:100px; background:var(--frost-bg);
@@ -318,7 +318,7 @@
   </div>
 
   <div class="sec">
-    <span class="mini-lbl">Timer</span>
+    <span class="mini-lbl">Timer visibility</span>
     <div class="mini-seg" data-seg="vis">
       <button data-v="always">Always</button><button data-v="hover">On hover</button><button data-v="hidden">Hidden</button>
     </div>
@@ -366,7 +366,7 @@
 (function () {
   var S = document.getElementById('scene'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
   var cfg = JSON.parse(localStorage.getItem('sustain.session') || 'null')
-         || { mode:'flow', flowMin:25, place:'middle', phase:2, sounds:[], vol:100, sep:'none', font:"'Newsreader',serif", color:'#ffffff', vis:'always', followDay:true, autoContrast:true };
+         || { mode:'flow', flowMin:25, place:'middle', phase:2, sounds:[], vol:100, soundVol:{sand:100,ocean:100,breeze:100,birds:100}, sep:'none', font:"'Newsreader',serif", color:'#ffffff', vis:'always', followDay:true, autoContrast:true };
   var plan = Plan.buildPlan(cfg);
   var timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });
   timer.start();
@@ -640,7 +640,7 @@
     var id=r.dataset.mix, v=+r.value;
     SOUND_VOL[id]=v; r.style.setProperty('--fill',v+'%');
     document.querySelector('[data-mixv="'+id+'"]').textContent=v+'%';
-    applyVol(id);
+    applyVol(id); cfg.soundVol[id]=v; saveCfg();
   });
   volEl.addEventListener('input',function(e){
     masterPos=+e.target.value; volPctEl.textContent=masterPos+'%';
@@ -652,7 +652,11 @@
   var AUDIO_FILE={ sand:'sand.m4a', ocean:'ocean.mp3', breeze:'breeze.mp3', birds:'birds.mp3' };
   var LOOP_POINTS={ sand:[0.15,13.20], ocean:[0.35,70.0], breeze:[0.35,97.846], birds:[0.0,22.5] };
   var SOUND_GAIN={ sand:30, ocean:2.2, breeze:0.40, birds:8.0 };
-  var SOUND_VOL={ sand:100, ocean:100, breeze:100, birds:100 };   // user 0-100 per sound (session-runtime)
+  var SOUND_VOL={ sand:100, ocean:100, breeze:100, birds:100 };   // user 0-100 per sound
+  // persist per-sound volumes via cfg.soundVol; older saved configs won't have it, and a partial
+  // map is safe — per-key-default any missing sound to 100.
+  cfg.soundVol = cfg.soundVol || { sand:100, ocean:100, breeze:100, birds:100 };
+  SOUNDS.forEach(function(s){ SOUND_VOL[s.id] = cfg.soundVol[s.id]==null ? 100 : cfg.soundVol[s.id]; });
   var DUCK={ sand:{ ocean:0.20 }, breeze:{ ocean:0.60 } };
   function isOn(id){ for(var i=0;i<SOUNDS.length;i++) if(SOUNDS[i].id===id) return !!SOUNDS[i].on; return false; }
   function duckFactor(id){ var d=DUCK[id], f=1; if(d) for(var k in d) if(isOn(k)) f*=d[k]; return f; }
