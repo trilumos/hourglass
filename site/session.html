@@ -150,32 +150,70 @@
   @media (prefers-reduced-transparency: reduce){
     .frost{ background:#1a1d26f2; -webkit-backdrop-filter:none; backdrop-filter:none; }
   }
-  /* bottom-centre bar — .frost paints it; position/pill-radius mirrors Setup's floating
-     .begin button (~L377): same anchor, same radius, the same "last calm decision" placement. */
-  #controls{
-    position:absolute; left:50%; bottom:clamp(20px,4.5cqh,52px); transform:translateX(-50%); z-index:5;
-    display:flex; align-items:center; gap:.3em; border-radius:100px; padding:.35em;
-  }
-  #controls button{
-    font-family:inherit; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
-    font-size:clamp(10px,1.05cqi,14px); color:#fff; cursor:pointer;
-    padding:1.05em 2.2em; border-radius:100px; border:none; background:none;
-    transition:background .2s;
-  }
-  #controls button:hover{ background:rgba(255,255,255,.14); }
-  /* top-right icon button — .frost paints it; shape/position mirrors Setup's .backbtn
-     (~L100), mirrored to the opposite corner. Click (settings panel) is wired in Task 7. */
+  /* ---- session chrome redesign (Direction B): settings/give-up are quiet corner controls,
+       Pause is the one primary action — a standalone circle so it clears the hourglass sand
+       (vs. the old wide bottom pill). ---- */
+
+  /* top-left — settings. Small frost circle, inline-SVG sliders glyph (no emoji). */
   #gear{
-    position:absolute; right:clamp(14px,2.4cqi,46px); top:clamp(14px,2.4cqi,46px); z-index:5;
-    width:clamp(34px,3cqi,46px); aspect-ratio:1; border-radius:50%;
-    color:var(--ink); font-size:clamp(14px,1.3cqi,20px); line-height:1; cursor:pointer;
-    border:none; display:flex; align-items:center; justify-content:center;
+    position:absolute; left:clamp(12px,2cqi,20px); top:clamp(12px,2cqi,20px); z-index:5;
+    width:clamp(34px,3.4cqi,44px); aspect-ratio:1; border-radius:50%;
+    border:none; padding:0; cursor:pointer; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #gear svg{ width:52%; height:52%; }
+
+  /* top-right — the rare/destructive exit. Deliberately quiet text, never a peer of Pause. */
+  #giveup{
+    position:absolute; right:clamp(14px,2.2cqi,22px); top:clamp(14px,2.2cqi,22px); z-index:5;
+    min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+    font-family:inherit; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+    font-size:clamp(11px,1.15cqi,13px); color:var(--ink-dim); cursor:pointer;
+    padding:.5em .7em; border-radius:100px; border:none; background:none;
+    transition:color .2s,background .2s;
+  }
+  #giveup:hover, #giveup:focus-visible{ color:var(--ink); background:rgba(255,255,255,.08); }
+
+  /* bottom-centre — Pause/Resume, the one main control. A frost circle (not a pill) so it clears
+     the hourglass sand; the media glyph swaps in JS, the gold ring is the paused state. */
+  #pause{
+    position:absolute; left:50%; bottom:clamp(20px,4.5cqh,52px); transform:translateX(-50%); z-index:5;
+    width:clamp(48px,6cqh,60px); aspect-ratio:1; border-radius:50%;
+    border:none; padding:0; cursor:pointer; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    transition:filter .2s, transform .1s;
+  }
+  #pause svg{ width:42%; height:42%; }
+  #pause:hover{ filter:brightness(1.2); }
+  #pause:active{ transform:translateX(-50%) scale(.96); }
+  /* paused state — the one rare, stateful use of the gold accent. box-shadow isn't additive
+     across rules, so .frost's own shadows are repeated here alongside the ring; neither is lost. */
+  #pause.paused{
+    box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55,
+                0 22px 55px rgba(0,0,0,.34), 0 0 0 1.5px var(--gold);
   }
 
-  /* chrome fade-when-idle — #controls/#gear ONLY. Kept fully separate from S.dataset.vis
+  /* Endless "Flip" — quiet secondary like Give-up, centred just above the pause circle. */
+  #flipBtn{
+    position:absolute; left:50%; transform:translateX(-50%); z-index:5;
+    bottom:calc(clamp(20px,4.5cqh,52px) + clamp(48px,6cqh,60px) + .8em);
+    font-family:inherit; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+    font-size:clamp(11px,1.15cqi,13px); color:var(--ink-dim); cursor:pointer;
+    padding:.5em .9em; border-radius:100px; border:none; background:none;
+    transition:color .2s,background .2s;
+  }
+  #flipBtn[hidden]{ display:none; }
+  #flipBtn:hover, #flipBtn:focus-visible{ color:var(--ink); background:rgba(255,255,255,.08); }
+
+  /* chrome fade-when-idle — ALL chrome controls. Kept fully separate from S.dataset.vis
      (Task 4's number-visibility) and from #done (a modal — exempt, never opacity-governed here). */
-  #controls,#gear{ opacity:0; transition:opacity .4s }
-  body.active #controls, body.active #gear{ opacity:1 }
+  #gear, #giveup, #pause, #flipBtn{ opacity:0; transition:opacity .4s var(--e-std); }
+  body.active #gear, body.active #giveup, body.active #pause, body.active #flipBtn{ opacity:1; }
+
+  /* the only gold focus ring in the app — reserved for these controls */
+  #gear:focus-visible, #giveup:focus-visible, #pause:focus-visible, #flipBtn:focus-visible{
+    outline:2px solid var(--gold); outline-offset:3px;
+  }
 
   /* done-state overlay — dim scrim + a centred .frost card (Setup's material, not a new one).
      Fully visible whenever shown; the idle-fade rule above never touches it. */
@@ -294,8 +332,10 @@
 </div>
 <div id="seglabel" class="frost"></div>
 <div id="flip"></div>
-<button id="gear" class="frost" aria-label="Settings">⚙</button>
-<div id="controls" class="frost"><button id="pause">Pause</button><button id="flipBtn" hidden>Flip</button><button id="end">End</button></div>
+<button id="gear" class="frost" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="15" cy="7" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="9" cy="12" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="17" cy="17" r="2.3" fill="currentColor" stroke="none"/></svg></button>
+<button id="giveup" aria-label="End session">Give up</button>
+<button id="flipBtn" hidden>Flip</button>
+<button id="pause" class="frost" aria-label="Pause session" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="5" x2="8" y2="19"/><line x1="16" y1="5" x2="16" y2="19"/></svg></button>
 <div id="done" hidden>
   <div class="frost donecard">
     <p class="donecard-total">Focused <b id="doneMin">0m</b> today</p>
@@ -391,7 +431,21 @@
     o.min += min;
     localStorage.setItem(k, JSON.stringify(o));
   }
-  function endSession() { location.href = 'setup.html'; }
+  function endSession() { guardActive = false; location.href = 'setup.html'; }
+
+  // ================= navigation guard — a running session must NEVER be abandoned by accident =================
+  // Trap Back/back-swipe in a pushState loop + warn on reload/close. Cleared only by an intentional
+  // exit (endSession, above) — "Again" and normal completion never navigate, so they're unaffected.
+  var guardActive = true;
+  history.pushState(null, '', location.href);
+  window.addEventListener('popstate', function () {
+    if (!guardActive) return;
+    history.pushState(null, '', location.href);
+    showSegLabel('Use "Give up" to end your session');
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (guardActive) { e.preventDefault(); e.returnValue = ''; }
+  });
 
   // gentle sine blip at each focus↔rest boundary — see the sharedCtx contract above; a plain
   // no-op until Task 7 assigns a live AudioContext
@@ -439,11 +493,20 @@
   tick(); setInterval(tick, 250);   // 250ms so the seconds flip crisply; engine is wall-clock, not tick-accumulated
 
   var pauseBtn = document.getElementById('pause');
+  var PAUSE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="5" x2="8" y2="19"/><line x1="16" y1="5" x2="16" y2="19"/></svg>';
+  var PLAY_SVG  = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
   pauseBtn.addEventListener('click', function () {
-    if (timer.isPaused()) { timer.resume(); pauseBtn.textContent = 'Pause'; }
-    else { timer.pause(); pauseBtn.textContent = 'Resume'; }
+    if (timer.isPaused()) {
+      timer.resume();
+      pauseBtn.innerHTML = PAUSE_SVG; pauseBtn.classList.remove('paused');
+      pauseBtn.setAttribute('aria-pressed', 'false'); pauseBtn.setAttribute('aria-label', 'Pause session');
+    } else {
+      timer.pause();
+      pauseBtn.innerHTML = PLAY_SVG; pauseBtn.classList.add('paused');
+      pauseBtn.setAttribute('aria-pressed', 'true'); pauseBtn.setAttribute('aria-label', 'Resume session');
+    }
   });
-  document.getElementById('end').addEventListener('click', endSession);
+  document.getElementById('giveup').addEventListener('click', endSession);
   document.getElementById('doneEnd').addEventListener('click', endSession);
   document.getElementById('again').addEventListener('click', function () {
     timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });
@@ -472,8 +535,8 @@
     });
   }
 
-  // chrome fade-when-idle — #controls/#gear ONLY. Kept separate from S.dataset.vis (Task 4's
-  // number-visibility) and from #done (a modal — never governed by this).
+  // chrome fade-when-idle — all chrome controls (#gear/#giveup/#pause/#flipBtn). Kept separate
+  // from S.dataset.vis (Task 4's number-visibility) and from #done (a modal — never governed by this).
   var idleT = null;
   function wake() {
     document.body.classList.add('active');
