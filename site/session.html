@@ -176,6 +176,19 @@
     transition:background .2s;
   }
   .donecard-btns button:hover{ background:rgba(255,255,255,.17) }
+
+  /* ================= SEGMENT LABEL + ENDLESS FLIP (Task 6) ================= */
+  /* transition toast — Setup's frost material, reused; fades in on a segment change, auto-fades ~2s later */
+  #seglabel{
+    position:absolute; left:50%; top:clamp(20px,6cqh,56px); transform:translateX(-50%); z-index:4;
+    padding:.7em 1.6em; border-radius:100px; pointer-events:none;
+    font-family:inherit; font-weight:500; letter-spacing:.15em; text-transform:uppercase;
+    font-size:clamp(10px,1.05cqi,14px); color:var(--ink);
+    opacity:0; transition:opacity .4s;
+  }
+  #seglabel.show{ opacity:1 }
+  /* full-screen fade-through-black for Endless's user-triggered "flip" (reset the count, no sand anim in v1) */
+  #flip{ position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .5s; z-index:7 }
 </style>
 </head>
 <body>
@@ -188,8 +201,10 @@
   <div class="layer fg fg-horizon"></div>
   <div class="layer fg fg-ledge"></div>
 </div>
+<div id="seglabel" class="frost"></div>
+<div id="flip"></div>
 <button id="gear" class="frost" aria-label="Settings">⚙</button>
-<div id="controls" class="frost"><button id="pause">Pause</button><button id="end">End</button></div>
+<div id="controls" class="frost"><button id="pause">Pause</button><button id="flipBtn" hidden>Flip</button><button id="end">End</button></div>
 <div id="done" hidden>
   <div class="frost donecard">
     <p class="donecard-total">Focused <b id="doneMin">0m</b> today</p>
@@ -209,8 +224,13 @@
   timer.start();
   var fmt2 = function (n) { return String(n).padStart(2,'0'); };
 
+  // Task 7 contract: the ported audio engine assigns its live AudioContext here
+  // (sharedCtx = <engine ctx>) so softCue() below becomes audible. Until then it stays
+  // null and softCue no-ops silently (no throw) — expected pre-Task-7 behaviour.
+  var sharedCtx = null;
+
   // ================= controls (Task 5) — pause/resume, end, done-state, focusedToday =================
-  var focusMin = Plan.totalFocusOf(plan), shownDone = false;
+  var focusMin = Plan.totalFocusOf(plan), shownDone = false, lastSegIndex = 0;
   var doneEl = document.getElementById('done'), doneMinEl = document.getElementById('doneMin');
   function bumpFocusedToday(min) {
     var k = 'sustain.focusedToday', today = new Date().toDateString();
@@ -221,11 +241,40 @@
   }
   function endSession() { location.href = 'setup.html'; }
 
+  // gentle sine blip at each focus↔rest boundary — see the sharedCtx contract above; a plain
+  // no-op until Task 7 assigns a live AudioContext
+  function softCue(kind) {
+    if (sharedCtx == null) return;
+    sharedCtx.resume();
+    var now = sharedCtx.currentTime;
+    var osc = sharedCtx.createOscillator(), gain = sharedCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = kind === 'rest' ? 440 : 660;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.06, now + 0.2);
+    gain.gain.linearRampToValueAtTime(0, now + 0.4);
+    osc.connect(gain).connect(sharedCtx.destination);
+    osc.start(now); osc.stop(now + 0.4);
+  }
+
+  var seglabelEl = document.getElementById('seglabel'), seglabelT = null;
+  function showSegLabel(text) {
+    seglabelEl.textContent = text;
+    seglabelEl.classList.add('show');
+    clearTimeout(seglabelT);
+    seglabelT = setTimeout(function () { seglabelEl.classList.remove('show'); }, 2000);
+  }
+
   function tick() {
     var p = timer.progress();
     var totalSec = cfg.mode === 'endless' ? Math.floor(p.elapsedMs/1000) : Math.ceil(p.remainingMs/1000);
     mm.textContent = fmt2(Math.floor(totalSec/60) % 100);
     ss.textContent = fmt2(totalSec % 60);
+    if (!p.done && p.segIndex !== lastSegIndex) {   // segment auto-advance — guarded so it never fires at t=0 or on done
+      softCue(p.kind);
+      showSegLabel(p.kind === 'rest' ? 'Break · ' + Plan.fmt(plan[p.segIndex].min) : 'Focus');
+      lastSegIndex = p.segIndex;
+    }
     if (p.done && !shownDone) {          // endless mode never reaches here — progress().done stays false forever
       shownDone = true;
       bumpFocusedToday(focusMin);
@@ -246,9 +295,28 @@
     timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });
     timer.start();
     shownDone = false;
+    lastSegIndex = 0;
     doneEl.hidden = true;
   });
   // #gear: click intentionally unwired — the settings panel it opens is Task 7.
+
+  // ================= Endless fade-flip (Task 6) — user-triggered reset, fade through black =================
+  function fadeFlip(reset) {
+    var f = document.getElementById('flip');
+    f.style.opacity = '1';
+    setTimeout(function () { reset(); f.style.opacity = '0'; }, 500);
+  }
+  if (cfg.mode === 'endless') {
+    var flipBtn = document.getElementById('flipBtn');
+    flipBtn.hidden = false;
+    flipBtn.addEventListener('click', function () {
+      fadeFlip(function () {
+        timer = SessionTimer.create(plan, { endless: true });
+        timer.start();
+        lastSegIndex = 0;
+      });
+    });
+  }
 
   // chrome fade-when-idle — #controls/#gear ONLY. Kept separate from S.dataset.vis (Task 4's
   // number-visibility) and from #done (a modal — never governed by this).
