@@ -299,6 +299,14 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
    re-mounted** (View Transitions + `@starting-style`). This delivers the audio-carry fix.
 3. **Port the keepers:** the rendered-sand scene renderer (live) · `plan.js`/`session-timer.js` (→ ES
    modules) · the setup + session screens (→ scoped components) · the audio engine.
+   - **Scene port = VERBATIM, plumbing-only changes (2026-07-29).** `hybrid.html`'s fragment shader (sun/moon/
+     glitter) and sand physics are finely hand-tuned; copy them **exactly**. Change only: three importmap →
+     npm `import`; `<script type="x-shader">` tags → inline template-string constants; asset paths →
+     `/plates-phases/*`, `/plates/moon-tex.png` (public/); the `#ui` **debug sliders' default `value=`s
+     become baked-in locked constants** (drop the panel, or keep it dev-only); the `#session-ui` basic timer
+     is dropped (real Setup/Session drives the scene). Adapt three `r0.170→0.185` colour-management APIs if
+     needed. Verify it renders identically **before** exposing the scene API (`setProgress`, phase/time) and
+     layering the UI.
 4. **Wire LIVE rendered sand** in the session (hourglass driven by `S.prog`) + **moving sun/moon on the real
    clock** (§6).
 5. **Location schedule:** timezone→coords→SunCalc, replacing the hardcoded hours (§5).
