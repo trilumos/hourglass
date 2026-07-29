@@ -233,8 +233,14 @@
 
   /* chrome fade-when-idle — ALL chrome controls. Kept fully separate from S.dataset.vis
      (Task 4's number-visibility) and from #done (a modal — exempt, never opacity-governed here). */
-  #gear, #giveup, #pause, #flipBtn{ opacity:0; transition:opacity .4s var(--e-std); }
-  body.active #gear, body.active #giveup, body.active #pause, body.active #flipBtn{ opacity:1; }
+  #gear, #giveup, #pause, #flipBtn, #intentTop{ opacity:0; transition:opacity .4s var(--e-std); }
+  body.active #gear, body.active #giveup, body.active #pause, body.active #flipBtn, body.active #intentTop{ opacity:1; }
+  /* the user's Intention, quiet at top-centre — reveals/fades with the chrome. */
+  #intentTop{ position:absolute; top:clamp(16px,2.6cqi,30px); left:50%; transform:translateX(-50%); z-index:5;
+    max-width:56cqi; text-align:center; font-family:'Jost',sans-serif; font-weight:400; font-size:clamp(12px,1.5cqi,17px);
+    letter-spacing:.03em; color:var(--ink); text-shadow:0 1px 10px rgba(0,0,0,.4); pointer-events:none;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #intentTop[hidden]{ display:none; }
 
   /* the only gold focus ring in the app — reserved for these controls */
   #gear:focus-visible, #giveup:focus-visible, #pause:focus-visible, #flipBtn:focus-visible{
@@ -412,6 +418,7 @@
 <div id="flip"></div>
 <button id="gear" class="frost" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="15" cy="7" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="9" cy="12" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="17" cy="17" r="2.3" fill="currentColor" stroke="none"/></svg></button>
 <button id="giveup" aria-label="End session">Give up</button>
+<div id="intentTop" hidden></div>
 <button id="flipBtn" hidden>Flip</button>
 <button id="pause" class="frost" aria-label="Pause session" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="5" x2="8" y2="19"/><line x1="16" y1="5" x2="16" y2="19"/></svg></button>
 <div id="done" hidden>
@@ -640,6 +647,7 @@
     pauseBtn.innerHTML = PLAY_SVG; pauseBtn.classList.add('paused');
     pauseBtn.setAttribute('aria-pressed', 'true'); pauseBtn.setAttribute('aria-label', 'Resume session');
     pausedEl.classList.add('show');
+    wake();                            // keep the chrome (Resume/Settings/Give up) visible while paused
     if (master) {                      // fade theme sounds to silence — master only; sources keep running
       var t = AC.currentTime;
       master.gain.cancelScheduledValues(t);
@@ -653,6 +661,7 @@
     pauseBtn.innerHTML = PAUSE_SVG; pauseBtn.classList.remove('paused');
     pauseBtn.setAttribute('aria-pressed', 'false'); pauseBtn.setAttribute('aria-label', 'Pause session');
     pausedEl.classList.remove('show');
+    wake();                            // reveal chrome, then it fades again on its own since the session is running
     syncAudio();                       // re-ramps master back to gainFor() — gapless, sources never stopped
     clearInterval(pauseWatch); pauseWatch = null; pausedAt = null;
     pauseGrace.classList.remove('show');
@@ -665,6 +674,9 @@
   document.getElementById('giveup').addEventListener('click', function () { giveupConfirmEl.hidden = false; });
   document.getElementById('gcKeep').addEventListener('click', function () { giveupConfirmEl.hidden = true; });
   document.getElementById('gcGive').addEventListener('click', endSession);
+  // the user's Intention from Setup, shown quietly at top-centre (fades with the chrome).
+  var intentTopEl = document.getElementById('intentTop');
+  if (cfg.intention) { intentTopEl.textContent = cfg.intention; intentTopEl.hidden = false; }
   document.getElementById('doneEnd').addEventListener('click', endSession);
   document.getElementById('again').addEventListener('click', function () {
     timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });
@@ -699,7 +711,7 @@
   function wake() {
     document.body.classList.add('active');
     clearTimeout(idleT);
-    idleT = setTimeout(function () { document.body.classList.remove('active'); }, 3000);
+    idleT = setTimeout(function () { if (!timer.isPaused()) document.body.classList.remove('active'); }, 3000);  // chrome stays put while paused
   }
   window.addEventListener('pointermove', wake);
   window.addEventListener('touchstart', wake, { passive: true });
