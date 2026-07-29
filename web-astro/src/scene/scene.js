@@ -14,11 +14,11 @@ import { VERT, FRAG } from './shaders.js';
 // silhouette sits in the exact same pixels in every plate, the coded sand never
 // shifts when the background crossfades between phases.
 const PLATES = [
-  '/plates-phases/pre-dawn.png', '/plates-phases/sunrise.png', '/plates-phases/midday.png',
-  '/plates-phases/sunset.png',   '/plates-phases/twilight.png', '/plates-phases/midnight.png',
+  '/plates-phases/pre-dawn.jpg', '/plates-phases/sunrise.jpg', '/plates-phases/midday.jpg',
+  '/plates-phases/sunset.jpg',   '/plates-phases/twilight.jpg', '/plates-phases/midnight.jpg',
 ];
 const PHASE_NAMES = ['Pre-Dawn','Sunrise','Mid Day','Sunset','Twilight','Mid Night'];
-const IMG_W = 1671, IMG_H = 941, AR = IMG_W / IMG_H;
+const IMG_W = 1600, IMG_H = 901, AR = IMG_W / IMG_H;   // session's assets/plates framing (ledge-safe margin)
 const $ = id => document.getElementById(id);
 
 // ── layout: letterbox the image, size both canvases to the displayed rect ────
