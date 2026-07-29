@@ -540,12 +540,14 @@
   var plan = Plan.buildPlan(cfg);
   var timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });
   timer.start();
+  softCue();   // session-start bell (best-effort — silent until the first tap unlocks audio; see note in softCue)
   var fmt2 = function (n) { return String(n).padStart(2,'0'); };
 
   // Task 7 contract: the ported audio engine assigns its live AudioContext here
   // (sharedCtx = <engine ctx>) so softCue() below becomes audible. Until then it stays
   // null and softCue no-ops silently (no throw) — expected pre-Task-7 behaviour.
   var sharedCtx = null;
+  var cueBuffer = null;   // decoded cue_bell.mp3 — loaded once the AudioContext inits (see ensureAudio)
 
   // ================= controls (Task 5) — pause/resume, end, done-state, focusedToday =================
   var focusMin = Plan.totalFocusOf(plan), shownDone = false, lastSegIndex = 0;
@@ -573,20 +575,19 @@
     if (guardActive) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  // gentle sine blip at each focus↔rest boundary — see the sharedCtx contract above; a plain
-  // no-op until Task 7 assigns a live AudioContext
-  function softCue(kind) {
-    if (sharedCtx == null) return;
+  // Ritual cue — the same soft bell the app rings at session start/end and each break boundary.
+  // Needs an unlocked AudioContext (sharedCtx) + the loaded buffer; otherwise no-ops silently
+  // (web autoplay: audio can't sound before the user's first gesture on the page).
+  function softCue() {
+    if (sharedCtx == null || cueBuffer == null) return;
     sharedCtx.resume();
-    var now = sharedCtx.currentTime;
-    var osc = sharedCtx.createOscillator(), gain = sharedCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = kind === 'rest' ? 440 : 660;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.06, now + 0.2);
-    gain.gain.linearRampToValueAtTime(0, now + 0.4);
-    osc.connect(gain).connect(sharedCtx.destination);
-    osc.start(now); osc.stop(now + 0.4);
+    var t = sharedCtx.currentTime;
+    var src = sharedCtx.createBufferSource(); src.buffer = cueBuffer;
+    var g = sharedCtx.createGain(); g.gain.value = 0.55;      // app's cue volume
+    g.gain.setValueAtTime(0.55, t + 4.2);                     // ~4.5s cue, then a short tail fade so the long
+    g.gain.linearRampToValueAtTime(0, t + 4.9);               // bell doesn't ring on forever (app clips to 5s)
+    src.connect(g).connect(sharedCtx.destination);
+    src.start(t); src.stop(t + 5.0);
   }
 
   var seglabelEl = document.getElementById('seglabel'), seglabelT = null;
@@ -615,6 +616,7 @@
     }
     if (p.done && !shownDone) {          // endless mode never reaches here — progress().done stays false forever
       shownDone = true;
+      softCue();                         // session-end bell
       bumpFocusedToday(focusMin);
       doneMinEl.textContent = Plan.fmt(focusMin);
       doneEl.hidden = false;
@@ -917,6 +919,8 @@
     if(AC) return;
     AC=new (window.AudioContext||window.webkitAudioContext)();
     sharedCtx = AC;                                           // Task 6 contract: softCue() shares this ctx
+    if(!cueBuffer) fetch('assets/audio/cue_bell.mp3?v=1').then(function(r){return r.arrayBuffer();})  // ritual bell
+      .then(function(b){ return AC.decodeAudioData(b); }).then(function(buf){ cueBuffer=buf; }).catch(function(){});
     var lim=AC.createDynamicsCompressor();
     lim.threshold.value=-1.5; lim.knee.value=0; lim.ratio.value=20;
     lim.attack.value=0.003; lim.release.value=0.15;
