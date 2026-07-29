@@ -405,7 +405,9 @@
 * { margin:0; padding:0; box-sizing:border-box; }
   html,body { height:100%; overflow:hidden; background:#0a1a2a;
               font-family: ui-sans-serif, system-ui, sans-serif; }
-  #stage { position:fixed; inset:0; display:grid; place-items:center; overflow:hidden; }
+  #stage { position:fixed; inset:0; display:grid; place-items:end center; overflow:hidden; }
+  /* cover fills the viewport; anchor the crop to the BOTTOM (align:end) so the excess trims from the
+     top sky, never the ledge/hourglass base — our deploy plate sits tighter to the bottom than session's. */
   #frame { position:relative; }
   #glitter, #sand { position:absolute; inset:0; display:block; }
   #sand { pointer-events:none; transition:opacity .4s ease; }
