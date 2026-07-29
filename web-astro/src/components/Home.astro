@@ -1,0 +1,178 @@
+---
+// Home (Hero) — ported from the LOCKED hero-v22 (handoff: 2026-07-23-sustain-web-hero-handoff.md).
+// Golden-ratio phi-band layout over the live WebGL scene. Glass tokens + type stack are v22 verbatim.
+// Legibility = the handoff's per-glyph text-shadow halos (NOT v22's blur-boxes — those assumed a STATIC
+// plate; blur over a live canvas is the perf/seam trap the handoff §3/§4 forbids). Full-viewport (v22 was
+// a 16:9 card). "Focused Today" wired to real localStorage. Begin Focus -> Setup gets wired next.
+---
+<!-- shared liquid-glass refraction filter (small elements only) -->
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <filter id="glassdist" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.006 0.006" numOctaves="1" seed="12" result="t"/>
+    <feGaussianBlur in="t" stdDeviation="2" result="s"/>
+    <feDisplacementMap in="SourceGraphic" in2="s" scale="52" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<section class="hero" id="home" aria-label="Sustain — a calm focus timer">
+  <div class="vign"></div>
+  <div class="grain"></div>
+
+  <nav class="nav glass-quiet">
+    <span class="wm">sustain</span>
+    <span class="links"><span>About</span><span>Themes</span><span>Get the app</span><span class="ico">&#9881;</span></span>
+  </nav>
+
+  <div class="left">
+    <h1 class="brand">Sustain</h1>
+    <p class="tagline">Time flows. You focus.</p>
+    <p class="clarity">A calm focus timer that moves with your day.</p>
+    <div class="ctas">
+      <button class="cta glass-liquid" id="beginFocus" type="button"><span>Begin Focus</span><span class="arw">&#8594;</span></button>
+    </div>
+    <a class="play glass-liquid" href="#" aria-label="Get it on Google Play">
+      <svg class="gp" viewBox="0 0 26 30" width="1.25em" height="1.42em" aria-hidden="true">
+        <polygon points="3,4 23,15 3,15" fill="#12B5FF"/><polygon points="3,15 23,15 3,26" fill="#00D26A"/>
+        <polygon points="23,15 15,10.6 15,15" fill="#FF424B"/><polygon points="23,15 15,19.4 15,15" fill="#FFC400"/>
+      </svg>
+      <span class="pl"><small>GET IT ON</small>Google&nbsp;Play</span>
+    </a>
+  </div>
+
+  <div class="right">
+    <div class="ftlabel">Focused Today</div>
+    <div class="ftbig" id="ftBig">0<span class="u">m</span></div>
+    <div class="goalbar"><i id="ftBar"></i></div>
+    <div class="goal">Daily goal 8h</div>
+    <div class="qdiv"></div>
+    <div class="qwrap"><span class="qmark">&ldquo;</span><p class="quote">Discipline is choosing between what you want now and what you want most.</p></div>
+  </div>
+
+  <div class="dock glass-liquid">
+    <span class="ico">&#9834;</span><span>Ocean Breeze</span>
+    <span class="wv"><i></i><i></i><i></i><i></i><i></i></span>
+  </div>
+</section>
+
+<style>
+  /* full-viewport hero over the live scene (v22 was a 16:9 card). cqi units resolve to viewport width. */
+  .hero{ position:fixed; inset:0; z-index:5; overflow:hidden; isolation:isolate; container-type:inline-size;
+         /* per-glyph text-shadow halos (handoff §4) — scene stays 100% sharp, no scene blur */
+         --halo:0 0 1px rgba(6,8,16,.70),0 0 2px rgba(6,8,16,.58),0 0 4px rgba(6,8,16,.42),0 0 8px rgba(6,8,16,.26),0 1px 2px rgba(6,8,16,.55);
+         --halo-strong:0 0 1px rgba(6,8,16,.82),0 0 2px rgba(6,8,16,.70),0 0 4px rgba(6,8,16,.54),0 0 8px rgba(6,8,16,.40),0 0 15px rgba(6,8,16,.30),0 1px 2px rgba(6,8,16,.66); }
+  .hero *{ box-sizing:border-box; }
+
+  /* cinematic vignette — darkens edges where the UI lives, keeps centre real (v22 verbatim) */
+  .vign{ position:absolute; inset:0; pointer-events:none; z-index:2;
+    background:
+      radial-gradient(128% 112% at 50% 45%, transparent 34%, rgba(4,6,14,.22) 60%, rgba(4,6,14,.6) 100%),
+      linear-gradient(95deg,  rgba(4,6,14,.78) 0%, rgba(4,6,14,.46) 15%, rgba(4,6,14,.13) 31%, transparent 46%),
+      linear-gradient(265deg, rgba(4,6,14,.5) 0%, rgba(4,6,14,.22) 14%, transparent 34%),
+      linear-gradient(180deg, rgba(4,6,14,.46) 0%, transparent 15%),
+      linear-gradient(0deg,   rgba(4,6,14,.4) 0%, transparent 16%); }
+  .grain{ position:absolute; inset:0; pointer-events:none; z-index:3;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:220px 220px; opacity:.12; mix-blend-mode:overlay; }
+
+  /* ===== GLASS TOKENS (v22 verbatim, calibrated to the hourglass) ===== */
+  .glass-liquid{ position:relative; isolation:isolate; color:#fff;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.24); box-shadow:0 8px 22px rgba(0,0,0,.2); }
+  .glass-liquid::before{ content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1;
+    backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); filter:url(#glassdist); }
+  .glass-liquid::after{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    box-shadow:inset 1px 1px 0 0 rgba(255,255,255,.38), inset -1px -1px 1px 0 rgba(255,255,255,.16); }
+  .glass-quiet{ background:rgba(255,255,255,.05); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.16); }
+
+  /* nav */
+  .nav{ position:absolute; top:0; left:0; right:0; height:11%; z-index:5; display:flex; align-items:center;
+    justify-content:space-between; padding:0 4.2%; font-family:Jost,sans-serif; }
+  .nav.glass-quiet{ border:none; border-bottom:1px solid rgba(255,255,255,.12); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); }
+  .wm{ font-weight:400; letter-spacing:.4em; text-transform:uppercase; font-size:clamp(9px,1.15cqi,14px); color:#f6efe2; text-shadow:var(--halo); }
+  .links{ display:flex; align-items:center; gap:clamp(11px,2.3cqi,30px); font-weight:300; letter-spacing:.06em;
+    font-size:clamp(8px,.98cqi,13px); color:#eef0f6; opacity:.86; text-shadow:var(--halo); cursor:default; }
+  .links span:not(.ico){ cursor:pointer; } .links .ico{ opacity:.7; font-size:1.15em; cursor:pointer; }
+
+  /* LEFT phi-band */
+  .left{ position:absolute; left:6.3%; top:46%; transform:translateY(-50%); width:37%; z-index:4; }
+  .brand{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:300; margin:0 0 0 -.045em; line-height:.92;
+    font-size:clamp(46px,6.9cqi,126px); color:#f8eedb; letter-spacing:.004em; text-shadow:var(--halo); }
+  .tagline{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:300; font-style:italic; margin:.22em 0 0;
+    font-size:clamp(15px,2cqi,35px); color:#f4ead6; opacity:.96; text-wrap:pretty; text-shadow:var(--halo); }
+  .clarity{ font-family:Jost,sans-serif; font-weight:300; letter-spacing:.02em; white-space:nowrap;
+    font-size:clamp(8px,1.02cqi,14px); color:#eef1f7; opacity:.92; margin:1.1em 0 1.7em; text-shadow:var(--halo-strong); }
+  .cta{ display:inline-flex; align-items:center; gap:.75em; padding:.82em 1.6em; border-radius:100px; border:1px solid rgba(255,255,255,.24);
+    font-family:Jost,sans-serif; font-weight:400; letter-spacing:.11em; text-transform:uppercase;
+    font-size:clamp(8px,1cqi,13px); color:#fff8ec; cursor:pointer; white-space:nowrap; }
+  .cta .arw{ transition:transform .7s cubic-bezier(.16,1,.3,1); position:relative; z-index:1; }
+  .cta span{ position:relative; z-index:1; } .cta:hover .arw{ transform:translateX(5px); }
+  .play{ display:inline-flex; align-items:center; gap:.65em; margin-top:1.05em; padding:.62em 1.2em;
+    border-radius:11px; cursor:pointer; white-space:nowrap; color:#fdfdff; text-decoration:none; }
+  .play > *{ position:relative; z-index:1; }
+  .play .pl{ display:flex; flex-direction:column; line-height:1.08; font-family:Jost,sans-serif; font-weight:500; font-size:clamp(11px,1.3cqi,18px); }
+  .play .pl small{ font-size:.5em; letter-spacing:.16em; opacity:.82; font-weight:300; }
+
+  /* RIGHT phi-band — BOXLESS */
+  .right{ position:absolute; right:5.5%; top:49%; transform:translateY(-50%); width:25%; z-index:4; text-align:right;
+    font-family:Jost,sans-serif; color:#f4ecdd; }
+  .right::before{ content:''; position:absolute; inset:-24% -30% -18% -48%; z-index:-1; pointer-events:none;
+    background:radial-gradient(64% 60% at 76% 46%, rgba(4,6,14,.5), rgba(4,6,14,.18) 52%, transparent 76%); filter:blur(28px); }
+  .right .ftlabel, .right .ftbig, .right .goal{ text-shadow:var(--halo); }
+  .right .quote, .right .qmark{ text-shadow:var(--halo-strong); }
+  .ftlabel{ font-weight:300; letter-spacing:.3em; text-transform:uppercase; font-size:clamp(7px,.84cqi,11px); opacity:.82; position:relative; z-index:1; }
+  .ftbig{ font-family:Jost,sans-serif; font-weight:200; line-height:1; font-variant-numeric:tabular-nums lining-nums;
+    letter-spacing:.005em; font-size:clamp(26px,4cqi,66px); margin:.24em 0 .6em; position:relative; z-index:1; }
+  .ftbig .u{ font-size:.4em; opacity:.6; font-weight:300; margin:0 .04em 0 .02em; }
+  .goalbar{ height:6px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:100px;
+    overflow:hidden; margin-left:auto; width:100%; position:relative; z-index:1;
+    backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.28), inset 0 -1px 0 rgba(255,255,255,.12); }
+  .goalbar i{ display:block; height:100%; width:0%; margin-left:auto; border-radius:100px;
+    background:linear-gradient(90deg,rgba(255,208,150,.9),rgba(255,176,116,.78)); box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+    transition:width .6s cubic-bezier(.16,1,.3,1); }
+  .goal{ font-weight:300; letter-spacing:.04em; font-size:clamp(7px,.88cqi,12px); opacity:.7; margin-top:.5em; position:relative; z-index:1; }
+  .qdiv{ height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22)); margin:1.1em 0 1em; position:relative; z-index:1; }
+  .qwrap{ position:relative; z-index:1; }
+  .qmark{ display:block; font-family:'Newsreader',Georgia,serif; font-style:italic; font-weight:300;
+    font-variation-settings:'opsz' 42; font-size:clamp(24px,3cqi,46px); line-height:.4; opacity:.3; margin-bottom:.14em; }
+  .quote{ font-family:'Newsreader',Georgia,serif; font-style:italic; font-weight:340; font-variation-settings:'opsz' 60;
+    margin:0; line-height:1.52; text-wrap:pretty; letter-spacing:.004em; font-size:clamp(12px,1.5cqi,23px); color:#f5f0e7; opacity:.94; }
+
+  /* ambient dock */
+  .dock{ position:absolute; left:50%; bottom:5.5%; transform:translateX(-50%); z-index:4;
+    display:flex; align-items:center; gap:clamp(8px,1.4cqi,18px); padding:.6em 1.15em; border-radius:100px;
+    font-family:Jost,sans-serif; color:#f4ecdd; font-weight:300; letter-spacing:.04em; font-size:clamp(8px,1cqi,13px); text-shadow:var(--halo); }
+  .dock > *{ position:relative; z-index:1; } .dock .ico{ opacity:.85; }
+  .dock .wv{ display:flex; align-items:flex-end; gap:2px; height:1em; }
+  .dock .wv i{ width:2px; background:rgba(255,220,170,.85); border-radius:2px; animation:wv 1.4s ease-in-out infinite; }
+  .dock .wv i:nth-child(2){animation-delay:.2s} .dock .wv i:nth-child(3){animation-delay:.4s}
+  .dock .wv i:nth-child(4){animation-delay:.1s} .dock .wv i:nth-child(5){animation-delay:.5s}
+  @keyframes wv{ 0%,100%{height:35%} 50%{height:100%} }
+
+  /* entrance */
+  @keyframes rise{ from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:none} }
+  .left>*, .right, .dock{ animation:rise 1.4s cubic-bezier(.16,1,.3,1) backwards; }
+  .brand{animation-delay:.15s} .tagline{animation-delay:.34s} .clarity{animation-delay:.52s}
+  .ctas{animation-delay:.7s} .play{animation-delay:.82s} .right{animation-delay:.95s} .dock{animation-delay:1.05s}
+  .nav{ animation:rise 1.4s cubic-bezier(.16,1,.3,1) backwards; animation-delay:1.15s; }
+  @media (prefers-reduced-motion: reduce){ .left>*,.right,.dock,.nav,.wv i{ animation:none!important } }
+</style>
+
+<script>
+  // real "Focused Today" from localStorage (session.html writes 'sustain.focusedToday.<date>' in seconds)
+  const k = 'sustain.focusedToday.' + new Date().toDateString();
+  const sec = +localStorage.getItem(k) || 0;
+  const min = Math.round(sec / 60);
+  const big = document.getElementById('ftBig');
+  const bar = document.getElementById('ftBar');
+  if (big) {
+    if (min >= 60) big.innerHTML = Math.floor(min/60) + '<span class="u">h</span> ' + (min%60) + '<span class="u">m</span>';
+    else big.innerHTML = min + '<span class="u">m</span>';
+  }
+  if (bar) bar.style.width = Math.min(100, (min / (8*60)) * 100) + '%';   // toward a nominal 8h day
+
+  // Begin Focus -> Setup (wired when Setup is integrated next). For now it's the audio-unlock gesture.
+  document.getElementById('beginFocus')?.addEventListener('click', () => {
+    document.body.classList.add('to-setup');   // placeholder hook for the Setup transition
+  });
+</script>

@@ -1,8 +1,8 @@
 ---
-// The one living world (spec §0). The scene mounts once and stays; the Hero (Home) sits over it and
-// dissolves on Focus (scene never re-mounts). Setup + Session states get layered next.
+// The one living world (spec §0). The scene mounts once and stays; the Home (locked hero-v22) sits over it.
+// Setup + Session states get layered next (Home -> Setup -> Session), never re-mounting the scene.
 import SceneWorld from '../components/SceneWorld.astro';
-import Hero from '../components/Hero.astro';
+import Home from '../components/Home.astro';
 ---
 <!doctype html>
 <html lang="en">
@@ -11,16 +11,16 @@ import Hero from '../components/Hero.astro';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Sustain — a calm focus timer inside a living seaside world." />
     <title>Sustain — a living focus world</title>
-    <!-- Hero/UI fonts (dev via Google Fonts; self-host in the perf pass — spec §5.5/§13/§18). -->
+    <!-- v22 type stack (dev via Google Fonts; self-host in the perf pass — spec §13/§18). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Newsreader:ital,opsz,wght@1,6..72,200..500&family=Jost:wght@200;300;400;500&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
     <SceneWorld />
-    <Hero />
+    <Home />
   </body>
 </html>

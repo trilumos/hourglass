@@ -466,6 +466,10 @@
   #ss { left:calc(50% + 90px); }
   #frame.show-nums .clocknum { opacity:.92; }
   #focused-today { font-size:12px; color:#9fb0c8; min-height:14px; }
+  /* DEPLOY: this component is the clean living-world SCENE only. Hide ALL leftover lab/debug/temp UI that
+     came from porting hybrid.html — the real Home/Setup/Session UI (from the locked designs) layers over it.
+     (The dead lab code gets removed outright during the Session refactor.) */
+  #ui, #session-ui, #err, .hint, #mm, #ss { display:none !important; }
   /* temp: basic controls hide by default, reveal on mouse move / tap (body.show-ui) so the sand
      is unobstructed. Throwaway with #session-ui once the real Setup/Session UI lands. */
   #session-ui { opacity:0; pointer-events:none; transition:opacity .5s ease; }
