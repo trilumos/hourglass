@@ -53,9 +53,10 @@ Purchases never cross-unlock. Web tier prices are set at W2a with real traffic, 
 - **A fresh Astro build.** Ships **zero JS by default**; public pages (landing, timer, `/stage`) are
   static/SSR real HTML. **Explicitly NOT Flutter-web** (multi-MB, invisible to Google, non-native — fatal
   for a funnel). (Strategy §9, design-decisions §1.)
-- **Islands are vanilla, not React.** Everything already written (scene renderer, timer, audio) is vanilla
-  JS, and the perf budget (§13) rewards shipping less JS. *(Decided 2026-07-29; the first-push spec said
-  "one React island" — superseded: no framework needed since the code is vanilla.)*
+- **Islands use no UI framework (no React/Vue).** The timer + audio + UI are vanilla JS. *(Decided
+  2026-07-29; the first-push spec's "one React island" is superseded — no UI framework needed.)* **The scene
+  island, however, uses Three.js (WebGL)** — see the rendering stack in §6. "Vanilla islands" means no React,
+  not no Three.
 - **Ports the keepers, doesn't rewrite:** the **locked scene renderer** + **`timer.js`/`plan.js`/
   `session-timer.js`** from `web-prototype/` and the **polished `site/setup.html` + `site/session.html`**
   screens become Astro components/islands. (Design-decisions §1, session-design §2.)
@@ -123,6 +124,22 @@ mounted once and NEVER re-mounted.** (Design-decisions §3.)
   static prototype into the Astro build, and it's §4.1's core risk to prove — *does the countdown feel right
   against the falling sand?* (The static-plate + CSS-numeral look in the current `session.html` prototype was
   a shortcut and is superseded for the Astro session.)
+
+### 6.1 Scene rendering stack (verified from `web-prototype/hybrid.html` code, 2026-07-29)
+
+The locked scene renderer is **layered**, and reproducing it exactly on the deploy site **requires Three.js**:
+
+- **WebGL layer (Three.js `r0.170`)** — a full-screen-quad **fragment shader** renders the **plate image
+  texture + sun + moon + celestial lighting + old-anime water glitter**. This is the piece that *cannot* be
+  reproduced with plate images + 2D canvas; it's why W1 needs Three.js.
+- **Sand layer (Canvas 2D)** — the hourglass falling-sand painter (`sandCv.getContext('2d')`), driven by
+  `S.prog`.
+- **Refraction + film grain (Canvas 2D)** — glass refraction (`willReadFrequently`) and grain overlay.
+
+**Deploy/perf note:** render the plate **also** as a preloaded `<img>`/CSS background so it is the fast LCP,
+then mount the WebGL scene over it and **defer-init** after first paint (Three.js is bundled by Vite as an npm
+dep, not the CDN importmap `hybrid.html` uses; verify the current `three` version at build time). This keeps
+LCP = the plate and the WebGL glitter/sun/moon as progressive enhancement, honouring §13.
 
 ## 7. The timer engine (BUILT)
 
@@ -248,6 +265,10 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 
 ## 18. The path to the Astro build (Phase 1b) — remaining work
 
+> **Founder build order (2026-07-29):** build **Home (hero) → Setup → Session** first — the connected,
+> working web app with the living sky + rendered sand + audio-carry — and let the founder test that. The
+> **full scroll landing page + SEO depth** come in a **later pass**, not now.
+
 1. **Scaffold Astro** from current official docs; vanilla islands; asset paths under `public/`.
 2. **One shared viewport** (§4): Hero → Focus dissolve → Timer → Session, **scene + hourglass never
    re-mounted** (View Transitions + `@starting-style`). This delivers the audio-carry fix.
@@ -273,7 +294,9 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 
 - **Location source** = timezone → representative coords → SunCalc (no prompt; optional Geolocation upgrade later).
 - **Session hourglass** = live rendered sand (per spec), superseding the static-plate prototype look.
-- **Islands = vanilla, no React.**
+- **Islands = no UI framework (no React).** BUT **Three.js IS required** for the scene island (the sun/moon/
+  glitter/lighting are a WebGL shader in `hybrid.html` — verified from code; §6.1). Corrects an earlier wrong
+  call to drop Three.
 - **Dynamic sand↔ocean sidechain** replaces the static duck (both pages); **sand base gain 30→26.**
 - **Session engine parity:** count actual focus ≥2 min incl. give-up · Screen Wake Lock · break-audio hush ·
   ritual bell cues.
@@ -305,4 +328,9 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
   session hourglass = live rendered sand; vanilla islands (no React). Shipped this cycle: dynamic sand↔ocean
   sidechain (setup + session), sand base gain 30→26, ritual bell cues, session-engine parity (focus ≥2 min
   incl. give-up, Wake Lock, break-audio hush), frosted popups, hard-reload guard, give-up confirm,
-  idle-fade-while-running, Intention-at-top.
+  idle-fade-while-running, Intention-at-top. Founder build order: Home(hero)→Setup→Session first, full landing
+  later.
+- **2026-07-29 (correction)** — **Three.js IS required for W1** (scene island). Verified from
+  `web-prototype/hybrid.html`: sun/moon/glitter/celestial-lighting are a Three.js `r0.170` WebGL fragment
+  shader; only the sand + refraction + grain are 2D canvas (§6.1). Reverses the earlier "drop Three.js"
+  recommendation. Three rides in the scene island (landing stays zero-JS, plate stays LCP, WebGL defer-inits).
