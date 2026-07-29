@@ -24,10 +24,14 @@ const $ = id => document.getElementById(id);
 // ── layout: letterbox the image, size both canvases to the displayed rect ────
 const frame = $('frame'), glitterCv = $('glitter'), sandCv = $('sand');
 let DW = 0, DH = 0;
+const SCENE_OY = 0.5;   // vertical crop anchor: 0.5 = session's object-position 50% 50% (centre)
 function fit(){
   const vw = innerWidth, vh = innerHeight;
   if (vw/vh > AR) { DW = vw; DH = vw/AR; } else { DH = vh; DW = vh*AR; }   // COVER: fill the viewport, crop the overflow (locked plate rule — no side gaps)
   frame.style.width = DW+'px'; frame.style.height = DH+'px';
+  // position the covered frame: centre horizontally; SCENE_OY = vertical crop anchor (0.5 = session's 50% centre)
+  frame.style.left = -(DW - vw)/2 + 'px';
+  frame.style.top  = -(DH - vh)*SCENE_OY + 'px';
   const dpr = Math.min(devicePixelRatio, 2);
   for (const cv of [glitterCv, sandCv]) {
     cv.width = DW*dpr; cv.height = DH*dpr; cv.style.width = DW+'px'; cv.style.height = DH+'px';
