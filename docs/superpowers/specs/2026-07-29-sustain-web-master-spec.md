@@ -20,6 +20,22 @@
 
 ---
 
+## 0. NORTH STAR — the product is ONE living world (do not drift)
+
+The website's purpose is to render a **living world**: a scene alive with **subtle, continuous motion** — sun,
+moon, water glitter, drifting light, the day cycle, the falling sand. **That world IS the product.** The
+**timer / setup / session are states layered *into* the one continuous world** — never separate pages with a
+scene pasted behind them.
+
+- `web-prototype/hybrid.html` and the separate `site/setup.html` + `site/session.html` pages were
+  **prototypes to prove the scene's physics and confirm the idea** — scaffolding to make it concrete, **not
+  the deploy shape.**
+- The Astro build **mounts the living-world scene once and NEVER re-mounts it** (§4); Home(hero) → Setup →
+  Session are overlays/transitions *within* it.
+- **Drift signal:** if any decision starts splitting the world across re-mounting pages, or treats the timer
+  as the primary thing with the scene as a backdrop, **stop** — that's the drift the founder flagged
+  (2026-07-29). The scene is primary; the UI lives inside it.
+
 ## 1. What the web version is
 
 A **free, beautiful, deployable focus-timer website** built on the "living-painting" sea scene. Its **only
@@ -62,6 +78,15 @@ Purchases never cross-unlock. Web tier prices are set at W2a with real traffic, 
   screens become Astro components/islands. (Design-decisions §1, session-design §2.)
 - Build the Astro/GSAP/Three scaffold from **current official docs** (Iron Rule — this stack moves fast;
   never build it from memory).
+- **"One living world" ≠ "one URL" (SEO reconciliation, 2026-07-29).** SEO needs *many* real, SSR'd,
+  keyword-targeted URLs (`/`, `/pomodoro-timer`, `/hourglass-timer`, `/lofi-co-alternative`, `/stage`, …) —
+  a single-URL site ranks for only one term cluster and shows thin content (weak for a funnel). The
+  living-world **continuity is delivered client-side**: Astro **View Transitions (`ClientRouter`)** + the
+  scene island marked **`transition:persist`** keep the WebGL world mounted while content swaps, so a *user*
+  feels one continuous world (never re-mounts — §0 holds) while a *crawler / hard-load* of any URL gets a
+  full, separate, indexable HTML page. Crawlers see many optimized pages; humans see one world. The §0
+  "never re-mount" rule is about the **user's journey (Home→Setup→Session)**, not "the whole site is one HTML
+  file." *(Verify the exact `transition:persist` directive against Astro 7 docs at wire time.)*
 
 ## 4. Page architecture & workflow (LOCKED)
 
@@ -330,6 +355,14 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
   incl. give-up, Wake Lock, break-audio hush), frosted popups, hard-reload guard, give-up confirm,
   idle-fade-while-running, Intention-at-top. Founder build order: Home(hero)→Setup→Session first, full landing
   later.
+- **2026-07-29 (SEO)** — Clarified in §3: "one living world" ≠ "one URL". SEO gets many SSR'd keyword URLs;
+  the scene persists across them via Astro View Transitions + `transition:persist`. §0 "never re-mount" =
+  the user's journey, not a single-HTML-file site. Scaffold built clean (Astro 7.1.5, static). Scene assets
+  (6 plates + moon-tex) + `timer.js` moved into `web-astro/`.
+- **2026-07-29 (north star)** — Added **§0 North Star**: the product is ONE living world; timer/setup/session
+  are states layered into the single continuous scene, never re-mounting pages. The prototypes were scaffolding
+  to prove the idea. Founder flagged drift toward separate per-page builds — corrected. Verified current stack:
+  **Astro 7.1.5, three 0.185.1, Node 24.10.**
 - **2026-07-29 (correction)** — **Three.js IS required for W1** (scene island). Verified from
   `web-prototype/hybrid.html`: sun/moon/glitter/celestial-lighting are a Three.js `r0.170` WebGL fragment
   shader; only the sand + refraction + grain are 2D canvas (§6.1). Reverses the earlier "drop Three.js"
