@@ -98,7 +98,6 @@ const cam = new THREE.Camera();
 // ── Layer 1: 2D canvas — sand inside the baked glass ────────────────────────
 const sctx = sandCv.getContext('2d');
 const S = { prog:0.35, cx:0.498850, top:0.347, neck:0.627, bot:0.888, max:0.065, nh:0.003,
-            floorLift:0.014,   // deploy: raise the bottom pile up into the glass (tune 0=flush .., higher=further in)
             // curve shape — founder-tuned to the baked glass (2026-07-18)
             rimK:0.79, wTop:0.370, aTop:0.075, bTop:0.345, cTop:0.080,
             mxBot:0.985, wBot:0.700, aBot:0.150, bBot:0.375, cBot:0.110, baseK:0.91,
@@ -871,10 +870,7 @@ function solveHeight(target,lo,hi,f){
 function drawSand(t){
   sctx.clearRect(0,0,DW,DH);
   const G = glassPath();
-  const d = S.prog, {cx,mx,mxB,nh,yT,yN,halfAt} = G;
-  // The sand clips to the full glass (G.p), but the PILE's bottom is lifted a touch so it sits
-  // inside the glass instead of spilling to the base (founder). Tune via S.floorLift; 0 = flush.
-  const yB = G.yB - (S.floorLift||0)*DH;
+  const d = S.prog, {cx,mx,mxB,nh,yT,yN,yB,halfAt} = G;
   if (maskDirty){ rebuildMask(G); maskDirty=false; }
 
   // OUTLINE-ONLY mode: trace the glass interior, NO sand, to fit it 100% first.
