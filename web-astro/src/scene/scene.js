@@ -24,7 +24,7 @@ const $ = id => document.getElementById(id);
 // ── layout: letterbox the image, size both canvases to the displayed rect ────
 const frame = $('frame'), glitterCv = $('glitter'), sandCv = $('sand');
 let DW = 0, DH = 0;
-const SCENE_OY = 0.85;   // vertical crop anchor: 0.5 = centre (session), 1 = keep the whole ledge. Biased low so the hourglass base/ledge is never cut (extra trims off the top sky, which the margin plate has plenty of).
+const SCENE_OY = 0.72;   // vertical crop anchor: 0.5 = centre (session), 1 = keep the whole ledge. Biased so the hourglass base/ledge is never cut (extra trims off the top sky, which the margin plate has plenty of).
 function fit(){
   const vw = innerWidth, vh = innerHeight;
   if (vw/vh > AR) { DW = vw; DH = vw/AR; } else { DH = vh; DW = vh*AR; }   // COVER: fill the viewport, crop the overflow (locked plate rule — no side gaps)
