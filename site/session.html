@@ -243,20 +243,28 @@
 
   /* done-state overlay — dim scrim + a centred .frost card (Setup's material, not a new one).
      Fully visible whenever shown; the idle-fade rule above never touches it. */
-  #done{ position:absolute; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
-    background:rgba(4,6,12,.5); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
-  #done[hidden]{ display:none }
-  .donecard{ padding:clamp(28px,4.5cqi,48px) clamp(32px,6cqi,64px); border-radius:clamp(20px,2.4cqi,32px);
-    text-align:center }
-  .donecard-total{ font-size:clamp(15px,1.6cqi,20px); font-weight:400; color:var(--ink); margin-bottom:1.6em }
-  .donecard-btns{ display:flex; gap:1em; justify-content:center }
-  .donecard-btns button{
-    font-family:inherit; font-weight:500; letter-spacing:.15em; text-transform:uppercase;
-    font-size:clamp(10px,1.05cqi,14px); color:#fff; cursor:pointer; padding:.9em 2em;
-    border-radius:100px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.1);
-    transition:background .2s;
-  }
-  .donecard-btns button:hover{ background:rgba(255,255,255,.17) }
+  #done, #giveupConfirm, #sessionOver{ position:absolute; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
+    background:rgba(6,9,15,.42); -webkit-backdrop-filter:blur(18px) saturate(.92); backdrop-filter:blur(18px) saturate(.92); }
+  #done[hidden], #giveupConfirm[hidden], #sessionOver[hidden]{ display:none }
+  /* popup card — deep glass frost (stronger than .frost), serif heading, primary/ghost buttons. */
+  .popcard{ padding:clamp(34px,5cqi,58px) clamp(38px,7cqi,74px); border-radius:clamp(24px,2.8cqi,36px);
+    text-align:center; max-width:min(460px,88cqi);
+    background:rgba(255,255,255,.09); -webkit-backdrop-filter:blur(46px) saturate(1.25); backdrop-filter:blur(46px) saturate(1.25);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.16), 0 34px 90px -30px rgba(0,0,0,.62); }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .popcard{ background:#1a1d26f5; } }
+  .popcard-title{ font-family:'Newsreader',serif; font-weight:400; font-size:clamp(24px,3.2cqi,38px);
+    color:var(--ink-hi,#fdf6e6); letter-spacing:.01em; line-height:1.12; }
+  .popcard-sub{ font-size:clamp(13px,1.5cqi,16px); color:var(--ink-dim); margin-top:.55em; line-height:1.5; }
+  .popcard-sub b{ color:var(--ink); font-weight:500; }
+  .popcard-btns{ display:flex; gap:.7em; justify-content:center; margin-top:1.9em; }
+  .popcard-btns button{ font-family:inherit; font-weight:500; letter-spacing:.05em; font-size:clamp(12px,1.35cqi,15px);
+    cursor:pointer; padding:.85em 1.9em; border-radius:100px; border:none; transition:background .18s,transform .1s; }
+  .popcard-btns button:active{ transform:scale(.97); }
+  .pop-primary{ background:#fff; color:#181a20; }
+  .pop-primary:hover{ background:#f1ede3; }
+  .pop-ghost{ background:rgba(255,255,255,.07); color:var(--ink); box-shadow:inset 0 0 0 1px rgba(255,255,255,.2); }
+  .pop-ghost:hover{ background:rgba(255,255,255,.13); }
+  .pop-danger{ color:#f0a98c; }
 
   /* ================= SEGMENT LABEL + ENDLESS FLIP (Task 6) ================= */
   /* transition toast — Setup's frost material, reused; fades in on a segment change, auto-fades ~2s later */
@@ -407,9 +415,24 @@
 <button id="flipBtn" hidden>Flip</button>
 <button id="pause" class="frost" aria-label="Pause session" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="5" x2="8" y2="19"/><line x1="16" y1="5" x2="16" y2="19"/></svg></button>
 <div id="done" hidden>
-  <div class="frost donecard">
-    <p class="donecard-total">Focused <b id="doneMin">0m</b> today</p>
-    <div class="donecard-btns"><button id="again">Again</button><button id="doneEnd">End</button></div>
+  <div class="frost popcard">
+    <h2 class="popcard-title">Well done</h2>
+    <p class="popcard-sub">You focused <b id="doneMin">0m</b> today.</p>
+    <div class="popcard-btns"><button id="again" class="pop-ghost">Again</button><button id="doneEnd" class="pop-primary">End</button></div>
+  </div>
+</div>
+<div id="giveupConfirm" hidden>
+  <div class="frost popcard">
+    <h2 class="popcard-title">Give up this session?</h2>
+    <p class="popcard-sub">You'll lose this focus block.</p>
+    <div class="popcard-btns"><button id="gcKeep" class="pop-primary">Keep going</button><button id="gcGive" class="pop-ghost pop-danger">Give up</button></div>
+  </div>
+</div>
+<div id="sessionOver" hidden>
+  <div class="frost popcard">
+    <h2 class="popcard-title">This session has ended</h2>
+    <p class="popcard-sub">Start a fresh one whenever you're ready.</p>
+    <div class="popcard-btns"><button id="soSetup" class="pop-primary">Back to Setup</button></div>
   </div>
 </div>
 <!-- ⚙ Settings (Task 7) — Setup's frost sheet, four live sections -->
@@ -495,6 +518,15 @@
 <script src="js/session-timer.js?v=1"></script>
 <script>
 (function () {
+  // Hard-reload / direct-open guard: Setup arms a one-shot flag on Begin; the session consumes it on first
+  // load, so a reload (or opening session.html directly) finds it gone -> the session is over. Show the end
+  // screen instead of a broken resume. No nav-guard is installed in this branch, so the user can leave freely.
+  if (sessionStorage.getItem('sustain.armed') !== '1') {
+    document.getElementById('sessionOver').hidden = false;
+    document.getElementById('soSetup').addEventListener('click', function () { location.href = 'setup.html'; });
+    return;
+  }
+  sessionStorage.removeItem('sustain.armed');
   var S = document.getElementById('scene'), mm = document.getElementById('mm'), ss = document.getElementById('ss');
   var cfg = JSON.parse(localStorage.getItem('sustain.session') || 'null')
          || { mode:'flow', flowMin:25, place:'middle', fill:'solid', phase:2, sounds:[], vol:100, soundVol:{sand:100,ocean:100,breeze:100,birds:100}, sep:'none', font:"'Newsreader',serif", color:'#ffffff', vis:'always', followDay:true, autoContrast:true };
@@ -629,7 +661,10 @@
     if (timer.isPaused()) resumeSession(); else pauseSession();
   });
   pausedEl.addEventListener('click', resumeSession);   // tap the blurred scene to resume
-  document.getElementById('giveup').addEventListener('click', endSession);
+  var giveupConfirmEl = document.getElementById('giveupConfirm');
+  document.getElementById('giveup').addEventListener('click', function () { giveupConfirmEl.hidden = false; });
+  document.getElementById('gcKeep').addEventListener('click', function () { giveupConfirmEl.hidden = true; });
+  document.getElementById('gcGive').addEventListener('click', endSession);
   document.getElementById('doneEnd').addEventListener('click', endSession);
   document.getElementById('again').addEventListener('click', function () {
     timer = SessionTimer.create(plan, { endless: cfg.mode === 'endless' });

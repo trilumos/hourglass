@@ -1305,7 +1305,9 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     cfg.sounds = SOUNDS.filter(function(s){return s.on;}).map(function(s){return s.id;});
     cfg.vol = masterPos;                                             // master 0-100
     cfg.soundVol = { sand:SOUND_VOL.sand, ocean:SOUND_VOL.ocean, breeze:SOUND_VOL.breeze, birds:SOUND_VOL.birds };
+    cfg.intention = (qs('#intent') && qs('#intent').value.trim()) || '';   // shown at the top of the session
     localStorage.setItem('sustain.session', JSON.stringify(cfg));
+    sessionStorage.setItem('sustain.armed','1');   // one-shot: the session consumes this on first load; a reload finds it gone → "session over" screen
     location.href='session.html';
   });
 
