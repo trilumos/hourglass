@@ -1,0 +1,50 @@
+---
+// Hero (Home) — the entry into the living world (spec §4, hero direction B1 "Editorial, warm serif").
+// Left-weighted wordmark sitting in the sky's negative space, atmospheric left->right scrim, a Focus
+// affordance. Interim: the full scroll landing is a later pass. On Focus the hero dissolves; the scene
+// underneath stays live and is never re-mounted.
+---
+<section id="hero" aria-label="Sustain — a calm place to focus">
+  <div class="hero-scrim"></div>
+  <div class="hero-inner">
+    <p class="hero-eyebrow">A calm place to focus</p>
+    <h1 class="hero-word">Sustain</h1>
+    <p class="hero-tag">Sit with the sea. Watch the sand fall. Get one true thing done.</p>
+    <button id="focusBtn" class="hero-focus" type="button">Focus</button>
+  </div>
+</section>
+
+<style>
+  #hero{ position:fixed; inset:0; z-index:50; display:flex; align-items:center;
+         opacity:1; transition:opacity .9s ease; }
+  #hero.gone{ opacity:0; pointer-events:none; }
+  /* atmospheric scrim: soft left->right so the left-weighted text reads over the bright sky */
+  .hero-scrim{ position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(101deg, rgba(6,12,22,.52) 0%, rgba(6,12,22,.30) 34%, rgba(6,12,22,0) 63%); }
+  .hero-inner{ position:relative; max-width:min(46rem,84vw); padding:0 clamp(1.6rem,6vw,7rem); color:#f4ead6; }
+  .hero-eyebrow{ font-family:'Jost',system-ui,sans-serif; text-transform:uppercase; letter-spacing:.34em;
+    font-size:clamp(.62rem,1.05vw,.78rem); font-weight:500; opacity:.82; margin:0 0 1.1rem; }
+  .hero-word{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:500; margin:0;
+    font-size:clamp(4.4rem,15vw,12rem); line-height:.9; letter-spacing:.004em;
+    text-shadow:0 2px 44px rgba(0,0,0,.30); }
+  .hero-tag{ font-family:'Cormorant Garamond',Georgia,serif; font-style:italic; font-weight:400;
+    font-size:clamp(1.12rem,2.3vw,1.7rem); line-height:1.42; opacity:.92; margin:1.15rem 0 0; max-width:32ch; }
+  .hero-focus{ margin-top:2.4rem; font-family:'Jost',system-ui,sans-serif; font-weight:500;
+    letter-spacing:.22em; text-transform:uppercase; font-size:clamp(.72rem,1.2vw,.86rem);
+    color:#14171d; background:#f4ead6; border:none; border-radius:100px; padding:.98em 2.5em; cursor:pointer;
+    box-shadow:0 10px 34px -10px rgba(0,0,0,.5); transition:transform .25s ease, box-shadow .25s ease; }
+  .hero-focus:hover{ transform:translateY(-2px); box-shadow:0 16px 44px -12px rgba(0,0,0,.55); }
+  .hero-focus:active{ transform:translateY(0); }
+  @media (prefers-reduced-motion: reduce){ #hero, .hero-focus{ transition:none; } }
+</style>
+
+<script>
+  const hero = document.getElementById('hero');
+  const btn = document.getElementById('focusBtn');
+  btn?.addEventListener('click', () => {
+    // Dissolve the hero; the WebGL scene underneath keeps rendering (never re-mounted).
+    // The Focus click is also the first user gesture — it unlocks audio for the session to come.
+    hero?.classList.add('gone');
+    document.body.classList.add('in-app');   // interim: reveals the temp timer chrome
+  });
+</script>
