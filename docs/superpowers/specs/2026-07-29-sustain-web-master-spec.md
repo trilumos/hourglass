@@ -88,6 +88,34 @@ Purchases never cross-unlock. Web tier prices are set at W2a with real traffic, 
   "never re-mount" rule is about the **user's journey (Home→Setup→Session)**, not "the whole site is one HTML
   file." *(Verify the exact `transition:persist` directive against Astro 7 docs at wire time.)*
 
+### 3.1 SEO landing pages (later pass — decided 2026-07-29)
+
+The interactive tool is **one page** (correct — a running-timer screen is not a search target). SEO strength
+comes from a **small set of focused content pages** around it, each a real SSR URL Google indexes and ranks
+separately. They are **not new tools or copies** — each targets one phrase with genuinely unique, useful
+content and then launches the **same** living-world tool.
+
+**Three kinds:**
+1. **Mode / use-case pages** — same tool preconfigured, wrapped in keyword content. e.g. `/pomodoro-timer`
+   (what Pomodoro is, why 25/5, a short FAQ for featured snippets) with the tool embedded, **preset to
+   Pomodoro**; `/aesthetic-study-timer` (calm-study framing, opens on a calming mode).
+2. **"Alternative" pages** — capture orphaned/competitor searches, e.g. `/lofi-co-alternative` (lofi.co shut
+   down May 2024).
+3. **Guides / small blog** — informational articles (`/guides/how-to-focus`, `/guides/what-is-the-pomodoro-
+   technique`) that answer searched questions and link into the tool.
+
+**Hard rule:** each page needs **genuinely unique, useful content** — thin pages that just re-embed the tool
+under a new heading are "doorway pages" Google ignores/penalises. This is real writing work → the later pass.
+**Scope:** start with **3–5 high-intent pages + 2–3 guides**, grow by what ranks. **Does not block W1** — ship
+the one-page app first, add these after.
+
+**The "Start" button flow (locked):** a landing page **already hosts the living world** behind its content.
+Its tool button does **not** load a separate setup page — it triggers the **Hero → Setup transition
+in-place** (scene persists, never re-mounts; §0/§4), landing on **Setup preconfigured to that page's mode**
+(one tap from Begin). That click is also the **audio-unlock gesture**, so ambient + start bell play when the
+session begins — starting from a landing page sidesteps autoplay entirely. Default target = **Setup** (keeps
+the sounds/theme/intention choices); an optional "quick start → straight to session" can come later.
+
 ## 4. Page architecture & workflow (LOCKED)
 
 **One shared first viewport is the base for both the landing page and the timer. The scene + hourglass are
