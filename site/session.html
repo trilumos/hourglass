@@ -285,11 +285,15 @@
   }
   .sheet.open{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   /* thin scrollbar — identical to Setup's .themes-scroll (setup.html ~L144-149) */
-  .sheet::-webkit-scrollbar{ width:3px; }
+  .sheet::-webkit-scrollbar{ width:8px; }
   .sheet::-webkit-scrollbar-button{ display:none; width:0; height:0; }
   .sheet::-webkit-scrollbar-track,.sheet::-webkit-scrollbar-corner{ background:transparent; }
-  .sheet::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:99px; }
-  .sheet:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.3); }
+  /* 2px transparent border + padding-box clip = a ~4px thumb inset from the edge: visible, hugs the
+     right side, sits INSIDE the panel (off the rounded corner), no wide gutter. */
+  .sheet::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.22); border-radius:99px;
+     border:2px solid transparent; background-clip:padding-box; }
+  .sheet:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.4); background-clip:padding-box; }
+  .sheet{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.3) transparent; }  /* Firefox */
   .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-grp); }
   .sheet-head h3{ font-weight:400; font-size:clamp(13px,1.5cqi,20px); letter-spacing:.02em; }
   .sheet-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.08); border:none;
