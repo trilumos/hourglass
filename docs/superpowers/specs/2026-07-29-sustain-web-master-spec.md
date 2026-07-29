@@ -385,6 +385,13 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 
 ## 22. Changelog (append on every web change)
 
+- **2026-07-29 (glass outline re-locked + lab ergonomics)** — Founder re-traced the glass silhouette in the
+  lab to fix the bottom pile reading as "out of the glass" (the issue was **Z-depth**, not X/Y — a floorLift
+  attempt was tried and reverted as wrong). New `LOCKED_NODES` synced into both `hybrid.html` and the deploy
+  `scene.js`; **outline LOCKED**, no persp change needed. Lab gained an **Edit-outline** toggle (S.dbg edit
+  mode + timer controls hidden) and the same hide-controls-on-hover as the deploy. Depth lever documented:
+  `S.persp` (the "Pile top-view (ellipse)" slider) sets the pile's forward bulge (`yC + rCone*k`).
+
 - **2026-07-29 (living world in Astro)** — Ported `hybrid.html` into `web-astro/` (Astro 7.1.5): verbatim
   shaders (`src/scene/shaders.js`) + verbatim module (`src/scene/scene.js`, plumbing-only) + `SceneWorld.astro`
   (markup + CSS, lab UI hidden). Builds to a static site; dev server renders the WebGL sun/moon/glitter +
