@@ -279,21 +279,23 @@
   .sheet-scrim.open{ opacity:1; pointer-events:auto; }
   .sheet{
     position:absolute; z-index:9; left:50%; top:50%; transform:translate(-50%,-46%) scale(.98);
-    width:min(560px,86cqi); max-height:84cqh; overflow-y:auto; border-radius:clamp(20px,2.4cqi,32px);
+    width:min(560px,86cqi); max-height:84cqh; overflow:hidden; display:flex; flex-direction:column; border-radius:clamp(20px,2.4cqi,32px);
     padding:clamp(20px,2.6cqi,36px); opacity:0; pointer-events:none;
     transition:opacity .3s var(--e-std), transform .3s var(--e-std);
   }
   .sheet.open{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   /* thin scrollbar — identical to Setup's .themes-scroll (setup.html ~L144-149) */
-  .sheet::-webkit-scrollbar{ width:8px; }
-  .sheet::-webkit-scrollbar-button{ display:none; width:0; height:0; }
-  .sheet::-webkit-scrollbar-track,.sheet::-webkit-scrollbar-corner{ background:transparent; }
-  /* 2px transparent border + padding-box clip = a ~4px thumb inset from the edge: visible, hugs the
-     right side, sits INSIDE the panel (off the rounded corner), no wide gutter. */
-  .sheet::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.22); border-radius:99px;
+  .sheet-head{ flex:none; }
+  /* Scroll on a RECTANGULAR inner wrapper so the bar (and any native arrows) stay INSIDE the panel,
+     off the rounded corners. margin/padding-right gives a small inset — bar hugs near the edge, no wide gutter. */
+  .sheet-scroll{ overflow-y:auto; min-height:0; flex:1 1 auto; margin-right:-6px; padding-right:6px;
+     scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.32) transparent; }
+  .sheet-scroll::-webkit-scrollbar{ width:8px; }
+  .sheet-scroll::-webkit-scrollbar-button{ display:none; height:0; width:0; }
+  .sheet-scroll::-webkit-scrollbar-track,.sheet-scroll::-webkit-scrollbar-corner{ background:transparent; }
+  .sheet-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.24); border-radius:99px;
      border:2px solid transparent; background-clip:padding-box; }
-  .sheet:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.4); background-clip:padding-box; }
-  .sheet{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.3) transparent; }  /* Firefox */
+  .sheet-scroll:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.42); background-clip:padding-box; }
   .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-grp); }
   .sheet-head h3{ font-weight:400; font-size:clamp(13px,1.5cqi,20px); letter-spacing:.02em; }
   .sheet-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.08); border:none;
@@ -360,6 +362,15 @@
                border:1px solid rgba(255,255,255,.2); border-radius:10px; background:none; }
   .set-lbl{ font-size:var(--t-sm); color:var(--ink-dim); }
   .sec-row2{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-in); margin-top:var(--sp-in); }
+  /* Colour: round preset swatches + a rainbow "custom" swatch (hidden native picker overlaid). */
+  .swatches{ display:flex; align-items:center; gap:.5em; }
+  .sw-c{ width:1.5em; height:1.5em; border-radius:50%; border:none; cursor:pointer; padding:0; flex:none;
+         box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); position:relative; }
+  .sw-c.on{ box-shadow:0 0 0 2px var(--gold); }
+  .sw-custom{ overflow:hidden; display:inline-flex;
+     background:conic-gradient(from 90deg,#e6a6b0,#eaca78,#a7d18f,#8fb7e0,#b99ce6,#e6a6b0); }
+  .sw-custom input[type=color]{ position:absolute; inset:-30%; width:160%; height:160%;
+     border:none; padding:0; background:none; cursor:pointer; opacity:0; }
 
   /* hidden-timer readout — only shown when the on-scene numbers are set to Hidden (cfg.vis), so opening
      Settings never leaves you with zero read on the session clock. */
@@ -395,6 +406,7 @@
 <div class="sheet-scrim" id="setScrim"></div>
 <div class="sheet frost" id="setSheet" role="dialog" aria-modal="true" aria-label="Settings">
   <div class="sheet-head"><h3>Settings</h3><button class="sheet-close" id="setClose" aria-label="Close">&times;</button></div>
+  <div class="sheet-scroll">
   <div class="hidden-time" id="hiddenTime" hidden></div>
 
   <div class="sec">
@@ -445,7 +457,14 @@
     </div>
     <div class="sec-row2">
       <span class="set-lbl">Colour</span>
-      <input type="color" class="color-pick" id="colorPick" value="#ffffff" aria-label="Number colour">
+      <div class="swatches" id="swatches">
+        <button type="button" class="sw-c" data-c="#ffffff" style="background:#ffffff" aria-label="White"></button
+        ><button type="button" class="sw-c" data-c="#f2ecdd" style="background:#f2ecdd" aria-label="Ivory"></button
+        ><button type="button" class="sw-c" data-c="#eaca78" style="background:#eaca78" aria-label="Gold"></button
+        ><button type="button" class="sw-c" data-c="#8fb7e0" style="background:#8fb7e0" aria-label="Sky"></button
+        ><button type="button" class="sw-c" data-c="#20242e" style="background:#20242e" aria-label="Charcoal"></button
+        ><label class="sw-c sw-custom" title="Custom colour"><input type="color" id="colorPick" value="#ffffff" aria-label="Custom number colour"></label>
+      </div>
     </div>
   </div>
 
@@ -468,6 +487,7 @@
         <button data-v="on">On</button><button data-v="off">Off</button>
       </div>
     </div>
+  </div>
   </div>
 </div>
 </div>
@@ -1037,12 +1057,16 @@
     });
   });
 
-  // ---- Colour picker (any colour) ----
+  // ---- Colour: preset swatches + custom picker ----
   var colorPick=document.getElementById('colorPick');
+  var swatchesEl=document.getElementById('swatches');
+  function reflectColor(){ swatchesEl.querySelectorAll('.sw-c[data-c]').forEach(function(b){
+    b.classList.toggle('on', b.dataset.c.toLowerCase()===String(cfg.color||'').toLowerCase()); }); }
+  function setColor(c){ cfg.color=c; colorPick.value=c; applyLook(cfg); setTone(); saveCfg(); reflectColor(); }
   colorPick.value = cfg.color || '#ffffff';
-  colorPick.addEventListener('input', function(){
-    cfg.color=colorPick.value; applyLook(cfg); setTone(); saveCfg();
-  });
+  swatchesEl.addEventListener('click', function(e){ var b=e.target.closest('.sw-c[data-c]'); if(b) setColor(b.dataset.c); });
+  colorPick.addEventListener('input', function(){ setColor(colorPick.value); });
+  reflectColor();
 
   // ---- Reflect current cfg on the controls (initial state) ----
   renderTokens();
