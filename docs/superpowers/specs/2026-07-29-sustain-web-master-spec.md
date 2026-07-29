@@ -165,6 +165,29 @@ mounted once and NEVER re-mounted.** (Design-decisions §3.)
   cycle built in (free for everyone); a single-timeframe theme (e.g. a fixed Night) has none. Never sold or
   toggled by name. (First-push §2.1.)
 
+### 5.1 Plate framing & fit — LOCKED (iron rule, 2026-07-29)
+
+A plate's framing decides whether `object-fit: cover` keeps the hourglass + ledge on every window. Locked:
+
+**Seascape (current theme).** Deploy plates = `assets/plates/*.jpg` (**1600×901**, AR ≈ 1.776 / 16:9). The
+hourglass sits cap ~28% → base ~88% — a tight ~12% margin below — so the scene uses **`SCENE_OY = 0.72`**
+(cover-crop biased toward the bottom) so the ledge/base is never cut; the excess trims off the top sky. Note:
+`assets/plates` and the older `web-prototype/plates-phases/*.png` are the **same image at different
+resolutions** (identical composition), so the coded sand aligns to either — no re-trace when switching.
+
+**New themes — generate plates to THIS spec so cover-fit just works (no per-theme bias needed):**
+- **Aspect ratio 16:9** for every plate. Generate at **2560×1440**; export compressed **AVIF/WebP < 200 KB**
+  for deploy (§13). Same AR across all themes so the fit rule never changes.
+- **Hourglass centred horizontally** (axis at 50% width).
+- **Crop-safe vertical zone:** the hourglass (top cap → base) **plus its ledge** must sit inside the central
+  band — **≥ 20% sky above the top cap** (sun/moon + crop headroom) and **≥ 18% ground/ledge below the base**.
+  So the hourglass+ledge occupies ~the central **60%** of the height. Built this way, the theme renders
+  correctly at **`SCENE_OY = 0.5`** (true centre) on any window from ~4:3 to ~21:9 — no cutting.
+- **Pixel-locked hourglass:** the empty hourglass occupies the **exact same pixels across all 6 phase plates**
+  (0 px residual — integer-align pass), so the coded sand never shifts when the sky crossfades between phases.
+- Keep sun/moon/horizon/sea features **consistent across the 6 phases** (the schedule + shader assume shared
+  geometry).
+
 ## 6. The hourglass
 
 - The **one mascot everywhere** — a faithful port of the app's 2.5D canvas sand painter
@@ -384,6 +407,12 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 ---
 
 ## 22. Changelog (append on every web change)
+
+- **2026-07-29 (plate fit + iron rule)** — Deploy scene switched to session's `assets/plates/*.jpg` (same
+  image as `plates-phases` at lower res → sand stayed aligned, ~236 KB perf win, ledge-safe framing).
+  Fill = `object-fit: cover` via a JS-positioned frame; vertical crop anchor **`SCENE_OY = 0.72`** (biased
+  low so the ledge/hourglass base is never cut). Added **§5.1 — the LOCKED plate framing/fit iron rule**
+  (seascape config + the 16:9 / central-60% / ≥20% sky / ≥18% ledge / pixel-locked spec for new themes).
 
 - **2026-07-29 (glass outline re-locked + lab ergonomics)** — Founder re-traced the glass silhouette in the
   lab to fix the bottom pile reading as "out of the glass" (the issue was **Z-depth**, not X/Y — a floorLift
