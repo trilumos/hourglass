@@ -1286,13 +1286,13 @@ function rebuildMask(G){
 // truth for the silhouette now; the curve sliders below only regenerate a
 // starting shape if you deliberately go back to them (Shift+R).
 const LOCKED_NODES = [
-  {a:[0.4976,0.3467], hi:null,             ho:[0.5352,0.3488]},
-  {a:[0.5520,0.3671], hi:[0.5449,0.3424],  ho:[0.5587,0.3811]},
-  {a:[0.5661,0.4426], hi:[0.5661,0.4013],  ho:[0.5647,0.5438]},
-  {a:[0.5042,0.6333], hi:[0.5048,0.6139],  ho:[0.5042,0.6724]},   // neck (founder re-traced 2026-07-29)
-  {a:[0.5637,0.8121], hi:[0.5637,0.7216],  ho:[0.5637,0.8326]},
-  {a:[0.5522,0.8757], hi:[0.5631,0.8520],  ho:[0.5510,0.8735]},
-  {a:[0.5006,0.8843], hi:[0.5297,0.8843],  ho:null},
+  {a:[0.4976,0.3471], hi:null,             ho:[0.5352,0.3492]},
+  {a:[0.5520,0.3675], hi:[0.5449,0.3428],  ho:[0.5587,0.3815]},
+  {a:[0.5661,0.4430], hi:[0.5661,0.4017],  ho:[0.5631,0.5464]},
+  {a:[0.5009,0.6344], hi:[0.4991,0.5999],  ho:[0.5031,0.6735]},   // neck (founder re-traced 2026-07-29)
+  {a:[0.5649,0.8114], hi:[0.5588,0.7120],  ho:[0.5636,0.8415]},
+  {a:[0.5507,0.8764], hi:[0.5631,0.8520],  ho:[0.5495,0.8743]},
+  {a:[0.4988,0.8829], hi:[0.5279,0.8829],  ho:null},
 ];
 const cloneNodes = ns => ns.map(n=>({a:[...n.a], hi:n.hi&&[...n.hi], ho:n.ho&&[...n.ho]}));
 // custom starts TRUE so the sliders' initial run cannot clobber the locked shape.
