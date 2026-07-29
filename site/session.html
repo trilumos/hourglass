@@ -279,20 +279,17 @@
   .sheet-scrim.open{ opacity:1; pointer-events:auto; }
   .sheet{
     position:absolute; z-index:9; left:50%; top:50%; transform:translate(-50%,-46%) scale(.98);
-    width:min(560px,86cqi); max-height:84cqh; overflow:hidden; display:flex; flex-direction:column; border-radius:clamp(20px,2.4cqi,32px);
+    width:min(560px,86cqi); max-height:84cqh; overflow-y:auto; border-radius:clamp(20px,2.4cqi,32px);
     padding:clamp(20px,2.6cqi,36px); opacity:0; pointer-events:none;
     transition:opacity .3s var(--e-std), transform .3s var(--e-std);
   }
   .sheet.open{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
-  .sheet-head{ flex:none; }
-  /* scroll lives on an INNER wrapper (like Setup's .themes-scroll) so the thin bar sits inset inside
-     the sheet padding, not on the rounded edge. Head stays fixed above it. */
-  .sheet-scroll{ overflow-y:auto; min-height:0; flex:1 1 auto; }
-  .sheet-scroll::-webkit-scrollbar{ width:3px; }
-  .sheet-scroll::-webkit-scrollbar-button{ display:none; width:0; height:0; }
-  .sheet-scroll::-webkit-scrollbar-track,.sheet-scroll::-webkit-scrollbar-corner{ background:transparent; }
-  .sheet-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:99px; }
-  .sheet-scroll:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.3); }
+  /* thin scrollbar — identical to Setup's .themes-scroll (setup.html ~L144-149) */
+  .sheet::-webkit-scrollbar{ width:3px; }
+  .sheet::-webkit-scrollbar-button{ display:none; width:0; height:0; }
+  .sheet::-webkit-scrollbar-track,.sheet::-webkit-scrollbar-corner{ background:transparent; }
+  .sheet::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:99px; }
+  .sheet:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.3); }
   .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-grp); }
   .sheet-head h3{ font-weight:400; font-size:clamp(13px,1.5cqi,20px); letter-spacing:.02em; }
   .sheet-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.08); border:none;
@@ -394,7 +391,6 @@
 <div class="sheet-scrim" id="setScrim"></div>
 <div class="sheet frost" id="setSheet" role="dialog" aria-modal="true" aria-label="Settings">
   <div class="sheet-head"><h3>Settings</h3><button class="sheet-close" id="setClose" aria-label="Close">&times;</button></div>
-  <div class="sheet-scroll">
   <div class="hidden-time" id="hiddenTime" hidden></div>
 
   <div class="sec">
@@ -468,7 +464,6 @@
         <button data-v="on">On</button><button data-v="off">Off</button>
       </div>
     </div>
-  </div>
   </div>
 </div>
 </div>
