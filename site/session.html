@@ -291,7 +291,8 @@
   /* mini-lbl (setup.html ~L179) */
   .mini-lbl{ font-weight:500; letter-spacing:.2em; text-transform:uppercase; font-size:var(--t-sm); opacity:.8; }
 
-  /* chips + chip rows (setup.html ~L225, L261-268) — sound toggles, mode/font/sep/scene groups */
+  /* chips + chip rows (setup.html ~L225, L261-268) — Sound multi-select tokens + Scene manual-phase row
+     (the two places chips are still correct: multi-select, and 6 uneven-length peers — see research doc). */
   .chips{ display:flex; flex-wrap:wrap; gap:var(--sp-in); justify-content:center; }
   .chip{
     font-family:inherit; font-weight:400; font-size:var(--t-md); color:var(--ink);
@@ -302,14 +303,20 @@
   .chip:hover{ background:rgba(255,255,255,.16); }
   .chip.on{ background:#fff; color:#181a20; font-weight:500; box-shadow:0 1px 6px rgba(0,0,0,.18); }
   .chip:disabled{ opacity:.32; cursor:not-allowed; }
+  /* Sound: same chip look, laid out as Setup's even 2-col token grid instead of a wrapping row —
+     fixes the old sheet's wrap/overlap. Still multi-select (research doc: chips are correct here). */
+  .tokens{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-in); }
+  .tokens .chip{ width:100%; text-align:center; }
 
-  /* mini segmented control (setup.html ~L361-366) — timer visibility + auto-contrast */
+  /* mini segmented control (setup.html ~L361-366) — the ONE compact-control language: every ≤4-option/
+     on-off/picker row (Timer, Placement, Fill, Font, Separator, Follow my day, Auto-contrast). */
   .mini-seg{ display:flex; background:rgba(255,255,255,.06); border-radius:100px;
              padding:calc(var(--sq)*.005); flex:none; }
   .mini-seg button{ font-family:inherit; font-size:var(--t-sm); color:var(--ink-dim);
                     cursor:pointer; padding:calc(var(--ctrl-y)*.75) .85em; border-radius:100px;
                     background:none; border:none; white-space:nowrap; }
   .mini-seg button.on{ color:#181a20; background:#fff; font-weight:500; }
+  .mini-seg button:disabled{ opacity:.32; cursor:not-allowed; }
 
   /* range slider (setup.html ~L297-305) — master volume + per-sound mixer */
   input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:calc(var(--sq)*.009);
@@ -336,11 +343,16 @@
   #mixRows{ margin-top:var(--sp-in); }
 
   /* number-look Colour swatch — native picker (brief C.3) */
-  .set-row{ display:flex; align-items:center; gap:var(--sp-in); flex-wrap:wrap; }
   .color-pick{ width:calc(var(--sq)*.09); height:calc(var(--sq)*.06); padding:0; cursor:pointer;
                border:1px solid rgba(255,255,255,.2); border-radius:10px; background:none; }
   .set-lbl{ font-size:var(--t-sm); color:var(--ink-dim); }
   .sec-row2{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-in); margin-top:var(--sp-in); }
+
+  /* hidden-timer readout — only shown when the on-scene numbers are set to Hidden (cfg.vis), so opening
+     Settings never leaves you with zero read on the session clock. */
+  .hidden-time{ text-align:center; font-weight:500; font-variant-numeric:tabular-nums;
+                font-size:clamp(28px,4cqi,44px); color:var(--ink); margin-bottom:var(--sp-grp); }
+  .hidden-time[hidden]{ display:none; }
 </style>
 </head>
 <body>
@@ -370,10 +382,11 @@
 <div class="sheet-scrim" id="setScrim"></div>
 <div class="sheet frost" id="setSheet" role="dialog" aria-modal="true" aria-label="Settings">
   <div class="sheet-head"><h3>Settings</h3><button class="sheet-close" id="setClose" aria-label="Close">&times;</button></div>
+  <div class="hidden-time" id="hiddenTime" hidden></div>
 
   <div class="sec">
     <span class="mini-lbl">Sound</span>
-    <div class="chips" id="tokens"></div>
+    <div class="tokens" id="tokens"></div>
     <div class="sound-vol">
       <div class="vol-head"><span class="mini-lbl">Volume</span><span class="pct" id="volPct">100%</span></div>
       <input type="range" id="vol" min="0" max="100" value="100" aria-label="Volume">
@@ -382,30 +395,42 @@
   </div>
 
   <div class="sec">
-    <span class="mini-lbl">Timer visibility</span>
-    <div class="mini-seg" data-seg="vis">
-      <button data-v="always">Always</button><button data-v="hover">On hover</button><button data-v="hidden">Hidden</button>
+    <div class="sec-row2" style="margin-top:0">
+      <span class="set-lbl">Timer</span>
+      <div class="mini-seg" data-seg="vis">
+        <button data-v="always">Always</button><button data-v="hover">On hover</button><button data-v="hidden">Hidden</button>
+      </div>
     </div>
   </div>
 
   <div class="sec">
     <span class="mini-lbl">Number look</span>
-    <div class="chips" data-k="place" style="margin-bottom:var(--sp-in)">
-      <button class="chip" data-v="horizon">Horizon</button><button class="chip" data-v="middle">Middle</button
-      ><button class="chip" data-v="ledge">Ledge</button><button class="chip" data-v="top">Top</button>
+    <div class="sec-row2" style="margin-top:0">
+      <span class="set-lbl">Placement</span>
+      <div class="mini-seg" data-seg="place">
+        <button data-v="horizon">Horizon</button><button data-v="middle">Middle</button
+        ><button data-v="ledge">Ledge</button><button data-v="top">Top</button>
+      </div>
     </div>
-    <div class="chips" data-k="font" style="margin-bottom:var(--sp-in)">
-      <button class="chip" data-v="'Newsreader',serif">Serif</button><button class="chip" data-v="'Jost',sans-serif">Jost</button>
+    <div class="sec-row2">
+      <span class="set-lbl">Fill</span>
+      <div class="mini-seg" data-seg="fill">
+        <button data-v="solid">Solid</button><button data-v="glass">Glass</button><button data-v="outline">Outline</button>
+      </div>
     </div>
-    <div class="chips" data-k="fill" style="margin-bottom:var(--sp-in)">
-      <button class="chip" data-v="solid">Solid</button><button class="chip" data-v="glass">Glass</button
-      ><button class="chip" data-v="outline">Outline</button>
+    <div class="sec-row2">
+      <span class="set-lbl">Font</span>
+      <div class="mini-seg" data-seg="font">
+        <button data-v="'Newsreader',serif">Serif</button><button data-v="'Jost',sans-serif">Jost</button>
+      </div>
     </div>
-    <div class="chips" data-k="sep" style="margin-bottom:var(--sp-in)">
-      <button class="chip" data-v="colon">Colon</button><button class="chip" data-v="dot">Dot</button
-      ><button class="chip" data-v="none">None</button>
+    <div class="sec-row2">
+      <span class="set-lbl">Separator</span>
+      <div class="mini-seg" data-seg="sep">
+        <button data-v="colon">Colon</button><button data-v="dot">Dot</button><button data-v="none">None</button>
+      </div>
     </div>
-    <div class="set-row">
+    <div class="sec-row2">
       <span class="set-lbl">Colour</span>
       <input type="color" class="color-pick" id="colorPick" value="#ffffff" aria-label="Number colour">
     </div>
@@ -413,9 +438,14 @@
 
   <div class="sec">
     <span class="mini-lbl">Scene</span>
-    <div class="chips" data-k="scene">
-      <button class="chip" data-v="follow">Follow my day</button
-      ><button class="chip" data-v="0">Pre-dawn</button><button class="chip" data-v="1">Sunrise</button
+    <div class="sec-row2" style="margin-top:0">
+      <span class="set-lbl">Follow my day</span>
+      <div class="mini-seg" data-seg="followday">
+        <button data-v="on">On</button><button data-v="off">Off</button>
+      </div>
+    </div>
+    <div class="chips" id="phaseChips" style="margin-top:var(--sp-in)">
+      <button class="chip" data-v="0">Pre-dawn</button><button class="chip" data-v="1">Sunrise</button
       ><button class="chip" data-v="2">Midday</button><button class="chip" data-v="3">Sunset</button
       ><button class="chip" data-v="4">Twilight</button><button class="chip" data-v="5">Midnight</button>
     </div>
@@ -495,11 +525,15 @@
     seglabelT = setTimeout(function () { seglabelEl.classList.remove('show'); }, 2000);
   }
 
+  var hiddenTimeEl = document.getElementById('hiddenTime');
   function tick() {
     var p = timer.progress();
     var totalSec = cfg.mode === 'endless' ? Math.floor(p.elapsedMs/1000) : Math.ceil(p.remainingMs/1000);
-    mm.textContent = fmt2(Math.floor(totalSec/60) % 100);
-    ss.textContent = fmt2(totalSec % 60);
+    var mmText = fmt2(Math.floor(totalSec/60) % 100), ssText = fmt2(totalSec % 60);
+    mm.textContent = mmText;
+    ss.textContent = ssText;
+    hiddenTimeEl.hidden = cfg.vis !== 'hidden';   // settings-sheet readout when the on-scene numbers are off
+    if (cfg.vis === 'hidden') hiddenTimeEl.textContent = mmText + ':' + ssText;
     if (!p.done && p.segIndex !== lastSegIndex) {   // segment auto-advance — guarded so it never fires at t=0 or on done
       // note: a multi-segment jump after tab-backgrounding intentionally lands on the current
       // segment with a single cue here (no burst of stacked cues for skipped segments)
@@ -699,7 +733,7 @@
   function applySepForMode(mode) {
     var noSep = (mode === 'middle' || mode === 'ledge');
     if (noSep) S.dataset.sep = 'none'; else if (S.dataset.sep === 'none') S.dataset.sep = 'colon';
-    document.querySelectorAll('[data-k="sep"] .chip').forEach(function (c) {
+    document.querySelectorAll('[data-seg="sep"] button').forEach(function (c) {
       var isNone = c.dataset.v === 'none';
       c.disabled = noSep ? !isNone : isNone;
       c.classList.toggle('on', c.dataset.v === S.dataset.sep);
@@ -957,35 +991,35 @@
   setScrim.addEventListener('click', closeSheet);
   document.getElementById('setClose').addEventListener('click', closeSheet);
 
-  // ---- Single-select chip groups: Number look (place/font/sep) + Scene ----
-  setSheet.querySelectorAll('.chips[data-k]').forEach(function(row){
-    var k=row.dataset.k;
-    row.addEventListener('click', function(e){
-      var b=e.target.closest('.chip'); if(!b||b.disabled) return;
-      row.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('on'); });
-      b.classList.add('on');
-      var v=b.dataset.v;
-      if(k==='place'){ cfg.place=v; applyLook(cfg); refreshFG(); applySepForMode(cfg.place); }
-      else if(k==='font'){ cfg.font=v; applyLook(cfg); }
-      else if(k==='fill'){ cfg.fill=v; applyLook(cfg); }
-      else if(k==='sep'){ cfg.sep=v; S.dataset.sep=v; applySepForMode(cfg.place); }   // per-mode rule enforced
-      else if(k==='scene'){
-        if(v==='follow'){ cfg.followDay=true; phase=phaseFromClock(); }
-        else { cfg.followDay=false; cfg.phase=+v; phase=+v; }
-        setPlate();
-      }
-      saveCfg();
-    });
+  // ---- Scene phase chips — the one place chips stay (6 uneven-length manual values; see research doc).
+  //      Only visible when Follow my day is Off. ----
+  var phaseChipsEl = document.getElementById('phaseChips');
+  phaseChipsEl.addEventListener('click', function(e){
+    var b=e.target.closest('.chip'); if(!b) return;
+    phaseChipsEl.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('on'); });
+    b.classList.add('on');
+    cfg.followDay=false; cfg.phase=+b.dataset.v; phase=+b.dataset.v; setPlate();
+    saveCfg();
   });
 
-  // ---- Mini-segments: Timer visibility + Auto-contrast ----
+  // ---- Mini-segments: every compact control (Timer visibility, Placement, Fill, Font, Separator,
+  //      Follow my day, Auto-contrast) — the ONE toggle-row language, ported off the old chip delegate. ----
   setSheet.querySelectorAll('.mini-seg').forEach(function(seg){
     seg.addEventListener('click', function(e){
-      var b=e.target.closest('button'); if(!b) return;
+      var b=e.target.closest('button'); if(!b||b.disabled) return;
       seg.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); });
       var v=b.dataset.v, name=seg.dataset.seg;
       if(name==='vis'){ cfg.vis=v; S.dataset.vis=v; }
       else if(name==='auto'){ autoContrast=(v==='on'); cfg.autoContrast=autoContrast; setTone(); }
+      else if(name==='place'){ cfg.place=v; applyLook(cfg); refreshFG(); applySepForMode(cfg.place); }
+      else if(name==='fill'){ cfg.fill=v; applyLook(cfg); }
+      else if(name==='font'){ cfg.font=v; applyLook(cfg); }
+      else if(name==='sep'){ cfg.sep=v; S.dataset.sep=v; applySepForMode(cfg.place); }   // per-mode rule enforced
+      else if(name==='followday'){
+        cfg.followDay=(v==='on');
+        phaseChipsEl.hidden=cfg.followDay;
+        if(cfg.followDay){ phase=phaseFromClock(); setPlate(); }
+      }
       saveCfg();
     });
   });
@@ -1001,14 +1035,14 @@
   renderTokens();
   volEl.value=masterPos; volPctEl.textContent=masterPos+'%'; volEl.style.setProperty('--fill',masterPos+'%');
   renderMixRows();
-  function selChips(k,val){ setSheet.querySelectorAll('.chips[data-k="'+k+'"] .chip').forEach(function(c){
-    c.classList.toggle('on', c.dataset.v===String(val)); }); }
-  selChips('place', cfg.place); selChips('font', cfg.font); selChips('fill', cfg.fill || 'solid'); selChips('sep', cfg.sep);
-  selChips('scene', cfg.followDay ? 'follow' : (cfg.phase|0));
+  phaseChipsEl.querySelectorAll('.chip').forEach(function(c){ c.classList.toggle('on', c.dataset.v===String(cfg.phase|0)); });
+  phaseChipsEl.hidden = cfg.followDay;
   function selSeg(name,val){ setSheet.querySelectorAll('.mini-seg[data-seg="'+name+'"] button').forEach(function(b){
     b.classList.toggle('on', b.dataset.v===val); }); }
   selSeg('vis', cfg.vis); selSeg('auto', autoContrast?'on':'off');
-  applySepForMode(cfg.place);   // final authority on sep chip enable/disable + on-state for the current mode
+  selSeg('place', cfg.place); selSeg('font', cfg.font); selSeg('fill', cfg.fill || 'solid'); selSeg('sep', cfg.sep);
+  selSeg('followday', cfg.followDay ? 'on' : 'off');
+  applySepForMode(cfg.place);   // final authority on sep button enable/disable + on-state for the current mode
 })();
 </script>
 </body>
