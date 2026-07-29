@@ -785,7 +785,7 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
   // safely; birds has ~+16 dB headroom. Raised per founder — sand & birds were too faint.
   // These are the CALIBRATED base gains (the built-in balance). The per-sound volume slider
   // is a separate user multiplier on top, so the balance stays intact at any user level.
-  var SOUND_GAIN={ sand:30, ocean:2.2, breeze:0.40, birds:8.0 };
+  var SOUND_GAIN={ sand:26, ocean:2.2, breeze:0.40, birds:8.0 };   // sand trimmed a touch (was 30)
   var SOUND_VOL={ sand:100, ocean:100, breeze:100, birds:100 };   // user 0-100 per sound
   // ── Context ducking (auditory masking) ────────────────────────────────────
   // Research: layers that share a frequency band mask each other and muddy the mix; each
@@ -793,7 +793,9 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
   // right in ocean's way → it recedes to a whisper UNDER ocean, but stays full alone or
   // with breeze (low band) / birds (sparse events). Breeze shares ocean's low end a little,
   // so it dips slightly too. Values are multipliers applied only while the maskER is on.
-  var DUCK={ sand:{ ocean:0.20 }, breeze:{ ocean:0.60 } };
+  var DUCK={ breeze:{ ocean:0.60 } };   // sand's ocean-duck is now a LIVE sidechain (envelope-follows the waves), not a static value
+  var sandDuck=null, oceanTap=null, scRAF=null;   // sand duck-gain node + ocean envelope tap + follower rAF handle
+  var SC_LO=0.02, SC_HI=0.13, SC_DEPTH=0.72, SC_SMOOTH=0.05;   // ocean RMS lo..hi -> duck depth + smoothing (see sidechainTick)
   function isOn(id){ for(var i=0;i<SOUNDS.length;i++) if(SOUNDS[i].id===id) return !!SOUNDS[i].on; return false; }
   function duckFactor(id){ var d=DUCK[id], f=1; if(d) for(var k in d) if(isOn(k)) f*=d[k]; return f; }
   function userMult(id){ return Math.pow((SOUND_VOL[id]==null?100:SOUND_VOL[id])/100, 2.5); }
@@ -945,7 +947,16 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     var d=lp[1]-lp[0];
     n.bus=AC.createGain(); n.bus.gain.value=baseGain(id);
     if(id==='birds') attachBirdTide(n);                       // level rides a slow tide
-    var ch=filterChain(id,n.bus); ch.tail.connect(master); n.chain=ch;
+    var ch=filterChain(id,n.bus); n.chain=ch;
+    if(id==='sand'){                                          // insert a duck-gain the ocean sidechain modulates
+      sandDuck=AC.createGain(); sandDuck.gain.value=1;
+      ch.tail.connect(sandDuck); sandDuck.connect(master);
+    } else { ch.tail.connect(master); }
+    if(id==='ocean'){                                         // passive tap for the envelope follower
+      oceanTap=AC.createAnalyser(); oceanTap.fftSize=256; oceanTap.smoothingTimeConstant=0.3;
+      ch.tail.connect(oceanTap);
+    }
+    startSidechain();                                         // (re)arm when either sand or ocean starts
     var spec=XFADE[id]||2;
     if(spec<=1){
       // stacking: next pass every d*spec, each shaped by a sine window.
@@ -965,9 +976,24 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     if(n.lfo){ try{ n.lfo.stop(); n.lfo.disconnect(); n.lfoGain.disconnect(); }catch(e){}   // bird tide
                n.lfo=null; n.lfoGain=null; }
     (n.live||[]).forEach(function(s){ try{ s.stop(); s.disconnect(); }catch(e){} });
+    if(id==='sand' && sandDuck){ try{ sandDuck.disconnect(); }catch(e){} sandDuck=null; }
+    if(id==='ocean'){ oceanTap=null; if(sandDuck) sandDuck.gain.setTargetAtTime(1, AC.currentTime, 0.12); }  // ocean gone -> sand rises back
     try{ n.bus.disconnect(); }catch(e){}
     if(n.chain) n.chain.nodes.forEach(function(f){ try{ f.disconnect(); }catch(e){} });
     n.bus=null; n.chain=null; n.seg=null; n.live=null;
+  }
+  // Sand-under-ocean SIDECHAIN: an envelope-follower on the ocean tap ducks the sand duck-gain in real time,
+  // so sand recedes on each wave crest and rises in each lull — natural, not a fixed suppression.
+  function startSidechain(){ if(scRAF==null) sidechainTick(); }
+  function sidechainTick(){
+    if(sandDuck && oceanTap){
+      var buf=new Float32Array(oceanTap.fftSize); oceanTap.getFloatTimeDomainData(buf);
+      var s=0; for(var i=0;i<buf.length;i++) s+=buf[i]*buf[i];
+      var rms=Math.sqrt(s/buf.length);
+      var x=Math.max(0,Math.min(1,(rms-SC_LO)/(SC_HI-SC_LO)));
+      sandDuck.gain.setTargetAtTime(1 - x*SC_DEPTH, AC.currentTime, SC_SMOOTH);   // loud ocean -> duck sand toward (1-DEPTH)
+      scRAF=requestAnimationFrame(sidechainTick);
+    } else { scRAF=null; }                                    // one side stopped -> pause the follower
   }
   function syncAudio(){
     if(!previewOn && !AC) return;              // never build a context until asked

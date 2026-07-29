@@ -559,7 +559,28 @@
     o.min += min;
     localStorage.setItem(k, JSON.stringify(o));
   }
-  function endSession() { guardActive = false; location.href = 'setup.html'; }
+  var counted = false;
+  function commitFocus(min){ if(counted) return; counted = true; if(min >= 2) bumpFocusedToday(min); }   // credit actual focus, ≥2 min only (app parity)
+  function focusedSoFarMin(){                                    // actual focus minutes elapsed so far (excludes rests)
+    var p = timer.progress();
+    if(cfg.mode === 'endless') return Math.floor(p.elapsedMs/60000);
+    var elapsed = p.elapsedMs, acc = 0, focusMs = 0;
+    for(var i=0;i<plan.length;i++){ var segMs = plan[i].min*60000;
+      focusMs += (plan[i].kind === 'focus') ? Math.max(0, Math.min(elapsed, acc+segMs) - acc) : 0;
+      acc += segMs; if(elapsed < acc) break; }
+    return Math.floor(focusMs/60000);
+  }
+  // Screen Wake Lock — keep the display awake through a focus session; re-acquire when the tab refocuses.
+  var wakeLockObj = null;
+  function requestWakeLock(){ if(!('wakeLock' in navigator)) return;
+    navigator.wakeLock.request('screen').then(function(w){ wakeLockObj = w; }).catch(function(){}); }
+  requestWakeLock();
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') requestWakeLock(); });
+  function endSession() {
+    commitFocus(focusedSoFarMin());                             // credit actual focus (≥2m) on any intentional exit, incl. give-up
+    if(wakeLockObj){ wakeLockObj.release().catch(function(){}); wakeLockObj = null; }
+    guardActive = false; location.href = 'setup.html';
+  }
 
   // ================= navigation guard — a running session must NEVER be abandoned by accident =================
   // Trap Back/back-swipe in a pushState loop + warn on reload/close. Cleared only by an intentional
@@ -613,11 +634,13 @@
       softCue(p.kind);
       showSegLabel(p.kind === 'rest' ? 'Break · ' + Plan.fmt(plan[p.segIndex].min) : 'Focus');
       lastSegIndex = p.segIndex;
+      breakDuck = (p.kind === 'rest') ? BREAK_DUCK : 1;            // hush the ambient on a break, restore on focus
+      if (master && !timer.isPaused()) master.gain.setTargetAtTime(gainFor()*breakDuck, AC.currentTime, 0.6);
     }
     if (p.done && !shownDone) {          // endless mode never reaches here — progress().done stays false forever
       shownDone = true;
       softCue();                         // session-end bell
-      bumpFocusedToday(focusMin);
+      commitFocus(focusMin);             // credit focus once, ≥2 min
       doneMinEl.textContent = Plan.fmt(focusMin);
       doneEl.hidden = false;
     }
@@ -685,6 +708,8 @@
     timer.start();
     shownDone = false;
     lastSegIndex = 0;
+    counted = false;                    // a fresh run credits its own focus
+    breakDuck = 1; if (master) syncAudio();   // clear any leftover break-hush
     doneEl.hidden = true;
   });
   // #gear → opens the settings sheet (wired in the Task 7 block below).
@@ -855,6 +880,7 @@
   ];
   SOUNDS.forEach(function(s){ s.on = (cfg.sounds||[]).indexOf(s.id)>=0 ? 1 : 0; });   // seed from cfg.sounds
   var masterPos = (cfg.vol==null?100:cfg.vol), unlocked=false;
+  var breakDuck = 1, BREAK_DUCK = 0.15;    // ambient hushes to 15% during a break/rest, full during focus (tunable)
   function gainFor(){ return Math.pow((masterPos/100),2.5); }   // audio taper, one master level
 
   var tokensEl=document.getElementById('tokens'), mixRowsEl=document.getElementById('mixRows'),
@@ -898,7 +924,7 @@
   // ── Audio engine core — VERBATIM from setup.html (~L745-943) ──
   var AUDIO_FILE={ sand:'sand.m4a', ocean:'ocean.mp3', breeze:'breeze.mp3', birds:'birds.mp3' };
   var LOOP_POINTS={ sand:[0.15,13.20], ocean:[0.35,70.0], breeze:[0.35,97.846], birds:[0.0,22.5] };
-  var SOUND_GAIN={ sand:30, ocean:2.2, breeze:0.40, birds:8.0 };
+  var SOUND_GAIN={ sand:26, ocean:2.2, breeze:0.40, birds:8.0 };   // sand trimmed a touch (was 30)
   var SOUND_VOL={ sand:100, ocean:100, breeze:100, birds:100 };   // user 0-100 per sound
   // persist per-sound volumes via cfg.soundVol; older saved configs won't have it, and a partial
   // map is safe — per-key-default any missing sound to 100.
@@ -1081,7 +1107,7 @@
       SOUNDS.forEach(function(s){ if(s.on) applyVol(s.id); });   // ducking glides in/out live
       var t=AC.currentTime;
       master.gain.cancelScheduledValues(t);
-      master.gain.setTargetAtTime(gainFor(), t, 0.08);           // click-free ramp
+      master.gain.setTargetAtTime(gainFor()*breakDuck, t, 0.08);   // click-free ramp (breakDuck hushes ambient during rests)
     });
   }
   // autoplay unlock — create/resume the AudioContext on the first gesture, then start cfg.sounds live
