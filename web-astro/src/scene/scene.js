@@ -1051,7 +1051,7 @@ function drawSand(t){
   // gravity: slow and packed at the hole, fast and sparse at the pile. No glow, no
   // cone, no splash. A continuous column was tried here and cut — it reads as a
   // poured ribbon, not sand. Same constants as the app so the two products match.
-  if (d>0.001 && d<0.999){
+  if (S._sandOn && d<0.999){
     const holeY=yN;
     // The pile's TRUE top is NOT yApex. The apex is rounded by a quadratic whose
     // CONTROL point is at yApex, and a quadratic never reaches its control — the
@@ -1068,6 +1068,9 @@ function drawSand(t){
                       smooth(clamp((d - S.streamThin)/Math.max(1-S.streamThin,1e-4), 0, 1)));
     const colHalf = Math.max(nh,1)*S.streamCol*thin;   // thin column ~ the hole width
     const v0 = S.streamV0;                         // small exit speed; rest is gravity
+    // ONSET: at a focus start the stream head descends from the neck over one fall-period —
+    // t is the session sand-clock (0 at onset), so grains below the head aren't emitted yet.
+    const headFall = clamp(t / S.streamPer, 0, 1);
     // A grain LEAVES the top pile and JOINS the bottom one, so it carries the top
     // half's colour at the neck and arrives as the bottom half's. The two halves
     // are graded separately (top fully shadowed, bottom half lit), so a single
@@ -1090,6 +1093,7 @@ function drawSand(t){
       const speedR=0.8+0.4*rng(), offR=rng();      // varied speed, irregular spacing
       const ph=((t/(S.streamPer*speedR))+offR)%1;
       const fall=v0*ph+(1-v0)*ph*ph;               // gravity: phase squared
+      if(fall>headFall) continue;                  // below the descending head -> not emitted yet (onset)
       const py=holeY+fall*gap; if(py>=landY) continue;   // landed -> not into the pile
       const px=cx + Math.abs(lane)*lane*colHalf + Math.sin(ph*6.28318+i)*0.5;
       // fine grains: a touch over 1px leaving the hole, tapering finer as they fall
@@ -1103,7 +1107,7 @@ function drawSand(t){
     // (g = 2·v·sinθ, so it lands exactly at p=1, giving v·sinθ·p·(1−p)). Count and
     // energy GROW with the pile, so a small pile barely stirs and a tall one sprays.
     const fill=clamp(d,0,1);
-    const scatterN=Math.round((3+13*fill)*S.streamScat);
+    const scatterN=Math.round((3+13*fill)*S.streamScat*headFall);   // no spray until the head reaches the pile
     if (scatterN>0){
       const hScale=mxB*(0.10+0.40*fill)*2.2, vScale=(yB-yN)*(0.010+0.055*fill)*2.2;
       const erng=mulberry(31);
@@ -1687,9 +1691,21 @@ function onSampleExtras(r){
   if (!r.done) wasDone = false;
 }
 
+// ── temp: hide the basic controls, reveal on mouse move / tap, so the sand is unobstructed.
+//    (throwaway with the basic #session-ui; the real Setup/Session UI supersedes it.)
+let _uiHideT = 0;
+function _revealUI(){ document.body.classList.add('show-ui'); clearTimeout(_uiHideT);
+  _uiHideT = setTimeout(() => document.body.classList.remove('show-ui'), 2500); }
+addEventListener('mousemove', _revealUI); addEventListener('pointerdown', _revealUI);
+
 fit();
 dumpNodes(); dumpSea();
 let t0=performance.now(), tSec=0;
+// ── session-driven SAND CLOCK (deploy behaviour; diverges from the lab hybrid.html) ──
+// The falling stream belongs to the session, not the wall clock: it onsets from the neck at
+// each focus start, FREEZES when paused (frozen mid-air), and is absent while idle / on a
+// break / done. tSec still drives the living sky (glitter/sun/moon) so the world stays alive.
+let sandClock=0, prevSandKind='idle';
 // A throw inside drawSand used to blank the canvas with no clue why (twice: a
 // bad neck index, then an undefined S key -> addColorStop(NaN)). Surface it.
 let lastErr='';
@@ -1697,13 +1713,20 @@ function updateSession(){
   const r = session.sample();
   if (r.kind !== 'idle') S.prog = r.prog;   // idle leaves the debug slider in control
   if (typeof updateSessionUI === 'function') updateSessionUI(r);   // wired in Tasks 5–7
+  return r;
 }
-function loop(now){ tSec+=(now-t0)/1000; t0=now;
+function loop(now){ const dt=(now-t0)/1000; tSec+=dt; t0=now;
   updateDayCycle();
-  updateSession();
+  const r = updateSession();
+  const focusActive = (r.kind === 'focus');                     // sand present (falling or frozen)
+  if (focusActive && prevSandKind !== 'focus') sandClock = 0;   // new focus block -> stream onsets from the neck
+  if (focusActive && session.state.running) sandClock += dt;    // advance ONLY while running (frozen on pause)
+  if (!focusActive) sandClock = 0;                              // idle / rest / done -> no stream
+  prevSandKind = r.kind;
+  S._sandOn = focusActive;                                      // drawSand gates the stream on this
   U.uTime.value=tSec; renderer.render(scene,cam);
   try {
-    drawSand(tSec);
+    drawSand(sandClock);                                        // stream time = the session sand-clock
     if(lastErr){ lastErr=''; $('err').style.display='none'; }
   } catch(e){
     const msg=e && e.message ? e.message : String(e);
