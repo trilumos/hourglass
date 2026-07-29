@@ -66,6 +66,9 @@
   #ss { left:calc(50% + 90px); }
   #frame.show-nums .clocknum { opacity:.92; }
   #focused-today { font-size:12px; color:#9fb0c8; min-height:14px; }
+  /* match the Astro build: the timer controls hide, and reveal on mouse move / tap. */
+  #session-ui { opacity:0; pointer-events:none; transition:opacity .5s ease; }
+  body.show-ui #session-ui { opacity:1; pointer-events:auto; }
 </style>
 </head>
 <body>
@@ -2345,6 +2348,12 @@ function onSampleExtras(r){
   }
   if (!r.done) wasDone = false;
 }
+
+// match the Astro build: hide the controls, reveal on mouse move / tap so the sand is unobstructed.
+let _uiHideT = 0;
+function _revealUI(){ document.body.classList.add('show-ui'); clearTimeout(_uiHideT);
+  _uiHideT = setTimeout(() => document.body.classList.remove('show-ui'), 2500); }
+addEventListener('mousemove', _revealUI); addEventListener('pointerdown', _revealUI);
 
 fit();
 dumpNodes(); dumpSea();
