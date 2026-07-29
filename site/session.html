@@ -371,6 +371,16 @@
      background:conic-gradient(from 90deg,#e6a6b0,#eaca78,#a7d18f,#8fb7e0,#b99ce6,#e6a6b0); }
   .sw-custom input[type=color]{ position:absolute; inset:-30%; width:160%; height:160%;
      border:none; padding:0; background:none; cursor:pointer; opacity:0; }
+  /* Scene: Setup-style Time-of-day image grid (setup.html .tod-opts/.todo/.dot/.cap, verbatim). */
+  .tod-opts{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-in); margin-top:.6em; }
+  .todo{ background:none; border:none; cursor:pointer; display:flex; flex-direction:column;
+     align-items:center; gap:.4em; padding:0; color:var(--ink); }
+  .todo .dot{ width:calc(var(--sq)*.088); aspect-ratio:1; border-radius:50%; background-size:200%;
+     box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); transition:box-shadow .2s,transform .15s; }
+  .todo.on .dot{ box-shadow:0 0 0 2px var(--gold); transform:scale(1.04); }
+  .todo .cap{ font-weight:400; font-size:var(--t-xs); opacity:.9; white-space:nowrap; }
+  .todo.on .cap{ opacity:1; }
+  .dot.follow{ background:conic-gradient(from 210deg,#1a2440,#3a4d78 25%,#e6a86b 50%,#7db4e6 62%,#2a3350 88%,#1a2440); }
 
   /* hidden-timer readout — only shown when the on-scene numbers are set to Hidden (cfg.vis), so opening
      Settings never leaves you with zero read on the session clock. */
@@ -470,17 +480,7 @@
 
   <div class="sec">
     <span class="mini-lbl">Scene</span>
-    <div class="sec-row2" style="margin-top:0">
-      <span class="set-lbl">Follow my day</span>
-      <div class="mini-seg" data-seg="followday">
-        <button data-v="on">On</button><button data-v="off">Off</button>
-      </div>
-    </div>
-    <div class="chips" id="phaseChips" style="margin-top:var(--sp-in)">
-      <button class="chip" data-v="0">Pre-dawn</button><button class="chip" data-v="1">Sunrise</button
-      ><button class="chip" data-v="2">Midday</button><button class="chip" data-v="3">Sunset</button
-      ><button class="chip" data-v="4">Twilight</button><button class="chip" data-v="5">Midnight</button>
-    </div>
+    <div class="tod-opts" id="tod"></div>
     <div class="sec-row2">
       <span class="set-lbl">Auto-contrast</span>
       <div class="mini-seg" data-seg="auto">
@@ -1026,14 +1026,26 @@
 
   // ---- Scene phase chips — the one place chips stay (6 uneven-length manual values; see research doc).
   //      Only visible when Follow my day is Off. ----
-  var phaseChipsEl = document.getElementById('phaseChips');
-  phaseChipsEl.addEventListener('click', function(e){
-    var b=e.target.closest('.chip'); if(!b) return;
-    phaseChipsEl.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('on'); });
-    b.classList.add('on');
-    cfg.followDay=false; cfg.phase=+b.dataset.v; phase=+b.dataset.v; setPlate();
-    saveCfg();
+  // ---- Scene: Setup-style Time-of-day image grid (Follow my day + 6 phase thumbnails) ----
+  var TOD=[{id:'pre-dawn',cap:'Pre-dawn',pos:'50% 42%'},{id:'sunrise',cap:'Sunrise',pos:'50% 40%'},
+           {id:'midday',cap:'Midday',pos:'50% 38%'},{id:'sunset',cap:'Sunset',pos:'50% 42%'},
+           {id:'twilight',cap:'Twilight',pos:'50% 44%'},{id:'midnight',cap:'Midnight',pos:'50% 46%'}];
+  var todEl=document.getElementById('tod');
+  function renderTod(){
+    var h='<button type="button" class="todo'+(cfg.followDay?' on':'')+'" data-tod="follow">'
+      +'<span class="dot follow"></span><span class="cap">Follow my day</span></button>';
+    h+=TOD.map(function(p,i){ return '<button type="button" class="todo'+(!cfg.followDay&&(cfg.phase|0)===i?' on':'')+'" data-tod="'+i+'">'
+      +'<span class="dot" style="background-image:url(assets/plates/'+p.id+'.jpg);background-position:'+p.pos+'"></span>'
+      +'<span class="cap">'+p.cap+'</span></button>'; }).join('');
+    todEl.innerHTML=h;
+  }
+  todEl.addEventListener('click', function(e){
+    var b=e.target.closest('.todo'); if(!b) return;
+    if(b.dataset.tod==='follow'){ cfg.followDay=true; phase=phaseFromClock(); }
+    else { cfg.followDay=false; cfg.phase=+b.dataset.tod; phase=+b.dataset.tod; }
+    setPlate(); saveCfg(); renderTod();
   });
+  renderTod();
 
   // ---- Mini-segments: every compact control (Timer visibility, Placement, Fill, Font, Separator,
   //      Follow my day, Auto-contrast) — the ONE toggle-row language, ported off the old chip delegate. ----
@@ -1048,11 +1060,6 @@
       else if(name==='fill'){ cfg.fill=v; applyLook(cfg); }
       else if(name==='font'){ cfg.font=v; applyLook(cfg); }
       else if(name==='sep'){ cfg.sep=v; S.dataset.sep=v; applySepForMode(cfg.place); }   // per-mode rule enforced
-      else if(name==='followday'){
-        cfg.followDay=(v==='on');
-        phaseChipsEl.hidden=cfg.followDay;
-        if(cfg.followDay){ phase=phaseFromClock(); setPlate(); }
-      }
       saveCfg();
     });
   });
@@ -1072,13 +1079,10 @@
   renderTokens();
   volEl.value=masterPos; volPctEl.textContent=masterPos+'%'; volEl.style.setProperty('--fill',masterPos+'%');
   renderMixRows();
-  phaseChipsEl.querySelectorAll('.chip').forEach(function(c){ c.classList.toggle('on', c.dataset.v===String(cfg.phase|0)); });
-  phaseChipsEl.hidden = cfg.followDay;
   function selSeg(name,val){ setSheet.querySelectorAll('.mini-seg[data-seg="'+name+'"] button').forEach(function(b){
     b.classList.toggle('on', b.dataset.v===val); }); }
   selSeg('vis', cfg.vis); selSeg('auto', autoContrast?'on':'off');
   selSeg('place', cfg.place); selSeg('font', cfg.font); selSeg('fill', cfg.fill || 'solid'); selSeg('sep', cfg.sep);
-  selSeg('followday', cfg.followDay ? 'on' : 'off');
   applySepForMode(cfg.place);   // final authority on sep button enable/disable + on-state for the current mode
 })();
 </script>
