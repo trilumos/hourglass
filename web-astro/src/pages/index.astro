@@ -1,7 +1,6 @@
 ---
-// The one living world (spec §0). The scene mounts once and stays; the Home (locked hero-v22) sits over it.
-// Setup + Session states get layered next (Home -> Setup -> Session), never re-mounting the scene.
-import SceneWorld from '../components/SceneWorld.astro';
+// Home (landing hero). Background is STATIC day-time plates that crossfade the day (sun/moon) on scroll —
+// NOT the live WebGL scene (that's the Session). Setup + Session states get layered next.
 import Home from '../components/Home.astro';
 ---
 <!doctype html>
@@ -10,7 +9,7 @@ import Home from '../components/Home.astro';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Sustain — a calm focus timer inside a living seaside world." />
-    <title>Sustain — a living focus world</title>
+    <title>Sustain — a calm focus timer</title>
     <!-- v22 type stack (dev via Google Fonts; self-host in the perf pass — spec §13/§18). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,9 +17,14 @@ import Home from '../components/Home.astro';
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Newsreader:ital,opsz,wght@1,6..72,200..500&family=Jost:wght@200;300;400;500&display=swap"
       rel="stylesheet"
     />
+    <style is:global>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      html { scroll-behavior:auto; }
+      body { min-height:100%; background:#0a1a2a; font-family:Jost, ui-sans-serif, system-ui, sans-serif;
+             -webkit-font-smoothing:antialiased; }
+    </style>
   </head>
   <body>
-    <SceneWorld />
     <Home />
   </body>
 </html>
