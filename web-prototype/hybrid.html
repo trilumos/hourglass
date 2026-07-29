@@ -69,6 +69,11 @@
   /* match the Astro build: the timer controls hide, and reveal on mouse move / tap. */
   #session-ui { opacity:0; pointer-events:none; transition:opacity .5s ease; }
   body.show-ui #session-ui { opacity:1; pointer-events:auto; }
+  /* Edit-outline toggle: unlock the glass trace for dragging; timer controls vanish while editing. */
+  #editOutline { position:fixed; left:14px; top:14px; z-index:25; width:auto; margin:0;
+    padding:8px 14px; background:rgba(8,10,16,.78); color:#EACA78; border:1px solid rgba(234,202,120,.45);
+    border-radius:6px; font-weight:600; cursor:pointer; }
+  body.editing #session-ui { display:none !important; }
 </style>
 </head>
 <body>
@@ -81,6 +86,7 @@
 </div></div>
 
 <div id="err"></div>
+<button id="editOutline">🔓 Edit outline</button>
 
 <div id="session-ui">
   <div id="focused-today"></div>
@@ -2354,6 +2360,20 @@ let _uiHideT = 0;
 function _revealUI(){ document.body.classList.add('show-ui'); clearTimeout(_uiHideT);
   _uiHideT = setTimeout(() => document.body.classList.remove('show-ui'), 2500); }
 addEventListener('mousemove', _revealUI); addEventListener('pointerdown', _revealUI);
+
+// Edit-outline toggle: unlock = outline-edit mode (S.dbg → red trace + draggable nodes over the plate,
+// no sand), timer controls hidden. Lock = back to the sand scene.
+{
+  const eb = document.getElementById('editOutline');
+  let _editing = false;
+  eb.addEventListener('click', () => {
+    _editing = !_editing;
+    S.dbg = _editing ? 1 : 0;
+    sandCv.style.pointerEvents = (S.dbg||S.seaEdit||S.celEdit||S.horEdit) ? 'auto' : 'none';
+    document.body.classList.toggle('editing', _editing);
+    eb.textContent = _editing ? '🔒 Lock outline' : '🔓 Edit outline';
+  });
+}
 
 fit();
 dumpNodes(); dumpSea();
