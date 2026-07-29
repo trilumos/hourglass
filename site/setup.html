@@ -364,6 +364,18 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
                   cursor:pointer; padding:calc(var(--ctrl-y)*.75) .85em; border-radius:100px;
                   background:none; border:none; white-space:nowrap; }
 .mini-seg button.on{ color:#181a20; background:#fff; font-weight:500; }
+/* Number-look segmented controls (place/fill/font/separator) are full-width blocks in their .sec —
+   make the buttons share the width evenly so 2-3 options don't huddle left with dead space. */
+.sec>.mini-seg button{ flex:1 1 0; text-align:center; }
+/* Number colour: round preset swatches + rainbow custom picker (matches session.html). */
+.swatches{ display:flex; align-items:center; gap:.5em; flex-wrap:wrap; }
+.sw-c{ width:1.5em; height:1.5em; border-radius:50%; border:none; cursor:pointer; padding:0; flex:none;
+       box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); position:relative; }
+.sw-c.on{ box-shadow:0 0 0 2px var(--gold); }
+.sw-custom{ overflow:hidden; display:inline-flex;
+   background:conic-gradient(from 90deg,#e6a6b0,#eaca78,#a7d18f,#8fb7e0,#b99ce6,#e6a6b0); }
+.sw-custom input[type=color]{ position:absolute; inset:-30%; width:160%; height:160%;
+   border:none; padding:0; background:none; cursor:pointer; opacity:0; }
 /* explains the chosen option in plain words; wording fades when it changes (motion spec) */
 .set-desc{ font-size:var(--t-xs); line-height:1.45; color:#fff; opacity:.72;
            margin-top:calc(var(--sp-in)*.6); transition:opacity .2s var(--e-std); }
@@ -547,6 +559,17 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
           <button class="on" data-v="'Newsreader',serif">Serif</button><button data-v="'Jost',sans-serif">Jost</button>
         </div>
       </div>
+      <div class="sec">
+        <span class="mini-lbl">Number colour</span>
+        <div class="swatches" id="swatches" style="margin-top:.5em">
+          <button type="button" class="sw-c" data-c="#ffffff" style="background:#ffffff" aria-label="White"></button
+          ><button type="button" class="sw-c" data-c="#f2ecdd" style="background:#f2ecdd" aria-label="Ivory"></button
+          ><button type="button" class="sw-c" data-c="#eaca78" style="background:#eaca78" aria-label="Gold"></button
+          ><button type="button" class="sw-c" data-c="#8fb7e0" style="background:#8fb7e0" aria-label="Sky"></button
+          ><button type="button" class="sw-c" data-c="#20242e" style="background:#20242e" aria-label="Charcoal"></button
+          ><label class="sw-c sw-custom" title="Custom colour"><input type="color" id="numColor" value="#ffffff" aria-label="Custom number colour"></label>
+        </div>
+      </div>
       <button class="advanced-btn" id="advBtn">Advanced settings</button>
       </div>
     </section>
@@ -600,11 +623,6 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
         <button data-v="colon">Colon</button><button data-v="dot">Dot</button
         ><button class="on" data-v="none">None</button>
       </div>
-    </div>
-    <div class="sec">
-      <span class="mini-lbl">Number colour</span>
-      <input type="color" id="numColor" value="#ffffff" aria-label="Number colour"
-        style="margin-top:.5em;width:3em;height:1.8em;padding:0;border:0;background:none;cursor:pointer;display:block">
     </div>
   </div>
 </div>
@@ -990,6 +1008,16 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     if(b.dataset.tod==='time'){ return; } // W2: specific-time picker
     todSel=b.dataset.tod; renderTod(); applyScene();
   });
+
+  // Number colour: round preset swatches + custom picker (value read by Begin's cfg.color). */
+  (function(){
+    var swEl=qs('#swatches'), numColor=qs('#numColor');
+    function reflectSw(){ qsa('.sw-c[data-c]',swEl).forEach(function(b){
+      b.classList.toggle('on', b.dataset.c.toLowerCase()===numColor.value.toLowerCase()); }); }
+    swEl.addEventListener('click',function(e){ var b=e.target.closest('.sw-c[data-c]'); if(b){ numColor.value=b.dataset.c; reflectSw(); } });
+    numColor.addEventListener('input', reflectSw);
+    reflectSw();
+  })();
 
   // ── Generic mini-segments (sun/moon, timer show, number-look, cycle) ───────
   var segState={ sunmoon:'show', timershow:'always',
