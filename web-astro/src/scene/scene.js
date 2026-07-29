@@ -26,7 +26,7 @@ const frame = $('frame'), glitterCv = $('glitter'), sandCv = $('sand');
 let DW = 0, DH = 0;
 function fit(){
   const vw = innerWidth, vh = innerHeight;
-  if (vw/vh > AR) { DH = vh; DW = vh*AR; } else { DW = vw; DH = vw/AR; }
+  if (vw/vh > AR) { DW = vw; DH = vw/AR; } else { DH = vh; DW = vh*AR; }   // COVER: fill the viewport, crop the overflow (locked plate rule — no side gaps)
   frame.style.width = DW+'px'; frame.style.height = DH+'px';
   const dpr = Math.min(devicePixelRatio, 2);
   for (const cv of [glitterCv, sandCv]) {
