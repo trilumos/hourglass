@@ -385,6 +385,18 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 
 ## 22. Changelog (append on every web change)
 
+- **2026-07-29 (living world in Astro)** — Ported `hybrid.html` into `web-astro/` (Astro 7.1.5): verbatim
+  shaders (`src/scene/shaders.js`) + verbatim module (`src/scene/scene.js`, plumbing-only) + `SceneWorld.astro`
+  (markup + CSS, lab UI hidden). Builds to a static site; dev server renders the WebGL sun/moon/glitter +
+  canvas sand. **`scene.js` now diverges from `hybrid.html`** (deploy-specific behaviour below) — `hybrid.html`
+  stays the look-tuning lab.
+- **2026-07-29 (sand made session-driven)** — Founder feedback fixes in `scene.js`: the falling stream is now
+  driven by a **session sand-clock**, not the wall clock — it **freezes mid-air on pause** (pile already froze
+  via prog), **onsets from the neck** on each focus start (a `headFall` ceiling grows the stream downward over
+  one fall-period; scatter ramps with it) instead of flashing full, and **starts immediately on Begin** (gate
+  changed from `prog>0.001`, which cost ~1.5 s on long sessions, to "focus active"). The living sky keeps
+  running on `tSec`. Basic controls now hide and reveal on mouse-move/tap (temp, with `#session-ui`).
+
 - **2026-07-29** — Master spec created (consolidates all web specs). Locked: location = timezone→coords;
   session hourglass = live rendered sand; vanilla islands (no React). Shipped this cycle: dynamic sand↔ocean
   sidechain (setup + session), sand base gain 30→26, ritual bell cues, session-engine parity (focus ≥2 min
