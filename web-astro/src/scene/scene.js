@@ -110,7 +110,7 @@ const S = { prog:0.35, cx:0.498850, top:0.347, neck:0.627, bot:0.888, max:0.065,
             flat:0.20, persp:0.090, repose:0.545, apexR:0.07, topBulge:0.30,
             sandVol:0.75,                        // total sand ÷ top-bulb capacity
             gspec:0.32, grim:0.20, gshad:0.40, scool:1.0,  // glass optics + sand light
-            phase:2, live:0, daytime:12,          // day-cycle: edit-phase, live clock, scrub
+            phase:2, live:1, daytime:12,          // live:1 = day-cycle follows the real LOCAL clock (user's timezone)
             celEdit:0, horEdit:0,                             // moon is always FULL
             // LOCKED by the founder 2026-07-19
             moonR:0.040, moonK:1.20, moonSoft:0.07, moonTexAmt:0.50,
@@ -1722,12 +1722,16 @@ function updateSession(){
 function loop(now){ const dt=(now-t0)/1000; tSec+=dt; t0=now;
   updateDayCycle();
   const r = updateSession();
-  const focusActive = (r.kind === 'focus');                     // sand present (falling or frozen)
-  if (focusActive && prevSandKind !== 'focus') sandClock = 0;   // new focus block -> stream onsets from the neck
-  if (focusActive && session.state.running) sandClock += dt;    // advance ONLY while running (frozen on pause)
-  if (!focusActive) sandClock = 0;                              // idle / rest / done -> no stream
+  if (r.kind === 'idle') {                                      // HOME idle: ~40% fill, sand falling continuously (looped, NEVER filling)
+    S.prog = 0.4; S._sandOn = true; sandClock += dt;
+  } else {
+    const focusActive = (r.kind === 'focus');                   // sand present (falling or frozen)
+    if (focusActive && prevSandKind !== 'focus') sandClock = 0; // new focus block -> stream onsets from the neck
+    if (focusActive && session.state.running) sandClock += dt;  // advance ONLY while running (frozen on pause)
+    if (!focusActive) sandClock = 0;                            // rest / done -> no stream
+    S._sandOn = focusActive;                                    // drawSand gates the stream on this
+  }
   prevSandKind = r.kind;
-  S._sandOn = focusActive;                                      // drawSand gates the stream on this
   U.uTime.value=tSec; renderer.render(scene,cam);
   try {
     drawSand(sandClock);                                        // stream time = the session sand-clock
