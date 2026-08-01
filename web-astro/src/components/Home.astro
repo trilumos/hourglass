@@ -1,8 +1,10 @@
 ---
-// Home (landing hero) — LOCKED hero-v22, VERBATIM (blur-boxes, --halo:none, glass tokens, type stack).
-// It sits over the live SCENE (SceneWorld): the scene renders the current LOCAL-time plate (matching the
-// user's timezone) + the hourglass sand looping at ~40% (falling continuously, never filling). The home
-// itself adds no motion. Full-viewport (v22 was a 16:9 card).
+// Home (landing hero) — REDESIGN v3 (2026-07-30, "left editorial", Lovable-caliber).
+// Sits over the live SCENE (SceneWorld): current LOCAL-time plate + hourglass sand looping ~40%.
+// Legibility model (Lovable): NO text shadows/halos (they read as an ugly crisp outline). Instead a soft
+// bluish plate TINT — darkest in the lower-left behind the text, clearing toward the bright top-right — is
+// the bed the clean text sits on. Content grouped lower-left: headline → one-line support → two buttons.
+// Type: Playfair Display (headline + wordmark) / Jost (UI) / Newsreader retired here (quote removed).
 ---
 <svg style="position:absolute;width:0;height:0" aria-hidden="true">
   <filter id="glassdist" x="-20%" y="-20%" width="140%" height="140%">
@@ -15,153 +17,182 @@
 <section class="hero" id="home" aria-label="Sustain — a calm focus timer">
   <div class="vign"></div><div class="grain"></div>
 
-  <nav class="nav">
-    <span class="wm">sustain</span>
-    <span class="links"><span>About</span><span>Themes</span><span>Get the app</span><span class="ico">&#9881;</span></span>
+  <!-- slim floating glass pill nav -->
+  <nav class="nav glass-quiet" aria-label="Primary">
+    <a class="brandmark" href="#home" aria-label="Sustain home">
+      <img class="hg" src="/brand-icon.png" alt="" width="30" height="30" />
+      <span class="bt">Sustain</span>
+    </a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#science">Science</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a class="nav-cta" href="https://play.google.com/store/apps/details?id=com.trilumos.sustain" target="_blank" rel="noopener">Get the app</a>
   </nav>
 
-  <div class="left">
-    <h1 class="brand">Sustain</h1>
-    <p class="tagline">Time flows. You focus.</p>
-    <p class="clarity">A calm focus timer that moves with your day.</p>
-    <div class="ctas">
-      <button class="cta glass-liquid" id="beginFocus" type="button"><span>Begin Focus</span><span class="arw">&#8594;</span></button>
+  <!-- content, grouped in the lower-left -->
+  <div class="lede">
+    <h1 class="headline">Train your focus.<br>Transform your&nbsp;life.</h1>
+    <p class="support">A calm focus timer that moves with your day.</p>
+
+    <div class="actions">
+      <button class="btn-begin" id="beginFocus" type="button"><span>Begin Focus</span></button>
+      <a class="btn-play" href="https://play.google.com/store/apps/details?id=com.trilumos.sustain" target="_blank" rel="noopener" aria-label="Get it on Google Play">
+        <img src="/google-play-badge.svg" alt="Get it on Google Play" />
+      </a>
     </div>
-    <a class="play glass-liquid" href="#" aria-label="Get it on Google Play">
-      <svg class="gp" viewBox="0 0 26 30" width="1.25em" height="1.42em" aria-hidden="true">
-        <polygon points="3,4 23,15 3,15" fill="#12B5FF"/><polygon points="3,15 23,15 3,26" fill="#00D26A"/>
-        <polygon points="23,15 15,10.6 15,15" fill="#FF424B"/><polygon points="23,15 15,19.4 15,15" fill="#FFC400"/>
-      </svg>
-      <span class="pl"><small>GET IT ON</small>Google&nbsp;Play</span>
-    </a>
-  </div>
 
-  <div class="right">
-    <div class="ftlabel">Focused Today</div>
-    <div class="ftbig" id="ftBig">0<span class="u">m</span></div>
-    <div class="goalbar"><i id="ftBar"></i></div>
-    <div class="goal">Daily goal 8h</div>
-    <div class="qdiv"></div>
-    <div class="qwrap"><span class="qmark">&ldquo;</span><p class="quote">Discipline is choosing between what you want now and what you want most.</p></div>
-  </div>
-
-  <div class="dock glass-liquid">
-    <span class="ico">&#9834;</span><span>Ocean Breeze</span>
-    <span class="wv"><i></i><i></i><i></i><i></i><i></i></span>
+    <!-- returners only: unhidden by the script when today's focus > 0 -->
+    <div class="focused" id="focused" hidden>
+      <span class="ft-label">Focused today</span>
+      <span class="ft-val" id="ftVal">0m</span>
+      <span class="ft-bar"><i id="ftBar"></i></span>
+    </div>
   </div>
 </section>
 
 <style>
-  /* full-viewport hero over the live scene (v22 was a 16:9 card). cqi -> viewport width. */
-  .hero{ position:fixed; inset:0; z-index:5; overflow:hidden; isolation:isolate; container-type:inline-size;
-         /* per-glyph text-shadow halos (handoff §4) — hug the letters, no dark boxes, work at every time of day */
-         --halo:0 0 1px rgba(6,8,16,.70),0 0 2px rgba(6,8,16,.58),0 0 4px rgba(6,8,16,.42),0 0 8px rgba(6,8,16,.26),0 1px 2px rgba(6,8,16,.55);
-         --halo-strong:0 0 1px rgba(6,8,16,.82),0 0 2px rgba(6,8,16,.70),0 0 4px rgba(6,8,16,.54),0 0 8px rgba(6,8,16,.40),0 0 15px rgba(6,8,16,.30),0 1px 2px rgba(6,8,16,.66); }
+  .hero{ position:fixed; inset:0; z-index:5; overflow:hidden; isolation:isolate;
+         --ink:#f4ecdc; --ink-hi:#fbf3e2; }
+  .hero.screen-hidden{ opacity:0; pointer-events:none; }   /* instant flip; View Transition cross-fades */
   .hero *{ box-sizing:border-box; }
 
-  /* GENTLE atmospheric vignette only (no dark side-panels — the halos carry legibility). Subtle corner
-     darken + a whisper at top/bottom for the nav + dock. Reads clean on bright AND dark plates. */
+  /* ===== plate tint (Lovable) — the darkened bed the clean, shadowless text sits on.
+     Darkest in the lower-left behind the text, clearing toward the bright top-right sky. ===== */
   .vign{ position:absolute; inset:0; pointer-events:none; z-index:2;
     background:
-      radial-gradient(132% 118% at 50% 42%, transparent 46%, rgba(4,6,14,.14) 74%, rgba(4,6,14,.34) 100%),
-      linear-gradient(180deg, rgba(4,6,14,.26) 0%, transparent 13%),
-      linear-gradient(0deg,   rgba(4,6,14,.22) 0%, transparent 13%); }
+      /* CURVED tint anchored bottom-LEFT: full strength behind the hero text, fading across so the hourglass
+         + right scene stay lighter; also fades up into the sky. (Experimental — easy to revert.) */
+      radial-gradient(115% 125% at -2% 106%,
+        rgba(5,11,28,.46) 0%, rgba(5,11,28,.38) 22%, rgba(5,11,28,.24) 42%, rgba(5,11,28,.11) 62%, transparent 82%),
+      /* light whole-width bottom grounding so the right side still keeps a touch of shadow */
+      linear-gradient(0deg, rgba(5,11,28,.14) 0%, rgba(5,11,28,.07) 34%, transparent 52%),
+      /* thin top strip so the nav reads */
+      linear-gradient(180deg, rgba(5,11,28,.14) 0%, transparent 7%); }
   .grain{ position:absolute; inset:0; pointer-events:none; z-index:3;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size:220px 220px; opacity:.12; mix-blend-mode:overlay; }
+    background-size:220px 220px; opacity:.09; mix-blend-mode:overlay; }
 
-  /* ===== GLASS TOKENS (v22 verbatim) ===== */
+  /* ===== glass tokens (v22 verbatim) ===== */
   .glass-liquid{ position:relative; isolation:isolate; color:#fff;
     background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.24); box-shadow:0 8px 22px rgba(0,0,0,.2); }
   .glass-liquid::before{ content:''; position:absolute; inset:0; border-radius:inherit; z-index:-1;
     backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); filter:url(#glassdist); }
   .glass-liquid::after{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
     box-shadow:inset 1px 1px 0 0 rgba(255,255,255,.38), inset -1px -1px 1px 0 rgba(255,255,255,.16); }
-  .glass-quiet{ background:rgba(255,255,255,.05); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.16); }
+  .glass-quiet{ background:rgba(255,255,255,.045); backdrop-filter:blur(10px) saturate(1.15); -webkit-backdrop-filter:blur(10px) saturate(1.15);
+    border:1px solid rgba(255,255,255,.12); box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 10px 30px rgba(0,0,0,.12); }
 
-  /* nav */
-  .nav{ position:absolute; top:0; left:0; right:0; height:11%; z-index:5; display:flex; align-items:center;
-    justify-content:space-between; padding:0 4.2%; font-family:Jost,sans-serif; }   /* no panel/border — just text over the plate (v22) */
-  .wm{ font-weight:400; letter-spacing:.4em; text-transform:uppercase; font-size:clamp(9px,1.15cqi,14px); color:#f6efe2; text-shadow:var(--halo); }
-  .links{ display:flex; align-items:center; gap:clamp(11px,2.3cqi,30px); font-weight:300; letter-spacing:.06em;
-    font-size:clamp(8px,.98cqi,13px); color:#eef0f6; opacity:.86; text-shadow:var(--halo); }
-  .links span:not(.ico){ cursor:pointer; } .links .ico{ opacity:.7; font-size:1.15em; cursor:pointer; }
+  /* ===== slim glass-pill nav ===== */
+  /* compact island — hugs its content, centred; sized a touch up so the left symbol clears the centred sun */
+  .nav{ position:absolute; top:clamp(12px,2.2vh,22px); left:50%; transform:translateX(-50%);
+    width:min(74%,920px); max-width:94vw; z-index:6; display:flex; align-items:center; justify-content:space-between;
+    gap:clamp(16px,2vw,32px); padding:.46em .6em .46em 1.35em; border-radius:100px; font-family:Jost,sans-serif; }
+  .brandmark{ display:inline-flex; align-items:center; gap:.55em; text-decoration:none; color:var(--ink-hi); }
+  .brandmark .hg{ width:1.75em; height:1.75em; border-radius:7px; box-shadow:0 2px 8px rgba(6,10,22,.3); }
+  .brandmark .bt{ font-family:'Playfair Display',Georgia,serif; font-weight:500; letter-spacing:.005em;
+    font-size:clamp(16px,1.32vw,20px); }
+  .nav-links{ display:flex; align-items:center; gap:clamp(15px,1.9vw,28px);
+    font-weight:300; letter-spacing:.02em; font-size:clamp(12px,.98vw,15px); }
+  .nav-links a{ color:#f7f9fd; opacity:.96; text-decoration:none; position:relative; padding:.2em 0;
+    transition:opacity .3s ease; }
+  .nav-links a::after{ content:''; position:absolute; left:0; right:0; bottom:-.05em; height:1px;
+    background:currentColor; transform:scaleX(0); transform-origin:left; transition:transform .5s cubic-bezier(.16,1,.3,1); }
+  .nav-links a:hover{ opacity:1; } .nav-links a:hover::after{ transform:scaleX(1); }
+  /* Get the app = same solid cream pill as Begin Focus (just smaller) */
+  .nav-cta{ display:inline-flex; align-items:center; border-radius:100px; text-decoration:none;
+    padding:.52em 1.25em; font-weight:500; letter-spacing:.02em; font-size:clamp(11.5px,.95vw,14.5px);
+    color:#182231; white-space:nowrap;
+    background:linear-gradient(180deg,rgba(253,247,237,.98),rgba(245,235,217,.95));
+    border:1px solid rgba(255,255,255,.6); box-shadow:0 6px 16px rgba(6,10,22,.2), inset 0 1px 0 rgba(255,255,255,.9);
+    transition:transform .4s cubic-bezier(.16,1,.3,1), filter .3s ease; }
+  .nav-cta:hover{ transform:translateY(-1px); filter:brightness(1.03); }
 
-  /* LEFT phi-band */
-  .left{ position:absolute; left:6.3%; top:46%; transform:translateY(-50%); width:37%; z-index:4; }
-  .brand{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:300; margin:0 0 0 -.045em; line-height:.92;
-    font-size:clamp(46px,6.9cqi,126px); color:#f8eedb; letter-spacing:.004em; text-shadow:var(--halo); }
-  .tagline{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:300; font-style:italic; margin:.22em 0 0;
-    font-size:clamp(15px,2cqi,35px); color:#f4ead6; opacity:.96; text-wrap:pretty; text-shadow:var(--halo); }
-  .clarity{ font-family:Jost,sans-serif; font-weight:300; letter-spacing:.02em; white-space:nowrap;
-    font-size:clamp(8px,1.02cqi,14px); color:#eef1f7; opacity:.92; margin:1.1em 0 1.7em; text-shadow:var(--halo-strong); }
-  .cta{ display:inline-flex; align-items:center; gap:.75em; padding:.82em 1.6em; border-radius:100px;
-    font-family:Jost,sans-serif; font-weight:400; letter-spacing:.11em; text-transform:uppercase;
-    font-size:clamp(8px,1cqi,13px); color:#fff8ec; cursor:pointer; white-space:nowrap; }
-  .cta .arw{ transition:transform .7s cubic-bezier(.16,1,.3,1); position:relative; z-index:1; }
-  .cta span{ position:relative; z-index:1; } .cta:hover .arw{ transform:translateX(5px); }
-  .play{ display:inline-flex; align-items:center; gap:.65em; margin-top:1.05em; padding:.62em 1.2em;
-    border-radius:11px; cursor:pointer; white-space:nowrap; color:#fdfdff; text-decoration:none; }
-  .play > *{ position:relative; z-index:1; }
-  .play .pl{ display:flex; flex-direction:column; line-height:1.08; font-family:Jost,sans-serif; font-weight:500; font-size:clamp(11px,1.3cqi,18px); }
-  .play .pl small{ font-size:.5em; letter-spacing:.16em; opacity:.82; font-weight:300; }
+  /* ===== content, grouped lower-left ===== */
+  .lede{ position:absolute; left:clamp(20px,5.5vw,96px); bottom:clamp(52px,13vh,140px);
+    width:min(40%,600px); z-index:4; }
+  .headline{ font-family:'Playfair Display',Georgia,serif; font-weight:500; line-height:1.06;
+    margin:0 0 0 -.07em; letter-spacing:0; font-size:clamp(30px,3.9vw,56px); color:var(--ink-hi); }
+  .support{ font-family:Jost,sans-serif; font-weight:300; line-height:1.5; letter-spacing:.014em;
+    margin:1em 0 0; max-width:none; white-space:nowrap; font-size:clamp(14px,1.18vw,18px);
+    color:var(--ink); opacity:.82; }
 
-  /* RIGHT phi-band — BOXLESS */
-  .right{ position:absolute; right:5.5%; top:49%; transform:translateY(-50%); width:25%; z-index:4; text-align:right;
-    font-family:Jost,sans-serif; color:#f4ecdd; }
-  .right .ftlabel, .right .ftbig, .right .goal{ text-shadow:var(--halo); }
-  .right .quote, .right .qmark{ text-shadow:var(--halo-strong); }
-  .ftlabel{ font-weight:300; letter-spacing:.3em; text-transform:uppercase; font-size:clamp(7px,.84cqi,11px); opacity:.82; position:relative; z-index:1; }
-  .ftbig{ font-family:Jost,sans-serif; font-weight:200; line-height:1; font-variant-numeric:tabular-nums lining-nums;
-    letter-spacing:.005em; font-size:clamp(26px,4cqi,66px); margin:.24em 0 .6em; position:relative; z-index:1; }
-  .ftbig .u{ font-size:.4em; opacity:.6; font-weight:300; margin:0 .04em 0 .02em; }
-  .goalbar{ height:6px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:100px;
-    overflow:hidden; margin-left:auto; width:100%; position:relative; z-index:1;
-    backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
-    box-shadow:inset 0 1px 2px rgba(0,0,0,.28), inset 0 -1px 0 rgba(255,255,255,.12); }
-  .goalbar i{ display:block; height:100%; width:0%; margin-left:auto; border-radius:100px;
-    background:linear-gradient(90deg,rgba(255,208,150,.9),rgba(255,176,116,.78)); box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
-    transition:width .6s cubic-bezier(.16,1,.3,1); }
-  .goal{ font-weight:300; letter-spacing:.04em; font-size:clamp(7px,.88cqi,12px); opacity:.7; margin-top:.5em; position:relative; z-index:1; }
-  .qdiv{ height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22)); margin:1.1em 0 1em; position:relative; z-index:1; }
-  .qwrap{ position:relative; z-index:1; }
-  .qmark{ display:block; font-family:'Newsreader',Georgia,serif; font-style:italic; font-weight:300;
-    font-variation-settings:'opsz' 42; font-size:clamp(24px,3cqi,46px); line-height:.4; opacity:.3; margin-bottom:.14em; }
-  .quote{ font-family:'Newsreader',Georgia,serif; font-style:italic; font-weight:340; font-variation-settings:'opsz' 60;
-    margin:0; line-height:1.52; text-wrap:pretty; letter-spacing:.004em; font-size:clamp(12px,1.5cqi,23px); color:#f5f0e7; opacity:.94; }
+  .actions{ display:flex; align-items:center; gap:clamp(10px,.9vw,14px);
+    margin-top:clamp(1.7em,3.6vh,2.6em); flex-wrap:wrap; }
+  .btn-begin{ display:inline-flex; align-items:center; justify-content:center; width:auto; cursor:pointer;
+    padding:.9em 1.9em; border-radius:100px; font-family:Jost,sans-serif; font-weight:500;
+    letter-spacing:.035em; font-size:clamp(13.5px,1.05vw,16.5px); color:#182231; white-space:nowrap;
+    background:linear-gradient(180deg,rgba(253,247,237,.98),rgba(245,235,217,.95));
+    border:1px solid rgba(255,255,255,.6);
+    box-shadow:0 12px 30px rgba(6,10,22,.24), inset 0 1px 0 rgba(255,255,255,.9);
+    transition:transform .45s cubic-bezier(.16,1,.3,1), box-shadow .45s ease, filter .3s ease; }
+  .btn-begin:hover{ transform:translateY(-2px); filter:brightness(1.03);
+    box-shadow:0 18px 40px rgba(6,10,22,.3), inset 0 1px 0 rgba(255,255,255,.9); }
+  .btn-begin:active{ transform:translateY(0); }
+  /* official Google Play badge (exact asset, per brand guidelines — not restyled) */
+  .btn-play{ display:inline-flex; align-items:center; text-decoration:none;
+    transition:transform .45s cubic-bezier(.16,1,.3,1); }
+  .btn-play img{ display:block; height:clamp(42px,4vw,50px); width:auto; }
+  .btn-play:hover{ transform:translateY(-2px); }
 
-  /* ambient dock */
-  .dock{ position:absolute; left:50%; bottom:5.5%; transform:translateX(-50%); z-index:4;
-    display:flex; align-items:center; gap:clamp(8px,1.4cqi,18px); padding:.6em 1.15em; border-radius:100px;
-    font-family:Jost,sans-serif; color:#f4ecdd; font-weight:300; letter-spacing:.04em; font-size:clamp(8px,1cqi,13px); text-shadow:var(--halo); }
-  .dock > *{ position:relative; z-index:1; } .dock .ico{ opacity:.85; }
-  .dock .wv{ display:flex; align-items:flex-end; gap:2px; height:1em; }
-  .dock .wv i{ width:2px; background:rgba(255,220,170,.85); border-radius:2px; animation:wv 1.4s ease-in-out infinite; }
-  .dock .wv i:nth-child(2){animation-delay:.2s} .dock .wv i:nth-child(3){animation-delay:.4s}
-  .dock .wv i:nth-child(4){animation-delay:.1s} .dock .wv i:nth-child(5){animation-delay:.5s}
-  @keyframes wv{ 0%,100%{height:35%} 50%{height:100%} }
+  /* returners-only focused-today line (no box) */
+  .focused{ align-items:center; gap:.7em; margin-top:clamp(1.3em,2.8vh,2em);
+    font-family:Jost,sans-serif; color:var(--ink); }
+  .focused:not([hidden]){ display:flex; }
+  .focused .ft-label{ font-weight:300; letter-spacing:.16em; text-transform:uppercase;
+    font-size:clamp(9px,.76vw,11px); opacity:.66; }
+  .focused .ft-val{ font-weight:300; font-variant-numeric:tabular-nums lining-nums;
+    font-size:clamp(12px,1vw,15px); opacity:.9; }
+  .focused .ft-bar{ position:relative; width:clamp(70px,6.5vw,110px); height:4px; border-radius:100px;
+    background:rgba(255,255,255,.14); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.3); }
+  .focused .ft-bar i{ position:absolute; inset:0 auto 0 0; width:0%; border-radius:100px;
+    background:linear-gradient(90deg,rgba(255,208,150,.9),rgba(255,176,116,.8));
+    transition:width .8s cubic-bezier(.16,1,.3,1); }
 
-  @keyframes rise{ from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:none} }
-  .left>*, .right, .dock{ animation:rise 1.4s cubic-bezier(.16,1,.3,1) backwards; }
-  .brand{animation-delay:.15s} .tagline{animation-delay:.34s} .clarity{animation-delay:.52s}
-  .ctas{animation-delay:.7s} .play{animation-delay:.82s} .right{animation-delay:.95s} .dock{animation-delay:1.05s}
-  .nav{ animation:rise 1.4s cubic-bezier(.16,1,.3,1) backwards; animation-delay:1.15s; }
-  @media (prefers-reduced-motion: reduce){ .left>*,.right,.dock,.nav,.wv i{ animation:none!important } }
+  /* ===== load reveal — fade in (opacity + gentle drift + subtle de-blur), staggered ===== */
+  /* chrome hidden until the scene is ready (scene.js adds .scene-ready), THEN fades up in sequence —
+     plate/sand/sun appear first, text after. fill:both holds the final (visible) state. */
+  .nav,.headline,.support,.actions,.focused{ opacity:0; }
+  @keyframes fadeUp{ from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+  /* centred nav keeps its translateX(-50%) through the fade (else it drifts right then snaps) */
+  @keyframes fadeUpX{ from{opacity:0;transform:translateX(-50%) translateY(12px)} to{opacity:1;transform:translateX(-50%)} }
+  :root.scene-ready .headline,:root.scene-ready .support,:root.scene-ready .actions,:root.scene-ready .focused{
+    animation:fadeUp 1.1s cubic-bezier(.22,1,.36,1) both; }
+  :root.scene-ready .nav{ animation:fadeUpX 1.1s cubic-bezier(.22,1,.36,1) both; }
+  :root.scene-ready .headline{animation-delay:.24s} :root.scene-ready .support{animation-delay:.44s}
+  :root.scene-ready .actions{animation-delay:.62s} :root.scene-ready .focused{animation-delay:.74s}
+  :root.scene-ready .nav{animation-delay:.3s}
+  @media (prefers-reduced-motion:reduce){ .nav,.headline,.support,.actions,.focused{ animation:none!important; opacity:1!important } }
+
+  /* ===== compact / portrait ===== */
+  @media (max-width:820px){
+    .nav-links{ display:none; }
+    .nav{ width:min(94%,540px); }
+    .lede{ left:0; right:0; width:auto; padding:0 7vw; bottom:11vh; }
+    .headline{ font-size:clamp(34px,8.6vw,56px); }
+    .support{ white-space:normal; }
+  }
+  @media (max-width:520px){
+    .actions{ gap:10px; } .btn-begin,.btn-play{ flex:1 1 auto; justify-content:center; }
+  }
 </style>
 
 <script>
-  // real "Focused Today" (session writes 'sustain.focusedToday.<date>' in seconds)
+  // smooth-scroll for in-page nav anchors (targets are stub sections until the full landing pass ships).
+  document.documentElement.style.scrollBehavior = 'smooth';
+
+  // real "Focused Today" (session writes 'sustain.focusedToday.<date>' in seconds) — RETURNERS ONLY.
   const k = 'sustain.focusedToday.' + new Date().toDateString();
   const min = Math.round((+localStorage.getItem(k) || 0) / 60);
-  const big = document.getElementById('ftBig'), bar = document.getElementById('ftBar');
-  if (big) big.innerHTML = min >= 60
-    ? Math.floor(min/60) + '<span class="u">h</span> ' + (min%60) + '<span class="u">m</span>'
-    : min + '<span class="u">m</span>';
-  if (bar) bar.style.width = Math.min(100, (min / (8*60)) * 100) + '%';
+  if (min > 0) {
+    const box = document.getElementById('focused');
+    const val = document.getElementById('ftVal');
+    const bar = document.getElementById('ftBar');
+    if (val) val.textContent = min >= 60 ? `${Math.floor(min/60)}h ${min%60}m` : `${min}m`;
+    if (bar) bar.style.width = Math.min(100, (min / (8*60)) * 100) + '%';
+    if (box) box.hidden = false;
+  }
 
-  // Begin Focus -> Setup (wired when Setup is integrated next).
-  document.getElementById('beginFocus')?.addEventListener('click', () => {
-    document.body.classList.add('to-setup');
-  });
+  // Begin Focus navigation (Home -> Setup) is owned by the History/hash controller in index.astro.
 </script>

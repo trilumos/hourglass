@@ -121,9 +121,28 @@ the sounds/theme/intention choices); an optional "quick start → straight to se
 **One shared first viewport is the base for both the landing page and the timer. The scene + hourglass are
 mounted once and NEVER re-mounted.** (Design-decisions §3.)
 
-1. **Hero** — full-bleed sea scene + persistent hourglass (sand ~40%) + navbar + "Sustain" wordmark + a
-   **Focus** affordance. Hero direction **B1 "Editorial, warm serif"** (Cormorant Garamond, cream #f4ead6,
-   soft left→right scrim), title sitting in the sky's negative space (Ma) so it frames the hourglass.
+1. **Hero** — full-bleed sea scene + persistent hourglass (sand ~40%) + a **Focus** affordance.
+   **REDESIGNED 2026-07-30 (founder-approved, element-by-element) → "Composition A: left editorial."**
+   Chrome adapted from the founder's mockup, executed over the live painting:
+   - **Nav:** slim floating **glass pill** (`.glass-quiet`) — ⧗ hourglass glyph + "Sustain" (Playfair Display)
+     left · **in-page smooth-scroll anchors** `How it works · Science · FAQ` (NOT separate pages; targets are
+     stub sections until the full scrolling-landing pass) · a **Get the app** glass pill right. *(This reverses
+     the earlier "no-box, text-only nav" — the mockup pill wins. Themes link dropped: only one theme exists.)*
+   - **Lede — grouped in the LOWER-LEFT** (Lovable-caliber proportion, tuned 2026-07-30): two-line **Playfair
+     Display** headline **"Train your focus. / Transform your life."** (sized to *clear* the centred hourglass,
+     never overflow into the glass) → **one-line** Jost support → **solid light "Begin Focus"** (the Focus
+     affordance) + **glass "Get it on Google Play."** *(Eyebrow chip dropped as clutter.)*
+   - **Focused today:** quiet Jost line under the buttons, **shown only to returners** (today's focus > 0),
+     so first-timers never see a sad "0m."
+   - **Legibility = NO text shadows/halos** (they read as an ugly crisp outline) **+ a soft bluish plate tint**
+     doing the work: darkest in the lower-left behind the text, clearing toward the bright top-right (Lovable).
+     Type sized against the **viewport (vw)**, not a container (fixes the old cqi/16:9-card "too big" balloon).
+     *(The rotating sky quote was tried then removed — clutter over the busy scene.)*
+   - **Motion:** on load, chrome **fades in** (opacity + gentle up-drift + subtle de-blur, staggered; centred
+     elements keep their `translateX(-50%)` through the fade). The **scene breathes** — a slow ~60 s zoom
+     in→hold→out→hold loop on `#frame` (transform only; `fit()` owns left/top; disabled under reduced-motion).
+     Files: `web-astro/src/components/Home.astro`, `SceneWorld.astro` (`#frame` breathe).
+   - *(The old "B1 warm-serif, soft left→right scrim, giant Sustain wordmark" hero is superseded.)*
 2. **Click Focus** → navbar / hero title / landing content **dissolve**; **scene + hourglass stay live**.
    The site becomes the timer. (Native `@starting-style` + `transition-behavior: allow-discrete` for chrome;
    **View Transitions API** for the larger change; the hourglass canvas is never touched.)
@@ -407,6 +426,256 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 ---
 
 ## 22. Changelog (append on every web change)
+
+- **2026-08-01 (Break screen + endless block-loop + day-cycle retune + nav — session handoff)** — See
+  `2026-08-01-session-handoff.md` for the full state. Highlights: **Break** is now its own blurred screen
+  (BREAK + floored countdown + End break; no pause/Break button, scene numerals hidden, audio muted, never
+  pausable) in all modes. **Endless** redesigned to loop a chosen block (25/5, 50/10, 90/15, 52/17) counting
+  DOWN, breaks on the break screen (no stopwatch). **Day-cycle** retuned to real astronomy: twilight ~1.1 h,
+  sun glow dies ~19.5 ref, moon rises after glow (19.7) / sets before dawn (4.6) — never coincident; warped to
+  real sunset via SunCalc (fixes twilight-at-9-PM). **Single picked phase** now drifts through the FULL phase
+  window (`PH_SPAN`) stretched over the whole session (witness sunrise/sunset happen), and the phase pick no
+  longer gets overridden by live-follow. **Nav**: Setup Back→Home; back/swipe never re-enters a spent session;
+  guard hardened vs double-back. **Defaults**: sounds OFF, timer On-hover. Repo decluttered to `_internal/`.
+
+- **2026-08-01 (Session/Setup integration audit + fixes; day-night timing; endless redesign)** — Founder-found
+  integration/UX bugs (engine math was fine; these were wiring/defaults): **break countdown floated**
+  (`remainingSec % 60` not floored → added `mmss()`); **pause + Break buttons showed during a break** (now
+  only End break); **sounds defaulted ON** → all OFF; **specific time-of-day was ignored** (default
+  `cfg.cycle.preset='follow'` overrode the pick → `buildCycle` honors `followDay/phase`); **Setup Back** used
+  `history.back()` (could land on a spent `#session`) → always Home; **back/swipe re-entered a spent session**
+  → any back-nav into an un-armed `#session` bounces Home (reload still shows the ended popcard; in-session
+  guard unchanged + hardened with a 2-deep buffer vs double-back); **timer visibility default → On hover**.
+  **Break = its own screen** (blurred, "BREAK", floored countdown, End break; no hourglass, no sound). **Break
+  button** = skip to your next scheduled break (honest focus credit via truncation); **End break** = end the
+  rest early. **Day-night timing** (was twilight-glow at 9 PM): reference twilight shortened to end ~19.5
+  (night ~1.1 h after sunset, not 2 h); `SUN_ALT` glow dies by 19.5; `PH_HOUR` twilight → 19.0; **moon**
+  window rises 19.7 (after glow) / sets 04:36 (before dawn glow) so sun & moon never coincide. **Single picked
+  phase now WITNESSES the phase**: it drifts across the phase's window (`PH_SPAN`) over the WHOLE session
+  (a 5 h "sunrise" = pre-dawn→sun-up→into-midday over 5 h), not a frozen mid-point. **Endless redesigned**:
+  the open-block/manual-flip is gone; the user picks one of **4 blocks (25/5, 50/10, 90/15, 52/17)** which
+  **loops forever counting DOWN**, its break using the break screen; exit = "End". Circular favicon
+  (`favicon-round.png`). Engine regression 5/5 + endless-loop/skip-break tests green.
+
+- **2026-08-01 (Repo declutter + project README + session-state status)** — Web-only reorg (founder: don't
+  touch `web-astro/` or the Flutter app, move-not-delete): moved the 8 loose root items — `site/`,
+  `web-prototype/`, `tools/`, `icon images/`, `plates without hourglass/`, `FGS Proof/`, `APP DESCRIPTION`,
+  `skyline-matte (1).png` — into a single **`_internal/`** folder via `git mv` (140 renames, history preserved,
+  nothing deleted). Verified: pubspec assets + web-astro are self-contained (no refs to the moved dirs), so
+  both builds are unaffected (web build re-run green). Updated `CLAUDE.md` (design refs now `_internal/site/` +
+  `_internal/web-prototype/`), added `_internal/README.md`, and rewrote the root **`README.md`** as the full
+  project doc (structure of every folder/key file, features, workflow, session states, build/run). **Session-
+  state gaps flagged (not yet built):** (a) Endless **flip** should let the elapsed timer *continue* while only
+  the sand refills (currently resets, like session.html) — needs to decouple the sand visual from elapsed;
+  (b) **break audio-duck** (hush ambient on breaks) not yet ported to `SustainAudio`. Session-end / pause /
+  give-up / popcards / guard all confirmed working.
+
+- **2026-08-01 (Session in-depth browser audit — fixed dead buttons, sheet styling, Setup corruption)** — Ran a
+  real Chrome-DevTools walkthrough (Home→Setup→Session, every control, console). Bugs found + fixed:
+  (1) **ID collision** — the session sheet reused Setup's element IDs (`tokens`/`vol`/`volPct`/`mixRows`/
+  `swatches`/`tod`); Setup renders first, so `getElementById` returned Setup's, and the session's `buildTokens`/
+  `buildTod` overwrote Setup's Sound + Time-of-day on every load → namespaced all to `sess*`. (2) **Dead
+  pause/give-up/gear** — two overlapping click-blockers: Astro's **dev toolbar** (z-index 999999) over the
+  bottom-centre pause button (disabled via `devToolbar:{enabled:false}` so dev matches prod), and an
+  **invisible `.sheet-scrim`** because Astro scopes `.session-screen > *{pointer-events:auto}` to a higher
+  specificity than `.sheet-scrim{pointer-events:none}` → dropped the container `pointer-events:none`/`> *`
+  pattern (children interactive by default; closed overlays keep their own `none`). (3) **Unstyled sheet
+  controls** — the tokens/scene-tiles/mixer are built with `createElement`, so they never get Astro's scope
+  attribute → moved their styles to a `<style is:global>` block prefixed `.session-screen`; also fixed the
+  Scene captions to Setup's labels ("Follow my day"/"Pre-dawn"…) and restored the gear's `class="frost"`.
+  (4) **Reload popcard** — `begin()` bailed on `!SustainScene` before the armed check; reordered so the armed
+  one-shot shows the session-over popcard first (retry-starts once the scene loads). (5) Console cleanups:
+  favicon (`/brand-icon.png`), preload crossorigin (matched `#themeImg` to the anonymous plate fetch),
+  aria-hidden focus (blur a hidden screen's focused descendant in the controller). Verified in-browser: pause
+  freezes + "PAUSED" overlay + gold ring, give-up confirm, gear opens a fully-styled sheet, Setup uncorrupted.
+
+- **2026-08-01 (Session page — COMPLETE port of session.html: paused overlay, settings sheet, audio, chrome)** —
+  Finished the full session to match the locked `session.html`. **Chrome** (session.html positions): `#gear`
+  top-left, `#giveup` top-right (quiet uppercase), `#pause` bottom-centre frost circle (play/pause swap + gold
+  paused ring), `#intentTop` top-centre, `#flipBtn` (endless) above pause; all idle-fade via `.session-screen.active`
+  (wake on pointer, held while paused). **Paused overlay** `#paused`: backdrop-blur scrim + "Paused" + grace
+  line, tap-to-resume, audio muted while paused. **Settings sheet** (`#gear` → frost sheet, ported from
+  Setup): Sound (tokens + master vol + per-sound mixer), Timer (vis), Number-look (place/fill/font/separator
+  with the per-mode rule enforced/colour swatches+picker), Scene (time-of-day grid with plate thumbnails +
+  auto-contrast) — every control live-drives `SustainScene` (number look/day/vis) or `SustainAudio` (sound) and
+  persists to `localStorage`. **Audio**: new shared `src/scene/audio.js` (`window.SustainAudio`) — the LOCKED
+  Setup mixer graph (gapless crossfade loops, K-gains, tone-notch, ocean→sand sidechain, bird tide) + a soft
+  `cue_bell` ring at start / each break / end; imported via `scene.js`. Setup now stops its **preview** mix on
+  leave (no double audio) and no longer forces `setDay('follow')` when entering the session. **Wake lock** kept
+  through the session. **Dev-server note:** heavy component edits can leave Astro's dev HMR serving stale
+  scoped CSS (looked "unstyled") — a dev-server **restart** is the fix, not a browser reload.
+
+- **2026-08-01 (Session Phase C — chrome + back-proofing, fixes the "stuck focusing" leak)** — Ported the
+  decided session chrome from `session.html` into `Session.astro`, adapted to the hash-routed SPA. **Navigation
+  guard** (the bug fix): on session start `guardActive=true` + `history.pushState('#session')`; a `popstate`
+  (Back/swipe) re-pushes `#session` and shows the toast *"Use Give up to end your session"* — a running session
+  can no longer be backed/hash-routed out of by accident (so it can't leave a half-live "focusing" state on
+  Setup). `beforeunload` warns on reload/close. Guard is cleared ONLY by an intentional exit (`exitToSetup`);
+  it is NOT armed in `?tune` mode. **Armed one-shot** now shows the **session-over popcard** ("This session has
+  ended → Back to Setup") on a reload/stale/direct entry, instead of the earlier silent redirect. **Popcards**
+  (deep-glass frost + scrim, ported CSS): give-up confirm ("Give up this session?" Keep going / Give up),
+  completion ("Well done · you focused Xm" Again / End), session-over. **Give-up** quiet corner control.
+  **Pause cap**: 3 min + 15 s grace → auto-end (app parity), with a live grace toast. **Completion/segment
+  poll** watches `SustainScene.sampleSession()` for `done` (→ done popcard) and focus↔break changes (→ toast).
+  Chrome idle-fades after ~4 s, wakes on interaction, holds visible while paused. Still TODO: Phase D in-session
+  settings sheet; focus-credit ≥2 min parity + audio bell cues live in the session.
+
+- **2026-08-01 (Session numerals — geometry LOCKED + tuner made opt-in)** — Founder perfected and locked the
+  per-mode `size`(cqh)/`dy`(%) in `NUM_DEF` (scene.js): **horizon 13 / −3.5, middle 20 / +5, top 15 / +2.5,
+  ledge 20 / +8** (X/gap/tb-top unchanged). The baked `NUM_DEF` is now authoritative for all sessions — the
+  `localStorage['sustain.numTune']` override applies **only** in tuner mode (`window.__numTuneMode`), so stale
+  tuning can't diverge shipped numbers from the lock. **Tuner is now opt-in via `?tune`** (e.g.
+  `…/?tune#session`): removed from the site/production, but kept for backend tuning of future themes/plates
+  (mode buttons + Size + Vertical-nudge sliders + Copy JSON). Not present in a normal session.
+
+- **2026-08-01 (Session numerals — per-mode separator rule + steady session scene)** —
+  **Separator is per-mode** (from `number-lab.html applySepForMode`, was being ignored): Middle/Ledge force
+  `none` (the hourglass glass is the divider between the wide-flanked numbers); Top/Horizon use the user's
+  `colon|dot` and **can never be none**. `scene.js` now tracks the user's pick in `numSep` and `applyNum` sets
+  `data-sep` via `sepForPlace(place)`, so switching modes (incl. the tuner) always gets a legal separator. This
+  fixes horizon showing an empty centre gap when the cfg default `sep:'none'` leaked through. **Session scene
+  is now steady**: `:root.session-active #frame { animation:none; transform:none }` stops the breathing
+  zoom during a session (held zoomed-out) so the hourglass/numbers don't drift; Home still breathes.
+
+- **2026-08-01 (Session numerals — per-mode geometry restored + live dev tuner for size & vertical nudge)** —
+  Founder is re-perfecting numeral geometry against THIS build's plate framing (the lab values don't map 1:1).
+  **Each mode keeps its OWN designed X/position** (restored byte-for-byte from `number-lab.html` /
+  `timer-modes.json`): horizon sits wide-left (`--dx -30%`, `--hg-cx 50%`, gap 3cqw), top/middle/ledge flank
+  the hourglass axis (`--hg-cx 49.79%`) at their own gaps and vertical bands. `scene.js` `NUM_DEF` holds the
+  full geometry `{size, dy, gap, tbtop, hgcx, dx}` per mode; `applyNum(place)` writes it (X/gap/tb-top locked)
+  plus the tuned `size`/`dy`, and selects the active place so the occluder follows. **Live tuner** (localhost
+  only; `⧗ tune`, bottom-right of a session): mode buttons + **Vertical-nudge** (`dy`, ±60%) and **Size**
+  (cqh) sliders — the ONLY two editable axes; X never moves — writing through
+  `SustainScene.editNum(place,size,dy)` to `localStorage['sustain.numTune']`, which overrides `NUM_DEF` (tuned
+  values persist + apply in normal sessions). Panel shows a live JSON of all four modes with Copy/Reset; once
+  perfected these get baked into `NUM_DEF`. *(Correction of the earlier same-day attempt that wrongly unified
+  X and moved horizon.)* Occlusion logic (corrected per `number-lab.html`): **glass occludes every mode,
+  horizon adds the sea, ledge has no cut** (numbers rest on the ledge).
+
+- **2026-08-01 (Session screen — Phase B: numeral styling per cfg + self-hosted overlap-removed fonts)** —
+  Ported the LOCKED `session.html` numeral system into the scene. `#nums` wraps `#mm`/`#sep`/`#ss` inside
+  `#frame` (now `container-type:size` so numerals size in `cqh` like session.html's `#scene`); the numbers
+  flank the hourglass axis (`--hg-cx`=`S.cx` 49.885%) so a wider font grows outward while inner edges hold.
+  **cfg-driven look** via `SustainScene.setNumStyle(cfg)`: font, colour, `data-fill` (solid / glass /
+  **outline** hollow-stroke), `data-sep` (colon / dot / none), and the byte-for-byte **LOCKED per-place
+  geometry** (`NUM_LOCKED`: size/gap/weight 550/stretch + `--dx`/`--dy` fine offset) for the 4 placements
+  (horizon / middle / top / ledge). **Auto-contrast** ported from `session.html setTone` (a dark chosen
+  colour lifts toward white on dark plates only) — `bgLuma` estimated per phase (`PH_LUMA`) and blended live
+  each frame off the day cycle (throttled). **Fonts:** copied the 10 **overlap-removed** (`fontTools
+  removeOverlaps`) static woff2 from `site/assets/fonts/` → `web-astro/public/assets/fonts/` and self-host the
+  550 weights as numeral-only families **`NumSerif`/`NumSans`** — the clean single-contour glyphs are why the
+  outline fill's `text-stroke` doesn't double (Google variable faces would). Rest of the site keeps its Google
+  faces (Home's Jost 300 unchanged); widened the Google URL to add upright Newsreader (popcard titles) + Jost
+  600 (Setup).
+
+- **2026-08-01 (Session screen — depth occlusion: numbers pass behind the hourglass / sea / ledge)** —
+  Ported the locked depth effect over the LIVE WebGL scene. Layer stack inside `#frame`: plate `#glitter` (0)
+  → `#nums` (1) → **`#occ` occluder** (2) → `#sand` (3, on top so grains still read inside the glass). Each
+  frame (session only) `#occ` **copies the live `#glitter` render** and keeps only a silhouette via
+  `destination-in` — so it matches the plate exactly (crossfade, sun/moon, glitter), which a static CSS
+  plate-copy could not. The silhouette mattes come from the scene's **own `maskCv` channels** — **G = glass**,
+  **R = sea** — the same mask the shader composites with, so occlusion tracks the founder's re-traced
+  hourglass (not the older `hourglass-matte.png`); ledge = a hard bottom-11.3% cut. Matte per placement:
+  middle/top → glass, horizon → sea, ledge → ledge. Mattes rebuild with the mask (`buildOccMattes` in
+  `drawSand`); cleared on `endSession`. `WebGLRenderer` now `preserveDrawingBuffer:true` so the per-frame
+  `drawImage(glitterCv)` readback is reliable across GPUs. **Founder to verify on-device:** the occluder
+  alignment/readback, the `#frame` `container-type:size` (numeral sizing), and the `#sand`-on-top reorder.
+
+- **2026-08-01 (Session screen — Phase A: engine wired to the shared scene)** — Discovered `scene.js`
+  **already owns** the session engine (`createSession()` from `lib/timer.js` driving `S.prog` sand +
+  `#mm`/`#ss` numerals + `updateSessionUI`/`applyVis`/`bumpFocusedToday`/completion), so the Session screen
+  **drives that engine from the Setup `cfg`** rather than porting `session.html`'s separate `SessionTimer`.
+  **Plan reconciliation:** Setup builds plans with `plan.js` as `[{kind, min}]`; the engine wants
+  `[{kind, dur(sec)}]` — added `session.setPlan(plan, mode)` to `timer.js` to run an external plan verbatim,
+  and `Session.astro` converts (endless → a slow 45-min visual cycle the engine loops). **Scene API** extended:
+  `SustainScene.startSession(plan, endless)` / `togglePauseSession()` / `endSession()` / `sampleSession()` /
+  `setTimerVis(v)`. Numerals are gated on `:root.session-active` (SceneWorld) so they only appear in-session
+  (never on Home hover). New `src/components/Session.astro` (rendered in `index.astro`): on `#session` it reads
+  the `armed` one-shot (stale/refresh → home), consumes `cfg`, sets the day phase (`followDay`→'follow'),
+  vis, and starts the session; shows the **intention line** + a **frost pause/play button**. Numeral
+  styling per cfg (place/fill/font/colour/sep/auto-contrast) = **Phase B**; break/give-up/session-over
+  popcards = **Phase C**; in-session settings sheet = **Phase D**.
+
+- **2026-07-31 (Setup fully integrated over the persistent scene — Phases 1–5)** — Ported the LOCKED
+  `site/setup.html` into `web-astro/src/components/Setup.astro` over the shared live scene (its static plate
+  stripped). **Navigation:** one continuous document; **hash routes** (`/#setup`, `/#session`) via a controller
+  in `index.astro`, so **Back / swipe-back work** (popstate/hashchange) and refresh can't 404. Screen swaps use
+  the **View Transitions API** (cross-fades snapshots → the frost panels' backdrop-filter can't first-paint-pop).
+  Setup **glass-blurs the scene** (`:root.setup-active #frame`). **Phases:** (1) transition + shell; (2) timer
+  plan via `plan.js` (public/js/, `window.Plan`) — modes/durations/readout/canvas, mode pill positioned by a
+  **pure-CSS index** (no measurement); (3) Themes drive the scene through a new **`window.SustainScene`** API
+  (`setDay(phase|'follow')`, `setSunMoon`) — time-of-day previews on the scene, Back restores the live clock;
+  number-look + cycle builder are session config; (4) the full **Web Audio mixer** (tokens, per-sound volumes,
+  Listen-now; gapless crossfade loops, loudness gains, tone-notch, ocean→sand sidechain, bird tide; files in
+  public/assets/audio/); (5) **Begin** builds the full `cfg` → `localStorage['sustain.session']` +
+  `sessionStorage['sustain.armed']`, then `#session` (Home+Setup dissolve, scene un-blurs — placeholder for the
+  Session UI). **Astro-scoping gotcha:** JS-`innerHTML` elements don't get the scoped hash, so all injected
+  controls are styled via a global block scoped under `.setup-screen`. Also fixed the plate preload crossorigin
+  (match three.js anonymous CORS). Next: the **Session screen** (port `site/session.html`, consume `cfg`).
+
+- **2026-07-31 (location-based day cycle + whiter moon)** — Implemented spec §5's `timezone → coords → SunCalc`:
+  `src/scene/geo.js` maps the browser IANA timezone to representative coords (compact table + offset/mid-lat
+  fallback) and returns today's real local sunrise/sunset via **SunCalc** (installed; imported CJS-interop as
+  `import * as … ; const SunCalc = ns.default || ns` — plain default-import fails under rolldown). `scene.js`
+  keeps the tuned schedule as a **reference day** (sunrise 6:00, sunset ≈18:24) and a **`warpTime()`**
+  piecewise-stretches the viewer's real day onto it, so plates + sun + moon all shift to the region with no
+  re-tuning. `SEG` retuned so the midday→sunset golden build starts **~1.5 h before sunset** (≈5 PM for India).
+  The moon's arc lives entirely in the reference NIGHT, so post-warp it can **never coincide with the sun/glow**
+  (true per-night moonrise + phases remain an optional follow-up, would drop the always-full moon). **Moon
+  recoloured whiter/cooler**: `uMoonWarm`/`moonWarm` 0.55→0.15, disc pure white, glow lightened
+  (`moonGlowCol #cfe4ff→#e0efff`, `moonFarCol #6f8fd0→#9db6e4`). *(Lab `hybrid.html` unchanged — sync if
+  re-tuning there.)*
+
+- **2026-07-30 (CRITICAL: day cycle was frozen at noon — fixed)** — The live scene never actually followed the
+  clock. The lab's `bind('phase', …)` runs its callback **once on init** (that's how `bind` works), and that
+  callback sets `S.live = 0` + `S.daytime = 12`, so the deploy sat at **noon forever** (the blur-up placeholder
+  showed the correct current phase, but the WebGL scene did not — the tell that exposed it). Fix: force
+  `S.live = 1` after the lab binds run, before the render loop starts (deploy only; the lab UI that would
+  re-disable it is hidden). The circadian sun / moon / plate cycle now tracks the real local clock as designed.
+
+- **2026-07-30 (day schedule redesigned — proper per-plate windows)** — The old `SEG` was lopsided (midday
+  held 08:45→16:42; pre-dawn only ~0.3 h). New full-day schedule (`scene.js` `SEG` + the LQIP/preload map in
+  `index.astro`, kept in sync): **midnight 22:00→04:15 · pre-dawn 05:00→05:30 · sunrise 06:15→07:15 · midday
+  08:45→15:00 · sunset 17:30→18:45 · twilight 19:45→21:00**, each with a smooth crossfade between (midday→sunset
+  is a long **15:00–17:30 golden build**). `SUN_ALT` re-curved so the sun descends naturally after the 12:45
+  peak (~0.52 height at 16:00) and sets into the sea ~18:20 — late afternoon now reads as late afternoon, not
+  noon. Also fixed: the blur-up placeholder used a wrong hour-guess (flashed sunset ~16:00) — now uses the exact
+  SEG segment phase. *(Lab `hybrid.html` still holds the old schedule; sync it if re-tuning there.)*
+
+- **2026-07-30 (Home perf + load choreography + brand assets)** — "Advanced-engineer" pass. **Assets:** plates
+  recompressed JPG→**WebP** (~1.7 MB → ~956 KB), moon PNG→WebP (390→83 KB) via `web-astro/gen-assets.mjs`
+  (sharp; kept for regen). **No black screen:** a tiny base64 **blur-up LQIP** (auto-gen `src/scene/lqip.js`)
+  shows the current phase instantly; the real **WebP plate is preloaded** (`fetchpriority=high`) and the scene
+  reveals the moment that plate is decoded (`reveal()` in the loop, 3 s backstop), then the chrome fades in.
+  Layering: `#lqip` (blur-up) → `#stage` (WebGL, fades in) → hero. **Tab-return flash fixed:** breathing zoom
+  pauses on `visibilitychange`; loop `dt` clamped so the day-cycle/sand don't lurch after a hidden tab.
+  **Brand:** nav symbol = the real **app icon** (`public/brand-icon.png`); Play button = the **official Google
+  Play badge** (exact asset `public/google-play-badge.svg`, sized to the Begin-Focus button; guidelines folder
+  gitignored). Nav = **wider floating island** (space-between), symbol clears the sun. Bottom tint eased (dark
+  to the horizon, then fades up); halos already gone. Reveal motion = fade-up (no blur jank).
+
+- **2026-07-30 (Home hero — Lovable-parity tuning + a global-CSS bug fix)** — Iterated the redesign against a
+  Lovable reference the founder shared. **Root-cause fix:** the lab's `<style is:global>` in `SceneWorld.astro`
+  had bare `button{width:100%}` / `input` / `textarea` / `label` rules **leaking onto every real button**
+  (Home's CTA rendered full-width); scoped them all to `#ui`/`#session-ui` so they can't bleed into
+  Home/Setup/Session. **Overlay:** headline + wordmark → **Playfair Display** (sturdier than the thin Cormorant);
+  support forced to **one line**; content **grouped lower-left**, headline sized to **clear the centred
+  hourglass**. **Legibility reworked:** dropped all halos/text-shadows (crisp-outline look the founder
+  disliked) in favour of a **soft bluish plate tint** (darkest lower-left, clearing top-right). **Sky quote
+  removed.** **Motion:** load **fade-in** (opacity + drift + de-blur, staggered; centred nav keeps its
+  `translateX(-50%)`) and a slow **scene "breathing" zoom** (~60 s in→hold→out→hold on `#frame`, reduced-motion
+  off). Files: `Home.astro`, `SceneWorld.astro`, `index.astro` (fonts).
+
+- **2026-07-30 (Home hero REDESIGNED — "Composition A: left editorial")** — Founder pivoted off the v22 port
+  (nav box, oversized cqi type, midday legibility) to a research-backed, award-lane redesign, brainstormed and
+  **confirmed element-by-element** (impeccable + frontend-design). Chrome adapted from the founder's mockup:
+  floating **glass-pill nav** (⧗ Sustain · in-page smooth-scroll `How it works · Science · FAQ` · Get-the-app
+  pill; reverses the old text-only nav; Themes dropped) · eyebrow chip · two-line Cormorant headline
+  **"Train your focus. / Transform your life."** · Jost support · **solid "Begin Focus"** + glass "Install on
+  Play Store." Extras kept restrained: rotating Newsreader quote **lifted into the clear top-centre sky** (never
+  the busy right side) and a **returners-only** "Focused today" line (hidden at 0). Halos for legibility;
+  **type sized in vw, not cqi** (fixes the balloon). Full rewrite of `web-astro/src/components/Home.astro`;
+  scene untouched; §4.1 updated. Nav anchor targets are stubs until the scrolling-landing pass.
 
 - **2026-07-29 (plate fit + iron rule)** — Deploy scene switched to session's `assets/plates/*.jpg` (same
   image as `plates-phases` at lower res → sand stayed aligned, ~236 KB perf win, ledge-safe framing).

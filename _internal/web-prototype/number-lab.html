@@ -28,6 +28,7 @@
     --num-font: 'Newsreader', serif;
     --num-weight: 500;
     --num-color: #ffffff;
+    --num-eff: #ffffff;   /* effective colour = --num-color lifted toward white on dark plates (setTone) */
     --num-size: 34;          /* in cqh, applied to the scene box */
     --num-scaleX: 1;
     --dx: 0px; --dy: 0px;    /* drag offset for the number block */
@@ -58,8 +59,8 @@
   .num{ position:absolute; left:50%; top:50%; line-height:1; white-space:nowrap;
     text-box:trim-both cap alphabetic;   /* centre by cap-height/baseline → font-metric-independent */
     font-family:var(--num-font); font-weight:var(--num-weight);
-    font-size:calc(var(--num-size)*1cqh); color:var(--num-color);
-    -webkit-text-fill-color:var(--num-color);
+    font-size:calc(var(--num-size)*1cqh); color:var(--num-eff,var(--num-color));
+    -webkit-text-fill-color:var(--num-eff,var(--num-color));
     transform:translate(-50%,-50%) scaleX(var(--num-scaleX));
     font-variant-numeric:tabular-nums; letter-spacing:-.01em }
 
@@ -81,16 +82,16 @@
              -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat }
 
   /* ================= FILLS ================= */
-  #scene[data-fill="solid"] .num{
-    text-shadow:0 2px 26px rgba(0,0,0,.38), 0 1px 3px rgba(0,0,0,.30) }
+  #scene[data-fill="solid"] .num{     /* colour lifts toward white on dark plates (setTone); a subtle
+       dark drop grounds it on bright plates */
+    text-shadow:0 1px 2px rgb(0 0 0 / 32%), 0 2px 22px rgb(0 0 0 / 20%) }
   #scene[data-fill="glass"] .num{      /* translucent liquid-glass */
     color:rgba(255,255,255,.26); -webkit-text-fill-color:rgba(255,255,255,.26);
     -webkit-text-stroke:1px rgba(255,255,255,.5);
     text-shadow:0 1px 1px rgba(255,255,255,.35), 0 6px 34px rgba(0,0,0,.28) }
-  #scene[data-fill="outline"] .num{      /* true hollow (text-stroke). NOTE: variable fonts draw faint
-       internal overlap lines here — perfectly clean hollow needs a static (non-variable) weight. */
+  #scene[data-fill="outline"] .num{      /* hollow border (overlap-removed static fonts); stroke lifts at night */
     color:transparent; -webkit-text-fill-color:transparent;
-    -webkit-text-stroke:1.5px var(--num-color); text-shadow:none; paint-order:stroke }
+    -webkit-text-stroke:1.5px var(--num-eff,var(--num-color)); text-shadow:none; paint-order:stroke }
 
   /* ================= SEPARATOR (sectioning between mm and ss) ================= */
   #sep::before{ content:":" }                                      /* colon (default) */
@@ -237,6 +238,8 @@
     <input type="range" id="rX" min="0.6" max="1.8" step="0.02" value="1"></div>
   <div class="grp"><label>Gap <b class="val" id="vGap">1.5</b></label>
     <input type="range" id="rGap" min="0" max="40" step="0.5" value="1.5"></div>
+  <div class="grp"><label>Night lift <b class="val" id="vLift">1.0</b></label>
+    <input type="range" id="rLift" min="0" max="1.5" step="0.1" value="1"></div>
 
   <div class="grp"><label>Plate / phase</label><div class="row" data-k="phase">
     <button class="chip" data-v="0">Pre-dawn</button>
@@ -251,6 +254,7 @@
     <button class="chip on" id="tDepth">Depth</button>
     <button class="chip on" id="tGlass">Hourglass</button>
     <button class="chip on" id="tLive">Live</button>
+    <button class="chip on" id="tAuto">Auto-contrast</button>
   </div></div>
 
   <div class="grp"><label>Numbers show</label><div class="row" data-k="vis">
@@ -279,8 +283,8 @@
   const withHG = i => `../site/assets/plates/${PHASES[i]}.jpg`;
   const noHG   = i => `../plates%20without%20hourglass/${NOHG[i]}.png`;
   let phase = 2, hourglass = true;
-  const setPlate = () => document.documentElement.style.setProperty('--plate',
-    `url("${(hourglass?withHG:noHG)(phase)}")`);   // root: reaches #stage::before + scene layers
+  const setPlate = () => { document.documentElement.style.setProperty('--plate',
+    `url("${(hourglass?withHG:noHG)(phase)}")`); sampleBg(); };   // + re-sample bg luminance for auto-contrast
 
   // occluders are position-specific: the hourglass matte occludes in every mode, the horizon/ledge
   // mattes only occlude the mode they belong to (middle & top are hourglass-only)
@@ -300,9 +304,9 @@
       b.classList.add('on');
       if (k === 'phase') { phase = +b.dataset.v; setPlate(); }
       else if (k === 'font')  S.style.setProperty('--num-font',  b.dataset.v);
-      else if (k === 'color') S.style.setProperty('--num-color', b.dataset.v);
+      else if (k === 'color') { S.style.setProperty('--num-color', b.dataset.v); setTone(); }
       else S.dataset[k] = b.dataset.v;               // place / fill / vis
-      if (k === 'place') { localStorage.setItem('sustain.mode', b.dataset.v); applyMode(b.dataset.v); }
+      if (k === 'place') { localStorage.setItem('sustain.mode', b.dataset.v); applyMode(b.dataset.v); applySepForMode(b.dataset.v); }
       refreshFG(); updateJSON();
     });
   });
@@ -320,10 +324,13 @@
 
   // colour picker — any colour; deselects the quick swatches
   document.getElementById('colorPick').addEventListener('input', e => {
-    S.style.setProperty('--num-color', e.target.value);
+    S.style.setProperty('--num-color', e.target.value); setTone();
     document.querySelectorAll('[data-k="color"] .sw').forEach(c => c.classList.remove('on'));
     updateJSON();
   });
+  // night-lift strength (multiplies the per-plate colour lift)
+  document.getElementById('rLift').addEventListener('input', e => {
+    liftK = parseFloat(e.target.value); document.getElementById('vLift').textContent = liftK.toFixed(1); setTone(); });
 
   // boolean toggles
   const toggle = (id, fn) => { const b = document.getElementById(id);
@@ -332,6 +339,7 @@
   toggle('tGlass', on => { hourglass = on; S.dataset.hourglass = on?'on':'off';
     setPlate(); refreshFG(); });
   toggle('tLive',  on => { live = on; if (!on){ mm.textContent='25'; ss.textContent='00'; } });
+  toggle('tAuto',  on => { autoContrast = on; setTone(); });   // night colour-lift on/off (default on)
 
   // draggable numbers — pointerdown on #nums repositions the whole block anywhere in the scene;
   // .fg occluders are pointer-events:none so the drag still grabs #nums even behind the hourglass
@@ -400,11 +408,46 @@
       yPct:+((parseFloat(S.style.getPropertyValue('--dy'))||0)/r.height*100).toFixed(2) };
     localStorage.setItem('sustain.modePresets', JSON.stringify(modePresets));
   }
+  // auto-contrast: SAMPLE the plate's luminance behind the numbers, then lift the colour toward white on
+  // dark scenes (keeps its hue; stays true on bright scenes). Works on ANY image. Toggle-able (default on).
+  let bgLuma = 0.5, autoContrast = true, liftK = 1;
+  function rgbOf(c){ c=(c||'#ffffff').trim(); let r=255,g=255,b=255;
+    if(c[0]==='#'){ let h=c.slice(1); if(h.length===3)h=h.split('').map(x=>x+x).join('');
+      r=parseInt(h.slice(0,2),16); g=parseInt(h.slice(2,4),16); b=parseInt(h.slice(4,6),16); }
+    else { const m=c.match(/\d+/g); if(m){ [r,g,b]=m.map(Number); } }
+    return [r,g,b]; }
+  function setTone(){
+    const chosen = cs('--num-color');
+    if(!autoContrast){ S.style.setProperty('--num-eff', chosen); return; }
+    let [r,g,b]=rgbOf(chosen); const cL=(0.299*r+0.587*g+0.114*b)/255;      // colour luminance 0..1
+    let t=0;
+    if(cL < 0.5){                                       // dark colour: lift toward white on DARK scenes only
+      const s=Math.min(1, Math.max(0, (0.46 - bgLuma)/0.08));   // 1 below .38, 0 above .46 — JUMPS the muddy mid
+      const targetL = cL + (0.9 - cL) * s;                       // clearly light (s=1) or unchanged (s=0)
+      t = Math.min(1, ((targetL - cL)/(1 - cL)) * liftK);
+    }
+    r=r+(255-r)*t; g=g+(255-g)*t; b=b+(255-b)*t;
+    S.style.setProperty('--num-eff', `rgb(${Math.round(r)} ${Math.round(g)} ${Math.round(b)})`); }
+  function sampleBg(){                                    // OVERALL plate luminance (day vs night) — same for all modes
+    const img=new Image();
+    img.onload=()=>{ const W=48,H=27,cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+      const g=cv.getContext('2d',{willReadFrequently:true}); g.drawImage(img,0,0,W,H);
+      try{ const d=g.getImageData(0,0,W,H).data; let s=0,n=0;
+        for(let i=0;i<d.length;i+=4){ s+=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; n++; } bgLuma=n?s/n/255:0.5;
+      }catch(e){ bgLuma=0.5; } setTone(); };
+    img.onerror=()=>setTone(); img.src=(hourglass?withHG:noHG)(phase); }
+  // per-mode separator: Middle/Ledge = none (the glass is the divider); Top/Horizon = colon|dot
+  function applySepForMode(mode){
+    const noSep = (mode==='middle' || mode==='ledge');
+    if (noSep) S.dataset.sep='none'; else if (S.dataset.sep==='none') S.dataset.sep='colon';
+    document.querySelectorAll('[data-k="sep"] .chip').forEach(c=>{ const isNone=c.dataset.v==='none';
+      c.disabled = noSep ? !isNone : isNone; c.classList.toggle('on', c.dataset.v===S.dataset.sep); });
+  }
   // restore last mode + apply its (locked or saved) settings on load
   const savedMode = localStorage.getItem('sustain.mode') || S.dataset.place;
   S.dataset.place = savedMode;
   document.querySelectorAll('[data-k="place"] .chip').forEach(c => c.classList.toggle('on', c.dataset.v===savedMode));
-  applyMode(savedMode);
+  applyMode(savedMode); applySepForMode(savedMode);
 
   // panel toggle
   const panel = document.getElementById('panel');

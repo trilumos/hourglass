@@ -8,32 +8,41 @@
 import * as THREE from 'three';
 import { createSession } from '../lib/timer.js';
 import { VERT, FRAG } from './shaders.js';
+import { localSunTimes, preciseSunTimes } from './geo.js';
+import './audio.js';   // shared Web-Audio engine → window.SustainAudio (Session plays the mix live + bell cues)
 
 // The 6 time-of-day plates, PIXEL-LOCKED to Mid Day (built in plates-phases/ by
 // an integer-shift align pass — verified 0px residual). Because the hourglass
 // silhouette sits in the exact same pixels in every plate, the coded sand never
 // shifts when the background crossfades between phases.
 const PLATES = [
-  '/plates-phases/pre-dawn.jpg', '/plates-phases/sunrise.jpg', '/plates-phases/midday.jpg',
-  '/plates-phases/sunset.jpg',   '/plates-phases/twilight.jpg', '/plates-phases/midnight.jpg',
+  '/plates-phases/pre-dawn.webp', '/plates-phases/sunrise.webp', '/plates-phases/midday.webp',
+  '/plates-phases/sunset.webp',   '/plates-phases/twilight.webp', '/plates-phases/midnight.webp',
 ];
 const PHASE_NAMES = ['Pre-Dawn','Sunrise','Mid Day','Sunset','Twilight','Mid Night'];
 const IMG_W = 1600, IMG_H = 901, AR = IMG_W / IMG_H;   // session's assets/plates framing (ledge-safe margin)
 const $ = id => document.getElementById(id);
 
 // ── layout: letterbox the image, size both canvases to the displayed rect ────
-const frame = $('frame'), glitterCv = $('glitter'), sandCv = $('sand');
+const frame = $('frame'), glitterCv = $('glitter'), sandCv = $('sand'), occCv = $('occ');
 let DW = 0, DH = 0;
-const SCENE_OY = 0.72;   // vertical crop anchor: 0.5 = centre (session), 1 = keep the whole ledge. Biased so the hourglass base/ledge is never cut (extra trims off the top sky, which the margin plate has plenty of).
+let _skyTop = 0;   // fraction of the plate cropped off the TOP by fit() — the sun/moon must never arc above it
+// Vertical framing rule (founder): trim only a LITTLE off the bottom deck (BOTTOM_TRIM), then crop the rest of
+// the overflow off the TOP sky; when the window is tall enough (≈ the plate's 16:9) the whole plate shows. So the
+// deck is always mostly present, the top sky yields on short/non-fullscreen windows, and the base is never cut.
+const BOTTOM_TRIM = 0.06;   // max fraction of the plate cropped off the bottom lip. One knob — tune to taste.
 function fit(){
   const vw = innerWidth, vh = innerHeight;
   if (vw/vh > AR) { DW = vw; DH = vw/AR; } else { DH = vh; DW = vh*AR; }   // COVER: fill the viewport, crop the overflow (locked plate rule — no side gaps)
   frame.style.width = DW+'px'; frame.style.height = DH+'px';
   // position the covered frame: centre horizontally; SCENE_OY = vertical crop anchor (0.5 = session's 50% centre)
   frame.style.left = -(DW - vw)/2 + 'px';
-  frame.style.top  = -(DH - vh)*SCENE_OY + 'px';
+  // Trim at most BOTTOM_TRIM off the bottom deck; crop the REST of the vertical overflow off the top sky. When the
+  // window is tall enough (overflow ≤ BOTTOM_TRIM) nothing crops the top (whole plate, tiny bottom trim only).
+  frame.style.top  = Math.min(0, vh - (1 - BOTTOM_TRIM)*DH) + 'px';
+  _skyTop = Math.max(0, (1 - BOTTOM_TRIM) - vh/DH);   // fraction cropped off the top → sun/moon must peak below it
   const dpr = Math.min(devicePixelRatio, 2);
-  for (const cv of [glitterCv, sandCv]) {
+  for (const cv of [glitterCv, sandCv, occCv]) {
     cv.width = DW*dpr; cv.height = DH*dpr; cv.style.width = DW+'px'; cv.style.height = DH+'px';
   }
   renderer.setSize(DW, DH);
@@ -42,7 +51,9 @@ function fit(){
 }
 
 // ── Layer 0: WebGL — the image + old-anime star glitter on the water ────────
-const renderer = new THREE.WebGLRenderer({ canvas: glitterCv, antialias:true, alpha:false });
+// preserveDrawingBuffer: the session occluder (#occ) copies this canvas via drawImage each frame; without
+// it, an antialiased buffer can read back empty on some GPUs. Small cost on a single fullscreen-quad shader.
+const renderer = new THREE.WebGLRenderer({ canvas: glitterCv, antialias:true, alpha:false, preserveDrawingBuffer:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 // Identity colour pipeline: no input decode, no output encode. The texture's
 // sRGB bytes pass straight through to the sRGB canvas, so the background looks
@@ -53,11 +64,16 @@ const loaderTex = new THREE.TextureLoader();
 const TEX = PLATES.map(src => {
   const t = loaderTex.load(src); t.colorSpace = THREE.NoColorSpace; return t;
 });
+// Reveal the scene the moment the CURRENTLY-VISIBLE plate is decoded (the loop calls reveal() once uTex has
+// an image). A blur-up LQIP shows until then; a 3 s timeout is the backstop against a slow/failed plate.
+let _revealed = false;
+function reveal(){ if (_revealed) return; _revealed = true; document.documentElement.classList.add('scene-ready'); }
+setTimeout(reveal, 3000);
 // The moon is PAINTED, not generated. Every procedural attempt — selenographic
 // maria, then ring craters — read as stains or pimples at this on-screen size.
 // plates/moon-tex.png is the founder's artwork, cropped to the opaque disc so the
 // shader's halo is the only glow (the source's own bloom is deliberately dropped).
-const MOON_TEX = loaderTex.load('/plates/moon-tex.png');
+const MOON_TEX = loaderTex.load('/plates/moon-tex.webp');
 MOON_TEX.colorSpace = THREE.NoColorSpace;
 
 const U = {
@@ -70,11 +86,11 @@ const U = {
   uMoonGlowW:{value:1.30}, uMoonGlowA:{value:1.50},
   uMoonFarW:{value:0.540}, uMoonFarA:{value:0.16},
   uMoonTex:{value:MOON_TEX}, uMoonTexAmt:{value:1.0},
-  uMoonWarm:{value:0.55}, uMoonHaze:{value:0.30}, uMoonWarmH:{value:0.35},
+  uMoonWarm:{value:0.15}, uMoonHaze:{value:0.30}, uMoonWarmH:{value:0.35},
   uMoonWarmCol:{value:new THREE.Vector3(1.0,0.722,0.467)},
-  uMoonCol:{value:new THREE.Vector3(0.992,0.984,0.941)},
-  uMoonGlowCol:{value:new THREE.Vector3(0.812,0.894,1.0)},
-  uMoonFarCol:{value:new THREE.Vector3(0.435,0.561,0.816)},
+  uMoonCol:{value:new THREE.Vector3(1.0,1.0,1.0)},
+  uMoonGlowCol:{value:new THREE.Vector3(0.878,0.937,1.0)},
+  uMoonFarCol:{value:new THREE.Vector3(0.616,0.714,0.894)},
   // sun, blended from SUNKEY each frame
   uSunSize:{value:0.020}, uCoreW:{value:2.0}, uCoreA:{value:2.4},
   uNearW:{value:0.38}, uNearA:{value:1.15}, uFarW:{value:0.07}, uFarA:{value:0.30},
@@ -114,11 +130,11 @@ const S = { prog:0.35, cx:0.498850, top:0.347, neck:0.627, bot:0.888, max:0.065,
             celEdit:0, horEdit:0,                             // moon is always FULL
             // LOCKED by the founder 2026-07-19
             moonR:0.040, moonK:1.20, moonSoft:0.07, moonTexAmt:0.50,
-            moonWarm:0.55, moonHaze:0.30, moonWarmH:0.35,
+            moonWarm:0.15, moonHaze:0.30, moonWarmH:0.35,
             moonWarmCol:'#ffb877',           // a low moon reddens, like a low sun           // moon reads BIGGER than the sun
             moonGlowW:1.30, moonGlowA:1.50, moonFarW:0.540, moonFarA:0.16,
             moonCol:'#ffffff',
-            moonGlowCol:'#cfe4ff', moonFarCol:'#6f8fd0',
+            moonGlowCol:'#e0efff', moonFarCol:'#9db6e4',
             // live sun params — these MIRROR SUNKEY[S.sunKey]; editing a slider
             // writes through to that key, and switching keys reloads them.
             sunKey:0, sunSize:0.020, coreW:2.00, coreA:2.40,
@@ -242,10 +258,18 @@ const PH_RIM  = [3.0, 1.2, 0.6, 1.8, 3.2, 4.0];
 // dissolving rather than the light changing. It is the largest colour move of the
 // day, so it gets the second-longest fade. smoothstep peaks at 1.5/T, so T=1.3h
 // caps the rate at ~1.15/h — below the threshold where the change draws the eye.
-const SEG = [[0.0,5,0],[4.4,0,1.3],[6.0,1,1.3],[8.0,2,1.3],
-             [18.5,3,1.8],[20.6,4,1.3],[23.0,5,1.3],[24.0,5,0]];
+// Day schedule in REFERENCE time (warpTime maps the real local day onto this). [hourFULLYshown, phase, crossfade-in hrs].
+// A phase is PURE from its hour until (next hour − next crossfade). Reference windows (sunrise 6:00, sunset ≈18:24):
+//   midnight 21:45→04:12 · pre-dawn 04:54→05:24 · sunrise 06:06→07:06 · midday 08:24→16:51 ·
+//   sunset 18:12→18:51 · twilight 19:39→20:45 — the midday→sunset golden build starts ~1.5 h before sunset.
+//   phases: 0 pre-dawn · 1 sunrise · 2 midday · 3 sunset · 4 twilight · 5 midnight
+// REFERENCE sunset = 18.4. Real civil+nautical twilight (the visible glow) lasts ~1h after sunset, not ~2h —
+// so night (midnight plate) now begins at 19.5 ref (~1.1 h after sunset), and the sun's glow (SUN_ALT below)
+// dies by then. Warped to a real ~7 PM sunset, night lands by ~8 PM, not 9 PM. (Fixes twilight-glow-at-9-PM.)
+const SEG = [[0.0,5,0],[4.9,0,0.7],[6.1,1,0.7],[8.0,2,1.3],
+             [17.9,3,1.35],[18.7,4,0.55],[19.5,5,0.7],[24.0,5,0]];
 // picking a phase to edit jumps here — where the phase reads purest
-const PH_HOUR = [5.0, 6.4, 12.0, 19.0, 20.7, 1.0];
+const PH_HOUR = [5.4, 6.4, 12.0, 18.0, 19.0, 1.0];   // representative hour per phase (twilight now 19.0, matching the shortened dusk)
 function phaseAt(t){                              // t hours → {a,b,blend}
   t=((t%24)+24)%24;
   let i=0;
@@ -267,7 +291,22 @@ const SUN_INT = [0.45, 0.90, 1.00, 0.85, 0.45, 0.55];
 // bound the sun's up-window, and the moon's window never overlaps it, so the two
 // discs are NEVER up together.
 let SR=6.0, SS=18.5;                    // sun up-window
-let MR=21.75, MS=5.5;                   // moon up-window (crosses midnight)
+let MR=19.7, MS=4.6;                    // moon up-window: rises once the sun's dusk glow is dead (~19.5), sets before the dawn glow (~4.9)
+// ── Location-based day cycle (2026-07-30) ─────────────────────────────────────
+// SEG / SUN_ALT / SR·SS / MOON_ALT below are tuned for a REFERENCE day (sunrise 6:00, sunset ≈18:24).
+// warpTime() piecewise-stretches the viewer's REAL local day (SunCalc, from their timezone's coords) onto the
+// reference, so plates + sun + moon all shift together to match the region. The moon's arc sits inside the
+// reference NIGHT, so after warping it stays in the real night — it can never coincide with the sun/glow.
+const REF_SR = 6.0, REF_SS = 18.4;
+let SR_real = REF_SR, SS_real = REF_SS;
+try { const _st = localSunTimes(); SR_real = _st.sr; SS_real = _st.ss; } catch(e){}
+try { preciseSunTimes(function(sr,ss){ SR_real=sr; SS_real=ss; }); } catch(e){}   // exact-location upgrade (opt-in prompt)
+function warpTime(t){
+  const dayR = SS_real - SR_real, dayRef = REF_SS - REF_SR;
+  if (t >= SR_real && t < SS_real) return REF_SR + (t - SR_real) / dayR * dayRef;   // daytime
+  const tn = (t >= SS_real) ? (t - SS_real) : (t + 24 - SS_real);                   // hours since sunset
+  return (REF_SS + tn / (24 - dayR) * (24 - dayRef)) % 24;                          // night
+}
 
 // ALTITUDE KEYFRAMES: [hour, altitude], 0 = horizon, 1 = peak, negative = below
 // (afterglow only — the disc is clipped by the horizon in the shader).
@@ -281,14 +320,18 @@ let MR=21.75, MS=5.5;                   // moon up-window (crosses midnight)
 // popped into existence in one frame. Now it climbs from fully submerged: glow
 // builds from 06:00, the upper limb breaks the water ~06:15, half disc ~06:27,
 // fully clear ~06:45 — an actual rise. Sunset mirrors it through 18:21→18:39.
-const SUN_ALT = [[6.0,-0.46],[6.30,-0.06],[6.85,0.28],[7.75,0.62],[11.0,0.97],
-                 [13.5,1.00],[16.7,0.80],[18.35,0.0],[18.65,-0.10],[20.4,-0.46]];
+// Sun at the horizon (alt 0) at reference sunset 18.4, then drops to −0.46 (glow fully dead) by 19.5 — so the
+// afterglow lasts ~1.1 h, matching the twilight window above (was −0.46 at 20.4, a ~2 h glow that read at 9 PM).
+const SUN_ALT = [[6.0,-0.46],[6.30,-0.06],[6.85,0.28],[7.75,0.62],[11.0,0.95],
+                 [12.75,1.00],[14.5,0.80],[16.0,0.52],[17.4,0.26],[18.4,0.0],[18.75,-0.16],[19.5,-0.46]];
 // Moon hours are in the shifted domain used by trackMoon (evening→dawn continuous).
 // Moon rises 21:45, once the sun's afterglow is fully dead (20:24), and is gone by
 // 05:30 — before the sunrise glow starts at 06:00. Hours are in the shifted domain
 // trackMoon uses (evening→dawn continuous), so 29.5 == 05:30.
-const MOON_ALT= [[21.75,-0.46],[22.05,-0.06],[22.60,0.28],[23.30,0.55],[25.60,0.92],
-                 [27.00,0.80],[28.60,0.0],[28.90,-0.10],[29.50,-0.46]];
+// Shifted domain (evening→dawn continuous; +24 after midnight). Rises 19.7 (glow dead), peaks at 24.0 (midnight),
+// sets 28.6 == 04:36 — fully down before the dawn glow, so sun & moon (and their glows) are never up together.
+const MOON_ALT= [[19.7,-0.46],[20.0,-0.06],[20.6,0.28],[21.4,0.55],[24.0,0.92],
+                 [26.3,0.80],[27.8,0.0],[28.2,-0.16],[28.6,-0.46]];
 // smoothstep between keyframes; outside the table the body is fully below.
 function altAt(t, K){
   if(t < K[0][0] || t > K[K.length-1][0]) return -1;
@@ -306,8 +349,11 @@ function celTrack(t, on, span, kf, inten, ALT){
   const u=(t-on)/span;
   const cu=clamp(u,0,1), f=cu<0.5?cu*2:(cu-0.5)*2, A=cu<0.5?0:1, B=cu<0.5?1:2;
   const x=lerp(SUN_POS[kf[A]][0], SUN_POS[kf[B]][0], f);
-  const peakY=lerp(SUN_POS[kf[A]][1], SUN_POS[kf[B]][1], f);   // canvas-y (down) of the peak
+  let peakY=lerp(SUN_POS[kf[A]][1], SUN_POS[kf[B]][1], f);     // canvas-y (down) of the peak
   const hc=1-S.hor;                                            // horizon in canvas-y
+  // Keep the body in the VISIBLE sky: fit() can crop the top (_skyTop). Never let the peak rise past _skyTop plus
+  // a disc/glow+breathing margin; keep it above the horizon too. So on short windows the sun simply arcs lower.
+  peakY = Math.min(hc-0.02, Math.max(peakY, _skyTop + 0.13));
   const y=hc + (peakY-hc)*alt;                                 // horizon at alt 0, peak at alt 1
   // Brightness fades only BELOW the horizon. The ramp reaches zero at alt −0.46,
   // which is where the fade window ends — so the afterglow dies exactly at 20:24
@@ -375,7 +421,7 @@ const CUR = { expo:1, lit:[255,255,255], shd:[255,255,255], sat:1, rim:0.6, t:12
 const clockHours=()=>{ const d=new Date(); return d.getHours()+d.getMinutes()/60+d.getSeconds()/3600; };
 const fmtHM=t=>{ const h=Math.floor(t), m=Math.floor((t-h)*60); return `${h}:${String(m).padStart(2,'0')}`; };
 function updateDayCycle(){
-  const t = S.live ? clockHours() : S.daytime;
+  const t = S.live ? warpTime(clockHours()) : S.daytime;   // live -> real local day warped onto the reference
   const {a,b,blend} = phaseAt(t);
   CUR.t=t; CUR.a=a; CUR.b=b; CUR.blend=blend;
   U.uTex.value=TEX[a]; U.uTex2.value=TEX[b]; U.uMix.value=blend;
@@ -384,7 +430,7 @@ function updateDayCycle(){
   CUR.shd =lerp3(PH_SHD[a],PH_SHD[b],blend);
   CUR.sat =lerp(PH_SAT[a],PH_SAT[b],blend);
   CUR.rim =lerp(PH_RIM[a],PH_RIM[b],blend);
-  // one sun (A) + one moon (B), each travelling its own path
+  // one sun (A) + one moon (B), each travelling its own path (continuous, on the location-warped clock)
   const su=trackSun(t), mo=trackMoon(t);
   BED.lift = lerp(S.bedNight, S.bedDay, smooth(clamp(su.alt,0,1)/0.70));
   U.uCelA.value.set(su.pos[0], 1-su.pos[1]); U.uCelAtype.value=1; U.uCelAamt.value=su.amt;
@@ -608,6 +654,42 @@ function rebuildMask(G){
   maskCtx.globalCompositeOperation='source-over';
   if(!maskTex){ maskTex=new THREE.CanvasTexture(maskCv); U.uMask.value=maskTex; }
   maskTex.needsUpdate=true;
+}
+
+// ── Session number OCCLUSION: numbers pass BEHIND the hourglass / sea-horizon / ledge. The #occ layer
+//    copies the LIVE WebGL plate each frame and keeps only the silhouette, so it matches the render exactly
+//    (crossfade, sun/moon, glitter). Mattes come from maskCv's own channels — G = glass, R = sea — the same
+//    silhouette the shader composites, so they track the founder's re-traced hourglass. Rebuilt with the mask. ──
+const occtx = occCv.getContext('2d');
+let occGlassCv=null, occHorizonCv=null;
+// Occlusion rules (number-lab.html §289): the HOURGLASS matte occludes in EVERY mode; the SEA (horizon)
+// matte occludes ONLY in horizon mode; the ledge NEVER occludes (numbers rest ON the ledge). So the glass
+// matte is the base for every placement, and horizon additionally unions the sea.
+function buildOccMattes(){
+  const mw=maskCv.width, mh=maskCv.height;
+  const d = maskCtx.getImageData(0,0,mw,mh).data;
+  // glass matte: alpha = the G (glass) channel, hard-edged (only the SEA carries the shoreline feather).
+  occGlassCv = document.createElement('canvas'); occGlassCv.width=mw; occGlassCv.height=mh;
+  { const cx=occGlassCv.getContext('2d'), im=cx.createImageData(mw,mh), o=im.data;
+    for(let i=0;i<d.length;i+=4) o[i+3]=d[i+1];
+    cx.putImageData(im,0,0); }
+  // horizon matte = glass ∪ a HARD sea. Filling seaPath() directly (no seaFeather blur) gives a CRISP horizon
+  // edge, so the numbers VANISH cleanly beyond it — not the translucent fade the feathered R channel produced.
+  occHorizonCv = document.createElement('canvas'); occHorizonCv.width=mw; occHorizonCv.height=mh;
+  const hx = occHorizonCv.getContext('2d');
+  hx.fillStyle='#000'; hx.fill(seaPath());   // seaPath uses DW/DH == mw/mh → aligns; opaque fill = alpha 255
+  hx.drawImage(occGlassCv, 0, 0);            // union the hourglass on top
+}
+function drawOcc(place){
+  const matte = place==='horizon' ? occHorizonCv : occGlassCv;   // hourglass occludes every mode; horizon adds the sea
+  occtx.setTransform(1,0,0,1,0,0);
+  occtx.globalCompositeOperation='source-over';
+  occtx.clearRect(0,0,occCv.width,occCv.height);
+  if(!matte) return;
+  occtx.drawImage(glitterCv, 0,0, occCv.width, occCv.height);   // live plate render, 1:1
+  occtx.globalCompositeOperation='destination-in';
+  occtx.drawImage(matte, 0,0, occCv.width, occCv.height);        // keep only the occluder silhouette
+  occtx.globalCompositeOperation='source-over';
 }
 
 // ── EDITABLE OUTLINE (pen tool) ─────────────────────────────────────────────
@@ -875,7 +957,7 @@ function drawSand(t){
   sctx.clearRect(0,0,DW,DH);
   const G = glassPath();
   const d = S.prog, {cx,mx,mxB,nh,yT,yN,yB,halfAt} = G;
-  if (maskDirty){ rebuildMask(G); maskDirty=false; }
+  if (maskDirty){ rebuildMask(G); buildOccMattes(); maskDirty=false; }   // occluder mattes track the mask
 
   // OUTLINE-ONLY mode: trace the glass interior, NO sand, to fit it 100% first.
   if (S.dbg){
@@ -1635,7 +1717,7 @@ S.prog = 0;   // idle = full glass, ready to begin
 let timerVis = 'hover', hideTimer = 0;
 const pad = n => String(Math.max(0, n | 0)).padStart(2, '0');
 function updateSessionUI(r){
-  const secs = (r.endless ? r.totalFocusSec : r.remainingSec) | 0;
+  const secs = r.remainingSec | 0;   // ALL modes count down (endless now loops a chosen block, not a stopwatch)
   $('mm').textContent = pad(secs / 60 | 0);
   $('ss').textContent = pad(secs % 60);
   if (r.done) revealNums();   // always show the final 00 · drained glass
@@ -1719,8 +1801,14 @@ function updateSession(){
   if (typeof updateSessionUI === 'function') updateSessionUI(r);   // wired in Tasks 5–7
   return r;
 }
-function loop(now){ const dt=(now-t0)/1000; tSec+=dt; t0=now;
+function loop(now){ const dt=Math.min((now-t0)/1000, 0.05); tSec+=dt; t0=now;   // clamp dt: no lurch after a hidden tab
   updateDayCycle();
+  if (S._sunMoonOff){ U.uCelAamt.value=0; U.uCelBamt.value=0; }                 // Setup: sun & moon hidden
+  if (document.documentElement.classList.contains('session-active')){           // numeral auto-contrast, live plate luminance
+    const bl = PH_LUMA[CUR.a]*(1-CUR.blend) + PH_LUMA[CUR.b]*CUR.blend;
+    if (Math.abs(bl-_bgLumaLast) > 0.01){ _bgLumaLast = bl; setNumTone(bl); }
+  }
+  if (!_revealed && U.uTex.value.image && U.uTex.value.image.width) reveal();   // scene-ready = current plate decoded
   const r = updateSession();
   if (r.kind === 'idle') {                                      // HOME idle: ~40% fill, sand falling continuously (looped, NEVER filling)
     S.prog = 0.4; S._sandOn = true; sandClock += dt;
@@ -1734,7 +1822,9 @@ function loop(now){ const dt=(now-t0)/1000; tSec+=dt; t0=now;
   prevSandKind = r.kind;
   U.uTime.value=tSec; renderer.render(scene,cam);
   try {
-    drawSand(sandClock);                                        // stream time = the session sand-clock
+    drawSand(sandClock);                                        // stream time = the session sand-clock (also rebuilds occ mattes when dirty)
+    if (document.documentElement.classList.contains('session-active'))
+      drawOcc(frame.dataset.place || 'middle');                // numbers pass behind the glass/sea/ledge
     if(lastErr){ lastErr=''; $('err').style.display='none'; }
   } catch(e){
     const msg=e && e.message ? e.message : String(e);
@@ -1743,4 +1833,127 @@ function loop(now){ const dt=(now-t0)/1000; tSec+=dt; t0=now;
   }
   requestAnimationFrame(loop);
 }
+// Deploy runs LIVE: the hidden lab's phase-bind fires once on init and flips S.live=0 (to preview a phase).
+// Undo it here so the day cycle follows the REAL clock. Nothing in the deploy re-disables it (lab UI hidden).
+S.live = 1;
 requestAnimationFrame(loop);
+
+// Pause the CSS "breathing" zoom while the tab is hidden, so it doesn't jump/catch-up on return.
+document.addEventListener('visibilitychange', () => {
+  const f = document.getElementById('frame');
+  if (f) f.style.animationPlayState = document.hidden ? 'paused' : 'running';
+});
+
+// ── Session numeral look: per-place geometry (LOCKED, byte-for-byte from session.html / timer-modes.json)
+//    + auto-contrast tone (ported from session.html setTone: a DARK chosen colour lifts toward white on
+//    DARK plates only; a light colour never changes). bgLuma is estimated per phase and blended live. ──
+// All PLATE-relative (cqh/cqw of #frame + % of the plate): the numbers are pasted on the plate and move/scale/crop
+// with it. Values are number-lab.html's (timer-modes.json) verbatim — the lab was perfected on the plate-cover.
+// Full per-place numeral geometry — each mode keeps its OWN designed X/position (from number-lab.html /
+// timer-modes.json): horizon sits wide-left (--dx -30%, --hg-cx 50%, small gap), top/middle/ledge flank the
+// hourglass axis (--hg-cx 49.79%) at their own gaps and vertical bands. ONLY `size` (cqh) and `dy` (vertical
+// offset %, nudges the block up/down) are tunable — live-edited via the dev panel and persisted to
+// localStorage['sustain.numTune'], overriding these. Everything else (X, gap, tb-top, weight) is a design
+// constant and never changes (founder: modes stay in their positions; Y-only nudge).
+const NUM_DEF = {   // size(cqh) & dy(%) LOCKED by the founder 2026-08-01 via the tuner; X/gap/tb-top are design constants
+  horizon: { size:13, dy:-3.5, gap:'3cqw',  tbtop:'55%', hgcx:'50%',    dx:'-30%' },
+  middle:  { size:20, dy:5,   gap:'15cqw', tbtop:'48%', hgcx:'49.79%', dx:'0'    },
+  top:     { size:15, dy:2.5, gap:'3cqw',  tbtop:'15%', hgcx:'49.79%', dx:'0'    },
+  ledge:   { size:20, dy:8,   gap:'15cqw', tbtop:'78%', hgcx:'49.79%', dx:'0'    }
+};
+function numTune(){ try { return JSON.parse(localStorage.getItem('sustain.numTune') || '{}'); } catch(e){ return {}; } }
+function numFor(place){
+  const d = NUM_DEF[place] || NUM_DEF.middle;
+  // Baked NUM_DEF is authoritative in normal sessions; the localStorage override only applies in the opt-in
+  // tuner (window.__numTuneMode), so stale tuning never diverges the shipped numbers from the locked defaults.
+  const o = window.__numTuneMode ? (numTune()[place] || {}) : {};
+  return { size: o.size!=null ? o.size : d.size, dy: o.dy!=null ? o.dy : d.dy };
+}
+// Per-mode separator rule (number-lab.html applySepForMode): Middle/Ledge = none (the glass is the divider
+// between the wide-flanked numbers); Top/Horizon = the user's colon|dot, never none.
+let numSep = 'colon';   // user's divider pick, only used by Top/Horizon
+function sepForPlace(place){ return (place==='middle' || place==='ledge') ? 'none' : (numSep==='dot' ? 'dot' : 'colon'); }
+function applyNum(place){                          // designed geometry (X fixed per mode) + tuned size/dy; selects the active place → occluder follows
+  const d = NUM_DEF[place] || NUM_DEF.middle, n = numFor(place);
+  frame.style.setProperty('--num-size', String(n.size));
+  frame.style.setProperty('--dy', n.dy + '%');
+  frame.style.setProperty('--gap', d.gap);
+  frame.style.setProperty('--tb-top', d.tbtop);
+  frame.style.setProperty('--hg-cx', d.hgcx);
+  frame.style.setProperty('--dx', d.dx);
+  frame.style.setProperty('--num-weight', '550');
+  frame.style.setProperty('--num-scaleX', '1');
+  frame.dataset.place = place;
+  frame.dataset.sep = sepForPlace(place);          // separator follows the mode rule, not the raw cfg
+}
+const PH_LUMA = [0.32, 0.52, 0.72, 0.50, 0.28, 0.14];   // pre-dawn,sunrise,midday,sunset,twilight,midnight
+let numColor = '#ffffff', numAuto = true, _bgLumaLast = -1;
+function _rgbOf(c){
+  c = (c || '#ffffff').trim(); let r=255,g=255,b=255;
+  if (c[0]==='#'){ let h=c.slice(1); if (h.length===3) h=h.split('').map(x=>x+x).join('');
+    r=parseInt(h.slice(0,2),16); g=parseInt(h.slice(2,4),16); b=parseInt(h.slice(4,6),16); }
+  else { const m=c.match(/\d+/g); if (m){ r=+m[0]; g=+m[1]; b=+m[2]; } }
+  return [r,g,b];
+}
+function setNumTone(bgLuma){
+  if (!numAuto){ frame.style.setProperty('--num-eff', numColor); return; }
+  let [r,g,b] = _rgbOf(numColor);
+  const cL = (0.299*r + 0.587*g + 0.114*b)/255; let t = 0;
+  if (cL < 0.5){                                       // dark colour → lift toward white on dark plates only
+    const s = Math.min(1, Math.max(0, (0.46 - bgLuma)/0.08));
+    const targetL = cL + (0.9 - cL)*s; t = Math.min(1, (targetL - cL)/(1 - cL));
+  }
+  r += (255-r)*t; g += (255-g)*t; b += (255-b)*t;
+  frame.style.setProperty('--num-eff', `rgb(${Math.round(r)} ${Math.round(g)} ${Math.round(b)})`);
+}
+
+// Setup drives the scene: preview a phase (index 0–5) or 'follow' the live clock, and toggle sun+moon.
+window.SustainScene = {
+  setDay: function(v){ if (v==='follow' || v==null){ S.live=1; } else { S.live=0; S.daytime=PH_HOUR[v|0]; } },
+  // Continuous day position for the light-cycle: set an arbitrary reference hour (0–24, wraps); the scene
+  // crossfades plates + moves sun/moon to it. The Session interpolates this through the cycle over elapsed.
+  setDayHour: function(h){ S.live=0; S.daytime=((h%24)+24)%24; },
+  phaseHour: function(i){ return PH_HOUR[((i|0)%6+6)%6]; },   // reference hour of a phase index (0–5)
+  setSunMoon: function(show){ S._sunMoonOff = !show; },
+  // ── Session: drive the shared hourglass + numerals from a prebuilt plan ([{kind,dur(sec)}]) ──
+  startSession: function(plan, endless){
+    session.setPlan(plan, endless ? 'endless' : 'custom');
+    session.start(); wasDone = false; S.prog = 0;
+    document.documentElement.classList.add('session-active');
+    applyVis();
+  },
+  togglePauseSession: function(){ if (session.state.running) session.pause(); else session.resume(); return session.state.running; },
+  endSession: function(){
+    const r = session.sample(); if (r.kind !== 'idle' && !r.done) bumpFocusedToday(r.focusSec);
+    session.reset(); S.prog = 0; wasDone = false;
+    document.documentElement.classList.remove('session-active');
+    occtx.setTransform(1,0,0,1,0,0); occtx.clearRect(0,0,occCv.width,occCv.height);   // drop the occluder
+  },
+  sampleSession: function(){ return session.sample(); },
+  flipEndless: function(){ session.flip(); },   // refill the endless glass; elapsed timer keeps running
+  skipToBreak: function(){ return session.skipToBreak(); },   // pomodoro/custom: take the next scheduled break early
+  skipBreak: function(){ return session.skipBreak(); },       // end the current rest early → focus resumes
+  setTimerVis: function(v){ timerVis = (v==='hidden' ? 'hidden' : v==='hover' ? 'hover' : 'always'); applyVis(); },
+  // Numeral look from the Setup cfg: font (→ overlap-removed numeral face), colour + auto-contrast,
+  // fill/separator (data-attrs), and the LOCKED per-place geometry (size/gap/weight/stretch/offset).
+  setNumStyle: function(cfg){
+    numColor = cfg.color || '#ffffff';
+    numAuto  = cfg.autoContrast !== false;
+    frame.style.setProperty('--num-color', numColor);
+    frame.style.setProperty('--num-font', /Jost/i.test(cfg.font || '') ? "'NumSans',sans-serif" : "'NumSerif',serif");
+    numSep = (cfg.sep === 'dot' ? 'dot' : 'colon');     // user's divider; applyNum enforces the per-mode rule (mid/ledge → none)
+    applyNum(cfg.place || 'middle');                    // size / top / gap / separator (merged with any tuned overrides); X fixed
+    frame.dataset.fill  = cfg.fill  || 'solid';
+    _bgLumaLast = -1;                                   // force an auto-contrast recompute next frame
+  },
+  // ── Dev number-tuner: live-edit + persist each mode's size (cqh) & vertical offset dy (%). Each mode keeps
+  //    its OWN X/position; only Y nudges. ──
+  editNum: function(place, size, dy){
+    const t = numTune(); t[place] = t[place] || {};
+    if (size != null) t[place].size = size;
+    if (dy   != null) t[place].dy   = dy;
+    try { localStorage.setItem('sustain.numTune', JSON.stringify(t)); } catch(e){}
+    applyNum(place);                                   // reflects immediately + switches active place (occluder follows)
+  },
+  numState: function(){ const o = {}; for (const k in NUM_DEF) o[k] = numFor(k); return o; }
+};

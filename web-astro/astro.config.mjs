@@ -7,4 +7,7 @@ import { defineConfig } from 'astro/config';
 // vanilla islands. Keep the plate the LCP (preloaded); the WebGL glitter/sun/moon defer-inits over it.
 export default defineConfig({
   // site: 'https://sustaintimer.com',  // set once the domain is bought (SEO/canonical/sitemap)
+  // Astro's dev toolbar renders bottom-centre at z-index 999999 — directly over the Session's pause button,
+  // eating its clicks in dev (it's dev-only, never in the production build). Disabled so dev matches prod.
+  devToolbar: { enabled: false },
 });

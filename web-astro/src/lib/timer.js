@@ -92,6 +92,7 @@ export function createSession(now = Date.now) {
   const st = {
     mode: 'flow', opts: {}, plan: buildPlan('flow'),
     startedAt: null, pausedAt: null, pausedAccumMs: 0, running: false,
+    flipBase: 0,   // endless-only: sand-block origin (seconds). Flip resets it so the glass refills, elapsed unaffected.
   };
   return {
     get state() { return st; },
@@ -100,7 +101,63 @@ export function createSession(now = Date.now) {
       st.mode = mode; st.opts = opts; st.plan = buildPlan(mode, opts);
       st.startedAt = null; st.pausedAt = null; st.pausedAccumMs = 0; st.running = false;
     },
-    start() { st.startedAt = now(); st.pausedAt = null; st.pausedAccumMs = 0; st.running = true; },
+    // Run an externally-built plan verbatim (Setup builds richer plans with plan.js). `plan` is
+    // [{kind:'focus'|'rest', dur}] in SECONDS. mode is kept only so sample() knows 'endless'.
+    setPlan(plan, mode = 'custom') {
+      st.mode = mode; st.opts = {}; st.plan = plan;
+      st.startedAt = null; st.pausedAt = null; st.pausedAccumMs = 0; st.running = false;
+    },
+    start() { st.startedAt = now(); st.pausedAt = null; st.pausedAccumMs = 0; st.running = true; st.flipBase = 0; },
+    // Endless only: refill the glass now (reset the sand block) WITHOUT resetting the elapsed timer.
+    flip() { if (st.mode === 'endless' && st.startedAt != null) st.flipBase = elapsedSeconds(st, now()); },
+    // Jump the ENDLESS loop position forward to `target` seconds within the current block, without mutating the
+    // plan (the block must keep looping at its chosen length). Only ever moves forward within one iteration.
+    _endlessJumpTo(loopE, target) {
+      const j = (target - loopE) * 1000;
+      if (j <= 0) return false;
+      st.startedAt -= j; if (st.pausedAt != null) st.pausedAt -= j;
+      return true;
+    },
+    // Take your next break early. Endless: jump the loop to the block's rest (no mutation). Pomodoro/Custom: end
+    // the CURRENT focus now by truncating it to the focus actually done (honest credit) so the rest begins now.
+    skipToBreak() {
+      if (st.startedAt == null) return false;
+      const elapsed = elapsedSeconds(st, now());
+      if (st.mode === 'endless') {
+        const total = planDuration(st.plan) || 1, loopE = elapsed % total;
+        let acc = 0;
+        for (const seg of st.plan) { if (seg.kind === 'rest' && acc > loopE + 0.001) return this._endlessJumpTo(loopE, acc); acc += seg.dur; }
+        return false;
+      }
+      let acc = 0;
+      for (let i = 0; i < st.plan.length; i++) {
+        const seg = st.plan[i];
+        if (elapsed < acc + seg.dur || i === st.plan.length - 1) {
+          if (seg.kind === 'focus' && i + 1 < st.plan.length && st.plan[i + 1].kind === 'rest') { seg.dur = Math.max(1, Math.floor(elapsed - acc)); return true; }
+          return false;
+        }
+        acc += seg.dur;
+      }
+      return false;
+    },
+    // End the current rest early → focus resumes now. Endless: jump the loop to the rest's end (no mutation).
+    skipBreak() {
+      if (st.startedAt == null) return false;
+      const elapsed = elapsedSeconds(st, now());
+      const endless = st.mode === 'endless';
+      const total = endless ? (planDuration(st.plan) || 1) : 0, ref = endless ? elapsed % total : elapsed;
+      let acc = 0;
+      for (let i = 0; i < st.plan.length; i++) {
+        const seg = st.plan[i];
+        if (ref < acc + seg.dur || (!endless && i === st.plan.length - 1)) {
+          if (seg.kind !== 'rest') return false;
+          if (endless) return this._endlessJumpTo(ref, acc + seg.dur);
+          seg.dur = Math.max(1, Math.floor(elapsed - acc)); return true;
+        }
+        acc += seg.dur;
+      }
+      return false;
+    },
     pause() { if (st.running && st.pausedAt == null) { st.pausedAt = now(); st.running = false; } },
     resume() {
       if (!st.running && st.pausedAt != null) {
@@ -114,8 +171,16 @@ export function createSession(now = Date.now) {
       }
       const elapsed = elapsedSeconds(st, now());
       if (st.mode === 'endless') {
-        const block = st.plan[0].dur;
-        return { prog: (elapsed % block) / block, kind: 'focus', remainingSec: block - (elapsed % block), totalFocusSec: elapsed, focusSec: elapsed, done: false, endless: true };
+        // Loop the chosen block [focus(, rest)] forever; count DOWN within the current segment; never "done".
+        const total = planDuration(st.plan) || 1;
+        const loopE = elapsed % total;
+        const p = progressAt(st.plan, loopE);
+        return {
+          prog: p.kind === 'focus' ? p.segProg : 0,   // rest → full glass
+          kind: p.kind,                                // 'focus' or 'rest' — breaks loop too
+          remainingSec: p.segRemainingSec,             // counts down within the segment
+          totalFocusSec: elapsed, focusSec: elapsed, done: false, endless: true,
+        };
       }
       const p = progressAt(st.plan, elapsed);
       if (p.done) st.running = false;

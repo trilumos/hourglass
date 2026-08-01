@@ -71,3 +71,9 @@ android/key.properties
 /freesound_community-*.mp3
 /claude images to give/
 /glass UI examples/
+
+# Same folders after the 2026-08-01 move into _internal/ (large source assets, not shipped).
+# The needed Play badge is copied into web-astro/public/.
+/_internal/claude images to give/
+/_internal/glass UI examples/
+/_internal/Google Play Badge guidelines/

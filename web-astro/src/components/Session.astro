@@ -1,0 +1,662 @@
+---
+// Session screen — full port of the LOCKED site/session.html, adapted to the hash-routed SPA + the shared
+// scene engine (SustainScene: sand/numerals/day) and audio engine (SustainAudio: live mix + bell cues).
+// Chrome: gear + live settings sheet (sound / timer / number-look / scene), pause (+ paused overlay, 3min cap),
+// give-up, intention, endless flip, wake lock, and the navigation guard (no accidental back/reload out of a
+// running session). Number-look/scene controls drive SustainScene; sound drives SustainAudio. ?tune = dev tuner.
+const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
+---
+<div class="session-screen" id="sessionScreen" aria-hidden="true">
+  <div id="intentTop" hidden></div>
+  <div id="seglabel"></div>
+
+  <button id="gear" class="frost" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="15" cy="7" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="9" cy="12" r="2.3" fill="currentColor" stroke="none"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="17" cy="17" r="2.3" fill="currentColor" stroke="none"/></svg></button>
+  <button id="giveup" aria-label="End session">Give up</button>
+  <button id="breakBtn" hidden>Break</button>
+  <button id="pause" class="frost" aria-label="Pause session" aria-pressed="false">
+    <svg class="ic-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="5" x2="8" y2="19"/><line x1="16" y1="5" x2="16" y2="19"/></svg>
+    <svg class="ic-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="8,5 19,12 8,19"/></svg>
+  </button>
+
+  <div id="paused" aria-hidden="true"><div class="paused-word">Paused</div><div class="paused-grace" id="pauseGrace"></div></div>
+  <div id="breakScreen" aria-hidden="true">
+    <div class="break-word">BREAK</div>
+    <div class="break-time" id="breakTime">00:00</div>
+    <button class="frost end-break" id="endBreakBtn">End break</button>
+  </div>
+  <div id="flip"></div>
+
+  <div class="pop" id="giveupConfirm" hidden><div class="frost popcard">
+    <h2 class="popcard-title">Give up this session?</h2>
+    <p class="popcard-sub">You'll lose this focus block.</p>
+    <div class="popcard-btns"><button id="gcKeep" class="pop-primary">Keep going</button><button id="gcGive" class="pop-ghost pop-danger">Give up</button></div>
+  </div></div>
+  <div class="pop" id="doneCard" hidden><div class="frost popcard">
+    <h2 class="popcard-title">Well done</h2>
+    <p class="popcard-sub">You focused <b id="doneMin">0m</b> today.</p>
+    <div class="popcard-btns"><button id="again" class="pop-ghost">Again</button><button id="doneEnd" class="pop-primary">End</button></div>
+  </div></div>
+  <div class="pop" id="sessionOver" hidden><div class="frost popcard">
+    <h2 class="popcard-title">This session has ended</h2>
+    <p class="popcard-sub">Start a fresh one whenever you're ready.</p>
+    <div class="popcard-btns"><button id="soSetup" class="pop-primary">Back to Setup</button></div>
+  </div></div>
+
+  <!-- ⚙ Settings — Setup's frost sheet, four live sections -->
+  <div class="sheet-scrim" id="setScrim"></div>
+  <div class="sheet frost" id="setSheet" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="sheet-head"><h3>Settings</h3><button class="sheet-close" id="setClose" aria-label="Close">&times;</button></div>
+    <div class="sheet-scroll">
+      <div class="hidden-time" id="hiddenTime" hidden></div>
+      <div class="sec">
+        <span class="mini-lbl">Sound</span>
+        <div class="tokens" id="sessTokens"></div>
+        <div class="sound-vol">
+          <div class="vol-head"><span class="mini-lbl">Volume</span><span class="pct" id="sessVolPct">100%</span></div>
+          <input type="range" id="sessVol" min="0" max="100" value="100" aria-label="Volume">
+        </div>
+        <div id="sessMixRows"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-row2" style="margin-top:0"><span class="set-lbl">Timer</span>
+          <div class="mini-seg" data-seg="vis"><button data-v="always">Always</button><button data-v="hover">On hover</button><button data-v="hidden">Hidden</button></div>
+        </div>
+      </div>
+      <div class="sec">
+        <span class="mini-lbl">Number look</span>
+        <div class="sec-row2" style="margin-top:0"><span class="set-lbl">Placement</span>
+          <div class="mini-seg" data-seg="place"><button data-v="horizon">Horizon</button><button data-v="middle">Middle</button><button data-v="ledge">Ledge</button><button data-v="top">Top</button></div>
+        </div>
+        <div class="sec-row2"><span class="set-lbl">Fill</span>
+          <div class="mini-seg" data-seg="fill"><button data-v="solid">Solid</button><button data-v="glass">Glass</button><button data-v="outline">Outline</button></div>
+        </div>
+        <div class="sec-row2"><span class="set-lbl">Font</span>
+          <div class="mini-seg" data-seg="font"><button data-v="'Newsreader',serif">Serif</button><button data-v="'Jost',sans-serif">Jost</button></div>
+        </div>
+        <div class="sec-row2"><span class="set-lbl">Separator</span>
+          <div class="mini-seg" data-seg="sep"><button data-v="colon">Colon</button><button data-v="dot">Dot</button><button data-v="none">None</button></div>
+        </div>
+        <div class="sec-row2"><span class="set-lbl">Colour</span>
+          <div class="swatches" id="sessSwatches">
+            <button type="button" class="sw-c" data-c="#ffffff" style="background:#ffffff" aria-label="White"></button
+            ><button type="button" class="sw-c" data-c="#f2ecdd" style="background:#f2ecdd" aria-label="Ivory"></button
+            ><button type="button" class="sw-c" data-c="#eaca78" style="background:#eaca78" aria-label="Gold"></button
+            ><button type="button" class="sw-c" data-c="#8fb7e0" style="background:#8fb7e0" aria-label="Sky"></button
+            ><button type="button" class="sw-c" data-c="#20242e" style="background:#20242e" aria-label="Charcoal"></button
+            ><label class="sw-c sw-custom" title="Custom colour"><input type="color" id="colorPick" value="#ffffff" aria-label="Custom number colour"></label>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <span class="mini-lbl">Scene</span>
+        <div class="tod-opts" id="sessTod"></div>
+        <div class="sec-row2"><span class="set-lbl">Auto-contrast</span>
+          <div class="mini-seg" data-seg="auto"><button data-v="on">On</button><button data-v="off">Off</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEV number tuner (opt-in via ?tune): perfect each mode's SIZE + VERTICAL position. X is fixed. -->
+  <button id="numEditToggle" hidden>⧗ tune</button>
+  <div id="numEditor" hidden>
+    <div class="ne-modes"><button data-place="horizon">Horizon</button><button data-place="top">Top</button><button data-place="middle">Middle</button><button data-place="ledge">Ledge</button></div>
+    <label>Vertical nudge · <span id="neYv"></span>%<input id="neY" type="range" min="-60" max="60" step="0.1"></label>
+    <label>Size · <span id="neSv"></span><input id="neS" type="range" min="8" max="45" step="0.5"></label>
+    <div class="ne-foot"><button id="neCopy">Copy JSON</button><button id="neReset">Reset</button></div>
+    <pre id="neOut"></pre>
+  </div>
+</div>
+
+<style>
+  /* NOTE: no `pointer-events:none` on the container + no `> * { auto }` override — Astro scopes the child
+     selector to a higher specificity than the closed-overlay rules (.sheet-scrim/.sheet), which made an
+     invisible scrim eat every chrome click. Children are interactive by default; closed overlays set their
+     own `pointer-events:none` and win. The container (visibility:hidden until .on) never blocks off-screen. */
+  .session-screen{ position:fixed; inset:0; z-index:6; opacity:0; visibility:hidden;
+    font-family:Jost,system-ui,sans-serif; color:#f2ecdd;
+    --e-std:cubic-bezier(.4,0,.2,1);
+    --sq:clamp(320px,64vh,640px); --sp-in:calc(var(--sq)*.018); --sp-grp:calc(var(--sq)*.048);
+    --t-xs:calc(var(--sq)*.0205); --t-sm:calc(var(--sq)*.0256); --t-md:calc(var(--sq)*.032);
+    --ctrl-y:calc(var(--sq)*.023); --ctrl-x:calc(var(--sq)*.046);
+    --ink:#f2ecdd; --ink-dim:#cfc7b6; --ink-hi:#fdf6e6; --gold:#EACA78; --track:rgba(255,255,255,.16); --frost-bg:#35353566; }
+  .session-screen.on{ opacity:1; visibility:visible; }
+  .frost{ background:var(--frost-bg); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+    box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55, 0 22px 55px rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.06); }
+
+  /* chrome */
+  #gear{ position:absolute; left:clamp(12px,2vw,20px); top:clamp(12px,2vw,20px); z-index:5;
+    width:clamp(34px,3.4vw,44px); aspect-ratio:1; border-radius:50%; padding:0; cursor:pointer; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; }
+  #gear svg{ width:52%; height:52%; }
+  #giveup{ position:absolute; right:clamp(14px,2.2vw,22px); top:clamp(14px,2.2vw,22px); z-index:5;
+    min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+    font-family:inherit; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+    font-size:clamp(11px,1.15vw,13px); color:var(--ink-dim); cursor:pointer;
+    padding:.5em .7em; border-radius:100px; border:none; background:none; transition:color .2s,background .2s; }
+  #giveup:hover, #giveup:focus-visible{ color:var(--ink); background:rgba(255,255,255,.08); }
+  #pause{ position:absolute; left:50%; bottom:clamp(20px,4.5vh,52px); transform:translateX(-50%); z-index:5;
+    width:clamp(48px,6vh,60px); aspect-ratio:1; border-radius:50%; padding:0; cursor:pointer; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; transition:filter .2s, transform .1s; }
+  #pause svg{ width:42%; height:42%; }
+  #pause .ic-play{ display:none; }
+  #pause.paused .ic-pause{ display:none; }
+  #pause.paused .ic-play{ display:block; }
+  #pause:hover{ filter:brightness(1.2); }
+  #pause:active{ transform:translateX(-50%) scale(.96); }
+  #pause.paused{ box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55, 0 22px 55px rgba(0,0,0,.34), 0 0 0 1.5px var(--gold); }
+  #breakBtn{ position:absolute; left:50%; transform:translateX(-50%); z-index:5;
+    bottom:calc(clamp(20px,4.5vh,52px) + clamp(48px,6vh,60px) + .8em);
+    font-family:inherit; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+    font-size:clamp(11px,1.15vw,13px); color:var(--ink-dim); cursor:pointer;
+    padding:.5em .9em; border-radius:100px; border:none; background:none; transition:color .2s,background .2s; }
+  #breakBtn[hidden]{ display:none; }
+  #breakBtn:hover, #breakBtn:focus-visible{ color:var(--ink); background:rgba(255,255,255,.08); }
+  #intentTop{ position:absolute; top:clamp(16px,2.6vw,30px); left:50%; transform:translateX(-50%); z-index:5;
+    max-width:56vw; text-align:center; font-weight:400; font-size:clamp(12px,1.5vw,17px); letter-spacing:.03em;
+    color:var(--ink); text-shadow:0 1px 10px rgba(0,0,0,.4); pointer-events:none;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #intentTop[hidden]{ display:none; }
+  /* idle fade — all chrome (scoped .active, not body) */
+  #gear, #giveup, #pause, #breakBtn, #intentTop{ opacity:0; transition:opacity .4s var(--e-std); }
+  .session-screen.active #gear, .session-screen.active #giveup, .session-screen.active #pause,
+  .session-screen.active #breakBtn, .session-screen.active #intentTop{ opacity:1; }
+  #gear:focus-visible, #giveup:focus-visible, #pause:focus-visible, #breakBtn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+
+  /* paused overlay */
+  #paused{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:.6em; opacity:0; pointer-events:none; transition:opacity .45s var(--e-std);
+    -webkit-backdrop-filter:blur(16px) saturate(.9); backdrop-filter:blur(16px) saturate(.9); background:rgba(8,12,20,.18); }
+  #paused.show{ opacity:1; pointer-events:auto; }
+  @media (prefers-reduced-transparency: reduce){ #paused{ background:rgba(20,24,32,.86); -webkit-backdrop-filter:none; backdrop-filter:none; } }
+  .paused-word{ font-weight:500; text-transform:uppercase; letter-spacing:.28em; font-size:clamp(34px,9vh,104px); color:#fff; line-height:1; }
+  .paused-grace{ font-weight:500; font-size:clamp(12px,1.5vw,16px); letter-spacing:.06em; color:var(--gold); opacity:0; transition:opacity .3s var(--e-std); }
+  .paused-grace.show{ opacity:1; }
+  /* break screen — like Paused: blurred scene, no hourglass/sound, a simple countdown + End break */
+  #breakScreen{ position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:.5em; opacity:0; pointer-events:none; transition:opacity .45s var(--e-std);
+    -webkit-backdrop-filter:blur(16px) saturate(.9); backdrop-filter:blur(16px) saturate(.9); background:rgba(8,12,20,.18); }
+  #breakScreen.show{ opacity:1; pointer-events:auto; }
+  @media (prefers-reduced-transparency: reduce){ #breakScreen{ background:rgba(20,24,32,.86); -webkit-backdrop-filter:none; backdrop-filter:none; } }
+  .break-word{ font-weight:500; text-transform:uppercase; letter-spacing:.28em; font-size:clamp(20px,4vh,44px); color:var(--gold); line-height:1; }
+  .break-time{ font-weight:300; font-variant-numeric:tabular-nums; font-size:clamp(48px,12vh,120px); color:#fff; line-height:1; letter-spacing:.01em; }
+  .end-break{ margin-top:1em; padding:.7em 1.7em; border-radius:100px; color:var(--ink); cursor:pointer;
+    font:500 clamp(12px,1.4vw,15px) Jost,sans-serif; letter-spacing:.05em; transition:transform .2s var(--e-std), background .2s; }
+  .end-break:hover{ transform:translateY(-2px); background:rgba(255,255,255,.12); }
+  #seglabel{ position:absolute; left:50%; top:clamp(20px,6vh,56px); transform:translateX(-50%); z-index:4;
+    padding:.7em 1.6em; border-radius:100px; pointer-events:none; font-weight:500; letter-spacing:.15em;
+    text-transform:uppercase; font-size:clamp(10px,1.05vw,14px); color:var(--ink);
+    background:var(--frost-bg); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+    box-shadow:inset 0 0 4px -2px #ffffff55; opacity:0; transition:opacity .4s; }
+  #seglabel.show{ opacity:1; }
+  #flip{ position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .5s; z-index:7; }
+
+  /* popcards */
+  .pop{ position:absolute; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
+    background:rgba(6,9,15,.42); -webkit-backdrop-filter:blur(18px) saturate(.92); backdrop-filter:blur(18px) saturate(.92); }
+  .pop[hidden]{ display:none; }
+  .popcard{ padding:clamp(34px,5vw,58px) clamp(38px,7vw,74px); border-radius:clamp(24px,2.8vw,36px);
+    text-align:center; max-width:min(460px,88vw);
+    background:rgba(255,255,255,.09); -webkit-backdrop-filter:blur(46px) saturate(1.25); backdrop-filter:blur(46px) saturate(1.25);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.16), 0 34px 90px -30px rgba(0,0,0,.62); }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .popcard{ background:#1a1d26f5; } }
+  .popcard-title{ font-family:'Newsreader',serif; font-weight:400; font-size:clamp(24px,3.2vw,38px); color:var(--ink-hi); letter-spacing:.01em; line-height:1.12; }
+  .popcard-sub{ font-size:clamp(13px,1.5vw,16px); color:var(--ink-dim); margin-top:.55em; line-height:1.5; }
+  .popcard-sub b{ color:var(--ink); font-weight:500; }
+  .popcard-btns{ display:flex; gap:.7em; justify-content:center; margin-top:1.9em; flex-wrap:wrap; }
+  .popcard-btns button{ font-family:inherit; font-weight:500; letter-spacing:.05em; font-size:clamp(12px,1.35vw,15px);
+    cursor:pointer; padding:.85em 1.9em; border-radius:100px; border:none; transition:background .18s, transform .1s; }
+  .popcard-btns button:active{ transform:scale(.97); }
+  .pop-primary{ background:#fff; color:#181a20; }
+  .pop-primary:hover{ background:#f1ede3; }
+  .pop-ghost{ background:rgba(255,255,255,.07); color:var(--ink); box-shadow:inset 0 0 0 1px rgba(255,255,255,.2); }
+  .pop-ghost:hover{ background:rgba(255,255,255,.13); }
+  .pop-danger{ color:#f0a98c; }
+
+  /* settings sheet */
+  .sheet-scrim{ position:absolute; inset:0; z-index:8; background:rgba(4,6,12,.5);
+    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:opacity .3s var(--e-std); }
+  .sheet-scrim.open{ opacity:1; pointer-events:auto; }
+  .sheet{ position:absolute; z-index:9; left:50%; top:50%; transform:translate(-50%,-46%) scale(.98);
+    width:min(560px,86vw); max-height:84vh; overflow:hidden; display:flex; flex-direction:column; border-radius:clamp(20px,2.4vw,32px);
+    padding:clamp(20px,2.6vw,36px); opacity:0; pointer-events:none; transition:opacity .3s var(--e-std), transform .3s var(--e-std); }
+  .sheet.open{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .sheet-scroll{ overflow-y:auto; min-height:0; flex:1 1 auto; margin-right:-6px; padding-right:6px;
+    scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.32) transparent; }
+  .sheet-scroll::-webkit-scrollbar{ width:8px; }
+  .sheet-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.24); border-radius:99px; border:2px solid transparent; background-clip:padding-box; }
+  .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-grp); flex:none; }
+  .sheet-head h3{ font-weight:400; font-size:clamp(13px,1.5vw,20px); letter-spacing:.02em; }
+  .sheet-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.08); border:none; color:var(--ink); font-size:18px; cursor:pointer; }
+  .sec{ margin-bottom:var(--sp-grp); }
+  .sec>.mini-lbl{ display:block; margin-bottom:.7em; }
+  .mini-lbl{ font-weight:500; letter-spacing:.2em; text-transform:uppercase; font-size:var(--t-sm); opacity:.8; }
+  .chip{ font-family:inherit; font-weight:400; font-size:var(--t-md); color:var(--ink); cursor:pointer;
+    padding:var(--ctrl-y) var(--ctrl-x); border-radius:100px; background:var(--frost-bg);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); border:none; transition:background .18s,color .18s; white-space:nowrap; }
+  .chip:hover{ background:rgba(255,255,255,.16); }
+  .chip.on{ background:#fff; color:#181a20; font-weight:500; box-shadow:0 1px 6px rgba(0,0,0,.18); }
+  .chip:disabled{ opacity:.32; cursor:not-allowed; }
+  .tokens{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-in); }
+  .tokens .chip{ width:100%; text-align:center; }
+  .mini-seg{ display:flex; background:rgba(255,255,255,.06); border-radius:100px; padding:calc(var(--sq)*.005); flex:none; }
+  .mini-seg button{ font-family:inherit; font-size:var(--t-sm); color:var(--ink-dim); cursor:pointer;
+    padding:calc(var(--ctrl-y)*.75) .85em; border-radius:100px; background:none; border:none; white-space:nowrap; }
+  .mini-seg button.on{ color:#181a20; background:#fff; font-weight:500; }
+  .mini-seg button:disabled{ opacity:.32; cursor:not-allowed; }
+  .sheet input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:calc(var(--sq)*.009); border-radius:99px;
+    background:linear-gradient(to right,var(--gold) var(--fill,100%),var(--track) var(--fill,100%)); outline:none; }
+  .sheet input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:calc(var(--sq)*.032); height:calc(var(--sq)*.032);
+    border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:pointer; }
+  .sheet input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var(--sq)*.032); border:none; border-radius:50%;
+    background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:pointer; }
+  .sound-vol{ margin-top:var(--sp-grp); }
+  .vol-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6em; }
+  .vol-head .mini-lbl{ opacity:.6; }
+  .vol-head .pct{ font-variant-numeric:tabular-nums; font-size:var(--t-md); opacity:.9; }
+  .mix-row{ display:flex; align-items:center; gap:.7em; margin-top:.6em; }
+  .mix-row .mr-k{ width:6.2em; flex:none; font-size:var(--t-sm); color:#fff; }
+  .mix-row input[type=range]{ flex:1; }
+  .mix-row .mr-v{ width:2.8em; flex:none; text-align:right; font-variant-numeric:tabular-nums; font-size:var(--t-xs); opacity:.7; }
+  #sessMixRows{ margin-top:var(--sp-in); }
+  .set-lbl{ font-size:var(--t-sm); color:var(--ink-dim); }
+  .sec-row2{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-in); margin-top:var(--sp-in); }
+  .swatches{ display:flex; align-items:center; gap:.5em; }
+  .sw-c{ width:1.5em; height:1.5em; border-radius:50%; border:none; cursor:pointer; padding:0; flex:none; box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); position:relative; }
+  .sw-c.on{ box-shadow:0 0 0 2px var(--gold); }
+  .sw-custom{ overflow:hidden; display:inline-flex; background:conic-gradient(from 90deg,#e6a6b0,#eaca78,#a7d18f,#8fb7e0,#b99ce6,#e6a6b0); }
+  .sw-custom input[type=color]{ position:absolute; inset:-30%; width:160%; height:160%; border:none; padding:0; background:none; cursor:pointer; opacity:0; }
+  .tod-opts{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-in); margin-top:.6em; }
+  .todo{ background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:.4em; padding:0; color:var(--ink); }
+  .todo .dot{ width:calc(var(--sq)*.088); aspect-ratio:1; border-radius:50%; background-size:cover; background-position:50% 50%; box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); transition:box-shadow .2s,transform .15s; }
+  .todo.on .dot{ box-shadow:0 0 0 2px var(--gold); transform:scale(1.04); }
+  .todo .cap{ font-weight:400; font-size:var(--t-xs); opacity:.9; white-space:nowrap; }
+  .todo.on .cap{ opacity:1; }
+  .dot.follow{ background:conic-gradient(from 210deg,#1a2440,#3a4d78 25%,#e6a86b 50%,#7db4e6 62%,#2a3350 88%,#1a2440); }
+  .hidden-time{ text-align:center; font-weight:500; font-variant-numeric:tabular-nums; font-size:clamp(28px,4vw,44px); color:var(--ink); margin-bottom:var(--sp-grp); }
+  .hidden-time[hidden]{ display:none; }
+
+  /* dev number tuner */
+  #numEditToggle{ position:absolute; right:12px; bottom:12px; z-index:8; font:600 11px Jost,sans-serif; color:#cfd6e2; background:#1a1f2acc; border:1px solid #ffffff22; border-radius:8px; padding:6px 10px; cursor:pointer; }
+  #numEditor{ position:absolute; right:12px; top:12px; z-index:9; width:212px; padding:12px; background:#0f131bf2; border:1px solid #ffffff22; border-radius:12px; color:#cfd6e2; font:11px/1.5 Jost,sans-serif; }
+  #numEditor[hidden], #numEditToggle[hidden]{ display:none; }
+  #numEditor .ne-modes{ display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:6px; }
+  #numEditor .ne-modes button{ font:600 11px Jost,sans-serif; color:#aeb6c4; background:#ffffff10; border:1px solid #ffffff1a; border-radius:7px; padding:6px 4px; cursor:pointer; }
+  #numEditor .ne-modes button.on{ color:#141414; background:#EACA78; border-color:#EACA78; }
+  #numEditor label{ display:block; margin:9px 0 2px; letter-spacing:.04em; text-transform:uppercase; font-size:10px; color:#8b95a6; }
+  #numEditor label span{ color:#EACA78; font-weight:600; }
+  #numEditor input[type=range]{ width:100%; accent-color:#EACA78; margin-top:3px; }
+  #numEditor .ne-foot{ display:flex; gap:6px; margin-top:11px; }
+  #numEditor .ne-foot button{ flex:1; font:600 10px Jost,sans-serif; color:#cfd6e2; background:#ffffff12; border:1px solid #ffffff1a; border-radius:7px; padding:6px; cursor:pointer; }
+  #numEditor pre{ margin:10px 0 0; padding:8px; background:#00000055; border-radius:7px; font:10px/1.4 ui-monospace,Consolas,monospace; color:#9fb0c8; white-space:pre-wrap; word-break:break-word; max-height:150px; overflow:auto; }
+</style>
+
+<style is:global>
+  /* Sheet controls built in JS (createElement) never receive Astro's scope attribute, so their styles must be
+     GLOBAL (prefixed .session-screen) or they render unstyled — the tokens, scene tiles + mixer sliders. The
+     CSS vars are inherited from the scoped .session-screen container. Mirrors the Setup screen's approach. */
+  .session-screen .chip{ font-family:inherit; font-weight:400; font-size:var(--t-md); color:var(--ink); cursor:pointer;
+    padding:var(--ctrl-y) var(--ctrl-x); border-radius:100px; background:var(--frost-bg);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); border:none; transition:background .18s,color .18s; white-space:nowrap; }
+  .session-screen .chip:hover{ background:rgba(255,255,255,.16); }
+  .session-screen .chip.on{ background:#fff; color:#181a20; font-weight:500; box-shadow:0 1px 6px rgba(0,0,0,.18); }
+  .session-screen .chip:disabled{ opacity:.32; cursor:not-allowed; }
+  .session-screen .tokens .chip{ width:100%; text-align:center; }
+  .session-screen .mix-row{ display:flex; align-items:center; gap:.7em; margin-top:.6em; }
+  .session-screen .mix-row .mr-k{ width:6.2em; flex:none; font-size:var(--t-sm); color:#fff; }
+  .session-screen .mix-row .mr-v{ width:2.8em; flex:none; text-align:right; font-variant-numeric:tabular-nums; font-size:var(--t-xs); opacity:.7; }
+  .session-screen .sheet input[type=range], .session-screen .mix-row input[type=range]{ -webkit-appearance:none; appearance:none;
+    width:100%; height:calc(var(--sq)*.009); border-radius:99px; flex:1;
+    background:linear-gradient(to right,var(--gold) var(--fill,100%),var(--track) var(--fill,100%)); outline:none; }
+  .session-screen .sheet input[type=range]::-webkit-slider-thumb, .session-screen .mix-row input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:calc(var(--sq)*.032); height:calc(var(--sq)*.032); border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:pointer; }
+  .session-screen .sheet input[type=range]::-moz-range-thumb, .session-screen .mix-row input[type=range]::-moz-range-thumb{
+    width:calc(var(--sq)*.032); height:calc(var(--sq)*.032); border:none; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); cursor:pointer; }
+  .session-screen .todo{ background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:.4em; padding:0; color:var(--ink); }
+  .session-screen .todo .dot{ width:calc(var(--sq)*.088); aspect-ratio:1; border-radius:50%; background-size:cover; background-position:50% 50%; box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); transition:box-shadow .2s,transform .15s; }
+  .session-screen .todo.on .dot{ box-shadow:0 0 0 2px var(--gold); transform:scale(1.04); }
+  .session-screen .todo .cap{ font-weight:400; font-size:var(--t-xs); opacity:.9; white-space:nowrap; }
+  .session-screen .todo.on .cap{ opacity:1; }
+  .session-screen .dot.follow{ background:conic-gradient(from 210deg,#1a2440,#3a4d78 25%,#e6a86b 50%,#7db4e6 62%,#2a3350 88%,#1a2440); }
+</style>
+
+<script is:inline define:vars={{ PHASES }}>
+(function(){
+  var TUNE = /[?&]tune\b/.test(location.search);
+  if(TUNE) window.__numTuneMode = true;
+  var $=function(id){ return document.getElementById(id); };
+  var scr=$('sessionScreen'), pauseBtn=$('pause'), intentTop=$('intentTop'), giveupBtn=$('giveup'),
+      seglabel=$('seglabel'), pausedEl=$('paused'), pauseGrace=$('pauseGrace'), flipEl=$('flip'), breakBtn=$('breakBtn'),
+      giveupConfirm=$('giveupConfirm'), doneCard=$('doneCard'), sessionOver=$('sessionOver'), doneMin=$('doneMin'),
+      hiddenTime=$('hiddenTime'), setScrim=$('setScrim'), setSheet=$('setSheet'),
+      breakScreen=$('breakScreen'), breakTime=$('breakTime');
+  var started=false, curCfg=null, guardActive=false, wakeLockObj=null, _hasBreaks=false, _onBreak=false;
+
+  function fmtMin(sec){ var m=Math.max(0,Math.round(sec/60)); if(m<60) return m+'m'; var h=Math.floor(m/60), r=m%60; return h+'h'+(r?' '+r+'m':''); }
+  function fmt2(n){ return (n<10?'0':'')+n; }
+  function mmss(sec){ var s=Math.max(0,Math.floor(sec)); return fmt2(Math.floor(s/60)%100)+':'+fmt2(s%60); }   // floored mm:ss
+  function planFromCfg(cfg){
+    if(cfg.mode==='endless'){                                        // loop the chosen block [focus, break] forever
+      var ef=Math.max(1,(cfg.pomoFocus||25))*60, eb=Math.max(0,(cfg.pomoBreak!=null?cfg.pomoBreak:5))*60;
+      return eb>0 ? [{kind:'focus',dur:ef},{kind:'rest',dur:eb}] : [{kind:'focus',dur:ef}];
+    }
+    if(!window.Plan) return [{ kind:'focus', dur:(cfg.flowMin||25)*60 }];
+    return window.Plan.buildPlan(cfg).map(function(s){ return { kind:s.kind, dur:Math.max(1, Math.round(s.min*60)) }; });
+  }
+
+  // ── "Light through your session" — progress the sky over session time (matches scene.js schedule) ──
+  var PH_HOUR=[5.4,6.4,12.0,18.0,19.0,1.0];   // representative hour per phase (pre-dawn..midnight)
+  // Witness WINDOW per phase [startHour → endHour]: a single picked phase drifts across this over the session, so
+  // you SEE the phase happen from its start (sunrise begins at the pre-dawn edge; sunset begins as the sun leaves
+  // midday and descends — not after it's already set). Midnight wraps past 24.
+  var PH_SPAN=[[3.5,6.1],[5.0,8.2],[8.2,16.5],[16.3,18.8],[18.2,19.6],[20.0,28.5]];
+  var PH_IDX={ 'pre-dawn':0,'sunrise':1,'midday':2,'sunset':3,'twilight':4,'midnight':5 };
+  var cycleKeys=null, cycleLoopT=0;            // keypoints [{t(sec),hour}] + loop period (0 = no loop)
+  function spanDrift(ph, T){ var sp=PH_SPAN[((ph%6)+6)%6]; cycleKeys=[{t:0,hour:sp[0]},{t:Math.max(1,T),hour:sp[1]}]; }
+  function buildCycle(cfg, plan){
+    cycleKeys=null; cycleLoopT=0;
+    var c=cfg.cycle, endless=(cfg.mode==='endless');
+    var T = endless ? 3600 : plan.reduce(function(a,s){ return a+s.dur; }, 0);   // endless: drift over ~1h then hold the end
+    // FOLLOW — live clock
+    if((!c && cfg.followDay) || (c && c.preset==='follow' && cfg.followDay!==false)) return { kind:'follow' };
+    var seq = c ? (c.seq||[]).map(function(id){ return PH_IDX[id]!=null ? PH_IDX[id] : 2; }) : [];
+    // SINGLE PHASE — a Time-of-day pick, 'hold', or a 1-item cycle → drift through its witness window
+    var single=null;
+    if(c && c.preset==='hold' && seq.length) single=seq[0];
+    else if((!c || c.preset==='follow') && cfg.followDay===false) single=(cfg.phase|0);
+    else if(c && c.preset!=='follow' && seq.length===1) single=seq[0];
+    if(single!=null){ spanDrift(single, T); return { kind:'seq' }; }
+    if(!seq.length) return { kind:'follow' };
+    // SEQUENCE — Into the day / night, A whole day, custom
+    var change=c.change||'once', by=c.by||'cycles', repeat=c.repeat||2, minutes=c.minutes||30, n=seq.length;
+    var Tn = endless ? null : T, durs=[];
+    if(change==='once' && Tn){ for(var i=0;i<n;i++) durs.push(Tn/n); }
+    else if(by==='cycles' && Tn){ var m=n*repeat; for(var j=0;j<m;j++) durs.push(Tn/m); }
+    else if(by==='minutes'){ var span=minutes*60;
+      if(Tn){ var left=Tn,k=0; while(left>0 && k<256){ durs.push(Math.min(left,span)); left-=span; k++; } }
+      else { for(var q=0;q<n;q++) durs.push(span); cycleLoopT=n*span; } }              // endless: loop the sequence
+    else if(by==='breaks' && Tn){ var b=Math.max(1, plan.filter(function(s){return s.kind==='rest';}).length+1); for(var w=0;w<b;w++) durs.push(Tn/b); }
+    else if(Tn){ for(var z=0;z<n;z++) durs.push(Tn/n); }                                // fallback = once
+    else { spanDrift(seq[0], T); return { kind:'seq' }; }                                // endless seq w/o time basis → drift first phase
+    // keypoints: unwrapped, monotonically-forward hour at each segment boundary (day moves forward through midnight)
+    var keys=[{ t:0, hour:PH_HOUR[seq[0]] }], t=0, prevH=PH_HOUR[seq[0]];
+    for(var s2=0;s2<durs.length;s2++){ t+=durs[s2]; var h=PH_HOUR[seq[(s2+1)%n]]; while(h<prevH) h+=24; keys.push({ t:t, hour:h }); prevH=h; }
+    cycleKeys=keys;
+    return { kind:'seq' };
+  }
+  function dayHourAt(elapsed){
+    if(!cycleKeys) return null;
+    var e = cycleLoopT>0 ? (elapsed % cycleLoopT) : elapsed, k=cycleKeys;
+    if(e<=k[0].t) return k[0].hour;
+    for(var i=1;i<k.length;i++){ if(e<=k[i].t){ var a=k[i-1],b=k[i]; return a.hour+(b.hour-a.hour)*((e-a.t)/((b.t-a.t)||1)); } }
+    return k[k.length-1].hour;
+  }
+  var segT=null;
+  function showSeg(t){ seglabel.textContent=t; seglabel.classList.add('show'); clearTimeout(segT); segT=setTimeout(function(){ seglabel.classList.remove('show'); }, 2200); }
+  function hidePops(){ giveupConfirm.hidden=true; doneCard.hidden=true; sessionOver.hidden=true; }
+
+  // ── completion / segment poll ──
+  var pollT=null, shownDone=false, lastKind=null;
+  function startPoll(){ stopPoll(); shownDone=false; lastKind=null; pollT=setInterval(poll,250); }
+  function stopPoll(){ if(pollT){ clearInterval(pollT); pollT=null; } }
+  function poll(){
+    if(!window.SustainScene) return;
+    var r=window.SustainScene.sampleSession();
+    if(cycleKeys){ var h=dayHourAt(r.totalFocusSec); if(h!=null) window.SustainScene.setDayHour(h); }   // progress the sky through the cycle
+    // Break = its OWN blurred screen (no hourglass, no sound) with a simple countdown; hides the Break button.
+    var onBreak = (r.kind==='rest' && !r.done);
+    if(onBreak!==_onBreak){
+      _onBreak=onBreak;
+      breakScreen.classList.toggle('show', onBreak);
+      breakScreen.setAttribute('aria-hidden', onBreak?'false':'true');
+      document.documentElement.classList.toggle('on-break', onBreak);   // hide the scene numerals (the break screen is the only timer)
+      breakBtn.hidden = onBreak || !_hasBreaks;
+      pauseBtn.hidden = onBreak;                                     // a break can NEVER be paused — only End break
+      if(onBreak){ pauseBtn.classList.remove('paused'); pauseBtn.setAttribute('aria-pressed','false'); pausedEl.classList.remove('show'); }
+      if(window.SustainAudio){ if(lastKind!==null) window.SustainAudio.cue(); window.SustainAudio.mute(onBreak); }   // silent during break; bell on the boundary
+      if(!onBreak) wake();
+    }
+    if(onBreak) breakTime.textContent = mmss(r.remainingSec);
+    if(curCfg && curCfg.vis==='hidden' && !onBreak){ hiddenTime.hidden=false; hiddenTime.textContent=mmss(r.remainingSec); }
+    else hiddenTime.hidden=true;
+    lastKind=r.kind;
+    if(r.done && !shownDone){ shownDone=true; if(window.SustainAudio) window.SustainAudio.cue(); doneMin.textContent=fmtMin(r.focusSec); doneCard.hidden=false; }
+  }
+
+  // ── navigation guard ──
+  // Trap Back/swipe: keep a 2-deep buffer so a rapid double-back can't pop past it into a real page unload.
+  window.addEventListener('popstate', function(){ if(!guardActive) return; history.pushState(null,'','#session'); history.pushState(null,'','#session'); showSeg('Use “Give up” to end your session'); });
+  window.addEventListener('beforeunload', function(e){ if(guardActive){ e.preventDefault(); e.returnValue=''; } });
+
+  // ── wake lock ──
+  function requestWakeLock(){ if(!('wakeLock' in navigator)) return; navigator.wakeLock.request('screen').then(function(w){ wakeLockObj=w; }).catch(function(){}); }
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible' && started){ requestWakeLock(); } });
+
+  function startFromCfg(cfg){
+    var plan = planFromCfg(cfg);
+    var cyc = buildCycle(cfg, plan);                                  // "Light through your session"
+    if(cyc.kind==='follow') window.SustainScene.setDay('follow');
+    else if(cyc.kind==='hold') window.SustainScene.setDay(cyc.phase);
+    else { var h0=dayHourAt(0); if(h0!=null) window.SustainScene.setDayHour(h0); }   // 'seq'/drift: set the start now (no flash), poll continues it
+    window.SustainScene.setSunMoon((cfg.sunmoon||'show')==='show');
+    window.SustainScene.setNumStyle(cfg);
+    window.SustainScene.setTimerVis(cfg.vis || 'always');
+    window.SustainScene.startSession(plan, cfg.mode==='endless');
+    if(window.SustainAudio){ window.SustainAudio.set(cfg); window.SustainAudio.cue(); }
+    if(cfg.intention){ intentTop.textContent=cfg.intention; intentTop.hidden=false; } else intentTop.hidden=true;
+    _hasBreaks = plan.some(function(s){ return s.kind==='rest'; });   // pomodoro/custom/endless-block all have breaks
+    _onBreak = false; breakScreen.classList.remove('show'); pauseBtn.hidden=false; document.documentElement.classList.remove('on-break');
+    breakBtn.hidden = !_hasBreaks;                                     // Break only when the plan has breaks
+    giveupBtn.textContent = (cfg.mode==='endless') ? 'End' : 'Give up';                                // endless ends, others give up
+    giveupBtn.setAttribute('aria-label', (cfg.mode==='endless') ? 'End session' : 'Give up');
+    pauseBtn.classList.remove('paused'); pauseBtn.setAttribute('aria-pressed','false'); pausedEl.classList.remove('show');
+    endPauseWatch(); hidePops(); startPoll(); syncSheetUI(); requestWakeLock(); wake();
+  }
+  function begin(){
+    if(started) return;
+    // Armed one-shot FIRST (needs no scene): a reload / stale / direct entry isn't armed → session over popcard.
+    if(sessionStorage.getItem('sustain.armed')!=='1'){ hidePops(); sessionOver.hidden=false; return; }
+    if(!window.SustainScene){ setTimeout(begin, 60); return; }   // scene module still loading on a fresh page → retry
+    sessionStorage.removeItem('sustain.armed');
+    var cfg; try{ cfg=JSON.parse(localStorage.getItem('sustain.session')||'null'); }catch(e){ cfg=null; }
+    if(!cfg){ sessionOver.hidden=false; return; }
+    curCfg=cfg; startFromCfg(cfg);
+    if(!TUNE){ guardActive=true; history.pushState(null,'','#session'); history.pushState(null,'','#session'); }   // 2-deep back buffer
+    started=true;
+  }
+  function releaseWake(){ if(wakeLockObj){ wakeLockObj.release().catch(function(){}); wakeLockObj=null; } }
+  function exitToSetup(){
+    guardActive=false; endPauseWatch(); stopPoll(); hidePops(); closeSheet(); document.documentElement.classList.remove('on-break'); breakScreen.classList.remove('show');
+    if(window.SustainScene) window.SustainScene.endSession();
+    if(window.SustainAudio) window.SustainAudio.stop();
+    releaseWake(); started=false; location.hash='setup';
+  }
+  function leave(){
+    if(!started) return;
+    if(window.SustainScene) window.SustainScene.endSession();
+    if(window.SustainAudio) window.SustainAudio.stop();
+    endPauseWatch(); stopPoll(); releaseWake(); guardActive=false; started=false; hidePops(); closeSheet(); document.documentElement.classList.remove('on-break'); breakScreen.classList.remove('show');
+  }
+
+  // ── pause (+ 3min cap / 15s grace) ──
+  var PAUSE_CAP=180000, PAUSE_GRACE=15000, pausedAt=null, pauseWatch=null;
+  function endPauseWatch(){ if(pauseWatch){ clearInterval(pauseWatch); pauseWatch=null; } pausedAt=null; pauseGrace.classList.remove('show'); }
+  function checkCap(){
+    var el=Date.now()-pausedAt;
+    if(el>=PAUSE_CAP+PAUSE_GRACE){ exitToSetup(); return; }
+    if(el>=PAUSE_CAP){ pauseGrace.textContent='Resume now · '+Math.ceil((PAUSE_CAP+PAUSE_GRACE-el)/1000)+'s to keep your session'; pauseGrace.classList.add('show'); }
+    else pauseGrace.classList.remove('show');
+  }
+  function setPaused(paused){
+    if(paused){ pauseBtn.classList.add('paused'); pauseBtn.setAttribute('aria-pressed','true'); pausedEl.classList.add('show');
+      breakBtn.hidden=true;                                     // no Break control while paused
+      if(window.SustainAudio) window.SustainAudio.mute(true); pausedAt=Date.now(); pauseWatch=setInterval(checkCap,500); wake(); }
+    else { pauseBtn.classList.remove('paused'); pauseBtn.setAttribute('aria-pressed','false'); pausedEl.classList.remove('show');
+      breakBtn.hidden = !_hasBreaks || _onBreak;                // restore Break (unless the mode has none / on break)
+      if(window.SustainAudio) window.SustainAudio.mute(false); endPauseWatch(); wake(); }
+  }
+  function togglePause(){ if(!window.SustainScene) return; var running=window.SustainScene.togglePauseSession(); setPaused(!running); }
+  pauseBtn.addEventListener('click', togglePause);
+  pausedEl.addEventListener('click', function(){ if(pausedAt!=null) togglePause(); });
+
+  // ── give-up / done / again / session-over ──
+  giveupBtn.addEventListener('click', function(){ giveupConfirm.hidden=false; });
+  $('gcKeep').addEventListener('click', function(){ giveupConfirm.hidden=true; });
+  $('gcGive').addEventListener('click', exitToSetup);
+  $('doneEnd').addEventListener('click', exitToSetup);
+  $('again').addEventListener('click', function(){ if(curCfg) startFromCfg(curCfg); });
+  $('soSetup').addEventListener('click', function(){ guardActive=false; hidePops(); location.hash='setup'; });
+  // Break: take the NEXT scheduled break early (poll then shows the break screen). Only for plans with breaks.
+  breakBtn.addEventListener('click', function(){ if(window.SustainScene) window.SustainScene.skipToBreak(); });
+  $('endBreakBtn').addEventListener('click', function(){ if(window.SustainScene) window.SustainScene.skipBreak(); });   // end the rest early
+
+  // ── chrome idle-fade ──
+  var idleT=null;
+  function wake(){ scr.classList.add('active'); clearTimeout(idleT); idleT=setTimeout(function(){ if(pausedAt==null) scr.classList.remove('active'); }, 3200); }
+  scr.addEventListener('pointermove', wake); scr.addEventListener('pointerdown', wake);
+
+  // ══════════ settings sheet ══════════
+  var SOUND_LABEL={ sand:'Sand', ocean:'Ocean', breeze:'Shore breeze', birds:'Seabirds' };
+  function saveCfg(){ if(curCfg) localStorage.setItem('sustain.session', JSON.stringify(curCfg)); }
+  function openSheet(){ if(!curCfg) return; syncSheetUI(); setScrim.classList.add('open'); setSheet.classList.add('open'); }
+  function closeSheet(){ setScrim.classList.remove('open'); setSheet.classList.remove('open'); }
+  $('gear').addEventListener('click', openSheet);
+  $('setClose').addEventListener('click', closeSheet);
+  setScrim.addEventListener('click', closeSheet);
+
+  // sound tokens + mixer
+  function buildTokens(){
+    var box=$('sessTokens'); box.innerHTML='';
+    ['sand','ocean','breeze','birds'].forEach(function(id){
+      var b=document.createElement('button'); b.className='chip'; b.textContent=SOUND_LABEL[id]; b.dataset.id=id;
+      b.addEventListener('click', function(){
+        var on=(curCfg.sounds||[]).indexOf(id)>=0;
+        if(on) curCfg.sounds=curCfg.sounds.filter(function(x){ return x!==id; });
+        else { curCfg.sounds=(curCfg.sounds||[]).slice(); curCfg.sounds.push(id); }
+        b.classList.toggle('on', !on);
+        if(window.SustainAudio) window.SustainAudio.toggle(id, !on);
+        buildMix(); saveCfg();
+      });
+      box.appendChild(b);
+    });
+  }
+  function buildMix(){
+    var box=$('sessMixRows'); box.innerHTML='';
+    (curCfg.sounds||[]).forEach(function(id){
+      var v=(curCfg.soundVol&&curCfg.soundVol[id]!=null)?curCfg.soundVol[id]:100;
+      var row=document.createElement('div'); row.className='mix-row';
+      row.innerHTML='<span class="mr-k">'+SOUND_LABEL[id]+'</span><input type="range" min="0" max="100" value="'+v+'"><span class="mr-v">'+v+'%</span>';
+      var rng=row.querySelector('input'), val=row.querySelector('.mr-v');
+      rng.style.setProperty('--fill', v+'%');
+      rng.addEventListener('input', function(){
+        var nv=+rng.value; val.textContent=nv+'%'; rng.style.setProperty('--fill', nv+'%');
+        curCfg.soundVol=curCfg.soundVol||{}; curCfg.soundVol[id]=nv;
+        if(window.SustainAudio) window.SustainAudio.setMix(id, nv); saveCfg();
+      });
+      box.appendChild(row);
+    });
+  }
+  $('sessVol').addEventListener('input', function(){
+    var v=+this.value; curCfg.vol=v; $('sessVolPct').textContent=v+'%'; this.style.setProperty('--fill', v+'%');
+    if(window.SustainAudio) window.SustainAudio.setMaster(v); saveCfg();
+  });
+
+  // mini-seg controls (vis / place / fill / font / sep / auto)
+  function applyLook(){ if(window.SustainScene){ window.SustainScene.setNumStyle(curCfg); window.SustainScene.setTimerVis(curCfg.vis||'always'); } }
+  function segSet(seg, v){
+    if(seg==='vis') curCfg.vis=v;
+    else if(seg==='place'){ curCfg.place=v; }
+    else if(seg==='fill') curCfg.fill=v;
+    else if(seg==='font') curCfg.font=v;
+    else if(seg==='sep') curCfg.sep=v;
+    else if(seg==='auto') curCfg.autoContrast=(v==='on');
+    applyLook(); syncSheetUI(); saveCfg();
+  }
+  Array.prototype.forEach.call(setSheet.querySelectorAll('.mini-seg'), function(mseg){
+    mseg.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||b.disabled) return; segSet(mseg.dataset.seg, b.dataset.v); });
+  });
+  // colour
+  Array.prototype.forEach.call($('sessSwatches').querySelectorAll('.sw-c[data-c]'), function(sw){
+    sw.addEventListener('click', function(){ curCfg.color=sw.dataset.c; $('colorPick').value=sw.dataset.c; applyLook(); syncSheetUI(); saveCfg(); });
+  });
+  $('colorPick').addEventListener('input', function(){ curCfg.color=this.value; applyLook(); syncSheetUI(); saveCfg(); });
+  // scene (time of day)
+  function buildTod(){
+    var box=$('sessTod'); box.innerHTML='';
+    var PH_LABEL=['Pre-dawn','Sunrise','Midday','Sunset','Twilight','Midnight'];   // match Setup's Time-of-day labels
+    var opts=[{k:'follow',cap:'Follow my day'}];
+    PHASES.forEach(function(p,i){ opts.push({k:i,cap:PH_LABEL[i]}); });
+    opts.forEach(function(o){
+      var btn=document.createElement('button'); btn.className='todo'; btn.dataset.k=String(o.k);
+      var dot=document.createElement('span'); dot.className='dot'+(o.k==='follow'?' follow':'');
+      if(o.k!=='follow') dot.style.backgroundImage='url(/plates-phases/'+PHASES[o.k]+'.webp)';
+      var cap=document.createElement('span'); cap.className='cap'; cap.textContent=o.cap;
+      btn.appendChild(dot); btn.appendChild(cap);
+      btn.addEventListener('click', function(){
+        if(o.k==='follow'){ curCfg.followDay=true; } else { curCfg.followDay=false; curCfg.phase=o.k; }
+        curCfg.cycle=null; cycleKeys=null; cycleLoopT=0;                  // a direct sheet pick stops any running drift (else the poll reverts it)
+        if(window.SustainScene) window.SustainScene.setDay(curCfg.followDay?'follow':(curCfg.phase|0));
+        syncSheetUI(); saveCfg();
+      });
+      box.appendChild(btn);
+    });
+  }
+  function markSeg(seg, val){
+    Array.prototype.forEach.call(setSheet.querySelectorAll('.mini-seg[data-seg="'+seg+'"] button'), function(b){ b.classList.toggle('on', b.dataset.v===val); });
+  }
+  function syncSheetUI(){
+    if(!curCfg) return;
+    // sound
+    Array.prototype.forEach.call($('sessTokens').children, function(b){ b.classList.toggle('on', (curCfg.sounds||[]).indexOf(b.dataset.id)>=0); });
+    var mv=curCfg.vol!=null?curCfg.vol:100; $('sessVol').value=mv; $('sessVol').style.setProperty('--fill', mv+'%'); $('sessVolPct').textContent=mv+'%';
+    buildMix();
+    // number look
+    markSeg('vis', curCfg.vis||'always'); markSeg('place', curCfg.place||'middle'); markSeg('fill', curCfg.fill||'solid');
+    markSeg('font', curCfg.font||"'Newsreader',serif");
+    // separator: enforce the per-mode rule in the UI (middle/ledge → none; top/horizon → colon|dot)
+    var noSep=(curCfg.place==='middle'||curCfg.place==='ledge');
+    var effSep = noSep ? 'none' : ((curCfg.sep==='dot')?'dot':'colon');
+    Array.prototype.forEach.call(setSheet.querySelectorAll('.mini-seg[data-seg="sep"] button'), function(b){
+      var isNone=b.dataset.v==='none'; b.disabled = noSep ? !isNone : isNone; b.classList.toggle('on', b.dataset.v===effSep);
+    });
+    markSeg('auto', (curCfg.autoContrast!==false)?'on':'off');
+    // colour
+    if($('colorPick')) $('colorPick').value=curCfg.color||'#ffffff';
+    Array.prototype.forEach.call($('sessSwatches').querySelectorAll('.sw-c[data-c]'), function(sw){ sw.classList.toggle('on', (sw.dataset.c||'').toLowerCase()===(curCfg.color||'').toLowerCase()); });
+    // scene
+    Array.prototype.forEach.call($('sessTod').children, function(b){ var on = curCfg.followDay ? b.dataset.k==='follow' : b.dataset.k===String(curCfg.phase|0); b.classList.toggle('on', on); });
+  }
+  buildTokens(); buildTod();
+
+  var _inited=false;
+  function onHash(){
+    var on = location.hash==='#session';
+    // The session is reachable ONLY via Begin. Backing/swiping INTO a spent #session (not armed, not running)
+    // bounces to Home — never re-enters the session. (A page RELOAD on #session still shows the ended popcard.)
+    if(on && !started && _inited && sessionStorage.getItem('sustain.armed')!=='1'){ _inited=true; location.replace('#home'); return; }
+    scr.classList.toggle('on', on); scr.setAttribute('aria-hidden', on?'false':'true');
+    if(on) begin(); else leave();
+    _inited=true;
+  }
+  addEventListener('hashchange', onHash);
+  onHash();
+
+  // ── DEV number tuner (opt-in via ?tune) ──
+  if(TUNE){
+    var neTog=$('numEditToggle'), nePanel=$('numEditor'), neY=$('neY'), neS=$('neS'), neYv=$('neYv'), neSv=$('neSv'), neOut=$('neOut'),
+        frameEl=$('frame'), cur='middle';
+    neTog.hidden=false;
+    var refreshOut=function(){ if(window.SustainScene) neOut.textContent=JSON.stringify(window.SustainScene.numState(),null,1); };
+    var loadPlace=function(p){ cur=p; var st=window.SustainScene.numState()[p];
+      neY.value=st.dy; neS.value=st.size; neYv.textContent=(+st.dy).toFixed(1); neSv.textContent=(+st.size).toFixed(1);
+      Array.prototype.forEach.call(nePanel.querySelectorAll('.ne-modes button'), function(b){ b.classList.toggle('on', b.dataset.place===p); }); };
+    var selectPlace=function(p){ window.SustainScene.editNum(p,null,null); loadPlace(p); refreshOut(); };
+    neTog.addEventListener('click', function(){ nePanel.hidden=!nePanel.hidden; if(!nePanel.hidden){ window.SustainScene.setTimerVis('always'); loadPlace((frameEl&&frameEl.dataset.place)||'middle'); refreshOut(); } });
+    Array.prototype.forEach.call(nePanel.querySelectorAll('.ne-modes button'), function(b){ b.addEventListener('click', function(){ selectPlace(b.dataset.place); }); });
+    neY.addEventListener('input', function(){ neYv.textContent=(+this.value).toFixed(1); window.SustainScene.editNum(cur,null,+this.value); refreshOut(); });
+    neS.addEventListener('input', function(){ neSv.textContent=(+this.value).toFixed(1); window.SustainScene.editNum(cur,+this.value,null); refreshOut(); });
+    $('neCopy').addEventListener('click', function(){ if(navigator.clipboard) navigator.clipboard.writeText(neOut.textContent); var t=this; t.textContent='Copied'; setTimeout(function(){ t.textContent='Copy JSON'; },900); });
+    $('neReset').addEventListener('click', function(){ localStorage.removeItem('sustain.numTune'); selectPlace(cur); });
+  }
+})();
+</script>

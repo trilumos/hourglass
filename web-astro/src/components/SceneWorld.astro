@@ -9,9 +9,13 @@
 
 <div id="stage"><div id="frame">
   <canvas id="glitter"></canvas>
+  <div id="nums">
+    <span id="mm" class="clocknum">25</span>
+    <span id="sep" class="clocknum"></span>
+    <span id="ss" class="clocknum">00</span>
+  </div>
+  <canvas id="occ"></canvas>
   <canvas id="sand"></canvas>
-  <span id="mm" class="clocknum">25</span>
-  <span id="ss" class="clocknum">00</span>
 </div></div>
 
 <div id="err"></div>
@@ -407,9 +411,28 @@
               font-family: ui-sans-serif, system-ui, sans-serif; }
   /* cover fills the viewport; fit() positions the frame — centred horizontally, vertical crop anchored by
      SCENE_OY (0.5 = session's object-position:50% 50%). Overflow is clipped by #stage. */
-  #stage { position:fixed; inset:0; overflow:hidden; }
-  #frame { position:absolute; }
-  #glitter, #sand { position:absolute; inset:0; display:block; }
+  /* blur-up placeholder (instant, no black screen) behind the scene; index.astro sets its image + fades it out */
+  #lqip { position:fixed; inset:0; z-index:0; background-size:cover; background-position:50% 94%;
+          filter:blur(26px) saturate(1.04); transform:scale(1.12); pointer-events:none; transition:opacity .7s ease .1s; }
+  :root.scene-ready #lqip { opacity:0; }
+  /* scene hidden until the current plate is decoded (scene.js adds .scene-ready) — reveals over the placeholder */
+  #stage { position:fixed; inset:0; overflow:hidden; z-index:1; opacity:0; transition:opacity .5s ease; }
+  :root.scene-ready #stage { opacity:1; }
+  /* slow "breathing" scene: zoom in, hold, zoom out, hold, loop. transform only (fit() owns left/top). */
+  #frame { position:absolute; transform-origin:50% 47%; will-change:transform; container-type:size;
+           animation:sceneBreathe 60s ease-in-out infinite; transition:filter .45s ease; }
+  /* Setup screen: soften the live scene like a sheet of glass, so the panels have the user's attention. */
+  :root.setup-active #frame { filter:blur(6px) saturate(.96); }
+  /* Session: hold the scene steady + zoomed-out (no breathing) so the numbers/hourglass don't drift. */
+  :root.session-active #frame { animation:none; transform:none; }
+  @keyframes sceneBreathe{ 0%,10%{transform:scale(1)} 46%,54%{transform:scale(1.055)} 90%,100%{transform:scale(1)} }
+  @media (prefers-reduced-motion:reduce){ #frame{ animation:none; } }
+  /* Layer stack inside #frame: plate(0) → numbers(1) → occluder(2, plate-copy masked to the glass/sea/ledge
+     so numbers pass BEHIND it) → sand(3, drawn on top so grains still read inside the glass). */
+  #glitter, #sand, #occ { position:absolute; inset:0; display:block; }
+  #glitter { z-index:0; }
+  #occ { z-index:2; pointer-events:none; }
+  #sand { z-index:3; }
   #sand { pointer-events:none; transition:opacity .4s ease; }
   #sand.refill { opacity:0; }
   #ui { position:fixed; top:0; right:0; bottom:0; width:250px; padding:14px;
@@ -417,25 +440,27 @@
         font-size:12px; overflow-y:auto; z-index:20;
         border-left:1px solid rgba(255,255,255,.08); }
   #ui.hidden { display:none; }
-  h3 { font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:#7d8798;
-       margin:12px 0 6px; font-weight:600; } h3:first-child { margin-top:0; }
-  label { display:flex; justify-content:space-between; margin:7px 0 2px; color:#aab3c2; }
-  label b { color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
-  input[type=range] { width:100%; accent-color:#EACA78; height:15px; }
-  .hint { color:#5d6879; margin-top:12px; line-height:1.5; }
-  kbd { background:rgba(255,255,255,.12); border-radius:3px; padding:1px 5px; }
-  textarea { width:100%; background:#0d1017; color:#9fb0c8; margin-top:6px;
+  /* lab form-primitives — scoped to #ui/#session-ui so they NEVER leak onto real UI (Home/Setup/Session).
+     (Bare `button{width:100%}` etc. previously bled globally, stretching the Home buttons full-width.) */
+  #ui h3 { font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:#7d8798;
+       margin:12px 0 6px; font-weight:600; } #ui h3:first-child { margin-top:0; }
+  #ui label { display:flex; justify-content:space-between; margin:7px 0 2px; color:#aab3c2; }
+  #ui label b { color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
+  #ui input[type=range] { width:100%; accent-color:#EACA78; height:15px; }
+  #ui .hint { color:#5d6879; margin-top:12px; line-height:1.5; }
+  #ui kbd { background:rgba(255,255,255,.12); border-radius:3px; padding:1px 5px; }
+  #ui textarea { width:100%; background:#0d1017; color:#9fb0c8; margin-top:6px;
              border:1px solid rgba(255,255,255,.12); border-radius:5px;
              font:11px/1.4 ui-monospace, monospace; padding:6px; resize:vertical; }
-  button { width:100%; margin-top:6px; padding:7px; background:#EACA78; color:#141414;
+  :is(#ui,#session-ui) button { width:100%; margin-top:6px; padding:7px; background:#EACA78; color:#141414;
            border:0; border-radius:5px; font-weight:700; cursor:pointer; }
   #curveState { color:#EACA78; margin-top:8px; font-weight:600; }
   .lockgrp.hid { display:none; }
   #lockToggle { background:rgba(255,255,255,.09); color:#8b95a6; font-weight:600;
                 margin:0 0 4px; text-align:left; padding:7px 9px; }
-  input[type=color] { width:42px; height:20px; padding:0; border:1px solid rgba(255,255,255,.2);
+  #ui input[type=color] { width:42px; height:20px; padding:0; border:1px solid rgba(255,255,255,.2);
                       border-radius:4px; background:none; vertical-align:middle; cursor:pointer; }
-  label.clr { align-items:center; }
+  #ui label.clr { align-items:center; }
   #err { display:none; position:fixed; left:14px; top:12px; z-index:30; max-width:52vw;
          background:#b3143c; color:#fff; padding:8px 12px; border-radius:6px;
          font:12px/1.4 ui-monospace, monospace; }
@@ -458,18 +483,50 @@
   #session-ui .visbtn { width:auto; margin:0; padding:4px 10px; font-size:11px; font-weight:600;
                         background:rgba(8,10,16,.5); color:#8b95a6; border:1px solid rgba(255,255,255,.12); }
   #session-ui .visbtn.on { color:#EACA78; border-color:rgba(234,202,120,.5); }
-  .clocknum { position:absolute; top:50%; transform:translateY(-50%); z-index:14;
-              font-size:clamp(28px,5vw,64px); font-weight:200; color:#f2f5fa;
-              font-variant-numeric:tabular-nums; letter-spacing:.02em; pointer-events:none;
-              text-shadow:0 2px 18px rgba(0,0,0,.45); opacity:0; transition:opacity .6s ease; }
-  #mm { right:calc(50% + 90px); }
-  #ss { left:calc(50% + 90px); }
-  #frame.show-nums .clocknum { opacity:.92; }
+  /* ── Session numerals — ported from the LOCKED site/session.html (data-attrs + CSS vars drive
+       place / fill / separator / tone). Numbers flank the hourglass axis (--hg-cx); a wider font grows
+       outward while the inner edges stay put. #nums carries the per-place fine offset (--dx/--dy). ── */
+  /* Numerals are LOCKED TO THE PLATE — sized in cqh/cqw and positioned in plate-% (--tb-top) against #frame
+     (container-type:size). They are "pasted on the plate": they crop, zoom, and move WITH it, staying exactly
+     where perfected in number-lab.html, independent of viewport/crop. scene.js setNumStyle() sets size/gap/dx/dy. */
+  #frame { --num-font:'NumSerif',serif; --num-weight:550; --num-color:#fff; --num-eff:#fff;
+           --num-size:25; --num-scaleX:1; --gap:15cqw; --hg-cx:49.885%; --tb-top:48%; --dx:0; --dy:0; }
+  #nums { position:absolute; inset:0; z-index:1; pointer-events:none; will-change:transform;
+          transform:translate(var(--dx,0), var(--dy,0)); }
+  .clocknum { position:absolute; line-height:1; white-space:nowrap; text-box:trim-both cap alphabetic;
+              font-family:var(--num-font); font-weight:var(--num-weight);
+              font-size:calc(var(--num-size)*1cqh); color:var(--num-eff); -webkit-text-fill-color:var(--num-eff);
+              font-variant-numeric:tabular-nums; letter-spacing:-.01em;
+              text-shadow:0 1px 2px rgb(0 0 0/32%), 0 2px 22px rgb(0 0 0/20%); opacity:0; transition:opacity .6s ease; }
+  #frame.show-nums .clocknum { opacity:.96; }
+  #mm { right:calc((100% - var(--hg-cx)) + var(--gap)); left:auto; top:var(--tb-top);
+        transform:translateY(-50%) scaleX(var(--num-scaleX)); }
+  #ss { left:calc(var(--hg-cx) + var(--gap)); right:auto; top:var(--tb-top);
+        transform:translateY(-50%) scaleX(var(--num-scaleX)); }
+  #sep { left:var(--hg-cx); right:auto; top:var(--tb-top);
+         transform:translate(-50%,-50%) scaleX(var(--num-scaleX)); }
+  #sep::before { content:":"; }
+  #frame[data-sep="dot"]  #sep::before { content:"\00B7"; }   /* middle dot */
+  #frame[data-sep="none"] #sep { display:none; }
+  /* fills */
+  #frame[data-fill="glass"] .clocknum { color:rgba(255,255,255,.26); -webkit-text-fill-color:rgba(255,255,255,.26);
+        -webkit-text-stroke:1px rgba(255,255,255,.5);
+        text-shadow:0 1px 1px rgba(255,255,255,.35), 0 6px 34px rgba(0,0,0,.28); }
+  #frame[data-fill="outline"] .clocknum { color:transparent; -webkit-text-fill-color:transparent;
+        -webkit-text-stroke:1.5px var(--num-eff); text-shadow:none; paint-order:stroke; }
+  /* placement — vertical band as a % of the plate (frame), so numbers track the hourglass at any crop.
+     Values are number-lab.html's (the lab was perfected at ~plate aspect, so its viewport-% == plate-%). */
+  /* Vertical centre (--tb-top) is set per-mode by applyNum() in scene.js (tunable + persisted). X is FIXED:
+     every mode flanks the hourglass axis --hg-cx, so horizon no longer gets its own centre. */
   #focused-today { font-size:12px; color:#9fb0c8; min-height:14px; }
   /* DEPLOY: this component is the clean living-world SCENE only. Hide ALL leftover lab/debug/temp UI that
      came from porting hybrid.html — the real Home/Setup/Session UI (from the locked designs) layers over it.
      (The dead lab code gets removed outright during the Session refactor.) */
-  #ui, #session-ui, #err, .hint, #mm, #ss { display:none !important; }
+  #ui, #session-ui, #err, .hint { display:none !important; }
+  /* session numerals: hidden until a session runs (:root.session-active); then #frame.show-nums fades them in */
+  #nums { display:none; }
+  :root.session-active #nums { display:block; }
+  :root.on-break #nums { display:none !important; }   /* during a break the blurred break screen is the only timer */
   /* temp: basic controls hide by default, reveal on mouse move / tap (body.show-ui) so the sand
      is unobstructed. Throwaway with #session-ui once the real Setup/Session UI lands. */
   #session-ui { opacity:0; pointer-events:none; transition:opacity .5s ease; }

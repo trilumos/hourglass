@@ -3,6 +3,9 @@
 // (falling continuously, never filling). The Home (locked hero-v22) sits over it. Setup + Session next.
 import SceneWorld from '../components/SceneWorld.astro';
 import Home from '../components/Home.astro';
+import Setup from '../components/Setup.astro';
+import Session from '../components/Session.astro';
+import { LQIP } from '../scene/lqip.js';
 ---
 <!doctype html>
 <html lang="en">
@@ -11,16 +14,73 @@ import Home from '../components/Home.astro';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Sustain — a calm focus timer inside a living seaside world." />
     <title>Sustain — a calm focus timer</title>
+    <link rel="icon" href="/favicon-round.png" type="image/png" />
     <!-- v22 type stack (dev via Google Fonts; self-host in the perf pass — spec §13/§18). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Newsreader:ital,opsz,wght@1,6..72,200..500&family=Jost:wght@200;300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,200..500&family=Jost:wght@200..600&display=swap"
       rel="stylesheet"
     />
+    <style is:global>
+      /* Overlap-REMOVED (fontTools removeOverlaps) numeral faces — clean single-contour glyphs so the OUTLINE
+         fill's text-stroke never doubles at glyph overlaps. Self-hosted, numeral-only names (the rest of the
+         site keeps its Google faces incl. Home's Jost 300). LOCKED weight is 550. Spec §13/§18 self-host goal. */
+      @font-face{ font-family:'NumSerif'; font-weight:550; font-display:swap; src:url('/assets/fonts/newsreader-550.woff2') format('woff2'); }
+      @font-face{ font-family:'NumSans';  font-weight:550; font-display:swap; src:url('/assets/fonts/jost-550.woff2') format('woff2'); }
+      /* Home <-> Setup View-Transition cross-fade timing */
+      ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.42s; animation-timing-function:cubic-bezier(.4,0,.2,1); }
+    </style>
   </head>
   <body>
+    <div id="lqip"></div>
+    <script is:inline define:vars={{ LQIP }}>
+      // Instant blur-up (no black screen): show the current phase's placeholder + preload that real WebP plate.
+      (function () {
+        var h = new Date().getHours() + new Date().getMinutes() / 60;
+        // Approx match to scene.js REFERENCE SEG segments (exact scene time is location-warped): midnight 0–4.9,
+        // pre-dawn 4.9–6.1, sunrise 6.1–8.4, midday 8.4–18.2, sunset 18.2–19.65, twilight 19.65–21.75, midnight.
+        var i = h < 4.9 ? 5 : h < 6.1 ? 0 : h < 8.4 ? 1 : h < 18.2 ? 2 : h < 19.65 ? 3 : h < 21.75 ? 4 : 5;
+        var el = document.getElementById('lqip');
+        if (el && LQIP[i]) el.style.backgroundImage = 'url(' + LQIP[i] + ')';
+        var names = ['pre-dawn', 'sunrise', 'midday', 'sunset', 'twilight', 'midnight'];
+        var l = document.createElement('link');
+        l.rel = 'preload'; l.as = 'image'; l.href = '/plates-phases/' + names[i] + '.webp';
+        l.setAttribute('fetchpriority', 'high'); l.crossOrigin = 'anonymous';   // match three.js's anonymous CORS texture fetch
+        document.head.appendChild(l);
+      })();
+    </script>
     <SceneWorld />
     <Home />
+    <Setup />
+    <Session />
+    <script is:inline>
+      // Home <-> Setup — one continuous document (scene never re-mounts). Hash route so Back/swipe-back work
+      // and a refresh can't 404 on a static host. Forward: Begin Focus sets #setup; Back: history.back().
+      (function () {
+        var home = document.getElementById('home');            // .hero
+        var setup = document.getElementById('setupScreen');    // .setup-screen
+        function screen(){ var h = location.hash; return h==='#setup' ? 'setup' : (h==='#session' ? 'session' : 'home'); }
+        function sync(){
+          var s = screen();
+          // Move focus out of a screen we're about to hide, so aria-hidden never traps a focused descendant.
+          var ae = document.activeElement;
+          if (ae && ae.blur && ((setup && s!=='setup' && setup.contains(ae)) || (home && s!=='home' && home.contains(ae)))) ae.blur();
+          if (setup){ setup.classList.toggle('on', s==='setup'); setup.setAttribute('aria-hidden', s==='setup' ? 'false' : 'true'); }
+          if (home) home.classList.toggle('screen-hidden', s!=='home');
+          document.documentElement.classList.toggle('setup-active', s==='setup');   // glass-blur the scene only under Setup
+          document.title = s==='setup' ? 'Sustain — Setup' : (s==='session' ? 'Sustain — Focus' : 'Sustain — a calm focus timer');
+        }
+        // Cross-fade snapshots (blur is baked in → no first-paint pop). Falls back to an instant flip.
+        function apply(){ if (document.startViewTransition) document.startViewTransition(sync); else sync(); }
+        sync();                                                // initial screen (no animation)
+        var begin = document.getElementById('beginFocus');
+        if (begin) begin.addEventListener('click', function (e){ e.preventDefault(); if (screen()!=='setup') location.hash = 'setup'; });
+        // Setup's Back button always goes HOME (not history.back(), which could land on a spent #session).
+        var back = document.getElementById('back');
+        if (back) back.addEventListener('click', function (e){ e.preventDefault(); location.hash = 'home'; });
+        addEventListener('hashchange', apply);                 // View-Transition cross-fade (Back/swipe fire it too)
+      })();
+    </script>
   </body>
 </html>

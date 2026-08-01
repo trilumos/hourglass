@@ -2,7 +2,8 @@
 
 ## Web version — the master spec is the source of truth (READ FIRST)
 
-For **any** work on the Sustain **web** version (the Astro site, `site/`, `web-prototype/`, the timer/setup/
+For **any** work on the Sustain **web** version (the production Astro site in `web-astro/`; the LOCKED design
+references + prototypes now live under `_internal/site/` and `_internal/web-prototype/`; the timer/setup/
 session screens, the living scene, audio, landing, SEO, deployment):
 
 1. **Read `docs/superpowers/specs/2026-07-29-sustain-web-master-spec.md` FIRST.** It holds the full context —
