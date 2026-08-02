@@ -1,0 +1,425 @@
+---
+// LANDING — a PINNED story, not a scrolling page (founder, 2026-08-02).
+//
+// Nothing on the page moves. The scene, its bottom tint, the grain and the nav are CONSTANT the whole way
+// down ("like a ppt with the same background throughout, only text is changing"). Scrolling only cross-fades
+// text and advances the day. The centre column (hourglass) is never covered.
+//
+// Each chapter is one statement and at most THREE short points, never paragraphs. The heading sits on one
+// flank, the points on the other, both on the SAME vertical line, sides swapping each chapter. The points
+// ride a quiet glass plate because they are small type over painted art; the heading needs none.
+//
+// Design laws (impeccable + ui-ux-pro-max): glass is rare and purposeful, not decorative; no identical card
+// grids; crossfade for content replacement in one container; ease-out entry, faster exit; reduced-motion
+// honoured; no em dashes in copy.
+
+const PLAY = 'https://play.google.com/store/apps/details?id=com.trilumos.sustain';
+
+// FAQ: what is visible IS what is in the structured data (Google requires the two to match), so three.
+const FAQ = [
+  { q: 'Is it free?',
+    a: 'Yes, forever. Every mode, the whole living world, no account and no ads.' },
+  { q: 'Does the timer survive a background tab?',
+    a: 'Yes. It reads the wall clock instead of counting frames, so a throttled tab cannot make it drift.' },
+  { q: 'Why does the sky change while I work?',
+    a: 'It follows your real day. Sustain reads your timezone and moves the sun and moon to match.' },
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ.map(f => ({
+    '@type': 'Question', name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const CHAPTERS = 6;   // hero (0) + five
+// Viewports of scroll per chapter. Short on purpose: `scroll-snap-stop: always` guarantees each chapter is
+// a stop no matter how hard you flick, so this only sets how FAR you must drag to trip the next one. The
+// snap fires past the halfway mark, so 0.75 means roughly a third of a screen of scroll per chapter.
+// Single source of truth: the controller in index.astro reads it off #runway's data attribute.
+const CH_LEN = 0.75;
+---
+
+<div class="chapters" id="chapters">
+
+  <!-- ═══ 1 · How it works — heading RIGHT ═══ -->
+  <article class="ch flip" id="how-it-works" aria-labelledby="hiw-h">
+    <div class="say">
+      <p class="eyebrow">How it works</p>
+      <h2 id="hiw-h" style="--n:18"><span>Focus is a ritual,</span><span>not a countdown.</span></h2>
+      <p class="lead">Four modes. One rhythm.</p>
+    </div>
+    <div class="tell">
+      <ul class="points">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3v3.2a4 4 0 0 0 1.6 3.2L12 12l2.4-2.6A4 4 0 0 0 16 6.2V3M8 21v-3.2a4 4 0 0 1 1.6-3.2L12 12l2.4 2.6a4 4 0 0 1 1.6 3.2V21"/></svg>
+          <b>Choose a block</b><span>Flow, Pomodoro, Custom or Endless.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20.5 15.2 9.3a2.6 2.6 0 1 0-3.7-3.7L4 13.2v7.3ZM13.4 7.4l3.7 3.7"/></svg>
+          <b>Name the intention</b><span>One line, kept in sight while you work.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c-4.4 0-8-3.6-8-8 0-5.5 5-9 13-9 0 8-3.5 13-9 13-2.2 0-4-.8-4-.8"/><path d="M6 21c1.5-5 5-8.5 9-10.5"/></svg>
+          <b>Recover properly</b><span>The break is training, not a reward.</span>
+        </li>
+      </ul>
+    </div>
+  </article>
+
+  <!-- ═══ 2 · The living world — heading LEFT ═══ -->
+  <article class="ch" id="living-world" aria-labelledby="lw-h">
+    <div class="say">
+      <p class="eyebrow">The living world</p>
+      <h2 id="lw-h" style="--n:14"><span>The sky moves</span><span>with your day.</span></h2>
+      <p class="lead">Your real sunrise. Your real sunset.</p>
+    </div>
+    <div class="tell">
+      <ul class="points">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
+          <b>Six painted skies</b><span>Cross-fading from pre-dawn to midnight.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg>
+          <b>Local to you</b><span>Sun times worked out from your timezone.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 3 2M3 11c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 3 2"/></svg>
+          <b>The sand is your session</b><span>Falling live. Frozen the moment you pause.</span>
+        </li>
+      </ul>
+    </div>
+  </article>
+
+  <!-- ═══ 3 · Why it works — heading RIGHT ═══ -->
+  <article class="ch flip" id="science" aria-labelledby="sci-h">
+    <div class="say">
+      <p class="eyebrow">Why it works</p>
+      <h2 id="sci-h" style="--n:11"><span>Blocks beat</span><span>willpower.</span></h2>
+      <p class="lead">Three findings, built in.</p>
+    </div>
+    <div class="tell">
+      <ul class="points">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M4 12h6M4 17h9"/><path d="M15 5l5 5-5 5"/></svg>
+          <b>Switching costs you</b><span>Attention stays on the task you left.<i>Leroy, 2009</i></span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.4l3.4 2"/></svg>
+          <b>Train in bouts</b><span>The best rest deliberately between.<i>Ericsson, 1993</i></span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 14c2.6 0 2.6-6 5.2-6s2.6 6 5.2 6 2.6-6 5.2-6S20.2 14 22 14"/></svg>
+          <b>Ride the wave</b><span>Alertness moves in ninety-minute swells.<i>Kleitman, 1982</i></span>
+        </li>
+      </ul>
+    </div>
+  </article>
+
+  <!-- ═══ 4 · Questions — heading LEFT ═══ -->
+  <article class="ch" id="faq" aria-labelledby="faq-h">
+    <div class="say">
+      <p class="eyebrow">Questions</p>
+      <h2 id="faq-h" style="--n:16"><span>Everything else.</span></h2>
+      <p class="lead">The short answers.</p>
+    </div>
+    <div class="tell">
+      <div class="points faq">
+        {FAQ.map(f => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </div>
+    </div>
+  </article>
+
+  <!-- ═══ 5 · Get the app — heading RIGHT ═══ -->
+  <article class="ch flip last" id="get-the-app" aria-labelledby="app-h">
+    <div class="say">
+      <p class="eyebrow">Take it further</p>
+      <h2 id="app-h" style="--n:26"><span>The timer is the practice.</span><span>The app is the progress.</span></h2>
+      <a class="play" href={PLAY} target="_blank" rel="noopener" aria-label="Get it on Google Play">
+        <img src="/google-play-badge.svg" alt="Get it on Google Play" width="180" height="53" loading="lazy" />
+      </a>
+    </div>
+    <div class="tell">
+      <ul class="points">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.6 9l6 .9-4.3 4.2 1 6L12 17.2 6.7 20l1-6L3.4 9.9l6-.9Z"/></svg>
+          <b>Focus Score</b><span>Focus as a trained skill, not a pile of minutes.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2.5 5.5 13.5H11L10.5 21.5 18.5 10H13Z"/></svg>
+          <b>Streaks and history</b><span>Every session kept, and a rhythm to protect.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          <b>Insights</b><span>Where your focus actually went.</span>
+        </li>
+      </ul>
+      <p class="fineprint">Free here, forever. No account, no ads.</p>
+    </div>
+  </article>
+</div>
+
+<!-- The only tall element on the page: it gives the wheel something to move, nothing renders in it. One
+     snap section per chapter, so every chapter is a hard stop and a gesture can never coast past one.
+     The last section is exactly one viewport, so the document ends ON the final snap point. -->
+<div class="runway" id="runway" aria-hidden="true" data-ch-len={CH_LEN}>
+  {/* svh, not dvh: a mobile URL bar collapsing mid-scroll would resize every stop and slide the snap points
+      out from under the gesture. svh is the stable (URL-bar-visible) height. */}
+  {Array.from({ length: CHAPTERS }).map((_, i) => (
+    <div class="stop" style={`height:${i === CHAPTERS - 1 ? 100 : CH_LEN * 100}svh`}></div>
+  ))}
+
+  <!-- The footer is the ONE thing that genuinely scrolls: a blurred sheet that rises over the bottom half
+       of the scene at the end of the story. It is not a chapter and does not cross-fade. -->
+  <footer class="site-foot">
+    <div class="foot-in">
+      <div class="foot-brand">
+        <img src="/brand-icon.png" alt="" width="30" height="30" />
+        <div>
+          <b>Sustain</b>
+          <p>A calm focus timer inside a living world.</p>
+        </div>
+      </div>
+
+      <nav class="foot-nav" aria-label="Footer">
+        <a href="#how-it-works">How it works</a>
+        <a href="#science">Why it works</a>
+        <a href="#faq">Questions</a>
+      </nav>
+
+      <nav class="foot-nav" aria-label="Legal and contact">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="mailto:trilumos.app@gmail.com">Contact</a>
+        <a href={PLAY} target="_blank" rel="noopener">Google Play</a>
+      </nav>
+    </div>
+
+    <p class="foot-fine">
+      Free, and free of accounts, ads and trackers. Your settings and today’s focus stay in this browser and
+      are never uploaded. Sustain is not medical or psychological advice.
+      <span>© {new Date().getFullYear()} Trilumos</span>
+    </p>
+  </footer>
+</div>
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(faqLd)}></script>
+
+<style>
+  /* NO added background layers: no scrim, no blur, no edge veils, no rail. The hero's own symmetric .vign
+     is the bed for both flanks. Only text moves. */
+
+  /* z-index 6, ABOVE the hero (5): the hero paints .vign and .grain over its whole box, so at z-index 4 the
+     chapter text sat UNDER the tint and came out washed. The nav lives inside the hero and never overlaps
+     the chapters' padded centre band, so it stays visible and clickable. */
+  .chapters{ position:fixed; inset:0; z-index:6; pointer-events:none;
+    font-family:Jost, ui-sans-serif, system-ui, sans-serif; color:#f4edde;
+    --rise:clamp(26px,4.5vh,52px); }
+  .chapters *{ box-sizing:border-box; }
+
+  /* Flanks straddle the hourglass. --hg-w is published by scene.js fit(), so the clear centre column tracks
+     the real hourglass at any viewport. BOTH blocks are pinned to grid-row 1: without that, a flipped
+     chapter puts .say in column 3 first and grid auto-placement, which never moves backwards, drops .tell
+     into row 2 — which is exactly why the flipped chapters read as vertically staggered. */
+  .ch{ position:absolute; inset:0; display:grid; align-items:center;
+    grid-template-columns:1fr var(--hg-w, 26vw) 1fr; grid-template-rows:1fr;
+    padding:clamp(76px,12vh,132px) clamp(24px,4.2vw,80px) clamp(64px,10vh,104px);
+    visibility:hidden; transition:visibility 0s linear .5s; }   /* held until the exit (--out) finishes */
+  .ch.on{ visibility:visible; transition:visibility 0s; }
+  /* Interactivity goes on the CONTENT, never on .ch: .ch is inset:0, so an active chapter with
+     pointer-events:auto is a full-viewport shield that swallows every click on the nav underneath it
+     (which is exactly why the burger stopped opening once you scrolled past the hero). */
+  .ch.on .say, .ch.on .tell{ pointer-events:auto; }
+
+  .say { grid-row:1; grid-column:1; }
+  .tell{ grid-row:1; grid-column:3; justify-self:end; }
+  .ch.flip .say { grid-column:3; text-align:right; justify-self:end; }
+  .ch.flip .tell{ grid-column:1; justify-self:start; }
+
+  /* ── the "scrolling" illusion, SEQUENTIAL not overlapping: the old text rises away and fades out first,
+     and only once it is gone does the new text rise up from below and fade in. The handoff is the enter
+     delay (--out) matching the exit duration, so the two never share the screen. Both flanks run on the
+     identical timing so they move as one block. ────────────────────────────────────────────────────── */
+  .chapters{ --out:.46s; }
+  .say, .tell{ transform:translateY(var(--rise));
+    transition:transform var(--out) cubic-bezier(.5,0,.75,0); }
+  .ch.past .say, .ch.past .tell{ transform:translateY(calc(var(--rise) * -1)); }
+  .ch.on .say, .ch.on .tell{ transform:none;
+    transition:transform 1.05s cubic-bezier(.16,1,.3,1) var(--out); }
+
+  /* The FADE is applied to leaf content, never to an ancestor of the glass plate. An element with
+     opacity < 1 becomes a Backdrop Root, so while .tell was fading, .points' backdrop-filter sampled an
+     empty group and drew NO blur, then snapped to full blur the frame opacity hit exactly 1. That is the
+     "blur arrives late" glitch. Nothing above .points animates opacity any more; the plate itself
+     transitions its tint and blur RADIUS instead, which does not create a backdrop root. */
+  .say > *, .points > *{ opacity:0;
+    transition:opacity var(--out) cubic-bezier(.5,0,.75,0); }
+  .ch.on .say > *, .ch.on .points > *{ opacity:1;
+    transition:opacity 1s cubic-bezier(.16,1,.3,1) var(--out); }
+
+  /* ── the statement side: a soft elliptical SCRIM, not a box. It belongs to the text (fades in and out
+     with it), bleeds well past the type so it never reads as a panel edge, and dies out long before the
+     hourglass. Large display type only needs 3:1 (WCAG 1.4.3), so this can stay gentle. ─────────────── */
+  .say{ position:relative; }
+  /* Spread wide and low-peak so it reads as ambient shade rather than a shape: most of the bleed goes
+     OUTWARD to the page edge and vertically, and the inward side stays modest so it dies well before the
+     hourglass. A tight, high-alpha ellipse is what made it look like a distinct blob. */
+  .say::before{ content:''; position:absolute; inset:-55% -20% -55% -85%; z-index:-1; pointer-events:none;
+    background:radial-gradient(58% 52% at 34% 50%,
+      rgba(5,10,24,.34) 0%, rgba(5,10,24,.29) 30%, rgba(5,10,24,.19) 52%, rgba(5,10,24,.08) 72%,
+      rgba(5,10,24,0) 90%); }
+  .ch.flip .say::before{ inset:-55% -85% -55% -20%;
+    background:radial-gradient(58% 52% at 66% 50%,
+      rgba(5,10,24,.34) 0%, rgba(5,10,24,.29) 30%, rgba(5,10,24,.19) 52%, rgba(5,10,24,.08) 72%,
+      rgba(5,10,24,0) 90%); }
+
+  .eyebrow{ font-weight:400; text-transform:uppercase; letter-spacing:.34em;
+    font-size:clamp(9.5px,.7vw,11px); margin:0 0 clamp(14px,2vh,22px); color:rgba(248,242,229,.72); }
+  /* `text-wrap:balance` was the reason headings re-wrapped into four short lines: it optimises for even line
+     LENGTHS, so it happily narrows the block. `pretty` only fixes orphans and lets the line breaks written
+     in the markup stand. The flank gets an explicit max-width so the block uses the space it has. */
+  /* The heading block takes the FULL flank, right up to the hourglass gutter: capping it left a wide dead
+     band between the type and the glass. The grid column is already exactly "edge to hourglass". */
+  /* The heading block takes the FULL flank (the grid column is already exactly "edge to hourglass"), and
+     each written line is one <span> that CANNOT re-wrap. The size is derived from the flank width and the
+     longest line's character count (--n, set per chapter), so a headline always fills the space it has and
+     never breaks into four short lines: at ~0.52em average advance for Playfair, n chars need n*0.52em. */
+  .say{ width:100%; container-type:inline-size; }
+  .ch h2{ font-family:'Playfair Display',Georgia,serif; font-weight:500; line-height:1.06;
+    color:#fffaf0; margin:0; letter-spacing:-.005em;
+    font-size:min(clamp(30px, 4.6vw, 76px), calc(100cqw / (var(--n,16) * 0.52))); }
+  .ch h2 span{ display:block; white-space:nowrap; }
+  .lead{ margin:clamp(16px,2.2vh,24px) 0 0; font-weight:300; line-height:1.5;
+    font-size:clamp(14px,1.1vw,18px); color:rgba(248,242,229,.82); letter-spacing:.01em; }
+  .play{ display:inline-flex; margin-top:clamp(22px,3.2vh,38px);
+    transition:transform .5s cubic-bezier(.16,1,.3,1); }
+  .play:hover{ transform:translateY(-2px); }
+  .play img{ display:block; height:clamp(42px,3.4vw,50px); width:auto; }
+
+  /* ── the points side: a glass plate. The blur lives on a PSEUDO-ELEMENT held at opacity 1, not on the
+     fading element itself. That is the fix for the blur arriving a beat after the panel: when the parent
+     fades, the browser rasterises the group once (backdrop already resolved) and fades that, instead of
+     re-evaluating a backdrop-filter mid-transition over a live WebGL canvas. `will-change` + translateZ
+     keep the layer promoted so it is never torn down and rebuilt between chapters. Same ::before pattern
+     the hero's .glass-liquid already uses. ───────────────────────────────────────────────────────── */
+  /* The plate never changes opacity. It animates its tint, border and BLUR RADIUS instead, so the blur
+     grows in with the panel instead of snapping on at the end. */
+  .points{ position:relative; list-style:none; margin:0;
+    padding:clamp(20px,1.9vw,32px) clamp(22px,2.1vw,36px);
+    width:min(100%, 30rem); border-radius:clamp(16px,1.3vw,22px);
+    background:rgba(8,14,32,0); border:1px solid rgba(255,255,255,0); box-shadow:none;
+    backdrop-filter:blur(0px) saturate(1); -webkit-backdrop-filter:blur(0px) saturate(1);
+    transform:translateZ(0); will-change:backdrop-filter;
+    transition:background var(--out) ease, border-color var(--out) ease, box-shadow var(--out) ease,
+               backdrop-filter var(--out) ease, -webkit-backdrop-filter var(--out) ease; }
+  .ch.on .points{
+    background:linear-gradient(150deg, rgba(8,14,32,.5), rgba(6,11,26,.4));
+    border-color:rgba(255,255,255,.14);
+    box-shadow:0 24px 60px rgba(3,7,18,.34), inset 0 1px 0 rgba(255,255,255,.13);
+    backdrop-filter:blur(14px) saturate(1.12); -webkit-backdrop-filter:blur(14px) saturate(1.12);
+    transition:background .9s ease var(--out), border-color .9s ease var(--out),
+               box-shadow .9s ease var(--out), backdrop-filter .9s ease var(--out),
+               -webkit-backdrop-filter .9s ease var(--out); }
+  .points li{ display:grid; grid-template-columns:auto 1fr; column-gap:clamp(12px,1vw,16px);
+    padding:clamp(11px,1.35vh,16px) 0; border-bottom:1px solid rgba(255,255,255,.10); }
+  .points li:first-child{ padding-top:0; }
+  .points li:last-child{ padding-bottom:0; border-bottom:0; }
+  .points svg{ grid-row:1 / span 2; width:clamp(19px,1.5vw,23px); height:clamp(19px,1.5vw,23px);
+    align-self:start; margin-top:.12em; fill:none; stroke:#f6c98a; stroke-width:1.3;
+    stroke-linecap:round; stroke-linejoin:round; opacity:.85; }
+  .points b{ font-family:'Playfair Display',Georgia,serif; font-weight:500; color:#fffaf0;
+    font-size:clamp(15px,1.18vw,19px); line-height:1.25; letter-spacing:.005em; }
+  .points span{ display:block; margin-top:.24em; font-weight:300; line-height:1.5;
+    font-size:clamp(12.5px,.94vw,15px); color:rgba(246,240,226,.78); }
+  .points span i{ display:block; margin-top:.42em; font-style:normal; letter-spacing:.14em;
+    text-transform:uppercase; font-size:.72em; color:rgba(246,240,226,.42); }
+  /* flipped: the plate hugs the left edge, text stays left-read (never mirror body copy) */
+  .ch.flip .points{ margin-right:auto; }
+
+  /* ── FAQ inside the same plate: native disclosure, no JS ─────────────────────────────────────────── */
+  .points.faq{ padding-block:clamp(8px,1vh,14px); }
+  .faq details{ border-bottom:1px solid rgba(255,255,255,.10); }
+  .faq details:last-child{ border-bottom:0; }
+  .faq summary{ cursor:pointer; list-style:none; padding:.86em 1.6em .86em 0; position:relative;
+    font-family:'Playfair Display',Georgia,serif; font-weight:500; line-height:1.3;
+    font-size:clamp(14px,1.1vw,18px); color:#fffaf0; transition:opacity .25s ease; }
+  .faq summary::-webkit-details-marker{ display:none; }
+  .faq summary:hover{ opacity:.8; }
+  .faq summary::after{ content:''; position:absolute; right:.25em; top:1.15em; width:7px; height:7px;
+    border-right:1.3px solid #f6c98a; border-bottom:1.3px solid #f6c98a; opacity:.7;
+    transform:rotate(45deg); transition:transform .35s cubic-bezier(.16,1,.3,1); }
+  .faq details[open] summary::after{ transform:rotate(-135deg); }
+  .faq details p{ margin:0 0 1em; font-weight:300; line-height:1.55;
+    font-size:clamp(12.5px,.94vw,15px); color:rgba(246,240,226,.78); }
+
+  .fineprint{ margin:clamp(12px,1.7vh,18px) 0 0; font-weight:300; letter-spacing:.06em;
+    font-size:clamp(10px,.76vw,12px); color:rgba(246,240,226,.5); }
+  .fineprint a{ color:inherit; text-decoration:none; margin-left:.9em;
+    border-bottom:1px solid rgba(246,240,226,.25); }
+  .fineprint a:hover{ color:#fffaf0; }
+  .ch.flip .fineprint{ text-align:left; }
+
+  .runway{ position:relative; z-index:0; pointer-events:none; }
+  .stop{ scroll-snap-align:start; scroll-snap-stop:always; }   /* always = a fling cannot skip a chapter */
+
+  /* ── the footer: the one element that really scrolls. A blurred sheet that rises over the bottom half of
+     the scene at the very end. z-index above the chapters so it covers them as it comes up. ──────────── */
+  .site-foot{ position:relative; z-index:8; pointer-events:auto; min-height:50svh;
+    scroll-snap-align:end; scroll-snap-stop:always;
+    display:flex; flex-direction:column; justify-content:flex-end; gap:clamp(20px,3vh,34px);
+    padding:clamp(34px,5vh,64px) clamp(22px,4.2vw,80px) clamp(24px,3.4vh,44px);
+    background:linear-gradient(180deg, rgba(6,11,26,.55) 0%, rgba(5,9,22,.88) 55%, rgba(4,8,20,.95) 100%);
+    backdrop-filter:blur(22px) saturate(1.1); -webkit-backdrop-filter:blur(22px) saturate(1.1);
+    border-top:1px solid rgba(255,255,255,.12);
+    font-family:Jost, ui-sans-serif, system-ui, sans-serif; color:rgba(244,237,222,.72); }
+  .foot-in{ display:flex; flex-wrap:wrap; gap:clamp(24px,4vw,72px); align-items:flex-start;
+    justify-content:space-between; }
+  .foot-brand{ display:flex; align-items:flex-start; gap:.8em; max-width:30ch; }
+  .foot-brand img{ border-radius:8px; flex:none; }
+  .foot-brand b{ display:block; font-family:'Playfair Display',Georgia,serif; font-weight:500;
+    font-size:clamp(16px,1.3vw,20px); color:#fffaf0; }
+  .foot-brand p{ margin:.3em 0 0; font-weight:300; font-size:clamp(12px,.9vw,14px); line-height:1.5; }
+  .foot-nav{ display:flex; flex-direction:column; gap:.7em; font-weight:300;
+    font-size:clamp(12.5px,.94vw,15px); }
+  .foot-nav a{ color:inherit; text-decoration:none; transition:color .3s ease; min-height:24px; }
+  .foot-nav a:hover{ color:#fffaf0; }
+  .foot-fine{ margin:0; padding-top:clamp(16px,2.4vh,26px); border-top:1px solid rgba(255,255,255,.09);
+    font-weight:300; line-height:1.6; font-size:clamp(11px,.82vw,13px); color:rgba(244,237,222,.5);
+    max-width:76ch; }
+  .foot-fine span{ display:block; margin-top:.5em; opacity:.75; }
+
+  /* ── motion off: chapters still change (that is navigation), they just do not travel ─────────────── */
+  @media (prefers-reduced-motion:reduce){
+    .ch, .say, .tell{ transition-duration:.01ms!important; }
+    .say, .tell{ transform:none!important; }
+  }
+
+  /* ── portrait / narrow: the hourglass fills the width, so the spine turns VERTICAL. Statement in the sky
+     above the glass, points below on the deck. The glass itself still stays clear. ─────────────────── */
+  @media (max-width:900px), (orientation:portrait){
+    /* Portrait has no usable flanks, so the spine turns vertical: the statement CENTRED at the top in the
+       sky, the points low on the deck. The glass itself stays clear between them. */
+    .ch{ grid-template-columns:1fr; grid-template-rows:auto 1fr; align-content:start;
+      row-gap:clamp(10px,1.6vh,18px);
+      padding:clamp(78px,12vh,116px) clamp(18px,5vw,34px) clamp(20px,3.5vh,40px); }
+    .say, .tell, .ch.flip .say, .ch.flip .tell{ grid-column:1; justify-self:stretch; }
+    .say, .ch.flip .say{ grid-row:1; text-align:center; }
+    .tell, .ch.flip .tell{ grid-row:2; align-self:end; text-align:left; }
+    .ch h2{ font-size:min(clamp(24px, 7.6vw, 44px), calc(100cqw / (var(--n,16) * 0.54))); }
+    .lead, .ch.flip .lead{ margin-left:auto; margin-right:auto; }
+    .points, .ch.flip .points{ width:100%; margin:0; }
+    .play{ margin-inline:auto; }
+    .fineprint, .ch.flip .fineprint{ text-align:center; }
+    .site-foot{ min-height:55svh; padding-inline:clamp(18px,5vw,34px); gap:clamp(18px,2.6vh,28px); }
+    .foot-in{ gap:clamp(18px,4vh,30px); }
+    .foot-nav{ flex-direction:row; flex-wrap:wrap; gap:.6em 1.3em; }
+    .foot-nav a{ min-height:32px; display:flex; align-items:center; }
+    /* the scrim follows the type: centred and wide, not anchored to a flank */
+    .say::before, .ch.flip .say::before{ inset:-30% -22% -26% -22%;
+      background:radial-gradient(70% 60% at 50% 42%,
+        rgba(5,10,24,.42) 0%, rgba(5,10,24,.32) 36%, rgba(5,10,24,.16) 62%, rgba(5,10,24,0) 88%); }
+  }
+</style>

@@ -77,7 +77,8 @@ hourglass/                          ← repo root
 │   ├── project-context.md          product context (#3)
 │   ├── superpowers/specs/2026-07-29-sustain-web-master-spec.md   WEB SOURCE OF TRUTH (read first)
 │   ├── brand-design-philosophy.md  design-language.md
-│   ├── launch-founder-actions.md   play-console-revenuecat-setup-guide.md  legal/  references/
+│   ├── launch-founder-actions.md   play-console-revenuecat-setup-guide.md  references/
+│   │   (legal/ moved 2026-08-02 → web-astro/src/pages/privacy.md + terms.md, hosted at /privacy + /terms)
 │
 ├── _internal/                      ═══ OUR WORKING FILES (not shipped) ═══
 │   ├── site/                       LOCKED design references (session.html, setup.html, home.html) — web-astro is ported from these

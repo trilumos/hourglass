@@ -31,6 +31,9 @@ let _skyTop = 0;   // fraction of the plate cropped off the TOP by fit() — the
 // the overflow off the TOP sky; when the window is tall enough (≈ the plate's 16:9) the whole plate shows. So the
 // deck is always mostly present, the top sky yields on short/non-fullscreen windows, and the base is never cut.
 const BOTTOM_TRIM = 0.06;   // max fraction of the plate cropped off the bottom lip. One knob — tune to taste.
+// Hourglass width as a fraction of the plate width: the glass silhouette spans ~0.134 around axis S.cx, the
+// wooden posts + plinth ~0.234; 0.27 adds clearance. Published as --hg-w for the landing's centre gutter.
+const HG_FRAC = 0.27;
 function fit(){
   const vw = innerWidth, vh = innerHeight;
   if (vw/vh > AR) { DW = vw; DH = vw/AR; } else { DH = vh; DW = vh*AR; }   // COVER: fill the viewport, crop the overflow (locked plate rule — no side gaps)
@@ -41,6 +44,16 @@ function fit(){
   // window is tall enough (overflow ≤ BOTTOM_TRIM) nothing crops the top (whole plate, tiny bottom trim only).
   frame.style.top  = Math.min(0, vh - (1 - BOTTOM_TRIM)*DH) + 'px';
   _skyTop = Math.max(0, (1 - BOTTOM_TRIM) - vh/DH);   // fraction cropped off the top → sun/moon must peak below it
+  // Publish the hourglass's displayed width so the landing page's centre gutter tracks it exactly at any
+  // viewport (the plate is cover-fit, so on tall/narrow windows the glass is a far bigger share of the
+  // screen than on wide ones). HG_FRAC covers the wooden posts + plinth, not just the glass silhouette.
+  document.documentElement.style.setProperty('--hg-w', (DW * HG_FRAC) + 'px');
+  // ...and the hourglass AXIS in layout px. Two reasons `left:50%` is wrong for anything that must line up
+  // with the glass: the axis sits at S.cx (0.49885), not 50%; and `innerWidth` (used for the cover maths)
+  // includes the scrollbar while a percentage resolves against the layout viewport, which does not. Reading
+  // the frame's REAL offset puts --hg-axis in exactly the same coordinate space as a fixed/absolute overlay.
+  // (Named --hg-axis, NOT --hg-cx: that name is already taken by the numeral geometry set on #frame.)
+  document.documentElement.style.setProperty('--hg-axis', (frame.offsetLeft + DW * S.cx) + 'px');
   const dpr = Math.min(devicePixelRatio, 2);
   for (const cv of [glitterCv, sandCv, occCv]) {
     cv.width = DW*dpr; cv.height = DH*dpr; cv.style.width = DW+'px'; cv.style.height = DH+'px';
@@ -61,13 +74,24 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 // space — fine for a simple additive white glint.
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const loaderTex = new THREE.TextureLoader();
-const TEX = PLATES.map(src => {
-  const t = loaderTex.load(src); t.colorSpace = THREE.NoColorSpace; return t;
-});
+// Load plates ON FIRST USE, not all six up front (spec §13: "load one plate, not six" — six eager loads was
+// ~960 KB before first paint). Frame 1 pulls the current phase (and its crossfade partner, if we load inside
+// a fade band); reveal() then warms the remaining plates, so the day cycle and the landing's scroll-sweep
+// never wait on a fetch. Callers that read .image already guard on it being undefined.
+const TEX = PLATES.map(() => null);
+const EMPTY_TEX = new THREE.Texture();          // uniform seed only — never sampled once frame 1 binds a plate
+function plateTex(i){
+  i = ((i|0) % PLATES.length + PLATES.length) % PLATES.length;
+  if (!TEX[i]) { TEX[i] = loaderTex.load(PLATES[i]); TEX[i].colorSpace = THREE.NoColorSpace; }
+  return TEX[i];
+}
 // Reveal the scene the moment the CURRENTLY-VISIBLE plate is decoded (the loop calls reveal() once uTex has
 // an image). A blur-up LQIP shows until then; a 3 s timeout is the backstop against a slow/failed plate.
 let _revealed = false;
-function reveal(){ if (_revealed) return; _revealed = true; document.documentElement.classList.add('scene-ready'); }
+function reveal(){
+  if (_revealed) return; _revealed = true; document.documentElement.classList.add('scene-ready');
+  for (let i = 0; i < PLATES.length; i++) plateTex(i);   // warm the rest AFTER first paint (never before)
+}
 setTimeout(reveal, 3000);
 // The moon is PAINTED, not generated. Every procedural attempt — selenographic
 // maria, then ring craters — read as stains or pimples at this on-screen size.
@@ -77,7 +101,9 @@ const MOON_TEX = loaderTex.load('/plates/moon-tex.webp');
 MOON_TEX.colorSpace = THREE.NoColorSpace;
 
 const U = {
-  uTex:{value:TEX[2]}, uTex2:{value:TEX[2]}, uMix:{value:0},
+  // Seeded with an EMPTY texture (no fetch): the render loop binds the real current plate on frame 1, so
+  // only the phase actually on screen is downloaded. reveal() waits for uTex to have a decoded image.
+  uTex:{value:EMPTY_TEX}, uTex2:{value:EMPTY_TEX}, uMix:{value:0},
   uCelA:{value:new THREE.Vector2(0.3,0.7)}, uCelB:{value:new THREE.Vector2(0.3,0.7)},
   uCelAamt:{value:0}, uCelBamt:{value:0}, uCelAtype:{value:1}, uCelBtype:{value:1},
   uCelAalt:{value:0}, uCelBalt:{value:0},
@@ -300,7 +326,12 @@ let MR=19.7, MS=4.6;                    // moon up-window: rises once the sun's 
 const REF_SR = 6.0, REF_SS = 18.4;
 let SR_real = REF_SR, SS_real = REF_SS;
 try { const _st = localSunTimes(); SR_real = _st.sr; SS_real = _st.ss; } catch(e){}
-try { preciseSunTimes(function(sr,ss){ SR_real=sr; SS_real=ss; }); } catch(e){}   // exact-location upgrade (opt-in prompt)
+// NOT called on load. Firing getCurrentPosition here threw a browser location prompt at every visitor within a
+// second of landing — against the locked decision in master spec §5 (timezone→coords, "no permission prompt,
+// privacy-clean"), and a conversion killer on the landing page. `preciseSunTimes` stays in geo.js for the
+// opt-in "use my exact location" control that spec §5 defers to later; wire it to a user gesture, never to load.
+// window.SustainScene.useExactLocation() below is that gesture hook.
+function useExactLocation(){ try { preciseSunTimes(function(sr,ss){ SR_real=sr; SS_real=ss; }); } catch(e){} }
 function warpTime(t){
   const dayR = SS_real - SR_real, dayRef = REF_SS - REF_SR;
   if (t >= SR_real && t < SS_real) return REF_SR + (t - SR_real) / dayR * dayRef;   // daytime
@@ -424,7 +455,7 @@ function updateDayCycle(){
   const t = S.live ? warpTime(clockHours()) : S.daytime;   // live -> real local day warped onto the reference
   const {a,b,blend} = phaseAt(t);
   CUR.t=t; CUR.a=a; CUR.b=b; CUR.blend=blend;
-  U.uTex.value=TEX[a]; U.uTex2.value=TEX[b]; U.uMix.value=blend;
+  U.uTex.value=plateTex(a); U.uTex2.value=plateTex(b); U.uMix.value=blend;
   CUR.expo=lerp(PH_EXPO[a],PH_EXPO[b],blend);
   CUR.lit =lerp3(PH_LIT[a],PH_LIT[b],blend);
   CUR.shd =lerp3(PH_SHD[a],PH_SHD[b],blend);
@@ -882,7 +913,7 @@ let refrDirty=true;
 const markGlassDirty=()=>{ refrDirty=true; };
 
 function buildRefraction(G){
-  const img=TEX[S.phase|0].image;
+  const img=plateTex(S.phase|0).image;
   if(!img || !img.width) return false;                 // texture still loading
   const W=Math.max(1,Math.round(DW)), H=Math.max(1,Math.round(DH));
   srcCv.width=W; srcCv.height=H; refrCv.width=W; refrCv.height=H;
@@ -1730,8 +1761,14 @@ function revealNums(){
     hideTimer = setTimeout(() => frame.classList.remove('show-nums'), 1600);
   }
 }
+// A touch device has no mousemove, so 'hover' visibility meant the numerals NEVER appeared on a phone (and
+// 'hover' is the default). Treat it as 'always' wherever hovering is not a thing.
+const noHover = () => matchMedia('(hover: none)').matches;
+// Portrait/narrow: only the TOP placement is offered (founder). The other placements put the numerals over
+// or beside the glass, which a phone has no room for.
+const narrowVP = () => matchMedia('(max-width: 900px), (orientation: portrait)').matches;
 function applyVis(){
-  if (timerVis === 'always') { clearTimeout(hideTimer); frame.classList.add('show-nums'); }
+  if (timerVis === 'always' || (timerVis === 'hover' && noHover())) { clearTimeout(hideTimer); frame.classList.add('show-nums'); }
   else frame.classList.remove('show-nums');
 }
 window.addEventListener('mousemove', () => { if (timerVis === 'hover') revealNums(); });
@@ -1874,6 +1911,11 @@ function numFor(place){
 let numSep = 'colon';   // user's divider pick, only used by Top/Horizon
 function sepForPlace(place){ return (place==='middle' || place==='ledge') ? 'none' : (numSep==='dot' ? 'dot' : 'colon'); }
 function applyNum(place){                          // designed geometry (X fixed per mode) + tuned size/dy; selects the active place → occluder follows
+  // Phones get TOP only. The other placements sit beside or across the glass, and a portrait viewport has no
+  // room for that. The size/gap themselves are re-expressed in viewport units by the portrait CSS in
+  // SceneWorld: these values are cqh/cqw of #frame, and on portrait the plate is ~4x wider than the screen,
+  // so `3cqw` and `15cqh` computed the pair straight off the edge of the display.
+  if (narrowVP()) place = 'top';
   const d = NUM_DEF[place] || NUM_DEF.middle, n = numFor(place);
   frame.style.setProperty('--num-size', String(n.size));
   frame.style.setProperty('--dy', n.dy + '%');
@@ -1886,6 +1928,11 @@ function applyNum(place){                          // designed geometry (X fixed
   frame.dataset.place = place;
   frame.dataset.sep = sepForPlace(place);          // separator follows the mode rule, not the raw cfg
 }
+// Rotating a phone flips whether the narrow rule applies, so re-run the placement (and the visibility rule,
+// since a hover-less device can gain/lose a mouse). numPlace holds the user's real choice, not the forced one.
+let numPlace = 'middle';
+addEventListener('resize', () => { applyNum(numPlace); applyVis(); });
+
 const PH_LUMA = [0.32, 0.52, 0.72, 0.50, 0.28, 0.14];   // pre-dawn,sunrise,midday,sunset,twilight,midnight
 let numColor = '#ffffff', numAuto = true, _bgLumaLast = -1;
 function _rgbOf(c){
@@ -1913,6 +1960,12 @@ window.SustainScene = {
   // Continuous day position for the light-cycle: set an arbitrary reference hour (0–24, wraps); the scene
   // crossfades plates + moves sun/moon to it. The Session interpolates this through the cycle over elapsed.
   setDayHour: function(h){ S.live=0; S.daytime=((h%24)+24)%24; },
+  // The viewer's real local time expressed in the scene's REFERENCE day (warped by their sunrise/sunset).
+  // The landing's scroll sweep anchors on this so the top of the page is always the true current sky.
+  refHour: function(){ return warpTime(clockHours()); },
+  // Opt-in only (spec §5): a representative timezone coord can be ~30–60 min off inside a wide timezone.
+  // Call this from a user gesture — it prompts for location. Never call it on load.
+  useExactLocation: useExactLocation,
   phaseHour: function(i){ return PH_HOUR[((i|0)%6+6)%6]; },   // reference hour of a phase index (0–5)
   setSunMoon: function(show){ S._sunMoonOff = !show; },
   // ── Session: drive the shared hourglass + numerals from a prebuilt plan ([{kind,dur(sec)}]) ──
@@ -1942,7 +1995,8 @@ window.SustainScene = {
     frame.style.setProperty('--num-color', numColor);
     frame.style.setProperty('--num-font', /Jost/i.test(cfg.font || '') ? "'NumSans',sans-serif" : "'NumSerif',serif");
     numSep = (cfg.sep === 'dot' ? 'dot' : 'colon');     // user's divider; applyNum enforces the per-mode rule (mid/ledge → none)
-    applyNum(cfg.place || 'middle');                    // size / top / gap / separator (merged with any tuned overrides); X fixed
+    numPlace = cfg.place || 'middle';                   // the user's CHOICE, kept so rotating back to landscape restores it
+    applyNum(numPlace);                                 // size / top / gap / separator (merged with any tuned overrides); X fixed
     frame.dataset.fill  = cfg.fill  || 'solid';
     _bgLumaLast = -1;                                   // force an auto-contrast recompute next frame
   },

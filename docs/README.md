@@ -30,7 +30,7 @@ Earlier specs are kept as a **design record** (why we built it this way), not as
 | [`v1-launch-checklist.md`](v1-launch-checklist.md) | ✅ **Historical.** The pre-publish audit (security, legal, store, a11y, perf). v1 shipped — this is the record of what was gated, not a todo list. |
 | [`play-console-revenuecat-setup-guide.md`](play-console-revenuecat-setup-guide.md) | Ops: Play Console + RevenueCat setup steps. |
 | [`launch-founder-actions.md`](launch-founder-actions.md) | The founder's launch to-do list. |
-| [`legal/privacy-policy.md`](legal/privacy-policy.md) · [`legal/terms-of-service.md`](legal/terms-of-service.md) | Deployed legal docs. |
+| [`web-astro/src/pages/privacy.md`](../web-astro/src/pages/privacy.md) · [`terms.md`](../web-astro/src/pages/terms.md) | The legal docs — **now live in the website** (moved from `docs/legal/` on 2026-08-02), so the hosted `/privacy` and `/terms` pages ARE the source. Cover the app and the web version. |
 
 ## Active work
 

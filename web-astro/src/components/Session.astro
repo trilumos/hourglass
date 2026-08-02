@@ -162,6 +162,17 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
   .session-screen.active #gear, .session-screen.active #giveup, .session-screen.active #pause,
   .session-screen.active #breakBtn, .session-screen.active #intentTop{ opacity:1; }
   #gear:focus-visible, #giveup:focus-visible, #pause:focus-visible, #breakBtn:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+  /* Touch pass: the vw-based clamps bottom out around 34px on a phone, under the 44px minimum (Apple HIG /
+     Material 48dp). Only coarse pointers are affected, so the desktop sizing is untouched. */
+  /* Same as Setup: portrait is Top-only, so the placement row would be a dead control. */
+  @media (max-width:900px), (orientation:portrait){
+    .session-screen .mini-seg[data-seg="place"]{ display:none; }
+  }
+  @media (pointer:coarse){
+    #gear{ width:44px; }
+    #breakBtn{ min-height:44px; display:inline-flex; align-items:center; padding-inline:1.1em; }
+    #intentTop{ max-width:82vw; font-size:14px; }
+  }
 
   /* paused overlay */
   #paused{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center;

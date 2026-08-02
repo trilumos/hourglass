@@ -158,6 +158,81 @@ mounted once and NEVER re-mounted.** (Design-decisions §3.)
 > without a second gesture. *(This is why the static two-file version has the "silent until you tap the
 > session page" problem, and why the Astro unification resolves it.)*
 
+### 4.2 The landing page = a PINNED STORY — BUILT 2026-08-02 (design: `2026-08-02-web-landing-page-design.md`)
+
+**Nothing on the page moves.** The scene, its bottom tint, the film grain and the nav are **constant the whole
+way down** — founder's words: *"like a ppt with the same background throughout, only text is changing."*
+Scrolling only cross-fades text chapters and advances the day. `src/components/Landing.astro`, controller in
+`index.astro`. *(An earlier version scrolled real content over the scene with a full-screen scrim + blur. The
+founder rejected it outright — that shape is dead, do not reintroduce it.)*
+
+- **Hard rules (founder, 2026-08-02):** nothing may sit on the hourglass or the centre column · **no
+  full-screen scrim, no blur over the art, no darkening layer** · the nav must not change on scroll · the
+  scene "breathing" zoom stays a free-running CSS loop and is **not** scroll-linked (tried, rejected).
+- **Chapters.** Hero is chapter 0; five more (How it works · The living world · Why it works · Questions ·
+  Get the app). Each is one statement plus **at most three short points, never paragraphs**. Heading on one
+  flank, points on the other, **both on grid-row 1** so they sit on the same line, sides swapping per chapter.
+- **Motion is sequential, not a crossfade:** the old text rises away and fades out first, then the new text
+  rises up from below (`--out` enter delay = exit duration), so two chapters never share the screen.
+- **Section snap.** One `.stop` per chapter (`0.75svh` each, last `100svh`) with `scroll-snap-type: y
+  mandatory` + `scroll-snap-stop: always`: every chapter is a hard stop and a fling can never skip one. An
+  earlier JS-damped follow was removed — that easing *was* the unwanted momentum. `svh` not `dvh` (a mobile
+  URL bar would slide the snap points mid-gesture), and the controller **measures** the stop's real height
+  rather than deriving it from `innerHeight`.
+- **Scroll drives the day.** Top = the viewer's **real local sky**; scrolling sweeps the scene clock **+12
+  reference hours, wrapping**; back at the top it returns to `setDay('follow')`.
+- **Legibility (the only permitted devices):** the hero's `.vign` is now **symmetric** (both bottom corners,
+  each dying out by ~76% of its own box so they never stack over the hourglass), plus a wide low-peak
+  **scrim** behind the heading block and a **glass plate** behind the points. WCAG 1.4.3 needs 4.5:1 for body
+  and 3:1 for large display type; text over imagery has exactly three legitimate remedies (scrim, blur,
+  panel) and blur-over-art is banned, so scrim + panel it is. No text shadows or halos anywhere.
+- **Blur must never pop in.** An element with `opacity < 1` becomes a **Backdrop Root**, so any fading
+  ancestor makes a descendant's `backdrop-filter` sample an empty group and snap to full blur only when
+  opacity hits exactly 1. **Never animate opacity above a `backdrop-filter` element.** The plate animates its
+  **blur radius** and tint instead; the fade lives on leaf content.
+- **Headings fill the flank.** Each written line is a `<span>` that cannot re-wrap, sized from the flank
+  width against the longest line's character count (`--n` per chapter):
+  `min(clamp(30px,4.6vw,76px), 100cqw / (n * 0.52))`. `text-wrap: balance` is **wrong** here — it optimises
+  for even line *lengths* and narrows a headline into four short lines.
+- **The hourglass is the SPINE.** `grid-template-columns: 1fr var(--hg-w) 1fr`; `--hg-w` and `--hg-axis` are
+  published by `scene.js fit()` (`HG_FRAC = 0.27`; axis from the frame's real `offsetLeft`, since the axis is
+  at `S.cx = 0.49885`, not 50%, and `innerWidth` includes a scrollbar that a percentage does not).
+  **The hero is exempt** — its empty right flank is deliberate.
+- **Interactivity goes on `.say`/`.tell`, never on `.ch`** (which is `inset:0`): an active chapter with
+  `pointer-events:auto` is a full-viewport shield that swallows every nav click beneath it.
+- **The footer is the one thing that really scrolls:** a blurred `50svh` sheet that rises over the bottom of
+  the scene at the end, with brand, section links, legal/contact and the disclaimer. Not a chapter.
+- **No invented proof.** No ratings, install counts or testimonials until they are real (founder: the app has
+  few installs yet).
+- **Scroll lock:** Home scrolls; `#setup`/`#session` add `:root.lock-scroll` (+ `scroll-snap-type:none`) and
+  reset to the top, and entering them restores the live day. The scrollbar is hidden site-wide (nothing
+  visibly scrolls, and it keeps `innerWidth` equal to the layout viewport so overlays and the scene share one
+  coordinate space).
+
+### 4.3 Responsive / mobile rules (BUILT 2026-08-02)
+
+- **Nav:** below 820 px the links become a **burger** drop panel; under 400 px the "Get the app" pill drops
+  (the panel and the hero button both still offer it).
+- **Landing portrait:** the spine turns **vertical** — statement centred in the sky at the top, points low on
+  the deck; the glass itself stays clear. The heading scrim re-centres.
+- **Setup portrait** (founder-specified order): focused-today → back (corner) + mode chooser (centred) →
+  **Timer → Themes → Sound → Begin**, all **in flow** in one vertical scroll. Also: `--sq` drove the whole
+  locked geometry off container **height** only, which asked for a 691 px `--main-w` on a 390 px screen; it is
+  now also capped by the available width. Desktop/tablet geometry is unchanged (height still wins), so the
+  founder-locked proportions hold.
+- **Session portrait:** **Top placement only** (`applyNum` forces it; the placement row is hidden in both
+  sheets, and the user's real choice is restored on rotate). Numerals are normally plate-relative
+  (`cqh`/`cqw` of `#frame`), and on portrait the plate is cover-cropped to ~4× the screen width, so the locked
+  `--gap:3cqw` / `15cqh` computed the pair off both edges: portrait re-expresses them in viewport units.
+- **`hover` timer visibility = `always` on `(hover: none)`.** It is the default, and a touch device fires no
+  `mousemove`, so the numerals could never appear on a phone at all.
+- **Touch targets:** ≥44 px on coarse pointers (Session `#gear`/`#breakBtn`, Setup steppers), applied only to
+  coarse pointers so the desktop look is untouched.
+- **SEO:** canonical + OpenGraph + `SoftwareApplication` JSON-LD in `index.astro`, `public/robots.txt`,
+  hand-written `public/sitemap.xml`, and a real `og-cover.jpg` (1200×630, generated by `gen-assets.mjs`).
+- **`/privacy` + `/terms`** ship as markdown pages under a plain `Doc.astro` layout (moved out of
+  `docs/legal/`, now covering the web version too) — this closes the P0 in `launch-founder-actions.md` §3.
+
 ## 5. The living scene (the free centrepiece)
 
 - **Locked plate rule (site-wide, never changes):** the plate `inset:0; background: cover; position 50% 50%`,
@@ -426,6 +501,49 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 ---
 
 ## 22. Changelog (append on every web change)
+
+- **2026-08-02 (Landing REBUILT as a pinned story + full responsive/mobile pass)** — The scrolling-page
+  landing was rejected by the founder ("no design, no UI/UX… just ugly") and replaced with a **pinned story**
+  (§4.2): the background never changes, only text chapters cross-fade while the day advances. Chapters are one
+  statement + ≤3 short points on a glass plate, flanks swapping, both blocks on the same grid row. Section
+  **scroll-snap** (mandatory + `stop:always`) replaced a JS-damped follow whose easing was the unwanted
+  momentum; runway shortened to `0.75svh`/chapter (890→375 svh of scrolling). Footer became a blurred `50svh`
+  sheet that genuinely scrolls up. Design skills consulted per the founder (impeccable, ui-ux-pro-max,
+  modern-web-guidance) — their bans on glass-as-default, identical card grids and cards-as-the-lazy-answer
+  named exactly what was rejected.
+  **Root-cause fixes (each explains a symptom the founder reported):** *(1)* **blur popped in late** — an
+  ancestor with `opacity < 1` is a **Backdrop Root**, so a fading parent makes `backdrop-filter` sample an
+  empty group until opacity hits exactly 1; the fade moved to leaf content and the plate animates its blur
+  **radius**. *(2)* **flipped chapters looked staggered** — grid auto-placement never moves backwards, so
+  `.say` taking column 3 pushed `.tell` into row 2; both pinned to `grid-row:1`. *(3)* **burger stopped
+  opening after the hero** — `.chapters` at z-index 6 with an `inset:0` active chapter was a full-viewport
+  click shield; interactivity moved to `.say`/`.tell`. *(4)* **text looked washed out** — chapters at z-index
+  4 sat *under* the hero's `.vign`/grain; raised to 6. *(5)* **headings broke into four lines** —
+  `text-wrap:balance` optimises for even line lengths; replaced with non-wrapping line spans sized from the
+  flank width and a per-chapter `--n`. *(6)* **scroll cue read off-centre** — the hourglass axis is `S.cx`
+  (49.885%), not 50%, and `innerWidth` includes a scrollbar the percentage does not; `--hg-axis` is now
+  published from the frame's real `offsetLeft` and the scrollbar is hidden.
+  **Mobile (§4.3):** burger nav; Setup restacked to the founder's order with `--sq` capped by width (it asked
+  for a 691 px column on a 390 px screen); Session forced to **Top** numerals with viewport-unit geometry
+  (plate-relative units put them off both edges); **`hover` visibility now means `always` on `(hover:none)`,
+  which is why a phone showed no timer at all**; 44 px touch targets on coarse pointers; snap stops in `svh`
+  with the stop height **measured**, not derived from `innerHeight`.
+  Also: the symmetric hero `.vign` (both flanks) is now the standing legibility bed.
+
+- **2026-08-02 (Landing page BUILT + SEO + legal pages; two real bugs found)** — Full scroll landing shipped
+  (§4.2; design doc `2026-08-02-web-landing-page-design.md`): five bands flanking the hourglass **spine**
+  (`--hg-w` published by `fit()`), **scroll sweeps the day +12 reference hours** from the viewer's real local
+  sky, `.deep-scrim` + `scene-deep` blur for legibility, native-`<details>` FAQ with `FAQPage` JSON-LD,
+  footer. Hero **unchanged** (its empty right flank is deliberate). SEO: canonical/OG/`SoftwareApplication`
+  JSON-LD, `robots.txt`, `sitemap.xml`, generated `og-cover.jpg`. `/privacy` + `/terms` moved out of
+  `docs/legal/` into the site (now covering the web version), closing the launch P0.
+  **Bug 1 — unprompted location request:** `scene.js` called `preciseSunTimes()` (→
+  `navigator.geolocation.getCurrentPosition`) **on load**, throwing a permission prompt at every visitor —
+  against §5's locked "timezone→coords, no permission prompt" decision and fatal for landing-page conversion.
+  Removed from load; kept as `SustainScene.useExactLocation()` for the opt-in control §5 defers.
+  **Bug 2 — all six plates loaded eagerly** (~960 KB before first paint), violating §13's "load one plate,
+  not six": plates now load **on first use**, and `reveal()` warms the rest **after** first paint.
+  Also: dropped the unused JPG/PNG source plates from `public/` (deploy −1.3 MB).
 
 - **2026-08-01 (Break screen + endless block-loop + day-cycle retune + nav — session handoff)** — See
   `2026-08-01-session-handoff.md` for the full state. Highlights: **Break** is now its own blurred screen

@@ -175,7 +175,11 @@
   opacity:0; visibility:hidden; pointer-events:none;   /* instant state flip; the View Transition cross-fades */
   /* ══ LOCKED PANEL GEOMETRY ══ */
   --gutter: clamp(14px, 2.4cqi, 46px);
-  --sq:     clamp(320px, 64cqh, 640px);
+  /* --sq drove the whole locked geometry off container HEIGHT only, so a tall narrow phone (390x844) asked
+     for a 540px square and a 691px --main-w on a 390px screen: guaranteed horizontal overflow. Also cap it
+     at the width the timer column can actually occupy. Desktop and tablet are unchanged (height still wins
+     there), so the founder-locked proportions hold; only narrow screens are clamped. */
+  --sq:     clamp(280px, min(64cqh, calc((100cqi - 2 * var(--gutter)) / 1.28)), 640px);
   --main-w: calc(var(--sq) * 1.28);
   --modes-w: 78%;
   --pad:    calc(var(--sq) * .055);
@@ -463,9 +467,56 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
   .setup-screen *{ transition-duration:.01ms !important; }
   .modes .pill{ transition:none; }
 }
+/* ══ NARROW / PORTRAIT — the whole screen becomes one vertical scroll, in the founder's order:
+      focused-today → back + mode chooser → Timer → Themes → Sound → Begin.
+      Everything goes IN FLOW (the absolute chrome would otherwise float over the scrolling panels). ══ */
 @container (max-width: 720px){
-  .cluster{ top:0; transform:none; max-height:100%; overflow-y:auto; padding-block:calc(var(--gutter)*2); }
-  .constellation{ flex-direction:column; }
+  .setup-screen{ overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .cluster{ position:static; transform:none; max-height:none; overflow:visible;
+    padding-block:0 calc(var(--gutter)*1.2); }
+  .constellation{ flex-direction:column; align-items:stretch; }
+
+  /* focused-today first, in flow, so it scrolls with the page instead of hovering over it */
+  .focused-today{ position:static; transform:none; justify-content:center;
+    margin:calc(var(--gutter)*.9) auto calc(var(--gutter)*.7); min-height:clamp(34px,3cqi,46px);
+    align-items:center; }
+  /* back stays a corner control, pinned to the top of the scrolled content */
+  .backbtn{ top:calc(var(--gutter)*.9); left:var(--gutter); }
+
+  /* stack order: Timer (with its mode chooser) → Themes → Sound */
+  .timer-col{ order:1; width:100%; height:auto; }
+  .panel.themes{ order:2; }
+  .panel.sound{ order:3; }
+  .panel.sound, .panel.themes{ height:auto; }
+  .themes-scroll{ overflow:visible; }          /* the page scrolls now, not the panel */
+
+  /* the mode chooser sits ABOVE the timer panel, centred and in flow (it is absolutely positioned above
+     the column on desktop, which on a stacked layout would collide with focused-today) */
+  .modes{ position:static; transform:none; width:100%; max-width:var(--modes-w);
+    margin:0 auto calc(var(--sp-in)*1.6); }
+
+  /* Begin is the last thing you scroll to, not a floating button over the panels */
+  .begin{ position:static; transform:none; display:block;
+    margin:calc(var(--gutter)*1.2) auto calc(var(--gutter)*1.6); padding:1.05em 3.2em; }
+  .begin:hover{ transform:translateY(-2px); }
+  .begin:active{ transform:translateY(1px); }
+}
+/* Touch pass: the steppers are sized as a fraction of --sq, which on a phone lands around 26px and 14px,
+   far under the 44px minimum. Bumped only for coarse pointers on narrow screens, so the founder-locked
+   desktop/tablet geometry is untouched. Checked against the box width so the +/- pair cannot overlap. */
+/* Portrait/narrow runs the numerals in TOP placement only (scene.js applyNum forces it), so offering the
+   other three would be a control that visibly does nothing. Hide the row and say why. */
+@media (max-width:900px), (orientation:portrait){
+  .setup-screen .mini-seg[data-seg="place"]{ display:none; }
+  .setup-screen .mini-seg[data-seg="place"] + *, .setup-screen .sec:has(.mini-seg[data-seg="place"]) .mini-lbl::after{
+    content:''; }
+  .setup-screen .sec:has(.mini-seg[data-seg="place"]) .mini-lbl::after{
+    content:' — fixed to Top on this screen'; opacity:.6; text-transform:none; letter-spacing:.02em; }
+}
+@media (pointer:coarse) and (max-width:720px){
+  .setup-screen .step{ width:max(calc(var(--sq)*.092), 44px); }
+  .setup-screen .box .step{ width:max(calc(var(--sq)*.048), 38px); }
+  .setup-screen .box.wide .step{ width:max(calc(var(--sq)*.055), 38px); }
 }
 </style>
 

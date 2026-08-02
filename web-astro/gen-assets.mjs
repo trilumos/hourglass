@@ -20,6 +20,12 @@ for (const p of PLATES) {
 const moon = await sharp('../_internal/web-prototype/plates/moon-tex.png').webp({ quality: 90 }).toFile('public/plates/moon-tex.webp');
 console.log(`moon-tex.webp ${(moon.size / 1024).toFixed(0)}KB`);
 
+// Social share card: 1200x630 from the sunset plate. JPG, not WebP — some scrapers still won't decode WebP.
+const og = await sharp(`${srcDir}/sunset.jpg`)
+  .resize(1200, 630, { fit: 'cover', position: 'centre' })
+  .jpeg({ quality: 82, mozjpeg: true }).toFile('public/og-cover.jpg');
+console.log(`og-cover.jpg ${(og.size / 1024).toFixed(0)}KB`);
+
 writeFileSync(
   'src/scene/lqip.js',
   '// AUTO-GENERATED (gen-assets.mjs). Tiny blur-up placeholders, base64, index-aligned to PLATES.\n' +

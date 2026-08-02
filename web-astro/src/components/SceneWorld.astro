@@ -407,8 +407,22 @@
 
 <style is:global>
 * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { height:100%; overflow:hidden; background:#0a1a2a;
+  /* Home scrolls (the landing page below the hero); Setup/Session are fixed full-screen overlays, so the
+     controller adds .lock-scroll on those routes. min-height (not height:100%) so the landing can extend. */
+  html,body { min-height:100%; background:#0a1a2a; overflow-x:hidden;
               font-family: ui-sans-serif, system-ui, sans-serif; }
+  :root.lock-scroll, :root.lock-scroll body { height:100%; overflow:hidden; }
+  @media (prefers-reduced-motion:no-preference){ html { scroll-behavior:smooth; } }
+  /* Every chapter is a stop. Mandatory snapping is what stops a flick carrying momentum forward and
+     drifting past a chapter; the browser owns the easing, so there is no JS inertia to fight. Setup and
+     Session lock the scroll entirely, so this only ever applies to the story. */
+  html { scroll-snap-type:y mandatory; }
+  :root.lock-scroll { scroll-snap-type:none; }
+  /* The story is a pinned stage: nothing visibly scrolls, so a scrollbar would be a lie. Hiding it also
+     makes innerWidth == the layout viewport, so overlays and the scene share one coordinate space
+     (the hourglass axis lined up ~half a scrollbar off otherwise). Keyboard/wheel scrolling is unaffected. */
+  html { scrollbar-width:none; }
+  html::-webkit-scrollbar { width:0; height:0; display:none; }
   /* cover fills the viewport; fit() positions the frame — centred horizontally, vertical crop anchored by
      SCENE_OY (0.5 = session's object-position:50% 50%). Overflow is clipped by #stage. */
   /* blur-up placeholder (instant, no black screen) behind the scene; index.astro sets its image + fades it out */
@@ -421,6 +435,9 @@
   /* slow "breathing" scene: zoom in, hold, zoom out, hold, loop. transform only (fit() owns left/top). */
   #frame { position:absolute; transform-origin:50% 47%; will-change:transform; container-type:size;
            animation:sceneBreathe 60s ease-in-out infinite; transition:filter .45s ease; }
+  /* The breath stays a free-running 60 s loop, independent of scroll (tried scroll-linked, felt wrong). */
+  /* The landing NEVER blurs or veils the scene (founder, 2026-08-02): the art stays pristine and the
+     hourglass column is never covered. Legibility is edge-tint only — see Landing.astro `.edge`. */
   /* Setup screen: soften the live scene like a sheet of glass, so the panels have the user's attention. */
   :root.setup-active #frame { filter:blur(6px) saturate(.96); }
   /* Session: hold the scene steady + zoomed-out (no breathing) so the numbers/hourglass don't drift. */
@@ -506,6 +523,15 @@
   #sep { left:var(--hg-cx); right:auto; top:var(--tb-top);
          transform:translate(-50%,-50%) scaleX(var(--num-scaleX)); }
   #sep::before { content:":"; }
+  /* PORTRAIT / narrow: the numerals are normally sized against the PLATE (cqh/cqw of #frame), but on a
+     portrait viewport the plate is cover-cropped to roughly four times the screen width, so the locked
+     `--gap:3cqw` and `15cqh` put the pair off both edges of the display. Re-express both in viewport units
+     so the top placement fits comfortably: clear of the screen edges and above the hourglass cap (which sits
+     at ~35% of the plate height, well below --tb-top:15%). Portrait is forced to `top` in applyNum(). */
+  @media (max-width:900px), (orientation:portrait){
+    #frame { --gap:4.5vw; }
+    .clocknum { font-size:min(8.5vh, 13vw); }
+  }
   #frame[data-sep="dot"]  #sep::before { content:"\00B7"; }   /* middle dot */
   #frame[data-sep="none"] #sep { display:none; }
   /* fills */

@@ -3,18 +3,46 @@
 // (falling continuously, never filling). The Home (locked hero-v22) sits over it. Setup + Session next.
 import SceneWorld from '../components/SceneWorld.astro';
 import Home from '../components/Home.astro';
+import Landing from '../components/Landing.astro';
 import Setup from '../components/Setup.astro';
 import Session from '../components/Session.astro';
 import { LQIP } from '../scene/lqip.js';
+
+const SITE = 'https://sustaintimer.com';
+const TITLE = 'Sustain — a calm focus timer in a living world';
+const DESC = 'A free focus timer inside a hand-painted seaside world that follows your real sunrise and sunset. Flow, Pomodoro, Custom and Endless blocks. No account, nothing uploaded.';
+// One app, described once — Google reads this for the rich result.
+const appLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Sustain',
+  applicationCategory: 'ProductivityApplication',
+  operatingSystem: 'Web, Android',
+  description: DESC,
+  url: SITE,
+  installUrl: 'https://play.google.com/store/apps/details?id=com.trilumos.sustain',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: { '@type': 'Organization', name: 'Trilumos', email: 'trilumos.app@gmail.com' },
+};
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Sustain — a calm focus timer inside a living seaside world." />
-    <title>Sustain — a calm focus timer</title>
+    <meta name="description" content={DESC} />
+    <title>{TITLE}</title>
+    <link rel="canonical" href={SITE + '/'} />
     <link rel="icon" href="/favicon-round.png" type="image/png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sustain" />
+    <meta property="og:title" content={TITLE} />
+    <meta property="og:description" content={DESC} />
+    <meta property="og:url" content={SITE + '/'} />
+    <meta property="og:image" content={SITE + '/og-cover.jpg'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0a1a2a" />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(appLd)}></script>
     <!-- v22 type stack (dev via Google Fonts; self-host in the perf pass — spec §13/§18). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -52,15 +80,22 @@ import { LQIP } from '../scene/lqip.js';
     </script>
     <SceneWorld />
     <Home />
+    <Landing />
     <Setup />
     <Session />
     <script is:inline>
       // Home <-> Setup — one continuous document (scene never re-mounts). Hash route so Back/swipe-back work
       // and a refresh can't 404 on a static host. Forward: Begin Focus sets #setup; Back: history.back().
       (function () {
-        var home = document.getElementById('home');            // .hero
-        var setup = document.getElementById('setupScreen');    // .setup-screen
+        var root  = document.documentElement;
+        var home  = document.getElementById('home');            // .hero
+        var setup = document.getElementById('setupScreen');     // .setup-screen
+        var landing = document.getElementById('chapters');
+        var cue   = document.getElementById('scrollCue');
+        var HOME_TITLE = document.title;                        // the <title> rendered in the head (one source)
+        // Only #setup / #session are routes. Any other hash (the landing's in-page anchors) is still Home.
         function screen(){ var h = location.hash; return h==='#setup' ? 'setup' : (h==='#session' ? 'session' : 'home'); }
+        var shown = null;
         function sync(){
           var s = screen();
           // Move focus out of a screen we're about to hide, so aria-hidden never traps a focused descendant.
@@ -68,12 +103,91 @@ import { LQIP } from '../scene/lqip.js';
           if (ae && ae.blur && ((setup && s!=='setup' && setup.contains(ae)) || (home && s!=='home' && home.contains(ae)))) ae.blur();
           if (setup){ setup.classList.toggle('on', s==='setup'); setup.setAttribute('aria-hidden', s==='setup' ? 'false' : 'true'); }
           if (home) home.classList.toggle('screen-hidden', s!=='home');
-          document.documentElement.classList.toggle('setup-active', s==='setup');   // glass-blur the scene only under Setup
-          document.title = s==='setup' ? 'Sustain — Setup' : (s==='session' ? 'Sustain — Focus' : 'Sustain — a calm focus timer');
+          if (landing) landing.hidden = (s!=='home');
+          root.classList.toggle('setup-active', s==='setup');   // glass-blur the scene only under Setup
+          // Setup/Session are fixed full-screen overlays: lock the page scroll and start them from the top.
+          root.classList.toggle('lock-scroll', s!=='home');
+          // 'instant' so the route change doesn't animate through the whole landing (html has scroll-behavior:smooth)
+          if (s!=='home'){ scrollTo({ top:0, left:0, behavior:'instant' }); if (window.SustainScene) SustainScene.setDay('follow'); }
+          document.title = s==='setup' ? 'Sustain — Setup' : (s==='session' ? 'Sustain — Focus' : HOME_TITLE);
+          shown = s;
         }
         // Cross-fade snapshots (blur is baked in → no first-paint pop). Falls back to an instant flip.
-        function apply(){ if (document.startViewTransition) document.startViewTransition(sync); else sync(); }
+        function apply(){
+          if (screen() === shown) return;                       // an in-page anchor is not a screen change
+          if (document.startViewTransition) document.startViewTransition(sync); else sync();
+        }
+
+        // ══ THE STORY ═══════════════════════════════════════════════════════════════════════════════
+        // Nothing on the page moves. The scene, its tint, the grain and the nav are constant; scrolling
+        // only cross-fades the text chapters and advances the day. The scroll position is DAMPED before it
+        // drives anything, so the sky glides instead of snapping to the wheel.
+        var chapters = Array.prototype.slice.call(document.querySelectorAll('.ch'));
+        var CH_N     = chapters.length + 1;                    // + the hero (chapter 0)
+        // Scroll distance per chapter, MEASURED off the first snap section rather than assumed from
+        // innerHeight. The sections are sized in svh, and on mobile innerHeight moves with the URL bar, so
+        // deriving it would drift the chapter maths away from the browser's actual snap points.
+        var runway   = document.getElementById('runway');
+        function stopH(){
+          var s = runway && runway.firstElementChild;
+          return (s && s.offsetHeight) || innerHeight;
+        }
+        var DAY_SPAN = 12;                                     // reference hours swept across the whole story
+        var slow     = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var target = 0, smooth = 0, shownCh = -1, running = false;
+
+        function maxScroll(){ return Math.max(1, document.documentElement.scrollHeight - innerHeight); }
+
+        function paint(){
+          running = false;
+          // Read the scroll position DIRECTLY. An eased/damped follow was carrying momentum after the
+          // gesture stopped, which is exactly what the snap is there to prevent; the browser's own snap
+          // easing is the smoothing now.
+          smooth = target;
+
+          var p = Math.min(1, Math.max(0, smooth / maxScroll()));
+
+          // chapter state: CH_LEN of scroll each (a chapter is longer than a screen so the sky has room to
+          // travel and the reader has time), swapping at the midpoints. Must match .runway's height.
+          var i = Math.max(0, Math.min(CH_N - 1, Math.round(smooth / stopH())));
+          if (i !== shownCh) {
+            shownCh = i;
+            chapters.forEach(function (el, n){
+              var mine = n + 1;                                 // chapters[0] is chapter 1
+              el.classList.toggle('on',   mine === i);
+              el.classList.toggle('past', mine <  i);
+              if (mine === i) el.removeAttribute('inert'); else el.setAttribute('inert', '');
+            });
+            root.classList.toggle('story-on', i > 0);            // hero lede yields
+            root.classList.toggle('ch-last',  i === CH_N - 1);
+            if (cue) cue.classList.toggle('gone', i > 0);
+          }
+
+          // the day: top of page = the viewer's real local sky, then +DAY_SPAN reference hours, wrapping
+          if (window.SustainScene && SustainScene.refHour) {
+            if (p < 0.002) SustainScene.setDay('follow');
+            else SustainScene.setDayHour(SustainScene.refHour() + p * DAY_SPAN);
+          }
+
+          // (The scene's "breathing" zoom stays a free-running CSS loop, deliberately NOT scroll-linked.)
+        }
+        function tick(){ if (!running && screen() === 'home'){ running = true; requestAnimationFrame(paint); } }
+
+        addEventListener('scroll', function(){ target = scrollY; tick(); }, { passive:true });
+        addEventListener('resize', function(){ target = scrollY; smooth = scrollY; shownCh = -1; tick(); }, { passive:true });
+
+        // Nav links open a chapter in place: no page navigation, no anchor jump (the chapters live in a
+        // fixed stage with no scroll position of their own, so the browser's anchor scrolling can't work).
+        function goTo(i){ scrollTo({ top: i * stopH(), behavior: slow ? 'smooth' : 'auto' }); }
+        document.querySelectorAll('.nav-links a[href^="#"], .say a[href^="#"]').forEach(function (a){
+          var id = a.getAttribute('href').slice(1);
+          var n  = chapters.findIndex(function (el){ return el.id === id; });
+          if (n < 0) return;
+          a.addEventListener('click', function (e){ e.preventDefault(); goTo(n + 1); });
+        });
+
         sync();                                                // initial screen (no animation)
+        target = smooth = scrollY; tick();
         var begin = document.getElementById('beginFocus');
         if (begin) begin.addEventListener('click', function (e){ e.preventDefault(); if (screen()!=='setup') location.hash = 'setup'; });
         // Setup's Back button always goes HOME (not history.back(), which could land on a spent #session).

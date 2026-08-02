@@ -1,7 +1,13 @@
+---
+layout: ../layouts/Doc.astro
+title: Terms of Service
+description: Short, plain terms for the Sustain focus timer — the free web version and the Android app.
+---
+
 # Sustain — Terms of Service
 
 **Effective date:** 25 June 2026
-**App:** Sustain (`com.trilumos.sustain`)
+**Applies to:** the Sustain Android app (`com.trilumos.sustain`) and the Sustain website (sustaintimer.com)
 **Contact:** trilumos.app@gmail.com
 
 These terms are intentionally short and plain. By using Sustain, you agree to them.
@@ -11,6 +17,9 @@ These terms are intentionally short and plain. By using Sustain, you agree to th
 Sustain is a personal focus-timer app. We grant you a personal, non-transferable
 licence to use it on your devices. Please don't reverse-engineer, resell, or
 redistribute the app, and don't use it to break the law.
+
+The **web version is free to use** and needs no account. The artwork, sounds, and
+code are ours; using the site does not give you a licence to reuse them elsewhere.
 
 ## 2. Your data
 

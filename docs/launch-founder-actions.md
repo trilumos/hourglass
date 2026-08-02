@@ -23,11 +23,12 @@ runtime, not in the build. Install the **release** build on a device and verify:
 If anything misbehaves, tell me and I'll widen the proguard keep rules (or we ship
 v1 with R8 off).
 
-## 3. Host the legal pages (P0)
-- Host `docs/legal/privacy-policy.md` and `docs/legal/terms-of-service.md` at public
-  URLs (GitHub Pages, a Notion page, or a one-pager site all work). Fill in the
-  **effective date** and a **support email** in both first.
-- Put the privacy-policy URL in the Play Console (App content → Privacy Policy).
+## 3. Host the legal pages (P0 — now built, pending deploy)
+- **Done in the repo (2026-08-02):** both docs moved into the website and render as real pages —
+  `web-astro/src/pages/privacy.md` → `/privacy`, `terms.md` → `/terms`. They now cover the app **and**
+  the web version, and the site footer links both.
+- **Remaining:** deploy the site, then put `https://<domain>/privacy` in the Play Console
+  (App content → Privacy Policy).
 - Optional but nice: link both from inside the app (Settings) — say the word.
 
 ## 4. Play Console → Data Safety form (P0)
