@@ -470,11 +470,20 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
 /* ══ NARROW / PORTRAIT — the whole screen becomes one vertical scroll, in the founder's order:
       focused-today → back + mode chooser → Timer → Themes → Sound → Begin.
       Everything goes IN FLOW (the absolute chrome would otherwise float over the scrolling panels). ══ */
-@container (max-width: 720px){
-  .setup-screen{ overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+/* A @container query can only style DESCENDANTS of the container, never the container itself — which is why
+   `overflow-y:auto` on .setup-screen silently did nothing and the screen never scrolled. This is a @media
+   query for exactly that reason. */
+@media (max-width: 720px), (orientation: portrait){
+  .setup-screen{ overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
   .cluster{ position:static; transform:none; max-height:none; overflow:visible;
     padding-block:0 calc(var(--gutter)*1.2); }
   .constellation{ flex-direction:column; align-items:stretch; }
+
+  /* `flex:1 1 0` is a HEIGHT basis of 0 once the row becomes a column, and an auto-height flex container has
+     no free space to grow into, so Themes and Sound collapsed to nothing (only the volume slider and a sliver
+     of panel showed). They size to their content now. */
+  .panel.sound, .panel.themes, .timer-col{ flex:0 0 auto; width:100%; }
+  .panel.sound, .panel.themes{ min-height:0; overflow:visible; }
 
   /* focused-today first, in flow, so it scrolls with the page instead of hovering over it */
   .focused-today{ position:static; transform:none; justify-content:center;
@@ -484,11 +493,12 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
   .backbtn{ top:calc(var(--gutter)*.9); left:var(--gutter); }
 
   /* stack order: Timer (with its mode chooser) → Themes → Sound */
-  .timer-col{ order:1; width:100%; height:auto; }
+  .timer-col{ order:1; height:auto; }
   .panel.themes{ order:2; }
   .panel.sound{ order:3; }
   .panel.sound, .panel.themes{ height:auto; }
-  .themes-scroll{ overflow:visible; }          /* the page scrolls now, not the panel */
+  /* the panel had its own inner scroller; the PAGE scrolls now, so let it grow instead */
+  .themes-scroll{ overflow:visible; flex:0 0 auto; min-height:0; transform:none; will-change:auto; }
 
   /* the mode chooser sits ABOVE the timer panel, centred and in flow (it is absolutely positioned above
      the column on desktop, which on a stacked layout would collide with focused-today) */

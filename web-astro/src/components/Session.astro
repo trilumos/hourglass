@@ -180,7 +180,7 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     -webkit-backdrop-filter:blur(16px) saturate(.9); backdrop-filter:blur(16px) saturate(.9); background:rgba(8,12,20,.18); }
   #paused.show{ opacity:1; pointer-events:auto; }
   @media (prefers-reduced-transparency: reduce){ #paused{ background:rgba(20,24,32,.86); -webkit-backdrop-filter:none; backdrop-filter:none; } }
-  .paused-word{ font-weight:500; text-transform:uppercase; letter-spacing:.28em; font-size:clamp(34px,9vh,104px); color:#fff; line-height:1; }
+  .paused-word{ font-weight:500; text-transform:uppercase; letter-spacing:.28em; font-size:min(clamp(34px,9vh,104px), 14vw); color:#fff; line-height:1; }
   .paused-grace{ font-weight:500; font-size:clamp(12px,1.5vw,16px); letter-spacing:.06em; color:var(--gold); opacity:0; transition:opacity .3s var(--e-std); }
   .paused-grace.show{ opacity:1; }
   /* break screen — like Paused: blurred scene, no hourglass/sound, a simple countdown + End break */
@@ -189,8 +189,8 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     -webkit-backdrop-filter:blur(16px) saturate(.9); backdrop-filter:blur(16px) saturate(.9); background:rgba(8,12,20,.18); }
   #breakScreen.show{ opacity:1; pointer-events:auto; }
   @media (prefers-reduced-transparency: reduce){ #breakScreen{ background:rgba(20,24,32,.86); -webkit-backdrop-filter:none; backdrop-filter:none; } }
-  .break-word{ font-weight:500; text-transform:uppercase; letter-spacing:.28em; font-size:clamp(20px,4vh,44px); color:var(--gold); line-height:1; }
-  .break-time{ font-weight:300; font-variant-numeric:tabular-nums; font-size:clamp(48px,12vh,120px); color:#fff; line-height:1; letter-spacing:.01em; }
+  .break-word{ font-weight:500; text-transform:uppercase; letter-spacing:.28em; font-size:min(clamp(20px,4vh,44px), 12vw); color:var(--gold); line-height:1; }
+  .break-time{ font-weight:300; font-variant-numeric:tabular-nums; font-size:min(clamp(48px,12vh,120px), 24vw); color:#fff; line-height:1; letter-spacing:.01em; }
   .end-break{ margin-top:1em; padding:.7em 1.7em; border-radius:100px; color:var(--ink); cursor:pointer;
     font:500 clamp(12px,1.4vw,15px) Jost,sans-serif; letter-spacing:.05em; transition:transform .2s var(--e-std), background .2s; }
   .end-break:hover{ transform:translateY(-2px); background:rgba(255,255,255,.12); }
