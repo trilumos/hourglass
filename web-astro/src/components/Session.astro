@@ -457,7 +457,9 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     window.SustainScene.setNumStyle(cfg);
     window.SustainScene.setTimerVis(cfg.vis || 'always');
     window.SustainScene.startSession(plan, cfg.mode==='endless');
-    if(window.SustainAudio){ window.SustainAudio.set(cfg); window.SustainAudio.cue(); }
+    // On /stage the start bell belongs at the END of the 3-2-1 lead-in, not here — stage.astro rings it on
+    // the same beat the clock starts. Ringing here too would double it, three seconds early.
+    if(window.SustainAudio){ window.SustainAudio.set(cfg); if(!STAGE) window.SustainAudio.cue(); }
     if(cfg.intention){ intentTop.textContent=cfg.intention; intentTop.hidden=false; } else intentTop.hidden=true;
     _hasBreaks = plan.some(function(s){ return s.kind==='rest'; });   // pomodoro/custom/endless-block all have breaks
     _onBreak = false; breakScreen.classList.remove('show'); pauseBtn.hidden=false; document.documentElement.classList.remove('on-break');

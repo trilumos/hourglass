@@ -66,6 +66,8 @@
         <div>
           <span class="mini-lbl">Time of day</span>
           <div class="tod-opts" id="tod"></div>
+          <!-- shown only when the session runs a light CYCLE rather than a single time of day -->
+          <p class="cyc-inuse" id="cycInUse" hidden></p>
         </div>
         <div class="toggles">
           <div class="toggle-row">
@@ -155,6 +157,11 @@
             ><button data-v="breaks">Breaks</button>
           </div></div>
       </div>
+      <!-- Applied vs draft: edits are a DRAFT until this is pressed. Disabled = what you see is what the
+           session will run; enabled = you have unapplied changes. Covers the presets too, so switching to
+           "Into the night" is an explicit choice rather than something that silently took effect. -->
+      <button class="cyc-apply" id="cycApply" disabled>Use this sequence</button>
+      <p class="cyc-applied-note" id="cycApplyNote"></p>
     </div>
 
     <div class="sec">
@@ -250,7 +257,11 @@
 .panel.sound, .panel.themes{ flex:1 1 0; height:var(--sq); }
 .panel.themes{ overflow:hidden; }
 .themes-scroll{
-  flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+  /* overflow-x MUST be stated. Per spec, when one axis is `visible` and the other is not, the `visible` one
+     computes to `auto` — so declaring only overflow-y silently gave this panel a horizontal scrollbar too
+     the moment any child was a pixel too wide. */
+  flex:1 1 auto; min-width:0; overflow-x:hidden;
+  min-height:0; overflow-y:auto; overscroll-behavior:contain;
   display:flex; flex-direction:column; gap:var(--sp-in); padding:3px 6px 3px 3px;   /* left/top/bottom = room for selected rings that the overflow-x clip would cut */
   scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.18) transparent;
   transform:translateZ(0); will-change:scroll-position;   /* own layer → scroll decoupled from the frost's backdrop-filter */
@@ -404,8 +415,10 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
 .todo.on .cap{ opacity:1; }
 .dot.follow{ background:conic-gradient(from 210deg,#1a2440,#3a4d78 25%,#e6a86b 50%,#7db4e6 62%,#2a3350 88%,#1a2440); }
 .dot.timepick{ background:radial-gradient(circle,#3a3f4d,#22252e); display:flex; align-items:center; justify-content:center; }
-.toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-in); margin-top:var(--sp-in); }
-.toggle-row .tr-k{ font-weight:400; font-size:var(--t-md); }
+/* wrap + min-width:0 so a long label and a fixed-width segment can never push past the panel edge
+   (`.mini-seg` is flex:none, so without this the row simply overflowed and made a scrollbar) */
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-in); margin-top:var(--sp-in); flex-wrap:wrap; }
+.toggle-row .tr-k{ font-weight:400; font-size:var(--t-md); min-width:0; }
 .mini-seg{ display:flex; background:rgba(255,255,255,.06); border-radius:100px; padding:calc(var(--sq)*.005); flex:none; }
 .mini-seg button{ font-family:inherit; font-size:var(--t-sm); color:var(--ink-dim); cursor:pointer; padding:calc(var(--ctrl-y)*.75) .85em; border-radius:100px; background:none; border:none; white-space:nowrap; }
 .mini-seg button.on{ color:#181a20; background:#fff; font-weight:500; }
@@ -468,6 +481,18 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
 .cyc-timeline .tseg{ height:100%; }
 .cyc-key{ font-weight:300; font-size:clamp(8px,.86cqi,11px); opacity:.6; line-height:1.5; }
 .cyc-disabled{ font-size:clamp(8px,.9cqi,12px); color:var(--warn); opacity:.85; margin-top:.5em; }
+/* "Use this sequence" — enabled only while the draft differs from what the session will actually run */
+.cyc-apply{ margin-top:.9em; width:100%; font-family:inherit; font-weight:500; letter-spacing:.12em;
+  text-transform:uppercase; font-size:var(--t-xs); color:#181a20; cursor:pointer;
+  padding:.85em 1.4em; border-radius:100px; border:1px solid rgba(255,255,255,.5);
+  background:var(--gsel); transition:opacity .2s, background .2s, color .2s; }
+.cyc-apply:disabled{ cursor:default; background:rgba(255,255,255,.07); color:var(--ink-dim);
+  border-color:rgba(255,255,255,.14); }
+.cyc-applied-note{ margin-top:.5em; font-size:clamp(8px,.9cqi,12px); color:var(--gold); opacity:.9; }
+/* Themes panel: what light the session will actually run, when it is not just "follow my day" */
+.cyc-inuse{ margin-top:.6em; font-size:var(--t-xs); font-weight:400; color:var(--gold); opacity:.92;
+  line-height:1.45; }
+.cyc-inuse[hidden]{ display:none; }
 
 @media (prefers-reduced-motion: reduce){
   .setup-screen *{ transition-duration:.01ms !important; }
@@ -852,6 +877,35 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     }
     function sessionTotal(){ return st.mode==='endless'? null : Plan.totalMinOf(Plan.buildPlan(st)); }
     function nBreaks(){ return Plan.restsOf(Plan.buildPlan(st)).length; }
+    // ── Applied vs draft ────────────────────────────────────────────────────────────────────────────
+    // Everything above edits a DRAFT. The session runs `cycApplied`, which only changes when "Use this
+    // sequence" is pressed. That is what makes the button meaningful: disabled means "this is what will
+    // run", enabled means "you have changes that are not in use yet".
+    function cycSnapshot(){
+      return JSON.stringify({ preset:cycPreset, seq:cycSeq, change:segState.cycChange,
+                              by:segState.cycBy, repeat:cycRepeat, minutes:cycMinutes });
+    }
+    var cycApplied = null;                       // set on first render (the defaults are "in use")
+    function cycDirty(){ return cycApplied !== cycSnapshot(); }
+    function labelFor(id){ var p=presetById(id); return p ? p.label : 'Custom sequence'; }
+    function renderCycState(){
+      var dirty = cycDirty();
+      var btn = qs('#cycApply'), note = qs('#cycApplyNote');
+      if (btn){ btn.disabled = !dirty; btn.textContent = dirty ? 'Use this sequence' : 'In use'; }
+      if (note) note.textContent = dirty ? 'Not in use yet — press to apply it to your session.' : '';
+      // Themes panel: say plainly when a cycle (not a single time of day) is what the session will run.
+      var applied = cycApplied ? JSON.parse(cycApplied) : null;
+      var el = qs('#cycInUse');
+      if (el){
+        if (applied && applied.preset && applied.preset !== 'follow'){
+          el.hidden = false;
+          el.textContent = labelFor(applied.preset) + ' in use'
+            + (applied.preset === 'custom' && applied.seq.length
+                 ? ' — ' + applied.seq.map(function(id){ return phaseById(id).cap; }).join(' · ')
+                 : '');
+        } else el.hidden = true;
+      }
+    }
     function renderCycle(){
       renderCycPresets();
       var tl=qs('#cycTimeline'), preset=presetById(cycPreset);
@@ -861,7 +915,8 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
           +'<span class="x" data-rm="'+i+'">&times;</span></span>'; }).join('');
       if(cycPreset==='follow'){
         tl.style.display='flex'; tl.style.background='linear-gradient(90deg,'+PHASES.map(function(p){return p.col;}).join(',')+')';
-        tl.innerHTML=''; qs('#cycKey').textContent='Follows your real clock'; qs('#cycDisabled').textContent=''; return;
+        tl.innerHTML=''; qs('#cycKey').textContent='Follows your real clock'; qs('#cycDisabled').textContent='';
+        renderCycState(); return;
       }
       tl.style.background='';
       var seq = cycPreset==='hold' ? [currentPlate()] : cycSeq;
@@ -885,6 +940,7 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
       }
       tl.innerHTML=segs.join(''); tl.style.display=segs.length?'flex':'none';
       qs('#cycDisabled').textContent=msg;
+      renderCycState();
       qs('#cycKey').textContent = segs.length ? seq.map(function(id){return phaseById(id).cap;}).join(' · ') : '';
     }
     qs('#cycPresets').addEventListener('click',function(e){
@@ -1178,7 +1234,10 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
       cfg.intention = (qs('#intent') && qs('#intent').value.trim()) || '';
       cfg.sunmoon = segState.sunmoon;                                  // show | hide
       // advanced "Light through your session" — the phase sequence + timing the session progresses the sky through
-      cfg.cycle = { preset:cycPreset, seq:cycSeq.slice(), change:segState.cycChange, by:segState.cycBy, repeat:cycRepeat, minutes:cycMinutes };
+      // the APPLIED cycle, not the draft: unapplied edits must not silently run (that is what the
+      // "Use this sequence" button exists to make explicit)
+      cfg.cycle = cycApplied ? JSON.parse(cycApplied)
+                             : { preset:cycPreset, seq:cycSeq.slice(), change:segState.cycChange, by:segState.cycBy, repeat:cycRepeat, minutes:cycMinutes };
       localStorage.setItem('sustain.session', JSON.stringify(cfg));
       sessionStorage.setItem('sustain.armed','1');   // one-shot the Session consumes on first load
       location.hash='session';                       // Session screen (reads the cfg) is the next roadmap item
@@ -1193,6 +1252,15 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     qs('#timerDesc').textContent=TIMER_DESC[segState.timershow];
     applySepForMode();
     renderCyclePalette(); renderCycPresets();
+    cycApplied = cycSnapshot();          // the defaults ARE in use, so the button starts disabled
+    renderCycState();
+    qs('#cycApply').addEventListener('click', function(){
+      cycApplied = cycSnapshot();
+      // Deliberately does NOT touch the live scene: spec §5 — a chosen cycle takes effect when the SESSION
+      // begins, and Setup always shows the real current-time plate. (Calling applyScene() here would snap
+      // the preview back to the time-of-day pick, which reads like the button did the wrong thing.)
+      renderCycState();
+    });
     // preview the chosen time-of-day + mix while on Setup; on leaving, stop the preview mix (the Session runs
     // its own audio) and only force the live clock when going HOME (the Session controls its own day/phase).
     window.addEventListener('hashchange',function(){

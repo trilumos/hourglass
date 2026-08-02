@@ -1996,6 +1996,14 @@ window.SustainScene = {
     applyVis();
   },
   togglePauseSession: function(){ if (session.state.running) session.pause(); else session.resume(); return session.state.running; },
+  // Reset the running plan's clock back to zero. `freeze` also parks it paused. /stage uses this for its
+  // 3-2-1 lead-in: pause/resume alone would keep the ~80 ms that elapsed before the pause landed, so a
+  // 25-minute block began at 24:59. Restarting means the block starts at EXACTLY its full length.
+  restartSession: function(freeze){
+    session.start(); wasDone = false; S.prog = 0;
+    if (freeze) session.pause();
+    return !freeze;
+  },
   endSession: function(){
     const r = session.sample(); if (r.kind !== 'idle' && !r.done) bumpFocusedToday(r.focusSec);
     session.reset(); S.prog = 0; wasDone = false;

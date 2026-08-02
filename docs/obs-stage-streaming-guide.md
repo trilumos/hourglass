@@ -23,13 +23,13 @@ and keeps rendering whether or not anything is in front of it.
 
 | Setting | Value | Why |
 |---|---|---|
-| URL | `https://<domain>/stage?record=1&flow=240` | see §4 for the parameters |
+| URL | `https://<domain>/stage?record=1` | the session itself is configured on the page — see §4 |
 | Width × Height | `1920` × `1080` | match the canvas exactly; do not scale the source in OBS |
 | FPS | `60`, or `30` | the scene is slow — 30 halves encode cost with almost no visible loss |
 | Custom CSS | *(clear the default)* | OBS injects a transparent-background rule that is not wanted here |
 | Shutdown source when not visible | **OFF** | otherwise the scene reloads on every scene switch and the day cycle restarts |
 | Refresh browser when scene becomes active | **OFF** | same reason |
-| Control audio via OBS | ON *(only if you want scene audio — see §5)* | |
+| Control audio via OBS | ON *(only if you want scene audio — see §6)* | |
 
 Then **right-click the source → Transform → Fit to screen**.
 
@@ -183,4 +183,4 @@ Stream to YouTube Live; it auto-archives as a VOD. Per strategy §10, **treat th
 converted 38M watch-minutes into ~$1,300 lifetime).
 
 The payoff is the link-back: **every description links the exact preset URL that produced the video**, e.g.
-`sustaintimer.com/?flow=240`. The video is the ad, and the ad is the product.
+`sustaintimer.com`. The video is the ad, and the ad is the product.
