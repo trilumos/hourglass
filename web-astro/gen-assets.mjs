@@ -4,18 +4,20 @@ import sharp from 'sharp';
 import { writeFileSync } from 'fs';
 
 const PLATES = ['pre-dawn', 'sunrise', 'midday', 'sunset', 'twilight', 'midnight'];
+// Sources stay in _internal/ (the design record); only the compressed WebP ships in public/.
+const srcDir = '../_internal/site/assets/plates';
 const dir = 'public/plates-phases';
 const lqip = [];
 
 for (const p of PLATES) {
-  const src = `${dir}/${p}.jpg`;
+  const src = `${srcDir}/${p}.jpg`;
   const out = await sharp(src).webp({ quality: 84 }).toFile(`${dir}/${p}.webp`);
   const tiny = await sharp(src).resize(64).webp({ quality: 50 }).toBuffer();
   lqip.push(`data:image/webp;base64,${tiny.toString('base64')}`);
   console.log(`${p}.webp  ${(out.size / 1024).toFixed(0)}KB   lqip ${tiny.length}B`);
 }
 
-const moon = await sharp('public/plates/moon-tex.png').webp({ quality: 90 }).toFile('public/plates/moon-tex.webp');
+const moon = await sharp('../_internal/web-prototype/plates/moon-tex.png').webp({ quality: 90 }).toFile('public/plates/moon-tex.webp');
 console.log(`moon-tex.webp ${(moon.size / 1024).toFixed(0)}KB`);
 
 writeFileSync(
