@@ -57,28 +57,63 @@ Two practical notes:
 - This scene is mostly slow gradients and a fine sand stream. Gradients are where low bitrates show banding,
   so do not go below ~6000 Kbps at 1080p even though the motion is gentle.
 
-## 4. `/stage` URL parameters
+## 4. How `/stage` works
 
-| Parameter | Default | What it does |
-|---|---|---|
-| `record=1` | off | Capture preset: hides the cursor, stops the breathing zoom, removes idle motion |
-| `flow=<minutes>` | `240` | Focus block length. The sand drains across it |
-| `loop=1` \| `0` | `1` | Start another block when one ends. Keep `1` for 24/7 — otherwise you film a finished hourglass |
-| `phase=` | `follow` | `follow` (real local time) or `pre-dawn` `sunrise` `midday` `sunset` `twilight` `midnight` |
-| `timer=1` | `0` | Show the clock numerals. Off by default — on a stream the hourglass *is* the timer |
+`/stage` opens the **real Setup screen** — the same one production users see. Choose the mode (Flow,
+Pomodoro, Custom, Endless), durations, intention, sounds and mixer, time of day and number look exactly as
+you would on the site, then press **Begin**.
 
-Examples:
+From that moment the session runs **with no interface at all**: no pause/resume, no break button, no
+settings gear, no give up, no popcards, no navigation guard. The same timer engine drives everything —
+segment advances, Pomodoro breaks, Endless block loops — it simply follows the configuration to the end and
+then **fades to black**.
+
+**Browser Back (or a back swipe) is the way out**, and it returns you to Setup ready to configure the next
+capture.
+
+| Parameter | What it does |
+|---|---|
+| `?record=1` | Capture preset: hides the cursor and stops the scene's breathing zoom |
+| `?stopstream=1` | Also stop **streaming** on completion, not just recording (see §5) |
+
+So the URL you point OBS at is simply:
 
 ```
-/stage?record=1                                  live day cycle, 4 h blocks, no numerals
-/stage?record=1&phase=midnight&flow=120          fixed night scene, 2 h blocks
-/stage?record=1&phase=sunset&timer=1             golden hour with the countdown showing
+https://<domain>/stage?record=1
 ```
 
-`phase=follow` means a 24/7 stream watches the real sun rise and set. A fixed `phase` is better for a
-themed VOD ("2 hours of rain at midnight").
+Configure the session in the browser before you go live, and everything after Begin is clean footage.
 
-## 5. Audio
+**For a long unattended stream, pick Endless** — it loops the chosen block forever, so the capture never
+reaches the fade-to-black.
+
+## 5. Starting and stopping the recording automatically
+
+**Press Begin and OBS starts recording.** The same click also puts the page into **fullscreen**, so the
+session always fills the frame. (Begin checks `getStatus` first, so pressing it twice cannot start a second
+recording.)
+
+When the session finishes, `/stage` fades to black over ~2.4 s and then calls
+**`window.obsstudio.stopRecording()`**, so the recording ends by itself on clean black. No timers to babysit,
+and a trivially easy cut point in the edit.
+
+`window.obsstudio` is injected by OBS **only inside a Browser Source**, so this does nothing in a normal
+browser — it cannot misfire while you are configuring the session.
+
+**One setting is required for it to work:**
+
+> Browser Source properties → **Page permissions → All access**
+
+Without that, OBS does not expose the control functions and the page simply fades to black without stopping
+anything (harmless, just manual).
+
+Notes:
+- Recording only. Add `?stopstream=1` if you also want a **live stream** to end — usually you do *not* want
+  that, since ending a YouTube Live ends the broadcast.
+- Endless never completes, so it never triggers this. That is the right behaviour for a 24/7 stream.
+- The stop fires ~3.2 s after completion, comfortably after the fade, so the last frames are pure black.
+
+## 6. Audio
 
 `/stage` does **not** start the scene's ambient audio. Browsers block audio until a user gesture, and a
 Browser Source never receives one. This is deliberate, not a bug:
@@ -88,15 +123,60 @@ Browser Source never receives one. This is deliberate, not a bug:
 - If you specifically want the ocean/sand/birds bed, add those files as OBS Media Sources with loop enabled.
   They are in `web-astro/public/assets/audio/`.
 
-## 6. Long runs
+## 7. Stopping Windows from interrupting a long capture
+
+**First, the diagnosis.** "It logs out the user but the processes keep running" is Windows **locking**, not
+signing out. A real sign-out terminates your processes; a lock leaves everything running behind the sign-in
+screen. That matters because it changes the fix, and it is also **one more reason to use a Browser Source**:
+a locked desktop stops composing, so Display/Window Capture records black, while a Browser Source keeps
+rendering inside OBS regardless.
+
+Work through these on the Asus TUF (Windows 11 Home):
+
+1. **Settings → Accounts → Sign-in options → "If you've been away, when should Windows require you to sign
+   in again?" → Never.** This is the usual culprit.
+   *On some Windows 11 Home builds this dropdown is greyed out with "Security policies on this PC are
+   preventing some options from being shown."* If so, set it directly:
+   ```
+   reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v InactivityTimeoutSecs /t REG_DWORD /d 0 /f
+   ```
+   (`0` = never; needs an admin terminal and a reboot.)
+
+2. **Screen saver.** Search "Change screen saver" → set to **(None)** and untick **"On resume, display logon
+   screen."** A screen saver with that box ticked locks the machine on its own schedule.
+
+3. **Dynamic Lock** — Settings → Accounts → Sign-in options → Dynamic lock → **untick**. It locks the PC when
+   a paired phone's Bluetooth goes out of range, which looks exactly like a random lock.
+
+4. **Power.** Settings → System → Power & battery → Screen and sleep → set **all four** to *Never* (both
+   "on battery" and "plugged in"). Then also clear the hidden console-lock timeout, which the GUI does not
+   expose:
+   ```
+   powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOCONLOCK 0
+   powercfg /setdcvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOCONLOCK 0
+   powercfg /setactive SCHEME_CURRENT
+   ```
+
+5. **MyASUS / Armoury Crate.** Asus utilities ship their own power and battery-saver profiles that override
+   Windows settings. Check Armoury Crate for a power plan or "battery care" mode and disable anything that
+   dims, sleeps or locks. This is the step people miss on TUF/ROG machines.
+
+6. **Belt and braces:** install **Microsoft PowerToys** and turn on **Awake** ("Keep screen on"). It holds a
+   system power request for as long as it runs and is the cleanest official way to guarantee an
+   uninterrupted capture. Verify with `powercfg /requests` in an admin terminal — you should see an entry
+   under DISPLAY or SYSTEM.
+
+Then confirm: leave it for an hour longer than your longest planned capture and check the recording is
+unbroken before you trust it with a real session.
+
+## 7b. Other long-run notes
 
 - Browser sources can leak memory over many hours. For 24/7, restart the stream on a schedule (daily is
   ample) rather than trusting an unbounded run.
-- Disable Windows sleep, display sleep and any GPU power-saving profile.
 - Do a **10-minute test recording first** and scrub it: check for banding in the sky gradient, that the sand
   stream reads cleanly, and that the day cycle is moving.
 
-## 7. Publishing
+## 8. Publishing
 
 Stream to YouTube Live; it auto-archives as a VOD. Per strategy §10, **treat this as customer acquisition at
 ~$0 CAC, never as revenue** — the research there is blunt that lofi streams monetise badly (College Music

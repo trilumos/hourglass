@@ -1,24 +1,24 @@
 ---
 // /stage — the STUDIO (master spec §18.7, first-push §4.4, strategy §10).
 //
-// A chrome-less fullscreen view of the living world: no nav, no setup, no buttons, no popcards. It exists to
-// be pointed at by OBS **Browser Source** (never Window/Display Capture — that screen-scrapes a throttled
-// background tab, which strategy §10 names as the cause of the freeze/black-screen glitch; a Browser Source
-// renders the page inside OBS and is immune to focus throttling). OBS → YouTube Live → auto-archived VOD.
+// The SAME app, minus the session chrome. You configure a session on the REAL Setup screen (identical to
+// production: mode, durations, intention, sounds + mixer, theme / time-of-day, number look), press Begin,
+// and the session then runs with NO UI at all: no pause/resume, no break button, no settings gear, no give
+// up, no popcards, no navigation guard. It simply follows the config to the end and fades to black.
+// Browser Back (or a back swipe) is the way out.
 //
-// "The site is the studio. We do not build a second render engine." (strategy §10)
+// It is pointed at by OBS **Browser Source** — never Window/Display Capture, which screen-scrapes a
+// throttled background tab (strategy §10 names that as the cause of the freeze/black-screen glitch).
+// Setup guide: docs/obs-stage-streaming-guide.md
 //
-// It reuses the SAME scene island as the app — nothing here re-implements the world.
+// "The site is the studio. We do not build a second render engine." — every screen here is the real one.
 //
-// ── URL parameters ────────────────────────────────────────────────────────────────────────────────────
-//   ?flow=240      focus block length in minutes (default 240 = 4 h). The sand drains across it.
-//   ?loop=1        when the block ends, start another instead of stopping (default on — 24/7 streams)
-//   ?phase=follow  time of day: follow | pre-dawn | sunrise | midday | sunset | twilight | midnight | 0-5
-//   ?timer=1       show the clock numerals (default 0 — the hourglass IS the timer on a stream)
-//   ?record=1      capture preset: no cursor, no breathing zoom, no idle motion, deterministic framing
+// ?record=1  capture preset: hides the cursor and stops the breathing zoom.
 //
-// Not indexed: it is a capture surface, not a page for humans.
+// noindex: a capture surface, not a page for humans.
 import SceneWorld from '../components/SceneWorld.astro';
+import Setup from '../components/Setup.astro';
+import Session from '../components/Session.astro';
 import { LQIP } from '../scene/lqip.js';
 ---
 <!doctype html>
@@ -29,15 +29,54 @@ import { LQIP } from '../scene/lqip.js';
     <title>Sustain — Stage</title>
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" href="/favicon-round.png" type="image/png" />
+    <script is:inline>
+      // Must run BEFORE the component modules: Session reads this class to skip the navigation guard.
+      document.documentElement.classList.add('stage');
+      if (/[?&]record=1\b/.test(location.search)) document.documentElement.classList.add('rec');
+      if (!location.hash) location.replace('#setup');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,200..500&family=Jost:wght@200..600&display=swap"
+      rel="stylesheet"
+    />
     <style is:global>
       @font-face{ font-family:'NumSerif'; font-weight:550; font-display:swap; src:url('/assets/fonts/newsreader-550.woff2') format('woff2'); }
       @font-face{ font-family:'NumSans';  font-weight:550; font-display:swap; src:url('/assets/fonts/jost-550.woff2') format('woff2'); }
-      /* The stage never scrolls and shows no chrome. */
-      html, body { height:100%; overflow:hidden; background:#0a1a2a; margin:0; }
-      /* record preset: nothing that would be captured as an artefact */
+
+      /* The stage never scrolls. */
+      :root.stage, :root.stage body { height:100%; overflow:hidden; }
+
+      /* ── the whole point: a session with NO interface ──────────────────────────────────────────────
+         Everything the user would touch during a session is removed. The engine still drives breaks,
+         segment advances and completion exactly as in production; only the controls are gone. */
+      :root.stage #gear,
+      :root.stage #giveup,
+      :root.stage #pause,
+      :root.stage #breakBtn,
+      :root.stage #intentTop,
+      :root.stage #seglabel,
+      :root.stage #giveupConfirm,
+      :root.stage #doneCard,
+      :root.stage #sessionOver,
+      :root.stage #paused,
+      :root.stage #endBreakBtn,
+      :root.stage #numEditToggle,
+      :root.stage #numEditor,
+      /* by ID, NOT by .sheet/.sheet-scrim: Setup's Advanced sheet uses those same class names, so a class
+         selector here silently killed Advanced settings on the stage's Setup screen too */
+      :root.stage #setSheet,
+      :root.stage #setScrim { display:none !important; }
+
+      /* capture preset */
       :root.rec { cursor:none; }
       :root.rec #frame { animation:none !important; }
-      :root.rec ::-webkit-scrollbar { display:none; }
+
+      /* ── the session ends → fade to black. Back / back-swipe is the way out. ─────────────────────── */
+      #stageEnd{ position:fixed; inset:0; z-index:99; background:#000; opacity:0; pointer-events:none;
+        transition:opacity 2.4s cubic-bezier(.4,0,.2,1); }
+      :root.stage-done #stageEnd{ opacity:1; pointer-events:auto; }
     </style>
   </head>
   <body>
@@ -58,54 +97,79 @@ import { LQIP } from '../scene/lqip.js';
     </script>
 
     <SceneWorld />
+    <Setup />
+    <Session />
+    <div id="stageEnd" aria-hidden="true"></div>
 
     <script is:inline>
+      // A two-state router: Setup ⇄ Session. Setup and Session each own their own behaviour off the hash;
+      // this only does what index.astro's controller does for the app — toggle Setup's visibility and the
+      // scene's glass blur — minus Home, the landing story and the scroll machinery.
       (function () {
-        var q = new URLSearchParams(location.search);
-        var root = document.documentElement;
-        var PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
+        var root  = document.documentElement;
+        var setup = document.getElementById('setupScreen');
 
-        var rec   = q.get('record') === '1';
-        var flow  = Math.max(1, parseFloat(q.get('flow') || '240') || 240);   // minutes
-        var loop  = q.get('loop') !== '0';
-        var timer = q.get('timer') === '1';
-        var phase = q.get('phase') || 'follow';
-
-        if (rec) root.classList.add('rec');
-
-        function phaseValue(p){
-          if (!p || p === 'follow') return 'follow';
-          var n = PHASES.indexOf(p);
-          if (n >= 0) return n;
-          n = parseInt(p, 10);
-          return isNaN(n) ? 'follow' : Math.max(0, Math.min(5, n));
+        function sync(){
+          var onSetup = location.hash !== '#session';
+          if (setup){
+            setup.classList.toggle('on', onSetup);
+            setup.setAttribute('aria-hidden', onSetup ? 'false' : 'true');
+          }
+          root.classList.toggle('setup-active', onSetup);
+          if (onSetup) root.classList.remove('stage-done');     // going back re-arms the stage
         }
+        sync();
+        addEventListener('hashchange', sync);
 
-        // The scene island boots asynchronously; wait for its API rather than racing it.
-        function whenReady(cb){
-          if (window.SustainScene) return cb();
-          var t = setInterval(function(){ if (window.SustainScene){ clearInterval(t); cb(); } }, 60);
-          setTimeout(function(){ clearInterval(t); }, 15000);
+        // Begin → fullscreen. requestFullscreen needs a user gesture, so it hangs off the Begin CLICK
+        // rather than the hashchange (which fires in a later task and can lose the activation).
+        function goFull(){
+          try {
+            var el = document.documentElement;
+            if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(function(){});
+          } catch (e) {}                                     // inside an OBS Browser Source this is a no-op
         }
-
-        whenReady(function () {
-          var S = window.SustainScene;
-          S.setDay(phaseValue(phase));
-          S.setTimerVis(timer ? 'always' : 'hidden');
-          if (timer) S.setNumStyle({ place:'top', fill:'solid', font:'serif', color:'#ffffff', sep:'colon', autoContrast:true });
-
-          // One long focus block so the sand actually falls. `endless` makes the engine loop it, which is
-          // what a 24/7 stream wants; without it the glass simply runs out and the scene goes static.
-          function start(){ S.startSession([{ kind:'focus', dur: Math.round(flow * 60) }], loop); }
-          start();
-
-          // Safety net for a non-looping block: if the engine reports done, restart so a long capture never
-          // ends up filming a finished hourglass.
-          if (loop) setInterval(function(){
-            var r = S.sampleSession && S.sampleSession();
-            if (r && r.done) { S.endSession(); start(); }
-          }, 5000);
+        var beginBtn = document.getElementById('begin');
+        if (beginBtn) beginBtn.addEventListener('click', function () {
+          goFull();
+          // ...and roll. Same OBS Browser Source API as the auto-stop; a no-op in a normal browser, and it
+          // needs the source's Page permissions set to ALL. Guarded on getStatus so pressing Begin twice
+          // cannot start a second recording.
+          try {
+            var obs = window.obsstudio;
+            if (!obs || typeof obs.startRecording !== 'function') return;
+            if (typeof obs.getStatus === 'function') {
+              obs.getStatus(function (st) { if (!st || !st.recording) obs.startRecording(); });
+            } else {
+              obs.startRecording();
+            }
+          } catch (e) {}
         });
+        // If Esc drops out of fullscreen mid-session, the next interaction puts it back (a gesture is the
+        // only thing the browser will accept).
+        addEventListener('pointerdown', function(){ if (location.hash === '#session') goFull(); });
+        addEventListener('keydown', function(){ if (location.hash === '#session') goFull(); });
+
+        // Completion → fade to black, then tell OBS to stop.
+        // window.obsstudio is injected ONLY inside an OBS Browser Source, so this is a no-op in a normal
+        // browser. It needs the source's "Page permissions" set to ALL (Advanced access), otherwise the
+        // control functions are not exposed. We wait for the 2.4s fade to finish so the recording always
+        // ends on clean black, and we only ever fire once.
+        var done = false;
+        setInterval(function () {
+          if (done || location.hash !== '#session' || !window.SustainScene || !SustainScene.sampleSession) return;
+          var r = SustainScene.sampleSession();
+          if (!r || !r.done) return;
+          done = true;
+          root.classList.add('stage-done');
+          setTimeout(function () {
+            try {
+              var obs = window.obsstudio;
+              if (obs && typeof obs.stopRecording === 'function') obs.stopRecording();
+              if (obs && typeof obs.stopStreaming === 'function' && /[?&]stopstream=1\b/.test(location.search)) obs.stopStreaming();
+            } catch (e) {}
+          }, 3200);
+        }, 1000);
       })();
     </script>
   </body>

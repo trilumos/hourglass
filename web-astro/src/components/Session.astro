@@ -335,6 +335,10 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
 (function(){
   var TUNE = /[?&]tune\b/.test(location.search);
   if(TUNE) window.__numTuneMode = true;
+  // /stage runs the SAME engine with no chrome and no navigation guard: it is a capture surface, so the
+  // browser's Back must work normally (it is the only way out there) and a beforeunload prompt would stall
+  // an unattended capture. stage.astro sets this class before this module runs.
+  var STAGE = document.documentElement.classList.contains('stage');
   var $=function(id){ return document.getElementById(id); };
   var scr=$('sessionScreen'), pauseBtn=$('pause'), intentTop=$('intentTop'), giveupBtn=$('giveup'),
       seglabel=$('seglabel'), pausedEl=$('paused'), pauseGrace=$('pauseGrace'), flipEl=$('flip'), breakBtn=$('breakBtn'),
@@ -472,7 +476,7 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     var cfg; try{ cfg=JSON.parse(localStorage.getItem('sustain.session')||'null'); }catch(e){ cfg=null; }
     if(!cfg){ sessionOver.hidden=false; return; }
     curCfg=cfg; startFromCfg(cfg);
-    if(!TUNE){ guardActive=true; history.pushState(null,'','#session'); history.pushState(null,'','#session'); }   // 2-deep back buffer
+    if(!TUNE && !STAGE){ guardActive=true; history.pushState(null,'','#session'); history.pushState(null,'','#session'); }   // 2-deep back buffer
     started=true;
   }
   function releaseWake(){ if(wakeLockObj){ wakeLockObj.release().catch(function(){}); wakeLockObj=null; } }

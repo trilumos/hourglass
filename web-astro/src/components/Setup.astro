@@ -181,7 +181,11 @@
      for a 540px square and a 691px --main-w on a 390px screen: guaranteed horizontal overflow. Also cap it
      at the width the timer column can actually occupy. Desktop and tablet are unchanged (height still wins
      there), so the founder-locked proportions hold; only narrow screens are clamped. */
-  --sq:     clamp(280px, min(64cqh, calc((100cqi - 2 * var(--gutter)) / 1.28)), 640px);
+  /* Max 600px, not 640px: at 64cqh the cap is reached once the viewport is ~937px tall, so a normal
+     windowed browser on a 1080p screen (~950px of viewport) is ALREADY at the cap — and going fullscreen,
+     which only buys back the browser chrome, then changes nothing. At 640px the cap needed ~1000px, so
+     windowed sat at 608px and fullscreen jumped to 640px: the panels visibly grew. */
+  --sq:     clamp(280px, min(64cqh, calc((100cqi - 2 * var(--gutter)) / 1.28)), 600px);
   --main-w: calc(var(--sq) * 1.28);
   --modes-w: 78%;
   --pad:    calc(var(--sq) * .055);
