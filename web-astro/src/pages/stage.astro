@@ -1,0 +1,112 @@
+---
+// /stage — the STUDIO (master spec §18.7, first-push §4.4, strategy §10).
+//
+// A chrome-less fullscreen view of the living world: no nav, no setup, no buttons, no popcards. It exists to
+// be pointed at by OBS **Browser Source** (never Window/Display Capture — that screen-scrapes a throttled
+// background tab, which strategy §10 names as the cause of the freeze/black-screen glitch; a Browser Source
+// renders the page inside OBS and is immune to focus throttling). OBS → YouTube Live → auto-archived VOD.
+//
+// "The site is the studio. We do not build a second render engine." (strategy §10)
+//
+// It reuses the SAME scene island as the app — nothing here re-implements the world.
+//
+// ── URL parameters ────────────────────────────────────────────────────────────────────────────────────
+//   ?flow=240      focus block length in minutes (default 240 = 4 h). The sand drains across it.
+//   ?loop=1        when the block ends, start another instead of stopping (default on — 24/7 streams)
+//   ?phase=follow  time of day: follow | pre-dawn | sunrise | midday | sunset | twilight | midnight | 0-5
+//   ?timer=1       show the clock numerals (default 0 — the hourglass IS the timer on a stream)
+//   ?record=1      capture preset: no cursor, no breathing zoom, no idle motion, deterministic framing
+//
+// Not indexed: it is a capture surface, not a page for humans.
+import SceneWorld from '../components/SceneWorld.astro';
+import { LQIP } from '../scene/lqip.js';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sustain — Stage</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/favicon-round.png" type="image/png" />
+    <style is:global>
+      @font-face{ font-family:'NumSerif'; font-weight:550; font-display:swap; src:url('/assets/fonts/newsreader-550.woff2') format('woff2'); }
+      @font-face{ font-family:'NumSans';  font-weight:550; font-display:swap; src:url('/assets/fonts/jost-550.woff2') format('woff2'); }
+      /* The stage never scrolls and shows no chrome. */
+      html, body { height:100%; overflow:hidden; background:#0a1a2a; margin:0; }
+      /* record preset: nothing that would be captured as an artefact */
+      :root.rec { cursor:none; }
+      :root.rec #frame { animation:none !important; }
+      :root.rec ::-webkit-scrollbar { display:none; }
+    </style>
+  </head>
+  <body>
+    <div id="lqip"></div>
+    <script is:inline define:vars={{ LQIP }}>
+      // Same blur-up as the app so a capture never opens on a black frame.
+      (function () {
+        var h = new Date().getHours() + new Date().getMinutes() / 60;
+        var i = h < 4.9 ? 5 : h < 6.1 ? 0 : h < 8.4 ? 1 : h < 18.2 ? 2 : h < 19.65 ? 3 : h < 21.75 ? 4 : 5;
+        var el = document.getElementById('lqip');
+        if (el && LQIP[i]) el.style.backgroundImage = 'url(' + LQIP[i] + ')';
+        var names = ['pre-dawn', 'sunrise', 'midday', 'sunset', 'twilight', 'midnight'];
+        var l = document.createElement('link');
+        l.rel = 'preload'; l.as = 'image'; l.href = '/plates-phases/' + names[i] + '.webp';
+        l.setAttribute('fetchpriority', 'high');       // no crossorigin — see index.astro
+        document.head.appendChild(l);
+      })();
+    </script>
+
+    <SceneWorld />
+
+    <script is:inline>
+      (function () {
+        var q = new URLSearchParams(location.search);
+        var root = document.documentElement;
+        var PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
+
+        var rec   = q.get('record') === '1';
+        var flow  = Math.max(1, parseFloat(q.get('flow') || '240') || 240);   // minutes
+        var loop  = q.get('loop') !== '0';
+        var timer = q.get('timer') === '1';
+        var phase = q.get('phase') || 'follow';
+
+        if (rec) root.classList.add('rec');
+
+        function phaseValue(p){
+          if (!p || p === 'follow') return 'follow';
+          var n = PHASES.indexOf(p);
+          if (n >= 0) return n;
+          n = parseInt(p, 10);
+          return isNaN(n) ? 'follow' : Math.max(0, Math.min(5, n));
+        }
+
+        // The scene island boots asynchronously; wait for its API rather than racing it.
+        function whenReady(cb){
+          if (window.SustainScene) return cb();
+          var t = setInterval(function(){ if (window.SustainScene){ clearInterval(t); cb(); } }, 60);
+          setTimeout(function(){ clearInterval(t); }, 15000);
+        }
+
+        whenReady(function () {
+          var S = window.SustainScene;
+          S.setDay(phaseValue(phase));
+          S.setTimerVis(timer ? 'always' : 'hidden');
+          if (timer) S.setNumStyle({ place:'top', fill:'solid', font:'serif', color:'#ffffff', sep:'colon', autoContrast:true });
+
+          // One long focus block so the sand actually falls. `endless` makes the engine loop it, which is
+          // what a 24/7 stream wants; without it the glass simply runs out and the scene goes static.
+          function start(){ S.startSession([{ kind:'focus', dur: Math.round(flow * 60) }], loop); }
+          start();
+
+          // Safety net for a non-looping block: if the engine reports done, restart so a long capture never
+          // ends up filming a finished hourglass.
+          if (loop) setInterval(function(){
+            var r = S.sampleSession && S.sampleSession();
+            if (r && r.done) { S.endSession(); start(); }
+          }, 5000);
+        });
+      })();
+    </script>
+  </body>
+</html>

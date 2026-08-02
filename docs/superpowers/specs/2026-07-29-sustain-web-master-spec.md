@@ -458,7 +458,10 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 6. **Landing:** scroll narrative with the **persistent hourglass** (never re-mounted), hero B1, then SEO —
    `<title>`/meta/**OpenGraph**, `sitemap.xml`, `robots.txt`, **Google Search Console** (DNS verify); target
    terms incl. "lofi.co alternative."
-7. **`/stage`** (+`?record=1` OBS preset).
+7. **`/stage`** (+`?record=1` OBS preset). ✅ **BUILT 2026-08-02** — `src/pages/stage.astro`: chrome-less
+   fullscreen scene reusing the SAME scene island (no second render engine), `noindex`, params
+   `record` / `flow` / `loop` / `phase` / `timer`. Capture guide: `docs/obs-stage-streaming-guide.md`
+   (Browser Source only — Window/Display Capture screen-scrapes a throttled tab, strategy §10).
 8. **Perf:** compress plates → AVIF/WebP, preload + LQIP, budget measured (§13).
 9. **Migration checklist (handoff §5.5):** absolute asset paths → `public/`; `plan.js` → ES module (drop
    `?v=` cache-buster); **add teardown for View Transitions** (remove listeners, `clearInterval`,
@@ -501,6 +504,25 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 ---
 
 ## 22. Changelog (append on every web change)
+
+- **2026-08-02 (`/stage` BUILT + OBS capture guide; scroll scrubbed to position; sunset accuracy)** —
+  **`/stage`** (§18.7, first-push §4.4, strategy §10) ships as `src/pages/stage.astro`: a chrome-less
+  fullscreen view reusing the **same** scene island ("the site is the studio; we do not build a second render
+  engine"), `noindex`, with `record` / `flow` / `loop` / `phase` / `timer` params and a long looping focus
+  block so the sand always falls. Capture guide added at `docs/obs-stage-streaming-guide.md` — **Browser
+  Source only**, never Window/Display Capture (that screen-scrapes a throttled background tab, the cause of
+  the freeze/black-screen glitch), plus current encoder settings (NVENC AV1 8000 Kbps / H.264 9000, CBR,
+  2 s keyframe) and the honest note that `/stage` does not start scene audio because a Browser Source never
+  gets a user gesture.
+  **Scroll:** the story is now **scrubbed to scroll position** — each chapter's `--o`/`--y` are written per
+  frame from the same value that moves the sun, so text and sky are one signal instead of two systems; snap
+  softened `mandatory`→`proximity` (mandatory yanked from anywhere, which is what felt chopped) while
+  `scroll-snap-stop:always` still prevents skipping; day span 12 h→6 h so the light drifts rather than jumps.
+  **Footer** was rendering *under* the artwork: `.runway`'s `position:relative; z-index:0` created a stacking
+  context that trapped the footer's `z-index:8` below the fixed scene.
+  **Sunset accuracy:** removing the on-load geolocation prompt left only timezone→representative coords, and
+  `Asia/Kolkata` = `[23.5, 80.0]` is ~9° east of Rajkot (~37 min of sunset). Now the Permissions API is
+  queried and exact location is used **only when already granted** — no prompt, so §5's rule holds.
 
 - **2026-08-02 (Landing REBUILT as a pinned story + full responsive/mobile pass)** — The scrolling-page
   landing was rejected by the founder ("no design, no UI/UX… just ugly") and replaced with a **pinned story**
