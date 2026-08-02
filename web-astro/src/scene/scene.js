@@ -338,6 +338,20 @@ try { const _st = localSunTimes(); SR_real = _st.sr; SS_real = _st.ss; } catch(e
 // opt-in "use my exact location" control that spec §5 defers to later; wire it to a user gesture, never to load.
 // window.SustainScene.useExactLocation() below is that gesture hook.
 function useExactLocation(){ try { preciseSunTimes(function(sr,ss){ SR_real=sr; SS_real=ss; }); } catch(e){} }
+// ...but if the visitor has ALREADY granted location, use it — that is not a prompt, so §5's "no permission
+// prompt" rule still holds, and it is the only way to be accurate: one representative coord per timezone is
+// off by up to half an hour across a wide country (Asia/Kolkata sits at 80°E, ~9° east of Rajkot, which is
+// ~37 min of sunset). Permissions API tells us the state without triggering the prompt.
+try {
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'geolocation' })
+      .then(function(st){
+        if (st.state === 'granted') useExactLocation();
+        st.onchange = function(){ if (st.state === 'granted') useExactLocation(); };
+      })
+      .catch(function(){});
+  }
+} catch(e){}
 function warpTime(t){
   const dayR = SS_real - SR_real, dayRef = REF_SS - REF_SR;
   if (t >= SR_real && t < SS_real) return REF_SR + (t - SR_real) / dayR * dayRef;   // daytime
