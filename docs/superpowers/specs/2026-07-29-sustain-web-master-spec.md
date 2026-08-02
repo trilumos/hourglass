@@ -505,6 +505,25 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 
 ## 22. Changelog (append on every web change)
 
+- **2026-08-02 (`/stage` = real Setup + chrome-free session; cycle apply; the "5 min" option was inert)** —
+  `/stage` reworked from URL params to **the same app minus the session chrome**: configure on the real Setup
+  screen, Begin → fullscreen + `obsstudio.startRecording()` → blurred **3-2-1 lead-in** → bell → session with
+  no UI → **fade to black** → `stopRecording()`. `SustainScene.restartSession(freeze)` added so the block
+  starts at EXACTLY its full length (pause/resume kept the ~80 ms before the pause landed, so 25 min began at
+  24:59). Session gains a `STAGE` flag (no nav guard, no `beforeunload`, no duplicate start bell).
+  **Cycle apply:** the builder and the presets now edit a **draft**; "Use this sequence" is disabled while it
+  matches what will run, and Begin serialises the **applied** cycle so unapplied edits cannot run silently.
+  The Themes panel names the cycle in use.
+  **The "5 min" timer option did nothing** — mapped to `'always'` behind a `// 5min→always for v1` shortcut
+  while its description promised "surfaces briefly every 5 minutes, then fades away". Implemented as `flash`
+  (show at start, fade ~4.2 s, repeat every 5 min, anchored to session start); `setTimerVis` now recognises
+  it instead of falling through to `always`. **This class of bug — a control that lies about what it does —
+  is invisible to change-scoped audits; a UI-contract audit is owed on the Session sheet and the modes.**
+  Also: Setup's `.themes-scroll` declared only `overflow-y`, and a `visible` axis computes to `auto` when the
+  other is not — hence a stray horizontal scrollbar; `--sq` capped 640→600 px so entering fullscreen no
+  longer grows the panels. Guide: `docs/obs-stage-streaming-guide.md` (Browser Source only, encoder settings,
+  Page-permissions=ALL, and the Windows "logs out" symptom that is actually **locking**).
+
 - **2026-08-02 (`/stage` BUILT + OBS capture guide; scroll scrubbed to position; sunset accuracy)** —
   **`/stage`** (§18.7, first-push §4.4, strategy §10) ships as `src/pages/stage.astro`: a chrome-less
   fullscreen view reusing the **same** scene island ("the site is the studio; we do not build a second render

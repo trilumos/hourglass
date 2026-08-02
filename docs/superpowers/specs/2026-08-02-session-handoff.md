@@ -72,6 +72,29 @@ These are worth knowing because several are non-obvious and will bite again:
 Also fixed: an **unprompted geolocation request on every page load** (against spec §5), and **all six plates
 loading before first paint** (against spec §13).
 
+### A UI-contract audit is now owed on every screen
+
+The **"5 min" timer option did nothing** — it was mapped to `'always'` behind a `// 5min→always for v1`
+shortcut while its own description promised "surfaces briefly every 5 minutes, then fades away". Now
+implemented (`flash`: shows at start, fades after ~4.2 s, repeats every 5 min, anchored to session start).
+
+The lesson is the audit *type*, not this one bug. Every audit so far has been **change-scoped** — "is what I
+just wrote correct?" — which structurally cannot catch an option that was wired wrong earlier and has been
+lying ever since. **A contract audit is different: for every control in the UI, does it do what its own
+label and description claim?**
+
+Swept during this session (Setup → `cfg` → scene):
+
+| Control | Verdict |
+|---|---|
+| `timershow` | ❌ **was broken** (`5min`→`always`) — fixed |
+| `sunmoon` | ✅ consumed by `Session.astro:456` |
+| `place` / `fill` / `font` / `sep` / colour | ✅ consumed by `setNumStyle` |
+| `cycChange` / `cycBy` / sequence | ✅ consumed via `cfg.cycle` at `Session.astro:373`, now applied-gated |
+| `autoContrast` | ⚠️ hardcoded `true` in Setup; only the Session sheet can change it. Not a false claim (Setup advertises no control), but worth a decision |
+
+**Still unswept: the Session settings sheet and the timer modes.** Do the same pass there before launch.
+
 ---
 
 ## 3. Blocked — needs the founder
