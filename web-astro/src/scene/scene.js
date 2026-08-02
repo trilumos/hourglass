@@ -1787,16 +1787,26 @@ const noHover = () => matchMedia('(hover: none)').matches;
 // Portrait/narrow: only the TOP placement is offered (founder). The other placements put the numerals over
 // or beside the glass, which a phone has no room for.
 const narrowVP = () => matchMedia('(max-width: 900px), (orientation: portrait)').matches;
+// 'flash' = the Setup option labelled "5 min", whose own description promises "surfaces briefly every 5
+// minutes, then fades away". It used to be mapped straight to 'always' (a v1 shortcut), so the option did
+// nothing. Interval is anchored to applyVis, i.e. to the session start, not to page load.
+const FLASH_EVERY = 300000, FLASH_HOLD = 4200;
+let flashTimer = 0;
+function flashNums(){
+  clearTimeout(hideTimer);
+  frame.classList.add('show-nums');
+  hideTimer = setTimeout(() => frame.classList.remove('show-nums'), FLASH_HOLD);
+}
 function applyVis(){
+  clearInterval(flashTimer); flashTimer = 0;
   if (timerVis === 'always' || (timerVis === 'hover' && noHover())) { clearTimeout(hideTimer); frame.classList.add('show-nums'); }
+  else if (timerVis === 'flash') {
+    flashNums();                                   // show at the start, then fade...
+    flashTimer = setInterval(() => { if (session.state.running) flashNums(); }, FLASH_EVERY);   // ...and every 5 min
+  }
   else frame.classList.remove('show-nums');
 }
 window.addEventListener('mousemove', () => { if (timerVis === 'hover') revealNums(); });
-setInterval(() => {
-  if (timerVis === 'flash' && session.state.running) {
-    revealNums(); setTimeout(() => frame.classList.remove('show-nums'), 1600);
-  }
-}, 60000);
 sUI.querySelectorAll('.visbtn').forEach(btn => btn.addEventListener('click', () => {
   sUI.querySelectorAll('.visbtn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on'); timerVis = btn.dataset.vis; applyVis();
@@ -2014,7 +2024,10 @@ window.SustainScene = {
   flipEndless: function(){ session.flip(); },   // refill the endless glass; elapsed timer keeps running
   skipToBreak: function(){ return session.skipToBreak(); },   // pomodoro/custom: take the next scheduled break early
   skipBreak: function(){ return session.skipBreak(); },       // end the current rest early → focus resumes
-  setTimerVis: function(v){ timerVis = (v==='hidden' ? 'hidden' : v==='hover' ? 'hover' : 'always'); applyVis(); },
+  setTimerVis: function(v){
+    timerVis = (v==='hidden' ? 'hidden' : v==='hover' ? 'hover' : v==='flash' ? 'flash' : 'always');
+    applyVis();
+  },
   // Numeral look from the Setup cfg: font (→ overlap-removed numeral face), colour + auto-contrast,
   // fill/separator (data-attrs), and the LOCKED per-place geometry (size/gap/weight/stretch/offset).
   setNumStyle: function(cfg){

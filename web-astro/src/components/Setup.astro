@@ -1215,7 +1215,9 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     // ── PHASE 5 — Begin: build the session config (the exact object the Session reads), save it, hand off ──
     qs('#begin').addEventListener('click',function(){
       this.textContent='Focusing…';
-      var VIS={ always:'always', '5min':'always', hover:'hover', never:'hidden' };   // 5min→always for v1
+      // Every value here must MATCH what TIMER_DESC promises the user. '5min' used to map to 'always',
+      // so the option's own description ("surfaces briefly every 5 minutes, then fades away") was false.
+      var VIS={ always:'always', '5min':'flash', hover:'hover', never:'hidden' };
       var pi=PHASES.map(function(p){return p.id;}).indexOf(todSel);
       var cfg={};
       for(var k in st) cfg[k]=st[k];                                   // mode + all mode-specific plan fields
