@@ -137,7 +137,10 @@ const appLd = {
           var s = runway && runway.firstElementChild;
           return (s && s.offsetHeight) || innerHeight;
         }
-        var DAY_SPAN = 12;                                     // reference hours swept across the whole story
+        // Reference hours swept across the WHOLE story. The runway is deliberately short, so 12 h over it
+        // moved the sky ~2.4 h per chapter and the scene lurched on a single scroll. 6 h is about an hour
+        // per chapter: the light still visibly travels, but it drifts instead of jumping.
+        var DAY_SPAN = 6;
         var slow     = !matchMedia('(prefers-reduced-motion: reduce)').matches;
         var target = 0, smooth = 0, shownCh = -1, running = false;
 
@@ -152,17 +155,36 @@ const appLd = {
 
           var p = Math.min(1, Math.max(0, smooth / maxScroll()));
 
-          // chapter state: CH_LEN of scroll each (a chapter is longer than a screen so the sky has room to
-          // travel and the reader has time), swapping at the midpoints. Must match .runway's height.
-          var i = Math.max(0, Math.min(CH_N - 1, Math.round(smooth / stopH())));
+          // ── SCRUB: every chapter's presence is a function of the scroll position, the same value that
+          // moves the sun. `u` is the position measured in chapters. For a chapter at distance `d`:
+          //   --o  1 while |d| <= HOLD, ramping to 0 by |d| = HOLD + FADE  (the gap between the two is a
+          //        deliberate breath of pure scene, and the reason two chapters never overlap)
+          //   --y  +1 waiting below … 0 in place … -1 gone above, so scrolling itself lifts the text away
+          var HOLD = 0.30, FADE = 0.14;
+          var u = smooth / stopH();
+          for (var n = 0; n < chapters.length; n++) {
+            var el = chapters[n];
+            var d = u - (n + 1);                                // chapters[0] is chapter 1
+            var o = Math.max(0, Math.min(1, (HOLD + FADE - Math.abs(d)) / FADE));
+            var y = -Math.max(-1, Math.min(1, d));
+            el.style.setProperty('--o', o.toFixed(3));
+            el.style.setProperty('--y', y.toFixed(3));
+            var live = o > 0.02;
+            if (el._live !== live) {                            // class/attr writes only on change
+              el._live = live;
+              el.classList.toggle('on', live);
+              if (live) el.removeAttribute('inert'); else el.setAttribute('inert', '');
+            }
+          }
+          // the hero is chapter 0: it only ever exits, so it uses the same curve against u itself
+          if (home) {
+            home.style.setProperty('--o', Math.max(0, Math.min(1, (HOLD + FADE - Math.abs(u)) / FADE)).toFixed(3));
+            home.style.setProperty('--y', (-Math.max(0, Math.min(1, u))).toFixed(3));
+          }
+
+          var i = Math.max(0, Math.min(CH_N - 1, Math.round(u)));
           if (i !== shownCh) {
             shownCh = i;
-            chapters.forEach(function (el, n){
-              var mine = n + 1;                                 // chapters[0] is chapter 1
-              el.classList.toggle('on',   mine === i);
-              el.classList.toggle('past', mine <  i);
-              if (mine === i) el.removeAttribute('inert'); else el.setAttribute('inert', '');
-            });
             root.classList.toggle('story-on', i > 0);            // hero lede yields
             root.classList.toggle('ch-last',  i === CH_N - 1);
             if (cue) cue.classList.toggle('gone', i > 0);

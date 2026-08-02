@@ -243,22 +243,24 @@ const CH_LEN = 0.75;
      and only once it is gone does the new text rise up from below and fade in. The handoff is the enter
      delay (--out) matching the exit duration, so the two never share the screen. Both flanks run on the
      identical timing so they move as one block. ────────────────────────────────────────────────────── */
-  .chapters{ --out:.46s; }
-  .say, .tell{ transform:translateY(var(--rise));
-    transition:transform var(--out) cubic-bezier(.5,0,.75,0); }
-  .ch.past .say, .ch.past .tell{ transform:translateY(calc(var(--rise) * -1)); }
-  .ch.on .say, .ch.on .tell{ transform:none;
-    transition:transform 1.05s cubic-bezier(.16,1,.3,1) var(--out); }
+  /* SCROLL-DRIVEN, not time-driven. The controller writes --o (0..1 presence) and --y (+1 below … -1 above)
+     on each chapter every frame from the same scroll value that moves the sun, so the text and the sky are
+     one signal instead of two systems fighting each other. Only transform and opacity are animated, both
+     compositor properties. There are no transitions here on purpose: a transition would lag the scroll. */
+  .say, .tell{ transform:translateY(calc(var(--y, 1) * var(--rise))); }
 
   /* The FADE is applied to leaf content, never to an ancestor of the glass plate. An element with
      opacity < 1 becomes a Backdrop Root, so while .tell was fading, .points' backdrop-filter sampled an
      empty group and drew NO blur, then snapped to full blur the frame opacity hit exactly 1. That is the
      "blur arrives late" glitch. Nothing above .points animates opacity any more; the plate itself
      transitions its tint and blur RADIUS instead, which does not create a backdrop root. */
-  .say > *, .points > *{ opacity:0;
-    transition:opacity var(--out) cubic-bezier(.5,0,.75,0); }
-  .ch.on .say > *, .ch.on .points > *{ opacity:1;
-    transition:opacity 1s cubic-bezier(.16,1,.3,1) var(--out); }
+  /* Presence follows the scroll. A tiny per-child offset (--k) makes the block travel in layers rather than
+     as one slab: the "layered movement" that gives scrollytelling its depth. */
+  .say > *, .points > li{ opacity:var(--o, 0);
+    transform:translateY(calc(var(--y, 1) * var(--k, 0) * 14px)); }
+  .say > *:nth-child(2), .points > li:nth-child(2){ --k:1; }
+  .say > *:nth-child(3), .points > li:nth-child(3){ --k:2; }
+  .say > *:nth-child(4), .points > li:nth-child(4){ --k:3; }
 
   /* ── the statement side: a soft elliptical SCRIM, not a box. It belongs to the text (fades in and out
      with it), bleeds well past the type so it never reads as a panel edge, and dies out long before the
@@ -307,22 +309,20 @@ const CH_LEN = 0.75;
      the hero's .glass-liquid already uses. ───────────────────────────────────────────────────────── */
   /* The plate never changes opacity. It animates its tint, border and BLUR RADIUS instead, so the blur
      grows in with the panel instead of snapping on at the end. */
+  /* The plate's own opacity STAYS 1 — an ancestor with opacity < 1 becomes a Backdrop Root and the
+     backdrop-filter would render nothing until the fade finished, then snap in. Its tint, border, shadow
+     and blur RADIUS are driven off --o instead, so the glass builds with the scroll and never pops. */
   .points{ position:relative; list-style:none; margin:0;
     padding:clamp(20px,1.9vw,32px) clamp(22px,2.1vw,36px);
     width:min(100%, 30rem); border-radius:clamp(16px,1.3vw,22px);
-    background:rgba(8,14,32,0); border:1px solid rgba(255,255,255,0); box-shadow:none;
-    backdrop-filter:blur(0px) saturate(1); -webkit-backdrop-filter:blur(0px) saturate(1);
-    transform:translateZ(0); will-change:backdrop-filter;
-    transition:background var(--out) ease, border-color var(--out) ease, box-shadow var(--out) ease,
-               backdrop-filter var(--out) ease, -webkit-backdrop-filter var(--out) ease; }
-  .ch.on .points{
-    background:linear-gradient(150deg, rgba(8,14,32,.5), rgba(6,11,26,.4));
-    border-color:rgba(255,255,255,.14);
-    box-shadow:0 24px 60px rgba(3,7,18,.34), inset 0 1px 0 rgba(255,255,255,.13);
-    backdrop-filter:blur(14px) saturate(1.12); -webkit-backdrop-filter:blur(14px) saturate(1.12);
-    transition:background .9s ease var(--out), border-color .9s ease var(--out),
-               box-shadow .9s ease var(--out), backdrop-filter .9s ease var(--out),
-               -webkit-backdrop-filter .9s ease var(--out); }
+    background:linear-gradient(150deg,
+      rgba(8,14,32, calc(var(--o, 0) * .5)), rgba(6,11,26, calc(var(--o, 0) * .4)));
+    border:1px solid rgba(255,255,255, calc(var(--o, 0) * .14));
+    box-shadow:0 24px 60px rgba(3,7,18, calc(var(--o, 0) * .34)),
+               inset 0 1px 0 rgba(255,255,255, calc(var(--o, 0) * .13));
+    backdrop-filter:blur(calc(var(--o, 0) * 14px)) saturate(1.12);
+    -webkit-backdrop-filter:blur(calc(var(--o, 0) * 14px)) saturate(1.12);
+    transform:translateZ(0); will-change:backdrop-filter; }
   .points li{ display:grid; grid-template-columns:auto 1fr; column-gap:clamp(12px,1vw,16px);
     padding:clamp(11px,1.35vh,16px) 0; border-bottom:1px solid rgba(255,255,255,.10); }
   .points li:first-child{ padding-top:0; }
@@ -362,7 +362,10 @@ const CH_LEN = 0.75;
   .fineprint a:hover{ color:#fffaf0; }
   .ch.flip .fineprint{ text-align:left; }
 
-  .runway{ position:relative; z-index:0; pointer-events:none; }
+  /* NO z-index here. `position:relative; z-index:0` creates a stacking context, which trapped .site-foot's
+     z-index:8 inside a parent sitting below the fixed scene (z-index:1) — the footer was rendering under
+     the artwork. z-index:auto keeps the runway transparent to stacking so the footer can rise above. */
+  .runway{ position:relative; pointer-events:none; }
   .stop{ scroll-snap-align:start; scroll-snap-stop:always; }   /* always = a fling cannot skip a chapter */
 
   /* ── the footer: the one element that really scrolls. A blurred sheet that rises over the bottom half of

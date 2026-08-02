@@ -413,10 +413,12 @@
               font-family: ui-sans-serif, system-ui, sans-serif; }
   :root.lock-scroll, :root.lock-scroll body { height:100%; overflow:hidden; }
   @media (prefers-reduced-motion:no-preference){ html { scroll-behavior:smooth; } }
-  /* Every chapter is a stop. Mandatory snapping is what stops a flick carrying momentum forward and
-     drifting past a chapter; the browser owns the easing, so there is no JS inertia to fight. Setup and
-     Session lock the scroll entirely, so this only ever applies to the story. */
-  html { scroll-snap-type:y mandatory; }
+  /* PROXIMITY, not mandatory. Mandatory yanks to the nearest stop from anywhere, which is what made the
+     story feel chopped into sections; proximity only settles when you finish near one, so scrolling reads
+     as continuous. `scroll-snap-stop:always` on the stops still prevents a fling from skipping a chapter,
+     so we keep the "every chapter is a stop" guarantee without the hard pull. Setup and Session lock the
+     scroll entirely, so this only ever applies to the story. */
+  html { scroll-snap-type:y proximity; }
   :root.lock-scroll { scroll-snap-type:none; }
   /* The story is a pinned stage: nothing visibly scrolls, so a scrollbar would be a lie. Hiding it also
      makes innerWidth == the layout viewport, so overlays and the scene share one coordinate space
