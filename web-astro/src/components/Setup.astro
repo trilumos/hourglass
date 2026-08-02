@@ -57,7 +57,9 @@
       <section class="panel themes frost" aria-label="Themes">
         <div class="themes-scroll">
         <div class="theme-prev">
-          <img id="themeImg" alt="Seascape" crossorigin="anonymous">
+          <!-- no crossorigin: same-origin plate, and a CORS fetch here cannot share the preload or the
+               CSS background-image dots (see the preload comment in index.astro) -->
+          <img id="themeImg" alt="Seascape">
           <span class="tp-name">Seascape</span>
         </div>
         <button class="select-theme" disabled><span class="k">Seascape · more worlds coming</span></button>

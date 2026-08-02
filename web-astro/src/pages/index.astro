@@ -74,7 +74,12 @@ const appLd = {
         var names = ['pre-dawn', 'sunrise', 'midday', 'sunset', 'twilight', 'midnight'];
         var l = document.createElement('link');
         l.rel = 'preload'; l.as = 'image'; l.href = '/plates-phases/' + names[i] + '.webp';
-        l.setAttribute('fetchpriority', 'high'); l.crossOrigin = 'anonymous';   // match three.js's anonymous CORS texture fetch
+        // NO crossorigin. The plates are same-origin, and the time-of-day dots in Setup/Session load them as
+        // CSS background-images, which are always fetched no-CORS. A CORS preload can never be reused by a
+        // no-CORS request ("credentials mode does not match"), so the preload was being thrown away and the
+        // plate downloaded twice. Everything now fetches no-CORS; same-origin images never taint a canvas,
+        // so the refraction readback and the WebGL texture are unaffected.
+        l.setAttribute('fetchpriority', 'high');
         document.head.appendChild(l);
       })();
     </script>

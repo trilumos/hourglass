@@ -74,6 +74,12 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 // space — fine for a simple additive white glint.
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const loaderTex = new THREE.TextureLoader();
+// three defaults to crossOrigin:'anonymous'. Setting it to undefined makes ImageLoader skip the attribute
+// entirely, so the plate is fetched NO-CORS like the preload and the CSS background-image dots — one shared
+// request instead of a CORS fetch that can never reuse them. Safe because the plates are same-origin (a
+// same-origin image never taints a canvas, so getImageData in buildRefraction still works). If plates ever
+// move to another origin, restore 'anonymous' HERE and on the preload, and the CSS dots must become <img>.
+loaderTex.crossOrigin = undefined;
 // Load plates ON FIRST USE, not all six up front (spec §13: "load one plate, not six" — six eager loads was
 // ~960 KB before first paint). Frame 1 pulls the current phase (and its crossfade partner, if we load inside
 // a fade band); reveal() then warms the remaining plates, so the day cycle and the landing's scroll-sweep
