@@ -93,8 +93,13 @@ const key = r => [r.kind, r.iv||'', r.blocks||r.hours, r.light, r.sound].join('|
     seen.set(k,i); });
   console.log(`unique combinations: ${seen.size}/${rows.length} ✓`); }
 
+// Minutes are ALWAYS two digits, so the first chapter reads 00:00 rather than 0:00. YouTube's chapter
+// docs are explicit — "make sure that the first timestamp you list starts with 00:00" — and with 0:00 the
+// timestamps still render as blue links (any timestamp does) while chapter validation silently fails and
+// the progress bar never segments. One missing zero costs you the chapter markers entirely.
 const ts=m=>{const s=Math.round(m*60),h=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;
-  return h?`${h}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`:`${mm}:${String(ss).padStart(2,'0')}`;};
+  return h?`${h}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`
+          :`${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;};
 const totalOf = r => P.totalMinOf(P.buildPlan(stOf(r)));
 const durTxt = m => { const h=Math.floor(m/60), mm=m%60;
   return h ? (mm ? `${h}h ${mm}m` : `${h}-Hour`) : `${mm}-Min`; };

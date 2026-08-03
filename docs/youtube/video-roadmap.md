@@ -359,7 +359,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -397,7 +397,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -435,7 +435,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -473,7 +473,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -511,7 +511,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -549,7 +549,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in the dark hour before dawn and eases toward first light as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -587,7 +587,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -629,7 +629,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -671,7 +671,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -713,7 +713,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -755,7 +755,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -797,7 +797,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in the dark hour before dawn and eases toward first light as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -839,7 +839,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -881,7 +881,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -923,7 +923,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -965,7 +965,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -1007,7 +1007,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -1057,7 +1057,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -1107,7 +1107,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -1157,7 +1157,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 25:00 Break 1
 30:00 Focus 2
 55:00 Break 2
@@ -1207,7 +1207,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 
 ```
@@ -1243,7 +1243,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 
 ```
@@ -1279,7 +1279,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 
 ```
@@ -1315,7 +1315,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -1355,7 +1355,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -1395,7 +1395,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -1435,7 +1435,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -1473,7 +1473,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -1511,7 +1511,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
@@ -1553,7 +1553,7 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-0:00 Focus 1
+00:00 Focus 1
 50:00 Break 1
 1:00:00 Focus 2
 1:50:00 Break 2
