@@ -85,8 +85,24 @@ function fit(){
 
 // ── Layer 0: WebGL — the image + old-anime star glitter on the water ────────
 // preserveDrawingBuffer: the session occluder (#occ) copies this canvas via drawImage each frame; without
-// it, an antialiased buffer can read back empty on some GPUs. Small cost on a single fullscreen-quad shader.
-const renderer = new THREE.WebGLRenderer({ canvas: glitterCv, antialias:true, alpha:false, preserveDrawingBuffer:true });
+// it, an antialiased buffer can read back empty on some GPUs. Cheap on a desktop GPU.
+//
+// NOT cheap on a phone. Every mobile GPU is tile-based, and BOTH of these flags force a full-framebuffer
+// resolve every single frame: `antialias` for the MSAA resolve, `preserveDrawingBuffer` to stop the driver
+// discarding the tile buffer it would otherwise throw away for free. Together they were the dominant cost
+// of the scene on mobile — far more than the shader itself.
+//
+// On a constrained device we drop both. The only thing preserveDrawingBuffer buys is the session occluder
+// (numerals passing BEHIND the glass), and #occ is a plain overlay: if it never draws, the numerals simply
+// render on top, fully legible. That is a fine trade for a site that actually runs. MSAA is likewise
+// invisible at DPR 1.25 on a soft painterly plate.
+const renderer = new THREE.WebGLRenderer({
+  canvas: glitterCv,
+  alpha: false,
+  antialias: !LOW,
+  preserveDrawingBuffer: !LOW,
+  powerPreference: LOW ? 'low-power' : 'high-performance',
+});
 renderer.setPixelRatio(DPR_CAP());
 // Identity colour pipeline: no input decode, no output encode. The texture's
 // sRGB bytes pass straight through to the sRGB canvas, so the background looks
@@ -1946,7 +1962,9 @@ function loopBody(now){ const dt=Math.min((now-t0)/1000, 0.05); tSec+=dt; t0=now
   U.uTime.value=tSec; renderer.render(scene,cam);
   try {
     drawSand(sandClock);                                        // stream time = the session sand-clock (also rebuilds occ mattes when dirty)
-    if (document.documentElement.classList.contains('session-active'))
+    // Occluder needs preserveDrawingBuffer, which we do not grant on a constrained device (see the
+    // renderer above). Skipping it just means the numerals sit ON the glass instead of behind it.
+    if (!LOW && document.documentElement.classList.contains('session-active'))
       drawOcc(frame.dataset.place || 'middle');                // numbers pass behind the glass/sea/ledge
     if(lastErr){ lastErr=''; $('err').style.display='none'; }
   } catch(e){
