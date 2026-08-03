@@ -63,7 +63,7 @@
 <body>
 <header>
   <h1>Sustain — <span id="mLabel">this month</span></h1>
-  <p class="sub">15 sessions, each shot twice: once with ocean, once bell-only. Shoot top-down, one a day.</p>
+  <p class="sub">15 sessions across Pomodoro, Flow and Custom — each shot twice: once with ambience, once bell-only. Shoot top-down.</p>
   <div class="bar">
     <div class="prog"><i id="pFill"></i></div>
     <span class="count" id="pCount">0 / 0</span>
@@ -107,6 +107,7 @@
         +   '<div class="grid">'
         +     cell('Mode', v.mode + ' ' + v.interval)
         +     cell('Blocks', v.blocks + ' → ' + v.duration)
+        +     cell('Setup', v.setup)
         +     cell('Time of day', v.lightSetup)
         +     cell('Sound', v.sound)
         +     cell('Audio levels', v.audio)
@@ -149,15 +150,10 @@
   function copy(k, v){
     return '<div class="cp"><b>' + esc(k) + '</b><button>copy</button><pre>' + esc(v) + '</pre></div>';
   }
-  // Assembled here rather than stored, so the head stays in step with the generator's own wording.
-  function descOf(v){
-    return v.duration + ' Study With Me pomodoro timer — ' + v.interval + ' focus blocks '
-      + (v.silent ? 'with no music, just a soft bell' : 'with ocean waves')
-      + ' under a ' + v.light.toLowerCase() + ' sky.\n'
-      + 'A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.\n\n'
-      + v.sentence + '\n\n'
-      + '⏱ Chapters\n' + v.chapters.join('\n');
-  }
+  // The generator emits the finished head (v.desc) — this page must not re-word it. The old version
+  // rebuilt the sentence here and hardcoded "pomodoro timer" and "ocean waves", which went wrong the
+  // moment Flow and non-ocean sessions existed.
+  function descOf(v){ return v.desc; }
   function progress(plan){
     var n = plan.videos.filter(function(v){ return done.has(v.id); }).length;
     document.getElementById('pCount').textContent = n + ' / ' + plan.videos.length;

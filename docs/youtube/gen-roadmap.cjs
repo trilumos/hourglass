@@ -47,11 +47,21 @@ const ROUND = {
   4:{work:200,breaks:4,len:10}, 5:{work:210,breaks:6,len:15}, 6:{work:300,breaks:4,len:15},
   8:{work:420,breaks:6,len:10}, 10:{work:550,breaks:10,len:5},
 };
-const stOf = r => r.kind==='custom'
-  ? { mode:'custom', customMode:'count', customWork:ROUND[r.hours].work,
-      customBreaks:ROUND[r.hours].breaks, customBreakLen:ROUND[r.hours].len }
-  : { mode:'pomodoro', pomoFocus:+r.iv.split('/')[0], pomoBreak:+r.iv.split('/')[1], blocks:r.blocks,
-      uniform:true };   // /stage: uniform blocks + trailing break => blocks x (focus+break) exactly
+const stOf = r =>
+    r.kind==='flow'   ? { mode:'flow', flowMin:r.mins }
+  : r.kind==='custom' ? { mode:'custom', customMode:'count', customWork:r.work,
+                          customBreaks:r.breaks, customBreakLen:r.len }
+  :                     { mode:'pomodoro', pomoFocus:+r.iv.split('/')[0], pomoBreak:+r.iv.split('/')[1],
+                          blocks:r.blocks, uniform:true };   // /stage: blocks x (focus+break) exactly
+
+// Every downstream reader (slug, guard-rails, title, tags, table, description) used to re-derive the
+// interval from r.iv, which only existed on Pomodoro rows. With three modes that is three ways to be
+// wrong, so the shape is read ONCE off the real plan and everything else consumes this.
+const totalOf = r => P.totalMinOf(P.buildPlan(stOf(r)));
+const shapeOf = r => { const pl = P.buildPlan(stOf(r));
+  const f = pl.filter(x=>x.kind==='focus'), b = pl.filter(x=>x.kind!=='focus');
+  return { focus:f[0].min, brk:b.length?b[0].min:0, nFocus:f.length, nBreak:b.length,
+           iv: b.length ? `${f[0].min}/${b[0].min}` : `${f[0].min}m` }; };
 
 const PLACE=['middle','horizon','ledge','top'], FILL=['solid','glass','outline'],
       FONT=['Serif','Jost'], SEP=['none','colon','dot'];
@@ -59,6 +69,8 @@ const PLACE=['middle','horizon','ledge','top'], FILL=['solid','glass','outline']
 const rows=[];
 const addC=(phase,hours,light,sound)=>rows.push({phase,kind:'custom',hours,light,sound});
 const addP=(phase,iv,blocks,light,sound)=>rows.push({phase,kind:'pomo',iv,blocks,light,sound});
+const addF=(phase,mins,light,sound)=>rows.push({phase,kind:'flow',mins,light,sound});
+const addX=(phase,work,breaks,len,light,sound)=>rows.push({phase,kind:'custom',work,breaks,len,light,sound});
 
 // ── THE MONTH — 15 unique sessions, each shot TWICE ──────────────────────────────────────────────
 // Founder's schedule: every config is captured once with ocean and once bell-only, published on
@@ -77,31 +89,46 @@ const addP=(phase,iv,blocks,light,sound)=>rows.push({phase,kind:'pomo',iv,blocks
 // midday gets the bright full shore, the night hours get the quiet mixes. Variety here also widens the
 // query surface: "ocean waves study", "brown noise"-adjacent sand, birdsong ambience are separate searches.
 // Day 1 stays ocean because it is already published.
+// Each entry is one SESSION; the generator adds its bell-only twin automatically.
+// Durations weighted by real volume (vidIQ 2026-08-03) rather than by taste:
+//   study with me 2,525,198/mo · deep focus 887,738 · deep work 654,229 · flow state 316,535
+//   2 hour timer 204,296 · study with me 3 hours 125,629 · study timer 103,138
+//   study with me pomodoro 44,753 · study with me 4 hours 44,753 · 60 minute timer 33,037
+// 3 HOURS was missing entirely and is one of the biggest duration queries in the niche.
+// FLOW mode earns its place on "deep work" and "flow state" — an unbroken block is literally what those
+// searches want, and nobody else in this niche offers one. CUSTOM covers the long-block schedules
+// (45/15, 60/20) that Pomodoro's fixed ratio cannot express.
+// Sound is matched to the LIGHT: birds at dawn, the full shore at midday, quiet mixes at night.
 const UNIQUE = [
-  ['50/10', 2, 'sunset',   'ocn'],           // ← PUBLISHED 2026-08-03, do not change
-  ['50/10', 2, 'midnight', 'ocn+brz'],       // quiet night: sea and a little wind
-  ['50/10', 2, 'sunrise',  'ocn+brd'],       // dawn chorus
-  ['50/10', 2, 'midday',   'brz+brd'],       // bright, airy
-  ['50/10', 2, 'twilight', 'ocn+snd'],
-  ['50/10', 2, 'predawn',  'snd'],           // the stillest hour: only the sand
-  ['50/10', 4, 'sunset',   'ocn+brz'],
-  ['50/10', 4, 'midnight', 'ocn'],
-  ['50/10', 4, 'sunrise',  'ocn+snd+brd'],
-  ['50/10', 4, 'midday',   'all4'],          // full shore ambience
-  ['25/5',  4, 'sunset',   'snd+brz'],
-  ['25/5',  4, 'midnight', 'ocn+snd'],
-  ['25/5',  8, 'sunset',   'ocn+brd'],
-  ['25/5',  8, 'midnight', 'brz'],           // shore breeze alone
-  ['50/10', 1, 'sunset',   'snd+brz+brd'],
+  // ── Pomodoro 50/10 — the proven interval ───────────────────────────────────────────────────────
+  { p:['50/10', 2], light:'sunset',   snd:'ocn'         },   // ← PUBLISHED 2026-08-03, do not change
+  { p:['50/10', 3], light:'midnight', snd:'ocn+brz'     },   // 3h: 125,629/mo
+  { p:['50/10', 4], light:'sunrise',  snd:'ocn+brd'     },
+  { p:['50/10', 1], light:'twilight', snd:'snd+brz'     },   // 60 minute timer: 33,037/mo
+  { p:['50/10', 3], light:'sunset',   snd:'ocn+snd+brd' },
+  // ── Pomodoro 25/5 — the other searched interval ────────────────────────────────────────────────
+  { p:['25/5',  4], light:'midnight', snd:'ocn'         },   // 2h
+  { p:['25/5',  6], light:'sunset',   snd:'ocn+snd'     },   // 3h
+  { p:['25/5',  8], light:'midday',   snd:'brz+brd'     },   // 4h
+  // ── Flow — one unbroken block. Targets deep work / flow state, and no competitor ships it ───────
+  { f:60,  light:'sunrise',  snd:'ocn+brd'     },
+  { f:120, light:'midnight', snd:'snd'         },
+  { f:180, light:'sunset',   snd:'ocn+brz'     },
+  // ── Custom — long-block schedules Pomodoro's fixed ratio cannot express ────────────────────────
+  { x:[150, 2, 15], light:'twilight', snd:'ocn'         },   // 3h -> 50/15
+  { x:[200, 4, 10], light:'predawn',  snd:'snd+brz'     },   // 4h -> 40/10
+  { x:[ 90, 2, 15], light:'midday',   snd:'all4'        },   // 2h -> 30/15
+  { x:[240, 3, 20], light:'sunrise',  snd:'ocn+snd'     },   // 5h -> 60/20
 ];
-// Interleaved so the silent twin follows its own session the very next day — the pair reads as a
-// deliberate choice on the channel page rather than two unrelated uploads.
-UNIQUE.forEach(([iv, blocks, light, snd]) => {
-  addP('1', iv, blocks, light, snd);
-  addP('1', iv, blocks, light, 'bell');
+// Interleaved so the silent twin follows its own session the very next day.
+UNIQUE.forEach(u => {
+  const add = (snd) => u.p ? addP('1', u.p[0], u.p[1], u.light, snd)
+            : u.f     ? addF('1', u.f, u.light, snd)
+            :           addX('1', u.x[0], u.x[1], u.x[2], u.light, snd);
+  add(u.snd); add('bell');
 });
 
-const key = r => [r.kind, r.iv||'', r.blocks||r.hours, r.light, r.sound].join('|');
+const key = r => [r.kind, shapeOf(r).iv, totalOf(r), r.light, r.sound].join('|');
 { const seen=new Map();
   rows.forEach((r,i)=>{ const k=key(r);
     if(seen.has(k)) throw new Error(`DUPLICATE row ${i+1} (first at ${seen.get(k)+1}): ${k}`);
@@ -115,21 +142,18 @@ const key = r => [r.kind, r.iv||'', r.blocks||r.hours, r.light, r.sound].join('|
 const ts=m=>{const s=Math.round(m*60),h=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;
   return h?`${h}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`
           :`${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;};
-const totalOf = r => P.totalMinOf(P.buildPlan(stOf(r)));
 // ── Guard-rails, asserted not trusted ────────────────────────────────────────────────────────────
 // A short block is a worse product: 15/5 means the viewer is interrupted every fifteen minutes, and a
 // sub-30-minute timer is not something anyone leaves running. Both would also read as filler in a
 // library, which is exactly what the inauthentic-content policy punishes. The generator refuses to emit
 // them rather than relying on whoever edits UNIQUE next month to remember.
-const slugOf = r => `P${r.iv.replace('/','-')}x${r.blocks}_${r.light}_${r.sound}`;
+
 const MIN_FOCUS = 25, MIN_BREAK = 5, MIN_TOTAL = 30;
 for (const r of rows){
-  if (r.kind !== 'pomo') continue;
-  const [w, b] = r.iv.split('/').map(Number);
-  if (w < MIN_FOCUS) throw new Error(`focus block too short: ${r.iv} (min ${MIN_FOCUS})`);
-  if (b < MIN_BREAK) throw new Error(`break too short: ${r.iv} (min ${MIN_BREAK})`);
-  const t = P.totalMinOf(P.buildPlan(stOf(r)));
-  if (t < MIN_TOTAL) throw new Error(`video too short: ${slugOf(r)} = ${t}min (min ${MIN_TOTAL})`);
+  const sh = shapeOf(r), t = totalOf(r);
+  if (sh.focus < MIN_FOCUS) throw new Error(`focus block too short: ${sh.iv} (min ${MIN_FOCUS})`);
+  if (sh.nBreak && sh.brk < MIN_BREAK) throw new Error(`break too short: ${sh.iv} (min ${MIN_BREAK})`);
+  if (t < MIN_TOTAL) throw new Error(`video too short: ${slug(r)} = ${t}min (min ${MIN_TOTAL})`);
 }
 console.log(`guard-rails: all ${rows.length} rows >= ${MIN_FOCUS}/${MIN_BREAK} and >= ${MIN_TOTAL}min ✓`);
 
@@ -143,9 +167,9 @@ const TOD = { predawn:'pre-dawn', sunrise:'sunrise', midday:'midday', sunset:'su
               twilight:'twilight', midnight:'midnight' };
 const SND_ID = { ocn:'ocean', snd:'sand', brz:'breeze', brd:'birds' };
 const presetURL = r => {
-  const q = ['mode=' + (r.kind==='custom' ? 'custom' : 'pomodoro')];
-  if (r.kind !== 'custom'){ const [w,b]=r.iv.split('/');
-    q.push('work='+w, 'break='+b, 'blocks='+r.blocks); }
+  const q = ['mode=' + (r.kind==='pomo' ? 'pomodoro' : r.kind)];
+  if (r.kind==='pomo') q.push('work='+shapeOf(r).focus, 'break='+shapeOf(r).brk, 'blocks='+r.blocks);
+  if (r.kind==='flow') q.push('flow=' + r.mins);
   if (TOD[r.light]) q.push('phase=' + TOD[r.light]);
   q.push('sound=' + (r.sound==='bell' ? '' : r.sound.split('+').map(k=>SND_ID[k]).join(',')));
   return 'https://sustaintimer.com/?' + q.join('&');
@@ -158,7 +182,8 @@ const presetURL = r => {
 const LEAD_IN = 13 / 60;                       // minutes, to match the plan's units
 // No closing chapter for the thank-you card: recording stops 5 s into it (OUTRO_STOP_MS), and a chapter
 // under 10 s is invalid and would silently kill the markers for the whole video. The last break absorbs it.
-const chapters = r => { const plan=P.buildPlan(stOf(r)); const out=[`${ts(0)} Intro`]; let t=LEAD_IN,f=0,b=0;
+const chapters = r => { if (shapeOf(r).nBreak === 0) return [];
+   const plan=P.buildPlan(stOf(r)); const out=[`${ts(0)} Intro`]; let t=LEAD_IN,f=0,b=0;
   for (const seg of plan){ if(seg.kind==='focus'){ out.push(`${ts(t)} Focus ${++f}`); } else { out.push(`${ts(t)} Break ${++b}`); } t+=seg.min; }
   return out; };
 const nBreaks = r => P.buildPlan(stOf(r)).filter(s=>s.kind!=='focus').length;
@@ -185,37 +210,92 @@ const sentence = r => {
   return shape + ' The sky moves the whole way through — this session '
        + (DRIFT[r.light] || 'follows the day') + ' as you work.';
 };
-const slug = r => (r.kind==='custom' ? `C${r.hours}h` : `P${r.iv.replace('/','-')}x${r.blocks}`)
-  + `_${r.light}_${r.sound.replace(/\+/g,'-')}`;
-// ── Title formula ───────────────────────────────────────────────────────────────────────────────────
-// Search + Suggested show ~60-70 chars, mobile truncates near 50, and front-loading the primary keyword
-// inside the first 30 chars is worth up to ~20% in search ranking. So the opening characters are the
-// whole asset and they go to the biggest terms, in volume order (vidIQ, 2026-08-03):
-//     study with me 2,525,198/mo   ·   pomodoro 982,562   ·   2 hour timer 204,296
-//     study with me sunset 12,415  ·   50/10 pomodoro ~5,000
-// The earlier formula opened on the interval — a ~5k term in the prime slot, pushing the 2.5M term out
-// to char 37. Now "{N} Hour Study With Me" leads, which lands TWO high-volume strings in the first 20
-// characters, and the light (our differentiator, and its own real query) sits by char ~30.
+const slug = r => `${{pomo:'P',flow:'F',custom:'C'}[r.kind]}${shapeOf(r).iv.replace('/','-')}`
+  + `x${Math.round(totalOf(r)/60*10)/10}h_${r.light}_${r.sound.replace(/\+/g,'-')}`;
+// ── Title formula — ONE skeleton, four slots ───────────────────────────────────────────────────────
 //
-// Shape is Focus with Elora's — a 157-SUBSCRIBER channel that pulled 8,442 views on
-// "4 Hour Study with Me | Pomodoro Timer 50/10 | Deep Focus Lofi Music". The title did the work.
-// LOCKED to the format of video #1 (published 2026-08-03), which the founder settled on after testing
-// against vidIQ's scorer:
-//   2-Hour Study With Me | Pomodoro 50/10 for Focus & ADHD | Ocean Waves & Sunset
-// Front-loads "{N}-Hour Study With Me" — study with me is 2,525,198/mo, the biggest term in the niche —
-// then Pomodoro (982,562) and the interval, all inside the ~50 chars a phone shows. The sound and light
-// ride in the tail: still indexed, and the thumbnail already says which sky it is.
-const title = r => { const L=LIGHT[r.light], S=SOUND[r.sound], m=totalOf(r);
-  const head = `${durTxt(m)} Study With Me | Pomodoro ${r.kind==='custom' ? '' : r.iv + ' '}for Focus & ADHD`;
-  return r.sound === 'bell' ? `${head} | No Music, ${L.cap}` : `${head} | ${S} & ${L.cap}`; };
+//   {N}-Hour Study With Me {e} {MODE PHRASE} for Deep Focus & ADHD | {Sound} & {Light}
+//
+// Only the emoji, the mode phrase, the sound and the light ever move. Everything else is fixed, on
+// purpose: the channels that win this niche run a rigid skeleton and vary two words per upload.
+// Measured 2026-08-03 on "3 hour study with me pomodoro timer":
+//   Timer Palette  546,673 / 239,288 / 117,648 views — "50/10 Pomodoro Timer with Brown Noise 🎧
+//                  3-Hour Study with Me for Deep Focus & ADHD ✨" — ONE variable word (Brown/Pink).
+//   Countdown Time 687,672 / 472,688 / 436,770 — "{IV} Pomodoro Timer - 3 hour study || No music -
+//                  Study for dreams - Deep focus - Study timer" — ONLY the interval changes.
+//   iCanStudy   13,210,854 — "3-HOUR STUDY WITH ME | ... Pomodoro 50-10"
+// Both openings are proven, so the opener is chosen on volume: "study with me" 2,525,198/mo beats
+// "50/10 pomodoro" 47,568 by 53x and leads.
+//
+// Three fixes over the video-#1 wording, each worth real indexed volume:
+//  1. "Pomodoro 50/10" -> "50/10 Pomodoro Timer". Word order is what exact-phrase matching sees: the
+//     old order matched NEITHER "50/10 pomodoro" (47,568/mo) nor "pomodoro timer" (427,868/mo).
+//     Four words now carry both. This was the single biggest hole in the old title.
+//  2. "Focus & ADHD" -> "Deep Focus & ADHD" — "deep focus" is 887,738/mo on its own.
+//  3. One emoji, tied to the sound rather than sprinkled. Every top performer here uses one or two
+//     (Timer Palette 🎧✨, Sherry 🌅🌊, Sean Study 🌅, Mr Tiny ☕🌤). It is also the only glyph in a
+//     wall of same-shaped titles, which is what earns the eye in a sidebar.
+//
+// Bell-only twins say "No Music" in the title, not the tail: Countdown Time's three biggest videos
+// (687k/472k/436k) all lead on it, and "pomodoro no music" is 9,661/mo at competition 10.4 — the
+// lowest-contested real term in the niche.
+const MODE = { pomo:'Pomodoro', flow:'Flow', custom:'Custom' };
+// What to actually tap into Setup before recording. Mode-shaped, because the three modes take
+// genuinely different inputs — Pomodoro counts blocks, Custom counts breaks, Flow takes one number.
+const setupOf = r => r.kind==='flow'
+    ? `flow length **${r.mins}m**`
+  : r.kind==='custom'
+    ? `By count · work **${r.work}m** · breaks **${r.breaks}** · break length **${r.len}m**`
+    : `focus **${shapeOf(r).focus}m** · break **${shapeOf(r).brk}m** · blocks **${r.blocks}**`;
+// The head of the video description, emitted once here so the roadmap markdown and the directory page
+// cannot drift apart — they both render THIS string.
+const descHead = r => { const m=totalOf(r), ch=chapters(r);
+  return `${durPlain(m)} Study With Me ${r.kind==='flow' ? 'deep work timer — one unbroken block'
+            : MODE[r.kind].toLowerCase()+' timer — '+shapeOf(r).iv+' focus blocks'} with `
+    + `${SOUND[r.sound].toLowerCase()} under a ${LIGHT[r.light].cap.toLowerCase()} sky.
+`
+    + `A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
+
+`
+    + `${sentence(r)}
+`
+    + (ch.length ? `
+⏱ Chapters
+${ch.join('\n')}
+` : ''); };
+const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
+const modePhrase = r => { const sh = shapeOf(r);
+  if (r.kind==='flow')   return 'Deep Work Timer, No Breaks for Flow State & ADHD';
+  if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer, No Music for Deep Focus & ADHD`;
+  return `${sh.iv} Pomodoro Timer for Deep Focus & ADHD`;
+};
+// A title YouTube truncates is a title nobody reads: 100 is the hard cap, ~70 is what Search shows.
+// The head carries every keyword that matters, so when a long sound name pushes past the cap the TAIL
+// gives way — the sound is already named in the description, the tags and the thumbnail.
+// "Ocean & Seabirds & Sunrise" reads like a typo, so a multi-word sound meets the light on a comma.
+const title = r => {
+  const head = `${durTxt(totalOf(r))} Study With Me ${EMOJI(r)} ${modePhrase(r)}`;
+  const L = LIGHT[r.light].cap, S = SOUND[r.sound];
+  if (r.sound === 'bell') return `${head} | ${L}`;
+  const full = `${head} | ${S}${/ & /.test(S) ? ',' : ' &'} ${L}`;
+  return full.length <= 100 ? full : `${head} | ${L}`;
+};
+for (const r of rows) if (title(r).length > 100)
+  throw new Error(`title still too long (${title(r).length}): ${title(r)}`);
 const TAG_BUDGET = 500-353;
 const NONEN = ['ポモドーロタイマー','अध्ययन टाइमर','temporizador de estudio','مؤقت للدراسة',
                'temporizador de estudo','핑크 노이즈 공부','timer belajar','çalışma zamanlayıcısı'];
-const tags = (r,i) => { const L=LIGHT[r.light], m=totalOf(r), h=Math.floor(m/60), t=[];
-  if (r.kind==='pomo'){ const [w,b]=r.iv.split('/'); t.push(`${w}/${b} pomodoro`,`${w} ${b} pomodoro`,`${w} minute pomodoro`); }
-  if (m%60===0) t.push(`${h} hour timer`,`${h} hour study timer`);   // "2 hour timer" = 204k/mo
-  t.push(`${L.cap.toLowerCase()} ambience`);
-  if (r.sound==='bell') t.push('silent timer','no music pomodoro');
+// Tags carry what the title could not fit, in measured-volume order. The title already owns
+// "study with me", "{iv} pomodoro timer" and "deep focus", so these are the misses:
+//   study with me {N} hours 125,629/mo · pomodoro technique 69,409 · 50/10 pomodoro 47,568
+//   study pomodoro 24,362 · pomodoro adhd 15,990 · pomodoro no music 9,661 (competition 10.4)
+//   deep work 654,229 · flow state 316,535 — flow rows only, where they are the actual promise
+const tags = (r,i) => { const L=LIGHT[r.light], m=totalOf(r), h=Math.floor(m/60), sh=shapeOf(r), t=[];
+  if (r.kind!=='flow') t.push(`${sh.iv} pomodoro`, `${sh.focus} minute pomodoro`, 'pomodoro technique');
+  else t.push('deep work', 'flow state', 'deep work timer', 'study with me no break');
+  if (m%60===0) t.push(`${h} hour timer`, `study with me ${h} hours`);   // 125,629/mo at h=3
+  t.push(`${L.cap.toLowerCase()} ambience`, 'pomodoro adhd');
+  if (r.sound==='bell') t.push('pomodoro no music','silent study timer');
   t.push(NONEN[i%NONEN.length]);
   while (t.join(', ').length>TAG_BUDGET) t.splice(-2,1);
   return t.join(', '); };
@@ -239,12 +319,13 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
     id: slug(r),
     pairId: slug({ ...r, sound: 'ocn' }),        // the silent twin points at its own session
     silent: r.sound === 'bell',
-    mode: 'Pomodoro', interval: r.iv, blocks: r.blocks,
+    mode: MODE[r.kind], interval: shapeOf(r).iv, blocks: shapeOf(r).nFocus,
+    setup: setupOf(r).replace(/\*\*/g,''),
     minutes: m, duration: durPlain(m),
     light: LIGHT[r.light].cap, lightSetup: LIGHT[r.light].setup,
     sound: soundSetup(r.sound), audio: audioCell(r.sound),
     numerals: `Always · ${PLACE[(i+1)%4]} · ${FILL[(i+1)%3]} · ${FONT[(i+1)%2]} · ${SEP[(i+1)%3]} · ${LIGHT[r.light].cols[(i+1) % LIGHT[r.light].cols.length]}`,
-    title: title(r), tags: tags(r, i+1), chapters: chapters(r),
+    title: title(r), tags: tags(r, i+1), chapters: chapters(r), desc: descHead(r),
     preset: presetURL(r), sentence: sentence(r),
   };
 });
@@ -261,10 +342,8 @@ for (const r of rows) {
       + '| ✓ | # | ID | Mode · timer · length · breaks | Time of day · Sun&moon | Numerals: show · place · fill · font · sep · colour | Audio (per-sound · master) | Title | Extra tags | Video ID |\n'
       + '|---|---|---|---|---|---|---|---|---|---|\n'; }
   n++; i++;
-  const L=LIGHT[r.light], m=totalOf(r), R=ROUND[r.hours];
-  const cfg = r.kind==='custom'
-    ? `**Custom → By count** · work **${R.work}m** · breaks **${R.breaks}** · break len **${R.len}m** → ${durPlain(m)}`
-    : `**Pomodoro** · ${r.iv} · blocks **${r.blocks}** → ${durPlain(m)} · ${nBreaks(r)} breaks`;
+  const L=LIGHT[r.light], m=totalOf(r), sh=shapeOf(r);
+  const cfg = `**${MODE[r.kind]}** · ${setupOf(r)} → ${durPlain(m)} · ${sh.nBreak} breaks`;
   const col=L.cols[i%L.cols.length];
   tbl += `| ☐ | ${String(n).padStart(2,'0')} | \`${slug(r)}\` | ${cfg} | ${L.setup} · Show `
       +  `| Always · ${PLACE[i%4]} · ${FILL[i%3]} · ${FONT[i%2]} · ${SEP[i%3]} · ${col} `
@@ -273,10 +352,7 @@ for (const r of rows) {
 
 let blocks='', bi=0;
 for (const r of rows.filter(x=>x.phase==='1')) { bi++;
-  const m=totalOf(r), ch=chapters(r), R=ROUND[r.hours];
-  const setupTxt = r.kind==='custom'
-    ? `Custom → By count · work **${R.work}m** · breaks **${R.breaks}** · break length **${R.len}m**`
-    : `Pomodoro · focus **${r.iv.split('/')[0]}m** · break **${r.iv.split('/')[1]}m** · blocks **${r.blocks}**`;
+  const m=totalOf(r), ch=chapters(r), setupTxt = `${MODE[r.kind]} · ${setupOf(r)}`;
   blocks += `\n<details>\n<summary><code>${slug(r)}</code> — ${title(r)}</summary>\n\n`
     + `**Setup:** ${setupTxt} · ${LIGHT[r.light].setup} · ${soundSetup(r.sound)}\n\n`
     + `**Verified length: ${durPlain(m)} exactly.**\n\n**Title:** ${title(r)}\n\n`
@@ -285,11 +361,7 @@ for (const r of rows.filter(x=>x.phase==='1')) { bi++;
     + `originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the\n`
     + `head below changes per video, and it goes FIRST because the opening two lines are what appear in\n`
     + `search and above the "…more" fold.\n\n\`\`\`\n`
-    + `${durPlain(m)} Study With Me pomodoro timer — ${r.kind==='pomo' ? r.iv + ' focus blocks' : 'timed focus blocks'} `
-    + `with ${SOUND[r.sound].toLowerCase()} under a ${LIGHT[r.light].cap.toLowerCase()} sky.\n`
-    + `A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.\n\n`
-    + `${sentence(r)}\n\n`
-    + `⏱ Chapters\n${ch.join('\n')}\n\n`
+    + descHead(r)
     + (LINKS_OK ? `▶ Run this exact session free:\n   ${presetURL(r).replace(/^https:\/\//, '')}\n` : '')
     + `\`\`\`\n`
     + (LINKS_OK ? '' : `\n> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip\n`
