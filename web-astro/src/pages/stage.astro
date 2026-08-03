@@ -546,26 +546,48 @@ import { LQIP } from '../scene/lqip.js';
         }
         // Text is painted BEFORE the hourglass goes back on top (see SustainScene.thumbFrame), which is
         // what puts line 2 behind the glass.
-        function thPaint(o, W, H){
-          o.textAlign = 'center'; o.textBaseline = 'middle';
+        // EXACTLY the timer's face: 'NumSans' is the self-hosted jost-550.woff2 the numerals use, at its
+        // one real weight (550). Google-Jost at 300 was a different typeface weight and read thinner.
+        var TH_FONT = "'NumSans','Jost',system-ui,sans-serif";
+        function thType(o, H){
+          o.textAlign = 'center'; o.textBaseline = 'middle'; o.fillStyle = '#fffaf0';
           o.shadowColor = 'rgba(0,0,0,.55)'; o.shadowBlur = Math.round(H*0.02); o.shadowOffsetY = Math.round(H*0.004);
+        }
+        // BEHIND the glass — the top block, so the stand and cap cut across it.
+        function thPaint(o, W, H){
+          thType(o, H);
           var s1 = Math.round(H * TH.top.size), s2 = Math.round(s1 * 0.42);
-          o.fillStyle = '#fffaf0';
-          o.font = '300 ' + s1 + "px 'Jost',system-ui,sans-serif";
+          o.font = '550 ' + s1 + 'px ' + TH_FONT;
           o.fillText(TH.l1, W*TH.top.x, H*TH.top.y);
-          o.font = '300 ' + s2 + "px 'Jost',system-ui,sans-serif";
+          o.font = '550 ' + s2 + 'px ' + TH_FONT;
           o.letterSpacing = Math.round(s2*0.18) + 'px';
           o.fillText(TH.l2, W*TH.top.x, H*TH.top.y + s1*0.78);
+          o.letterSpacing = '0px'; o.shadowBlur = 0; o.shadowOffsetY = 0;
+        }
+        // IN FRONT — the bottom line reads as a caption on the image, not something the stand blocks.
+        function thPaintOver(o, W, H){
+          thType(o, H);
           var s3 = Math.round(H * TH.bot.size);
-          o.font = '300 ' + s3 + "px 'Jost',system-ui,sans-serif";
+          o.font = '550 ' + s3 + 'px ' + TH_FONT;
           o.letterSpacing = Math.round(s3*0.22) + 'px';
           o.fillText(TH.l3, W*TH.bot.x, H*TH.bot.y);
           o.letterSpacing = '0px'; o.shadowBlur = 0; o.shadowOffsetY = 0;
+          // Centring guide: the hourglass AXIS, not the frame centre. Only while dragging, and never
+          // in the exported PNG.
+          if (thDragging && thGuide){
+            var ax = W * (SustainScene.thumbCropRect(W/H).axis || 0.5);
+            o.save();
+            o.strokeStyle = Math.abs(thDragging.x - thAxis()) < 0.004 ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.35)';
+            o.lineWidth = Math.max(1, Math.round(W/640)); o.setLineDash([H*0.02, H*0.02]);
+            o.beginPath(); o.moveTo(ax, 0); o.lineTo(ax, H); o.stroke();
+            o.restore();
+          }
         }
+        function thAxis(){ var r = SustainScene.thumbCropRect(16/9); return r && r.axis != null ? r.axis : 0.5; }
         var thRAF = 0;
         function thDraw(){
           if (!window.SustainScene || !SustainScene.thumbFrame) return;
-          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint });
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver });
           thCv.getContext('2d').drawImage(f, 0, 0, 1280, 720);
           var mc = thMob.getContext('2d'); mc.imageSmoothingQuality = 'high';
           mc.drawImage(f, 0, 0, 320, 180);
@@ -581,7 +603,7 @@ import { LQIP } from '../scene/lqip.js';
           cancelAnimationFrame(thRAF);
         }
         // Drag whichever block you grabbed; wheel resizes it.
-        var thDragging = null;
+        var thDragging = null, thGuide = true;
         function thHit(e){
           var r = thCv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height;
           return y < 0.62 ? TH.top : TH.bot;          // top block owns the upper ~2/3
@@ -592,7 +614,10 @@ import { LQIP } from '../scene/lqip.js';
         thCv.addEventListener('pointermove', function(e){
           if (!thDragging) return;
           var r = thCv.getBoundingClientRect();
-          thDragging.x = Math.max(0.06, Math.min(0.94, (e.clientX - r.left) / r.width));
+          var nx = Math.max(0.06, Math.min(0.94, (e.clientX - r.left) / r.width));
+          var ax = thAxis();
+          if (Math.abs(nx - ax) < 0.012) nx = ax;      // snap to the glass centreline
+          thDragging.x = nx;
           thDragging.y = Math.max(0.06, Math.min(0.94, (e.clientY - r.top) / r.height));
         });
         addEventListener('pointerup', function(){ thDragging = null; });
@@ -610,7 +635,9 @@ import { LQIP } from '../scene/lqip.js';
         });
         document.getElementById('thumbClose').addEventListener('click', thClose);
         document.getElementById('thumbSave').addEventListener('click', function(){
-          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint });
+          thGuide = false;
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver });
+          thGuide = true;
           f.toBlob(function(b){
             var c = readCfg(), name = 'thumb_' + (c.mode||'x') + '_' + (c.totalMin||0) + 'm_'
                   + lightLabel(c).toLowerCase().replace(/\s+/g,'-') + '.png';

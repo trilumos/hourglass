@@ -2087,7 +2087,9 @@ function thumbCrop(aspect){
   // that the sun/moon is still in shot for the lights we actually shoot.
   let y = (1 - h) * THUMB_YBIAS;
   if (y < 0) y = 0; if (y + h > 1) y = 1 - h;
-  return (_crop = { aspect, x, y, w, h });
+  // `axis` = where the hourglass centreline falls INSIDE the crop, 0–1. The thumbnail UI draws its
+  // centring guide off this, so "centred" means centred on the glass, not on the frame.
+  return (_crop = { aspect, x, y, w, h, axis: (S.cx - x) / w });
 }
 
 window.SustainScene = {
@@ -2158,7 +2160,7 @@ window.SustainScene = {
     blit(glitterCv, o);
     blit(sandCv, o);
 
-    if (typeof opts.paint === 'function') opts.paint(o, W, H);
+    if (typeof opts.paint === 'function') opts.paint(o, W, H);   // BEHIND the glass
 
     // Hourglass back on top, silhouette only — same technique as drawOcc(): take the live plate and keep
     // only the pixels inside the glass matte.
@@ -2172,6 +2174,9 @@ window.SustainScene = {
       o.drawImage(t, 0, 0);
       blit(sandCv, o);                                     // sand rides in front of the glass
     }
+    // ...and anything that must sit IN FRONT of the hourglass — the bottom line, which should read as
+    // a caption on the image rather than something the stand is standing on.
+    if (typeof opts.paintOver === 'function') opts.paintOver(o, W, H);
     return out;
   },
   // Expose the crop so a UI can show what will be kept, and so it can be tuned by eye.
