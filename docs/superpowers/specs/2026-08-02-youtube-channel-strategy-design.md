@@ -633,6 +633,33 @@ Two constraints: capture is real-time, so a day of recording is bounded by the c
 costs 3 h. Pair long captures with short ones. And **upload as Private, not Unlisted** — an Unlisted
 video is live and accumulates views before its scheduled slot, which is what happened to video #1.
 
+## 20. Chapters — root cause found and fixed, 2026-08-03
+
+Video #1 (`IRTdF6rgjpQ`) shipped valid-looking timestamps that YouTube silently refused. Diagnosed by
+comparing the rendered watch pages of four videos:
+
+| Video | Length | `macroMarkersListItemRenderer` | Timestamps in description |
+|---|---|---|---|
+| iCanStudy `74cOUSKXMz0` | 10,303 s | **present** | 35 |
+| Timer Palette `KNzl1LYrHtw` | 10,807 s | **present** | 30 |
+| Countdown Time `EZEF0-gEJ0Q` | 10,835 s | absent | 0 (never added any) |
+| **Sustain #1 `IRTdF6rgjpQ`** | 7,218 s | **absent** | **25** |
+
+Ours were present and *rejected* — and Timer Palette proves a 3-hour timer video can carry chapters.
+
+**Cause:** the list changed shape partway down. `ts()` was `h ? H:MM:SS : MM:SS`, so a 2-hour video
+emitted `00:00`, `00:13`, `50:13`, then `1:00:13`, `1:50:13`. Two defects at once — a format switch
+mid-list, and no leading zero on the hour. This survived the earlier `0:00` → `00:00` fix because that
+one only padded the minutes.
+
+**Fix:** always emit full zero-padded `HH:MM:SS`. Matches Timer Palette's working format exactly
+(`00:00:00` / `00:50:00` / `01:00:00`). Asserted in the generator: all chapters across all 30 videos
+now match `/^\d{2}:\d{2}:\d{2} \S/`.
+
+**Why it was invisible:** YouTube renders *any* timestamp as a clickable blue link, whether or not it
+validates as a chapter. The description looked correct in every way while the progress bar stayed
+unsegmented — there is no error message anywhere in Studio.
+
 ## 15. Sources
 
 - [YouTube Partner Program overview & eligibility](https://support.google.com/youtube/answer/72851?hl=en)

@@ -323,11 +323,11 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -361,11 +361,11 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -399,13 +399,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
-2:00:13 Focus 3
-2:50:13 Break 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
+02:00:13 Focus 3
+02:50:13 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -439,13 +439,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
-2:00:13 Focus 3
-2:50:13 Break 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
+02:00:13 Focus 3
+02:50:13 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -479,15 +479,15 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
-2:00:13 Focus 3
-2:50:13 Break 3
-3:00:13 Focus 4
-3:50:13 Break 4
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
+02:00:13 Focus 3
+02:50:13 Break 3
+03:00:13 Focus 4
+03:50:13 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -521,15 +521,15 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
-2:00:13 Focus 3
-2:50:13 Break 3
-3:00:13 Focus 4
-3:50:13 Break 4
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
+02:00:13 Focus 3
+02:50:13 Break 3
+03:00:13 Focus 4
+03:50:13 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -563,9 +563,9 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -599,9 +599,9 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -635,13 +635,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
-2:00:13 Focus 3
-2:50:13 Break 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
+02:00:13 Focus 3
+02:50:13 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -675,13 +675,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:00:13 Focus 2
-1:50:13 Break 2
-2:00:13 Focus 3
-2:50:13 Break 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:00:13 Focus 2
+01:50:13 Break 2
+02:00:13 Focus 3
+02:50:13 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -715,15 +715,15 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-25:13 Break 1
-30:13 Focus 2
-55:13 Break 2
-1:00:13 Focus 3
-1:25:13 Break 3
-1:30:13 Focus 4
-1:55:13 Break 4
+00:00:00 Intro
+00:00:13 Focus 1
+00:25:13 Break 1
+00:30:13 Focus 2
+00:55:13 Break 2
+01:00:13 Focus 3
+01:25:13 Break 3
+01:30:13 Focus 4
+01:55:13 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -757,15 +757,15 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-25:13 Break 1
-30:13 Focus 2
-55:13 Break 2
-1:00:13 Focus 3
-1:25:13 Break 3
-1:30:13 Focus 4
-1:55:13 Break 4
+00:00:00 Intro
+00:00:13 Focus 1
+00:25:13 Break 1
+00:30:13 Focus 2
+00:55:13 Break 2
+01:00:13 Focus 3
+01:25:13 Break 3
+01:30:13 Focus 4
+01:55:13 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -799,19 +799,19 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 6 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-25:13 Break 1
-30:13 Focus 2
-55:13 Break 2
-1:00:13 Focus 3
-1:25:13 Break 3
-1:30:13 Focus 4
-1:55:13 Break 4
-2:00:13 Focus 5
-2:25:13 Break 5
-2:30:13 Focus 6
-2:55:13 Break 6
+00:00:00 Intro
+00:00:13 Focus 1
+00:25:13 Break 1
+00:30:13 Focus 2
+00:55:13 Break 2
+01:00:13 Focus 3
+01:25:13 Break 3
+01:30:13 Focus 4
+01:55:13 Break 4
+02:00:13 Focus 5
+02:25:13 Break 5
+02:30:13 Focus 6
+02:55:13 Break 6
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -845,19 +845,19 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 6 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-25:13 Break 1
-30:13 Focus 2
-55:13 Break 2
-1:00:13 Focus 3
-1:25:13 Break 3
-1:30:13 Focus 4
-1:55:13 Break 4
-2:00:13 Focus 5
-2:25:13 Break 5
-2:30:13 Focus 6
-2:55:13 Break 6
+00:00:00 Intro
+00:00:13 Focus 1
+00:25:13 Break 1
+00:30:13 Focus 2
+00:55:13 Break 2
+01:00:13 Focus 3
+01:25:13 Break 3
+01:30:13 Focus 4
+01:55:13 Break 4
+02:00:13 Focus 5
+02:25:13 Break 5
+02:30:13 Focus 6
+02:55:13 Break 6
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -891,23 +891,23 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-25:13 Break 1
-30:13 Focus 2
-55:13 Break 2
-1:00:13 Focus 3
-1:25:13 Break 3
-1:30:13 Focus 4
-1:55:13 Break 4
-2:00:13 Focus 5
-2:25:13 Break 5
-2:30:13 Focus 6
-2:55:13 Break 6
-3:00:13 Focus 7
-3:25:13 Break 7
-3:30:13 Focus 8
-3:55:13 Break 8
+00:00:00 Intro
+00:00:13 Focus 1
+00:25:13 Break 1
+00:30:13 Focus 2
+00:55:13 Break 2
+01:00:13 Focus 3
+01:25:13 Break 3
+01:30:13 Focus 4
+01:55:13 Break 4
+02:00:13 Focus 5
+02:25:13 Break 5
+02:30:13 Focus 6
+02:55:13 Break 6
+03:00:13 Focus 7
+03:25:13 Break 7
+03:30:13 Focus 8
+03:55:13 Break 8
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -941,23 +941,23 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-25:13 Break 1
-30:13 Focus 2
-55:13 Break 2
-1:00:13 Focus 3
-1:25:13 Break 3
-1:30:13 Focus 4
-1:55:13 Break 4
-2:00:13 Focus 5
-2:25:13 Break 5
-2:30:13 Focus 6
-2:55:13 Break 6
-3:00:13 Focus 7
-3:25:13 Break 7
-3:30:13 Focus 8
-3:55:13 Break 8
+00:00:00 Intro
+00:00:13 Focus 1
+00:25:13 Break 1
+00:30:13 Focus 2
+00:55:13 Break 2
+01:00:13 Focus 3
+01:25:13 Break 3
+01:30:13 Focus 4
+01:55:13 Break 4
+02:00:13 Focus 5
+02:25:13 Break 5
+02:30:13 Focus 6
+02:55:13 Break 6
+03:00:13 Focus 7
+03:25:13 Break 7
+03:30:13 Focus 8
+03:55:13 Break 8
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1177,12 +1177,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 15-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:05:13 Focus 2
-1:55:13 Break 2
-2:10:13 Focus 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:05:13 Focus 2
+01:55:13 Break 2
+02:10:13 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1216,12 +1216,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 50 minutes, a 15-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-50:13 Break 1
-1:05:13 Focus 2
-1:55:13 Break 2
-2:10:13 Focus 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:50:13 Break 1
+01:05:13 Focus 2
+01:55:13 Break 2
+02:10:13 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1255,16 +1255,16 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 5 focus blocks of 40 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in the dark hour before dawn and eases toward first light as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-40:13 Break 1
-50:13 Focus 2
-1:30:13 Break 2
-1:40:13 Focus 3
-2:20:13 Break 3
-2:30:13 Focus 4
-3:10:13 Break 4
-3:20:13 Focus 5
+00:00:00 Intro
+00:00:13 Focus 1
+00:40:13 Break 1
+00:50:13 Focus 2
+01:30:13 Break 2
+01:40:13 Focus 3
+02:20:13 Break 3
+02:30:13 Focus 4
+03:10:13 Break 4
+03:20:13 Focus 5
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1298,16 +1298,16 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 5 focus blocks of 40 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in the dark hour before dawn and eases toward first light as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-40:13 Break 1
-50:13 Focus 2
-1:30:13 Break 2
-1:40:13 Focus 3
-2:20:13 Break 3
-2:30:13 Focus 4
-3:10:13 Break 4
-3:20:13 Focus 5
+00:00:00 Intro
+00:00:13 Focus 1
+00:40:13 Break 1
+00:50:13 Focus 2
+01:30:13 Break 2
+01:40:13 Focus 3
+02:20:13 Break 3
+02:30:13 Focus 4
+03:10:13 Break 4
+03:20:13 Focus 5
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1341,12 +1341,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 30 minutes, a 15-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-30:13 Break 1
-45:13 Focus 2
-1:15:13 Break 2
-1:30:13 Focus 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:30:13 Break 1
+00:45:13 Focus 2
+01:15:13 Break 2
+01:30:13 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1380,12 +1380,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 3 focus blocks of 30 minutes, a 15-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-30:13 Break 1
-45:13 Focus 2
-1:15:13 Break 2
-1:30:13 Focus 3
+00:00:00 Intro
+00:00:13 Focus 1
+00:30:13 Break 1
+00:45:13 Focus 2
+01:15:13 Break 2
+01:30:13 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1419,14 +1419,14 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 60 minutes, a 20-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-1:00:13 Break 1
-1:20:13 Focus 2
-2:20:13 Break 2
-2:40:13 Focus 3
-3:40:13 Break 3
-4:00:13 Focus 4
+00:00:00 Intro
+00:00:13 Focus 1
+01:00:13 Break 1
+01:20:13 Focus 2
+02:20:13 Break 2
+02:40:13 Focus 3
+03:40:13 Break 3
+04:00:13 Focus 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1460,14 +1460,14 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 4 focus blocks of 60 minutes, a 20-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-00:00 Intro
-00:13 Focus 1
-1:00:13 Break 1
-1:20:13 Focus 2
-2:20:13 Break 2
-2:40:13 Focus 3
-3:40:13 Break 3
-4:00:13 Focus 4
+00:00:00 Intro
+00:00:13 Focus 1
+01:00:13 Break 1
+01:20:13 Focus 2
+02:20:13 Break 2
+02:40:13 Focus 3
+03:40:13 Break 3
+04:00:13 Focus 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip

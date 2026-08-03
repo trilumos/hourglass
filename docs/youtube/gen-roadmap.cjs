@@ -139,9 +139,14 @@ const key = r => [r.kind, shapeOf(r).iv, totalOf(r), r.light, r.sound].join('|')
 // docs are explicit — "make sure that the first timestamp you list starts with 00:00" — and with 0:00 the
 // timestamps still render as blue links (any timestamp does) while chapter validation silently fails and
 // the progress bar never segments. One missing zero costs you the chapter markers entirely.
-const ts=m=>{const s=Math.round(m*60),h=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;
-  return h?`${h}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`
-          :`${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;};
+// ALWAYS full zero-padded HH:MM:SS. That `h ? ... : ...` was the bug that survived the 0:00 -> 00:00
+// fix: it made the list CHANGE SHAPE partway down, `50:13` (MM:SS) followed by `1:00:13` (H:MM:SS, no
+// leading zero). YouTube parsed neither, so the progress bar never segmented on video #1 — while the
+// timestamps still rendered as blue links, which is why nothing looked broken.
+// Verified against Timer Palette KNzl1LYrHtw, a 3-hour timer whose chapters DO render:
+//   00:00:00 / 00:50:00 / 01:00:00 — one consistent zero-padded form the whole way down.
+const ts = m => { const s = Math.round(m*60), p = n => String(n).padStart(2,'0');
+  return `${p(Math.floor(s/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`; };
 // ── Guard-rails, asserted not trusted ────────────────────────────────────────────────────────────
 // A short block is a worse product: 15/5 means the viewer is interrupted every fifteen minutes, and a
 // sub-30-minute timer is not something anyone leaves running. Both would also read as filler in a
