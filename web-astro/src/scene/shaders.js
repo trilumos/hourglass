@@ -10,6 +10,7 @@ export const FRAG = `
     uniform float uPathX,uPathW,uPersp,uGlen,uGthk,uGdrift;
     uniform vec2 uCelA,uCelB;
     uniform float uCelAamt,uCelBamt,uCelAtype,uCelBtype,uMoonK,uAspect;
+    uniform float uLite;          // 1 = constrained device: skip sun/moon + glitter (plate crossfade only)
     uniform float uMoonR,uMoonSoft,uMoonTexAmt,uMoonWarm,uMoonHaze,uMoonWarmH;
     uniform vec3  uMoonWarmCol;
     uniform float uMoonGlowW,uMoonGlowA,uMoonFarW,uMoonFarA;
@@ -168,27 +169,41 @@ export const FRAG = `
       float water = mk.r;
       float glass = mk.g;
 
-      // Sun/moon in the sky — the setting body fades out while the rising one
-      // fades in (A = phase leaving, B = phase arriving).
-      col.rgb = celestial(col.rgb, vUv, uCelA, uCelAtype, uCelAamt, glass, uCelAalt);
-      col.rgb = celestial(col.rgb, vUv, uCelB, uCelBtype, uCelBamt, glass, uCelBalt);
+      // ── LITE TIER ───────────────────────────────────────────────────────────
+      // On a constrained device (uLite = 1) the sun/moon and the water glitter are skipped and only the
+      // PLATE and its crossfade remain — the founder's call, and the two effects below are exactly the
+      // expensive ones: celestial() runs twice, and the glitter evaluates two starLayer() grids, each a
+      // hash-per-cell twinkle. Everything above this point (plate sample, phase crossfade, tone) is
+      // untouched, which is why the sky still moves through the day on a phone.
+      //
+      // uLite is a UNIFORM, so the branch is coherent across every fragment — there is no warp
+      // divergence and the GPU genuinely skips the work rather than executing both sides.
+      //
+      // DESKTOP IS BYTE-FOR-BYTE UNCHANGED: uLite is 0 there, so this is the identical code path with
+      // the identical inputs. Nothing inside the branch was edited.
+      if (uLite < 0.5) {
+        // Sun/moon in the sky — the setting body fades out while the rising one
+        // fades in (A = phase leaving, B = phase arriving).
+        col.rgb = celestial(col.rgb, vUv, uCelA, uCelAtype, uCelAamt, glass, uCelAalt);
+        col.rgb = celestial(col.rgb, vUv, uCelB, uCelBtype, uCelBamt, glass, uCelBalt);
 
-      // GLITTER PATH — real sun-glitter is a column pointing at the light, not an
-      // even wash. uPathX will later be driven by the rendered sun's position.
-      // A wide path degrades naturally to "no path" — no branch needed.
-      float px = (vUv.x-uPathX)/max(uPathW,0.02);
-      float path = exp(-px*px);
-      // denser + finer toward the horizon
-      float dens = mix(1.0, 1.0+1.2*uPersp, 1.0-depth);
-      float g = starLayer(vUv,26.0,0.0,dens) + starLayer(vUv,40.0,13.7,dens)*0.7;
-      // faint, additive white — a glint, not a glow.
-      // Glitter is a mirror-angle specular: it only exists when the eye, the
-      // facet and the light line up. Curved glass destroys that alignment, so it
-      // is killed inside the hourglass — while the wave lines above, which are
-      // the water's own appearance, pass straight through.
-      // glints carry the LIGHT's colour — a low orange sun makes orange glints
-      col.rgb += g * uGl * water * (1.0-glass) * mix(0.30,1.0,path) * 0.55
-               * mix(vec3(1.0,0.99,0.94), uLightCol, 0.85);
+        // GLITTER PATH — real sun-glitter is a column pointing at the light, not an
+        // even wash. uPathX will later be driven by the rendered sun's position.
+        // A wide path degrades naturally to "no path" — no branch needed.
+        float px = (vUv.x-uPathX)/max(uPathW,0.02);
+        float path = exp(-px*px);
+        // denser + finer toward the horizon
+        float dens = mix(1.0, 1.0+1.2*uPersp, 1.0-depth);
+        float g = starLayer(vUv,26.0,0.0,dens) + starLayer(vUv,40.0,13.7,dens)*0.7;
+        // faint, additive white — a glint, not a glow.
+        // Glitter is a mirror-angle specular: it only exists when the eye, the
+        // facet and the light line up. Curved glass destroys that alignment, so it
+        // is killed inside the hourglass — while the wave lines above, which are
+        // the water's own appearance, pass straight through.
+        // glints carry the LIGHT's colour — a low orange sun makes orange glints
+        col.rgb += g * uGl * water * (1.0-glass) * mix(0.30,1.0,path) * 0.55
+                 * mix(vec3(1.0,0.99,0.94), uLightCol, 0.85);
+      }
 
       // No sun/moon water reflection. Several passes at a specular column all read
       // as a smudge that either camouflaged the sun or looked painted-on; the

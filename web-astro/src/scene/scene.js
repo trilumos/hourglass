@@ -176,6 +176,8 @@ const U = {
   uFarCol:{value:new THREE.Vector3(1,0.68,0.26)},
   uLightCol:{value:new THREE.Vector3(1.0,0.90,0.70)},
   uTime:{value:0}, uGl:{value:0.6}, uGd:{value:0.32}, uGs:{value:1},
+  // Constrained device: skip sun/moon + water glitter, keep the plate and its crossfade (founder call).
+  uLite:{value: LOW ? 1 : 0},
   uHor:{value:0.42}, uSill:{value:0.17}, uPathX:{value:0.5}, uPathW:{value:2.0},
   uPersp:{value:0.8}, uGdrift:{value:0.200},   // long lines  // short dashes
   uGlen:{value:0.38}, uGthk:{value:0.045},
