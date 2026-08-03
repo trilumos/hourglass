@@ -117,11 +117,23 @@ const nBreaks = r => P.buildPlan(stOf(r)).filter(s=>s.kind!=='focus').length;
 
 const slug = r => (r.kind==='custom' ? `C${r.hours}h` : `P${r.iv.replace('/','-')}x${r.blocks}`)
   + `_${r.light}_${r.sound.replace(/\+/g,'-')}`;
+// ── Title formula ───────────────────────────────────────────────────────────────────────────────────
+// Search + Suggested show ~60-70 chars, mobile truncates near 50, and front-loading the primary keyword
+// inside the first 30 chars is worth up to ~20% in search ranking. So the opening characters are the
+// whole asset and they go to the biggest terms, in volume order (vidIQ, 2026-08-03):
+//     study with me 2,525,198/mo   ·   pomodoro 982,562   ·   2 hour timer 204,296
+//     study with me sunset 12,415  ·   50/10 pomodoro ~5,000
+// The earlier formula opened on the interval — a ~5k term in the prime slot, pushing the 2.5M term out
+// to char 37. Now "{N} Hour Study With Me" leads, which lands TWO high-volume strings in the first 20
+// characters, and the light (our differentiator, and its own real query) sits by char ~30.
+//
+// Shape is Focus with Elora's — a 157-SUBSCRIBER channel that pulled 8,442 views on
+// "4 Hour Study with Me | Pomodoro Timer 50/10 | Deep Focus Lofi Music". The title did the work.
 const title = r => { const L=LIGHT[r.light], S=SOUND[r.sound], m=totalOf(r);
-  if (r.sound==='bell') return `${durTxt(m)} Study With Me | No Music 🔔 Bell Only | ${L.cap} Focus Timer`;
+  if (r.sound==='bell') return `${durTxt(m)} Study With Me ${L.emo} ${L.cap} Pomodoro Timer ${r.iv} | No Music, Bell Only`;
   return r.kind==='custom'
-    ? `${durTxt(m)} Study With Me ${L.emo} ${L.cap} Pomodoro Timer | ${S} for Deep Focus`
-    : `${r.iv} Pomodoro Timer ${L.emo} ${durTxt(m)} ${L.cap} Study With Me | ${S} for Deep Focus`; };
+    ? `${durTxt(m)} Study With Me ${L.emo} ${L.cap} Pomodoro Timer | ${S} for Deep Focus & ADHD`
+    : `${durTxt(m)} Study With Me ${L.emo} ${L.cap} Pomodoro Timer ${r.iv} | ${S} for Deep Focus & ADHD`; };
 const TAG_BUDGET = 500-353;
 const NONEN = ['ポモドーロタイマー','अध्ययन टाइमर','temporizador de estudio','مؤقت للدراسة',
                'temporizador de estudo','핑크 노이즈 공부','timer belajar','çalışma zamanlayıcısı'];
