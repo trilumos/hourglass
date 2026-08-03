@@ -623,6 +623,19 @@ import { LQIP } from '../scene/lqip.js';
             o.beginPath(); o.arc(ax, y, Math.max(2, s3*0.11), 0, 6.284); o.fill();
           }
           o.shadowBlur = 0; o.shadowOffsetY = 0;
+          // Handle markers: a ring on whatever is grabbed or hovered, so it is never ambiguous which
+          // block a drag will move. Editor-only — suppressed in the export with the guide.
+          if (thGuide && (thDragging || thHover)){
+            var act = thDragging || thHover;
+            var hx = act.kind === 'top' ? W*TH.top.x
+                   : act.side === 'L' ? ax - W*TH.bot.gapL : ax + W*TH.bot.gapR;
+            var hy = act.kind === 'top' ? H*(TH.top.y + TH.top.size*0.4) : H*TH.bot.y;
+            o.save();
+            o.strokeStyle = thDragging ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.5)';
+            o.lineWidth = Math.max(1.5, W/500);
+            o.beginPath(); o.arc(hx, hy, Math.max(8, W*0.014), 0, 6.284); o.stroke();
+            o.restore();
+          }
           if (thDragging && thGuide){
             o.save();
             o.strokeStyle = Math.abs(TH.top.x - thAxis()) < 0.004 ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.35)';
@@ -668,20 +681,40 @@ import { LQIP } from '../scene/lqip.js';
         var thDragging = null, thGuide = true;
         // Which handle did you grab? Top block owns the upper ~2/3; below that, whichever SIDE of the
         // hourglass axis you clicked — so the two bottom words drag independently.
-        function thHit(e){
+        // Pointer -> frame fractions. The canvas is CSS-scaled, so always go through the rect.
+        function thPt(e){
           var r = thCv.getBoundingClientRect();
-          var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-          if (y < 0.62) return { kind:'top' };
-          return { kind:'bot', side: x < thAxis() ? 'L' : 'R' };
+          return { x:(e.clientX - r.left) / r.width, y:(e.clientY - r.top) / r.height };
         }
+        // Grab the NEAREST handle, not whatever a y-threshold guesses. A single dividing line was
+        // fragile — anything that moved the bottom row near it, or any CSS scaling of the canvas, made
+        // every click resolve to the heading. Distance to the real anchor always picks what you aimed at.
+        function thHit(e){
+          var p = thPt(e), ax = thAxis();
+          var cand = [
+            { kind:'top',                x:TH.top.x,       y:TH.top.y + TH.top.size*0.4 },
+            { kind:'bot', side:'L', x:ax - TH.bot.gapL, y:TH.bot.y },
+            { kind:'bot', side:'R', x:ax + TH.bot.gapR, y:TH.bot.y }
+          ];
+          var best = cand[0], bd = 1e9;
+          for (var i = 0; i < cand.length; i++){
+            var dx = (p.x - cand[i].x), dy = (p.y - cand[i].y) * 1.78;   // 16:9 -> compare in square space
+            var d = dx*dx + dy*dy;
+            if (d < bd){ bd = d; best = cand[i]; }
+          }
+          return best;
+        }
+        var thHover = null;
         thCv.addEventListener('pointerdown', function(e){
           thDragging = thHit(e); thCv.setPointerCapture(e.pointerId);
         });
+        thCv.addEventListener('pointermove', function(e){ if (!thDragging) thHover = thHit(e); });
+        thCv.addEventListener('pointerleave', function(){ thHover = null; });
         thCv.addEventListener('pointermove', function(e){
           if (!thDragging) return;
-          var r = thCv.getBoundingClientRect();
-          var nx = Math.max(0.02, Math.min(0.98, (e.clientX - r.left) / r.width));
-          var ny = Math.max(0.04, Math.min(0.97, (e.clientY - r.top) / r.height));
+          var p = thPt(e);
+          var nx = Math.max(0.02, Math.min(0.98, p.x));
+          var ny = Math.max(0.04, Math.min(0.97, p.y));
           var ax = thAxis();
           if (thDragging.kind === 'top'){
             if (Math.abs(nx - ax) < 0.012) nx = ax;    // snap to the glass centreline
