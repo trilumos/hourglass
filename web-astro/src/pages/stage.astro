@@ -155,6 +155,14 @@ import { LQIP } from '../scene/lqip.js';
       .th-pri{ background:#eaca78; border-color:#eaca78; color:#1a1200; font-weight:600 }
       .th-note{ color:#5c6673; font-size:11px; line-height:1.6; margin:2px 0 0 }
       .th-note em{ color:#8b949e; font-style:normal }
+      .th-rng{ gap:6px !important }
+      .th-rng b{ color:#eaca78; font-weight:500; font-size:11px; font-variant-numeric:tabular-nums }
+      .th-rng input[type=range]{ width:100%; accent-color:#eaca78; padding:0; background:none; border:0 }
+      .th-hr{ border:0; border-top:1px solid #26303f; margin:4px 0 }
+      .th-seg{ display:flex; align-items:center; gap:6px; font-size:12px; color:#8b949e; flex-wrap:wrap }
+      .th-seg button{ padding:5px 10px; border-radius:7px; border:1px solid #26303f; background:#161b22;
+        color:#8b949e; font:inherit; font-size:12px; cursor:pointer }
+      .th-seg button.on{ border-color:#eaca78; color:#e6edf3 }
       /* the injected trigger, beside Begin */
       #thumbBtn{ position:fixed; left:50%; bottom:calc(var(--begin-b,4.2vh) + 62px); transform:translateX(-50%);
         z-index:60; padding:9px 20px; border-radius:999px; cursor:pointer;
@@ -211,11 +219,29 @@ import { LQIP } from '../scene/lqip.js';
           <div class="th-side">
             <label>Line 1 <span>big</span><input id="thL1" type="text" maxlength="24"></label>
             <label>Line 2 <span>passes behind the glass</span><input id="thL2" type="text" maxlength="28"></label>
-            <label>Line 3 <span>small, bottom</span><input id="thL3" type="text" maxlength="32"></label>
+            <label class="th-rng">Top size <b id="thTopVal"></b>
+              <input id="thTopSize" type="range" min="60" max="220" step="1"></label>
+            <label class="th-rng">Line 2 size <b id="thL2Val"></b>
+              <input id="thL2Size" type="range" min="25" max="90" step="1"></label>
+            <label class="th-rng">Behind the glass <b id="thOccVal"></b>
+              <input id="thOcc" type="range" min="0" max="100" step="1"></label>
+
+            <hr class="th-hr">
+            <label>Bottom left <span>right-aligned to the axis</span><input id="thBL" type="text" maxlength="22"></label>
+            <label>Bottom right <span>left-aligned from the axis</span><input id="thBR" type="text" maxlength="22"></label>
+            <label class="th-rng">Bottom size <b id="thBotVal"></b>
+              <input id="thBotSize" type="range" min="20" max="90" step="1"></label>
+            <label class="th-rng">Gap from axis <b id="thGapVal"></b>
+              <input id="thGap" type="range" min="0" max="220" step="1"></label>
+            <div class="th-seg">Divider
+              <button data-sep="bar" class="on">Bar</button><button data-sep="dot">Dot</button><button data-sep="none">None</button>
+            </div>
+
             <button id="thumbReset" class="th-btn">Reset to config</button>
             <button id="thumbSave" class="th-btn th-pri">Download PNG</button>
-            <p class="th-note">Text is auto-filled from the session config. The hourglass is drawn back
-              <em>over</em> line 2, so it reads as depth rather than a sticker.</p>
+            <p class="th-note">Auto-filled from the session config. The divider is pinned to the
+              <em>hourglass axis</em>, and both bottom words sit the same distance from it — so every
+              thumbnail in the series lines up identically.</p>
           </div>
         </div>
       </div>
@@ -527,22 +553,28 @@ import { LQIP } from '../scene/lqip.js';
         // recognisability. So: text auto-fills from the same cfg that drove the capture, the crop is
         // fixed for the whole catalogue, and the hourglass is composited back OVER line 2 so the type
         // reads as depth. Everything is still draggable/resizable for CTR experiments.
+        // All sizes/offsets are FRACTIONS of the frame, so a value is identical at 1280x720 and at
+        // 320x180 — which is what lets a slider produce the same look on every video in the series.
         var TH = {
-          top: { x:0.5,  y:0.20, size:0.135 },      // fractions of the frame, so they survive any export size
-          bot: { x:0.5,  y:0.90, size:0.045 },
-          l1:'', l2:'', l3:''
+          top: { x:0.5, y:0.20, size:0.135 },
+          l2r: 0.52,                 // line 2 size, relative to line 1
+          bot: { y:0.90, size:0.045, gap:0.115, sep:'bar' },   // gap = distance of each word FROM THE AXIS
+          occ: 1,                    // how strongly the hourglass hides line 2 (0 = not at all)
+          l1:'', l2:'', bl:'', br:''
         };
         var thCv = document.getElementById('thumbCv'), thMob = document.getElementById('thumbMob');
-        var thL1 = document.getElementById('thL1'), thL2 = document.getElementById('thL2'), thL3 = document.getElementById('thL3');
+        var $t = function(id){ return document.getElementById(id); };
+        var thL1 = $t('thL1'), thL2 = $t('thL2'), thBL = $t('thBL'), thBR = $t('thBR');
 
         function thDefaults(){
           var c = readCfg(), m = c.totalMin || 0, h = Math.floor(m/60), mm = m%60;
           TH.l1 = m ? (h ? (mm ? h+'H '+mm+'M' : h + (h===1?' HOUR':' HOURS')) : mm+' MIN') : 'ENDLESS';
           TH.l2 = 'STUDY WITH ME';
-          TH.l3 = (c.mode === 'pomodoro' ? c.pomoFocus + '/' + c.pomoBreak + ' POMODORO'
-                 : c.mode === 'flow' ? 'FLOW' : c.mode === 'endless' ? 'ENDLESS' : 'CUSTOM')
-                 + '  ·  ' + lightLabel(c).toUpperCase();
-          thL1.value = TH.l1; thL2.value = TH.l2; thL3.value = TH.l3;
+          TH.bl = (c.mode === 'pomodoro' ? c.pomoFocus + '/' + c.pomoBreak + ' POMODORO'
+                 : c.mode === 'flow' ? 'FLOW' : c.mode === 'endless' ? 'ENDLESS' : 'CUSTOM');
+          TH.br = lightLabel(c).toUpperCase();
+          thL1.value = TH.l1; thL2.value = TH.l2; thBL.value = TH.bl; thBR.value = TH.br;
+          thSync();
         }
         // Text is painted BEFORE the hourglass goes back on top (see SustainScene.thumbFrame), which is
         // what puts line 2 behind the glass.
@@ -556,28 +588,34 @@ import { LQIP } from '../scene/lqip.js';
         // BEHIND the glass — the top block, so the stand and cap cut across it.
         function thPaint(o, W, H){
           thType(o, H);
-          var s1 = Math.round(H * TH.top.size), s2 = Math.round(s1 * 0.42);
+          var s1 = Math.round(H * TH.top.size), s2 = Math.round(s1 * TH.l2r);
           o.font = '550 ' + s1 + 'px ' + TH_FONT;
           o.fillText(TH.l1, W*TH.top.x, H*TH.top.y);
           o.font = '550 ' + s2 + 'px ' + TH_FONT;
-          o.letterSpacing = Math.round(s2*0.18) + 'px';
+          o.letterSpacing = Math.round(s2*0.16) + 'px';
           o.fillText(TH.l2, W*TH.top.x, H*TH.top.y + s1*0.78);
           o.letterSpacing = '0px'; o.shadowBlur = 0; o.shadowOffsetY = 0;
         }
-        // IN FRONT — the bottom line reads as a caption on the image, not something the stand blocks.
+        // IN FRONT — the bottom row. Both words are pinned the SAME distance either side of the
+        // hourglass axis with the divider exactly on it, so every thumbnail in the series lines up.
         function thPaintOver(o, W, H){
           thType(o, H);
-          var s3 = Math.round(H * TH.bot.size);
+          var ax = W * thAxis(), s3 = Math.round(H * TH.bot.size), y = H * TH.bot.y;
+          var gap = W * TH.bot.gap;
           o.font = '550 ' + s3 + 'px ' + TH_FONT;
           o.letterSpacing = Math.round(s3*0.22) + 'px';
-          o.fillText(TH.l3, W*TH.bot.x, H*TH.bot.y);
-          o.letterSpacing = '0px'; o.shadowBlur = 0; o.shadowOffsetY = 0;
-          // Centring guide: the hourglass AXIS, not the frame centre. Only while dragging, and never
-          // in the exported PNG.
+          o.textAlign = 'right'; o.fillText(TH.bl, ax - gap, y);
+          o.textAlign = 'left';  o.fillText(TH.br, ax + gap, y);
+          o.textAlign = 'center'; o.letterSpacing = '0px';
+          if (TH.bot.sep === 'bar'){
+            o.fillRect(Math.round(ax - Math.max(1, W/1000)), y - s3*0.55, Math.max(2, W/500), s3*1.1);
+          } else if (TH.bot.sep === 'dot'){
+            o.beginPath(); o.arc(ax, y, Math.max(2, s3*0.11), 0, 6.284); o.fill();
+          }
+          o.shadowBlur = 0; o.shadowOffsetY = 0;
           if (thDragging && thGuide){
-            var ax = W * (SustainScene.thumbCropRect(W/H).axis || 0.5);
             o.save();
-            o.strokeStyle = Math.abs(thDragging.x - thAxis()) < 0.004 ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.35)';
+            o.strokeStyle = Math.abs(TH.top.x - thAxis()) < 0.004 ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.35)';
             o.lineWidth = Math.max(1, Math.round(W/640)); o.setLineDash([H*0.02, H*0.02]);
             o.beginPath(); o.moveTo(ax, 0); o.lineTo(ax, H); o.stroke();
             o.restore();
@@ -587,7 +625,7 @@ import { LQIP } from '../scene/lqip.js';
         var thRAF = 0;
         function thDraw(){
           if (!window.SustainScene || !SustainScene.thumbFrame) return;
-          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver });
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver, occAlpha:TH.occ });
           thCv.getContext('2d').drawImage(f, 0, 0, 1280, 720);
           var mc = thMob.getContext('2d'); mc.imageSmoothingQuality = 'high';
           mc.drawImage(f, 0, 0, 320, 180);
@@ -627,16 +665,39 @@ import { LQIP } from '../scene/lqip.js';
           b.size = Math.max(0.02, Math.min(0.30, b.size * k));
         }, { passive:false });
 
-        [thL1, thL2, thL3].forEach(function(inp, i){
-          inp.addEventListener('input', function(){ TH[['l1','l2','l3'][i]] = inp.value; });
+        // Sliders, not just the scroll wheel: a NUMBER is what keeps 90 thumbnails identical, and the
+        // readout is the thing you copy to the next video.
+        function thSync(){
+          $t('thTopSize').value = Math.round(TH.top.size*1000);  $t('thTopVal').textContent = Math.round(TH.top.size*1000);
+          $t('thL2Size').value  = Math.round(TH.l2r*100);        $t('thL2Val').textContent  = Math.round(TH.l2r*100);
+          $t('thOcc').value     = Math.round(TH.occ*100);        $t('thOccVal').textContent = Math.round(TH.occ*100) + '%';
+          $t('thBotSize').value = Math.round(TH.bot.size*1000);  $t('thBotVal').textContent = Math.round(TH.bot.size*1000);
+          $t('thGap').value     = Math.round(TH.bot.gap*1000);   $t('thGapVal').textContent = Math.round(TH.bot.gap*1000);
+        }
+        [[thL1,'l1'],[thL2,'l2'],[thBL,'bl'],[thBR,'br']].forEach(function(p){
+          p[0].addEventListener('input', function(){ TH[p[1]] = p[0].value; });
+        });
+        function rng(id, set){ $t(id).addEventListener('input', function(){ set(+this.value); thSync(); }); }
+        rng('thTopSize', function(v){ TH.top.size = v/1000; });
+        rng('thL2Size',  function(v){ TH.l2r = v/100; });
+        rng('thOcc',     function(v){ TH.occ = v/100; });
+        rng('thBotSize', function(v){ TH.bot.size = v/1000; });
+        rng('thGap',     function(v){ TH.bot.gap = v/1000; });
+        Array.prototype.forEach.call(document.querySelectorAll('.th-seg button'), function(b){
+          b.addEventListener('click', function(){
+            TH.bot.sep = b.dataset.sep;
+            Array.prototype.forEach.call(document.querySelectorAll('.th-seg button'), function(x){ x.classList.toggle('on', x===b); });
+          });
         });
         document.getElementById('thumbReset').addEventListener('click', function(){
-          TH.top = { x:0.5, y:0.20, size:0.135 }; TH.bot = { x:0.5, y:0.90, size:0.045 }; thDefaults();
+          TH.top = { x:0.5, y:0.20, size:0.135 }; TH.l2r = 0.52; TH.occ = 1;
+          TH.bot = { y:0.90, size:0.045, gap:0.115, sep:TH.bot.sep };
+          thDefaults();
         });
         document.getElementById('thumbClose').addEventListener('click', thClose);
         document.getElementById('thumbSave').addEventListener('click', function(){
           thGuide = false;
-          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver });
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver, occAlpha:TH.occ });
           thGuide = true;
           f.toBlob(function(b){
             var c = readCfg(), name = 'thumb_' + (c.mode||'x') + '_' + (c.totalMin||0) + 'm_'

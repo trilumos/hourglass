@@ -2171,7 +2171,12 @@ window.SustainScene = {
       blit(glitterCv, tc);
       tc.globalCompositeOperation = 'destination-in';
       blit(occGlassCv, tc);
+      // occAlpha lets the caller dial how much the hourglass hides what is behind it. The matte is the
+      // GLASS silhouette (maskCv's G channel), so at 1 the bulbs hide text completely — correct for the
+      // session numerals, but heavy-handed for thin thumbnail type crossing the sand.
+      o.save(); o.globalAlpha = (opts.occAlpha == null ? 1 : opts.occAlpha);
       o.drawImage(t, 0, 0);
+      o.restore();
       blit(sandCv, o);                                     // sand rides in front of the glass
     }
     // ...and anything that must sit IN FRONT of the hourglass — the bottom line, which should read as
