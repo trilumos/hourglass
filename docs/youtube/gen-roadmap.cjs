@@ -130,10 +130,10 @@ const slug = r => (r.kind==='custom' ? `C${r.hours}h` : `P${r.iv.replace('/','-'
 // Shape is Focus with Elora's — a 157-SUBSCRIBER channel that pulled 8,442 views on
 // "4 Hour Study with Me | Pomodoro Timer 50/10 | Deep Focus Lofi Music". The title did the work.
 const title = r => { const L=LIGHT[r.light], S=SOUND[r.sound], m=totalOf(r);
-  if (r.sound==='bell') return `${durTxt(m)} Study With Me ${L.emo} ${L.cap} Pomodoro Timer ${r.iv} | No Music, Bell Only`;
+  if (r.sound==='bell') return `${durTxt(m)} Study With Me ${L.cap} Pomodoro Timer ${r.iv} | No Music, Bell Only`;
   return r.kind==='custom'
-    ? `${durTxt(m)} Study With Me ${L.emo} ${L.cap} Pomodoro Timer | ${S} for Deep Focus & ADHD`
-    : `${durTxt(m)} Study With Me ${L.emo} ${L.cap} Pomodoro Timer ${r.iv} | ${S} for Deep Focus & ADHD`; };
+    ? `${durTxt(m)} Study With Me ${L.cap} Pomodoro Timer | ${S} for Deep Focus & ADHD`
+    : `${durTxt(m)} Study With Me ${L.cap} Pomodoro Timer ${r.iv} | ${S} for Deep Focus & ADHD`; };
 const TAG_BUDGET = 500-353;
 const NONEN = ['ポモドーロタイマー','अध्ययन टाइमर','temporizador de estudio','مؤقت للدراسة',
                'temporizador de estudo','핑크 노이즈 공부','timer belajar','çalışma zamanlayıcısı'];
