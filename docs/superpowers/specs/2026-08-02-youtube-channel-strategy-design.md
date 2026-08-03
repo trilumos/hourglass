@@ -663,6 +663,22 @@ precisely YouTube's per-chapter minimum: legal, but with zero headroom. A `MIN_C
 walks every gap in every video (including the last chapter against real video length, lead-in + session
 + the 5 s of outro /stage records) and refuses to emit below 10 s. Verified to fire.
 
+**Second attempt, 2026-08-03.** Fixing the format alone did not revive chapters — the corrected block
+went live (verified in the served description) and the progress bar stayed unsegmented. Two differences
+from Timer Palette's working block remained, and both were changed:
+
+1. **No `Intro` chapter.** It left a 10-second first gap, exactly YouTube's per-chapter minimum with
+   zero headroom. Focus 1 now owns `00:00:00`, which is precisely what Timer Palette does — its first
+   marker is FOCUS 1 at 00:00:00 and its smallest gap is ten *minutes*. The 13 s of card + countdown is
+   absorbed into Focus 1: off by 13 s at the head of a 50-minute chapter, which no viewer will notice.
+2. **Blank line after the final chapter.** The generator emitted a single newline, so the list ran
+   straight into the `━━━` divider of the Upload-defaults block. Timer Palette's is surrounded by blank
+   lines.
+
+Also enforced: `MIN_CHAPTERS = 3`. A one-block Pomodoro yields two markers (Focus 1, Break 1), which
+YouTube ignores — emitting them just reproduces the silent rejection. Below three, ship none. Result:
+22 of 30 videos carry chapters (minimum 4 each); the 6 Flow sessions and 2 one-block hours carry none.
+
 **Why it was invisible:** YouTube renders *any* timestamp as a clickable blue link, whether or not it
 validates as a chapter. The description looked correct in every way while the progress bar stayed
 unsegmented — there is no error message anywhere in Studio.

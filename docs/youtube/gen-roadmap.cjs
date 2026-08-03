@@ -194,10 +194,19 @@ const presetURL = r => {
 const LEAD_IN = 10 / 60;                       // minutes, to match the plan's units
 // No closing chapter for the thank-you card: recording stops 5 s into it (OUTRO_STOP_MS), and a chapter
 // under 10 s is invalid and would silently kill the markers for the whole video. The last break absorbs it.
-const chapters = r => { if (shapeOf(r).nBreak === 0) return [];
-   const plan=P.buildPlan(stOf(r)); const out=[`${ts(0)} Intro`]; let t=LEAD_IN,f=0,b=0;
-  for (const seg of plan){ if(seg.kind==='focus'){ out.push(`${ts(t)} Focus ${++f}`); } else { out.push(`${ts(t)} Break ${++b}`); } t+=seg.min; }
-  return out; };
+// Chapters start at 00:00:00 with Focus 1 — no "Intro" marker. Two reasons, one hard:
+//   The intro card is 10 s and the countdown 3 s, so an Intro chapter leaves a 10 s first gap, sitting
+//   exactly on YouTube's per-chapter minimum with zero headroom. Video #1 was rejected at that width.
+//   Timer Palette KNzl1LYrHtw — a 3-hour timer whose chapters DO render — has no intro chapter either:
+//   its first marker is FOCUS 1 at 00:00:00 and its smallest gap is ten MINUTES.
+// Absorbing the 13 s of card + countdown into Focus 1 is off by 13 s at the head of a 50-minute
+// chapter, which no one clicking "Focus 2" will ever notice. Working chapters beat exact ones.
+const MIN_CHAPTERS = 3;                        // YouTube ignores the list below this
+const chapters = r => {
+  const plan=P.buildPlan(stOf(r)); const out=[]; let t=0,f=0,b=0;
+  for (const seg of plan){ if(seg.kind==='focus'){ out.push(`${ts(t)} Focus ${++f}`); } else { out.push(`${ts(t)} Break ${++b}`); }
+    t += seg.min; }
+  return out.length >= MIN_CHAPTERS ? out : []; };
 const nBreaks = r => P.buildPlan(stOf(r)).filter(s=>s.kind!=='focus').length;
 
 // One human sentence: the shape of the session, then what the sky actually does. Both are read off the
@@ -285,6 +294,7 @@ const descHead = r => { const m=totalOf(r), ch=chapters(r);
     + (ch.length ? `
 ⏱ Chapters
 ${ch.join('\n')}
+
 ` : ''); };
 const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
 const modePhrase = r => { const sh = shapeOf(r);
