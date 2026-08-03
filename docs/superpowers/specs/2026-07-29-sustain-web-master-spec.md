@@ -460,7 +460,10 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
    terms incl. "lofi.co alternative."
 7. **`/stage`** (+`?record=1` OBS preset). ✅ **BUILT 2026-08-02** — `src/pages/stage.astro`: chrome-less
    fullscreen scene reusing the SAME scene island (no second render engine), `noindex`, params
-   `record` / `flow` / `loop` / `phase` / `timer`. Capture guide: `docs/obs-stage-streaming-guide.md`
+   **`record` and `stopstream` only** — the session is configured on the real Setup screen, not by URL.
+   *(Corrected 2026-08-02: `flow` / `loop` / `phase` / `timer` were listed here but were replaced by the
+   `eabfb05` rewrite. **Nothing anywhere reads session config from the URL**, which is why video descriptions
+   cannot deep-link a preset yet.)* Capture guide: `docs/obs-stage-streaming-guide.md`
    (Browser Source only — Window/Display Capture screen-scrapes a throttled tab, strategy §10).
 8. **Perf:** compress plates → AVIF/WebP, preload + LQIP, budget measured (§13).
 9. **Migration checklist (handoff §5.5):** absolute asset paths → `public/`; `plan.js` → ES module (drop
@@ -498,12 +501,197 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 
 - Web tier composition + pricing → decided at **W2a** with real traffic (first-push §7.2).
 - App 2D-vs-scenic revamp → its own future brainstorm (first-push §7.1).
-- Founder actions: buy the domain (`sustaintimer.com` recommended); source CC0 soundscape audio;
-  plate regeneration ≥2560px.
+- ~~Founder actions: buy the domain~~ → **✅ `sustaintimer.com` SECURED 2026-08-02 (Hostinger).** Remaining:
+  source CC0 soundscape audio; plate regeneration ≥2560px.
+- **URL→`cfg` preset reader** — needed so video descriptions can deep-link the exact session that produced
+  them (the "video is the ad" half of strategy §10). Nothing reads config from the URL today.
 
 ---
 
 ## 22. Changelog (append on every web change)
+
+- **2026-08-03b (deep-link lands on Setup; /stage `uniform` Pomodoro; Month-1 list from search volume)** —
+  **Deep link fixed:** params were being applied **invisibly**. `index.astro`'s `screen()` treats any hash
+  that is not `#setup`/`#session` as Home, so a link carrying only query params seeded Setup and then
+  dropped the visitor on the hero. The deep-link block now ends with `location.hash='setup'`, running before
+  index's controller reads the hash, so its first paint is already Setup.
+  **⚠️ `/stage` ONLY — `uniform` Pomodoro (founder's call; user-facing is LOCKED).** The founder's screenshot
+  caught `hours=4` producing **3h50m**: `pomodoroPlan` drops the trailing break AND makes every 4th break
+  long (`pomoBreak x 3`), so **50/10 and 25/5 can NEVER hit a round hour** — every "2-Hour"/"4-Hour" title
+  in the roadmap was a lie. Fixed with a `uniform` flag: **no long break + keep the trailing break**, so
+  total = `blocks x (focus + break)` and 50/10 x N is exactly N hours. Set **only** by
+  `st.uniform = documentElement.classList.contains('stage')` — and only `stage.astro` ever adds that class,
+  so the user-facing plan takes the identical path it always did. **Locked by 4 self-test assertions**
+  (`norm(50,10,4)===230`, `norm(50,10,5)===310`, normal ends on FOCUS, uniform ends on BREAK) — 25 assertions
+  pass. plan.js's documented self-test command was also stale (web-astro is `type:module`, so the file cannot
+  be run as `.js`); header now carries the working `node -e` form.
+  **Roadmap regenerated from the SHIPPED plan.js**, never hand arithmetic — which also fixed a second silent
+  bug: the earlier chapter timestamps assumed uniform breaks and were wrong for any video with 4+ blocks.
+  **Month 1 = 30 videos chosen from search volume** (vidIQ 2026-08-03): **`study with me` 2,533,520/mo — 6x
+  `pomodoro timer`** — so titles now LEAD with it; `2 hour timer` 204,296; `study with me 4 hours` 44,753;
+  `60 minute timer` 33,037. **Midnight earns its slots on data**: `study with me late night` 6,242/mo; the
+  bell-only rows on `study with me no break no music` 4,388/mo. Month 2 is explicitly a **holding list, not
+  a plan** — re-cut from Month 1 Analytics. Generator asserts **every row is an exact round hour** and that
+  no combination repeats (it caught 4 bad Month-2 rows: 30/10 and 60/10 at 4 blocks).
+  **Directory browse order fixed** — rows varied `sound` fastest, so scrolling from 0 gave 16 near-identical
+  rows. Axes reordered so cosmetics vary slowest and duration/time-of-day/sound vary fastest; total
+  unchanged at 905,748,480.
+  **Deployed:** `sustain-directory.pages.dev` and `sustain-web.pages.dev` are live (Pages, folder deploys —
+  the branch name is metadata only; `--branch main` is required or the deploy files as *Preview*). Preview
+  URLs sit two levels deep and their cert lags a minute behind the deploy — that is the transient
+  `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`, not a misconfiguration. **Both need a redeploy** to pick up the
+  deep-link landing fix and the directory reorder. Runbook: `docs/deploy-runbook.md`.
+
+- **2026-08-03 (`/stage` is now the whole edit; countdown tick; deploy runbook; subs = a gate, not a KPI)** —
+  **`/stage` intro + outro cards BUILT.** Begin → recording starts → **intro card 10 s** over the blurred
+  scene → **3·2·1** → session → **thank-you card 7 s** → fade to black → `stopRecording`. Nothing is cut
+  together afterwards — what OBS captures IS the finished video. Both cards **write themselves from `cfg`**
+  (`cfg.totalMin` added at Begin, computed where `Plan` lives), so no copy is ever typed per video: mode /
+  interval / duration / light / sounds all render themselves. The config line doubles as the **on-screen
+  relevance signal** the algorithm reads in the first seconds.
+  **Founder feedback applied same session:** the intro was **too wordy** — cut from five blocks to
+  brand + config line + **one** sentence + a one-line disclaimer (`inHow`/`inGreet` and the now-dead `WORDS`
+  table deleted). Countdown confirmed working on device.
+  **Countdown tick added** — `SustainAudio.tick()`, **synthesised** (880→440 Hz sine, fast exponential decay,
+  gain 0.22), deliberately not a sample: no asset to source, no licence, stays 100% ours per strategy §4.
+  Ticks on 3·2·1; the **bell stays reserved for the clock actually starting**, so the two sounds mean
+  different things on tape.
+  **Fullscreen toast fixed** — `requestFullscreen()` makes the browser print *"To exit full screen, press
+  Esc"*, which landed on the intro card **on tape**. Now **skipped under `?record=1`**: inside an OBS Browser
+  Source it was always a no-op (the source already renders 1920×1080), so skipping costs nothing. Capturing a
+  real browser window instead? **Press F11 before Begin.**
+  **Deep-link params in use:** `mode work break blocks hours min phase cycle sound vis place fill font sep
+  sunmoon color`; `sound=` empty means bell-only. `astro.config.mjs` `site:` **set to
+  `https://sustaintimer.com`** now the domain exists (canonical/OG/sitemap use their own per-page `SITE`
+  constant, so this is for tooling that reads `Astro.site`). Build clean, `dist/` ≈ 8.4 MB, 4 pages.
+  **`docs/deploy-runbook.md` written** — exact ordered steps: `wrangler login` → move DNS Hostinger→
+  Cloudflare (registration stays at Hostinger; **flags the MX/SPF trap** — nameserver changes move ALL DNS
+  and can break email) → `wrangler pages deploy dist --project-name sustain-web` → custom domain + www→apex
+  301 redirect rule → directory as a **separate** Pages project → GSC **Domain property** via TXT in
+  Cloudflare DNS + submit `sitemap.xml`. All founder-run: `wrangler login` is interactive OAuth.
+  **⚠️ Strategy correction (founder, and correct):** **subscribers are a GATE, not a growth metric.** Revenue
+  is **RPM × views**; subs earn nothing and the algorithm ranks per video on satisfaction/relevance. §13's own
+  data proves it — Study Pomodoro: 98,246 views/video on 47,300 subs at **+0.2%** sub growth. The lone
+  exception is the YPP gate: **under 1,000 subs, views earn exactly $0.** So the Shorts track is a one-time
+  lock-pick — **~2/week until 1,000 subs, then stop entirely.** §8 updated.
+
+- **2026-08-02c (deep link BUILT; combination directory BUILT; monthly wave loop; vidIQ competitive scan)** —
+  **Deep link shipped** in `Setup.astro`: `/?mode=pomodoro&work=50&break=10&hours=4&phase=sunset&sound=ocean`
+  seeds the Setup screen (mode, interval, blocks/hours, time-of-day, cycle, sounds, vis/place/fill/font/sep/
+  sunmoon, colour). **Params only SEED — the visitor still sees Setup and still presses Begin**, so nothing
+  auto-starts and audio keeps its user gesture. Implemented by **clicking the real controls** rather than
+  re-implementing them, so `renderTimerDesc` / `applySepForMode` / `setSunMoon` / `applyScene` / the cycle
+  re-render all stay correct for free; only plain numbers touch `st`. `font` takes friendly aliases
+  (`serif`/`jost`) because the real value is a CSS stack. `sound=` **empty is meaningful** (bell-only).
+  Also `cfg.totalMin` is now written at Begin (computed where `Plan` lives) for the coming `/stage` intro card.
+  Build clean. **This closes the blocker that descriptions could not deep-link a preset.**
+  **`tools/video-directory/index.html`** — self-contained 17 KB page, no dependencies, no network, `noindex`.
+  Holds **every combination of every Setup control** without storing them: each combination is a
+  **mixed-radix index** decoded on demand. **905,748,480 combinations** (452,874,240 reachable in Setup — it
+  forces separator=none at middle/ledge; 226,437,120 recordable — `hover`/`never` are unusable in a capture).
+  *The earlier “6.7M” figure counted a smaller axis set.* Verified: index↔config round-trips exactly over
+  200k random samples, closed-form validity counts match Monte-Carlo to <0.2%, and filtered subspaces
+  enumerate uniquely with no scanning. Virtual-scrolled; ticks in `localStorage` with JSON export/import.
+  **Monthly wave loop:** *Export next month* takes the first 30 unmade+recordable matches of the current
+  filter and writes `wave-YYYY-MM.md` — a day-numbered table **plus an end-of-month review checklist**
+  (which axis won; low impressions = relevance/targeting vs high impressions + low CTR = thumbnail; real RPM;
+  subs per 1,000 views). Filter → shoot → tick → review → re-filter. **Discipline: judge the AXIS, not the
+  video — compare like-aged cohorts only**, since §2's curve makes a 3-week-old upload at 400 views on-plan.
+  Deploy is founder-run (`wrangler login` is interactive OAuth):
+  `npx wrangler pages deploy tools/video-directory --project-name sustain-directory` — keep it a **separate
+  Pages project** from `sustaintimer.com`.
+  **vidIQ competitive scan:** the niche is **growing and entry is viable** — Work Mode Audio +54%/mo subs,
+  Power Hour Focus +37%, Focus Room +32%, GooDuck +23%, all at 5–20K subs; **faceless is the norm** (4 of the
+  fastest risers). **The subscriber bottleneck is confirmed in data:** Study Pomodoro averages 98,246 views/
+  video on 47,300 subs at **+0.2%** monthly sub growth — people use the tool and leave. Adjacent segment
+  noted for later: **classroom timers** (`classroom timer` 6,986/mo).
+  **⚠️ STILL OWED:** the `/stage` intro (10 s) + thank-you (7 s) cards the founder specified — auto-written
+  from `cfg`, over the blurred scene, before the 3-2-1 and in place of the bare fade-to-black.
+
+- **2026-08-02b (video roadmap + metadata contract; domain secured; bell audible; cadence → daily)** —
+  **`docs/youtube/video-roadmap.md`** — **Wave 1: 94 videos, every config decided, tickable**
+  (regenerate: `node docs/youtube/gen-roadmap.mjs`). Phases A–F, one row per capture
+  carrying mode/interval/duration/breaks, light, sun&moon, numeral placement/fill/font/separator/colour,
+  per-sound volumes + master, finished title, per-video tags, and a video-ID column; Phase A ships
+  ready-to-paste descriptions with **computed chapter timestamps**.
+  **Cadence revised UP to one capture/day (~30/month)** in the same session: the reason for every-other-day
+  was that titling/uploading do not automate — the roadmap now ships finished titles, budget-fitted tags and
+  computed-chapter descriptions, so desk work collapses to *configure, upload, paste, tick*.
+  **Scoping — the space is real and enormous.** Counting only genuine product differences
+  (`interval 7 × duration 6 × time-of-day 9 × sound 16 × timer-display 2`), **one theme = 15,552 videos**;
+  with the cosmetic axes multiplied back in (×432) it is **6.7 million**, i.e. **43 years at one a day**.
+  So Wave 1 is a **publish order through a reservoir**, not the catalogue; Wave 2 is written from Phase A–B
+  Analytics, and `5 min` display opens a full parallel catalogue there. Wave 1 is cut to 94 by two rules: an axis multiplies **only if people search it**
+  (placement/fill/font/separator have **zero** volume), and multiplying by invisible axes is *literally* the
+  inauthentic-content policy's *"minimal variation"* wording — a **monetization risk, not just waste**. Those
+  axes are **rotated** for variety at zero catalogue cost. **Uniqueness is enforced, not assumed** — the
+  generator throws on any repeated config tuple, and caught a real duplicate on first run (Phase E re-adding
+  a bell config Phase A already held); the key spans every axis so future waves self-check. `Hover`/`Never` timer visibility are unusable in a
+  recording (no mouse / hides the product) — every row is `Always`. Numeral colour is chosen **per light**
+  (charcoal is invisible at midnight; moving sequences are restricted to Ivory/Gold).
+  **Workflow changed on founder's call: one capture = one video.** The bell-only twin (splitting one
+  recording into two SKUs) is dropped — it doubles titling/uploading, the scarce resource, while captures are
+  unattended. No-music videos are **their own rows**. Capture guide §6b demoted to OPTIONAL.
+  **`/stage` bell CONFIRMED audible** in a Browser Source — pressing Begin inside the source *is* a user
+  gesture, so §6's "never receives one" holds only for a source you never interact with. No post-mux needed.
+  **Domain `sustaintimer.com` SECURED (Hostinger)** — closes handoff blocker #1; canonical/sitemap/robots
+  already assumed it. Deploy still needs `wrangler login`.
+  **Metadata contract:** YouTube **"pulls" per viewer** rather than testing on a cohort; of Engagement /
+  Satisfaction / **Relevance**, only **Relevance** is ours to write (title, description, transcript,
+  **on-screen text in the first seconds**). **Category = Education** (brand-safe, ~$5–15 RPM vs much lower
+  for Music) and **Made for kids = No** (yes ⇒ no personalised ads, contextual pays **50–80% less**, comments
+  off). Tags are low-weight by YouTube's own docs (misspellings/ambiguity) — Upload defaults already use
+  **353/500 chars**, so each row's extra tags are generated to fit the remaining **147**, rotating one
+  **non-English** term (the one thing a tag adds that an English title cannot; `ポモドーロタイマー` = 272k/mo,
+  and Timer Palette's top videos tag in 8+ languages).
+  **⚠️ Two code findings.** (1) **§18.7 is stale** — it lists `/stage` params `record / flow / loop / phase /
+  timer`, but only `record` and `stopstream` exist; the `eabfb05` rewrite replaced the rest. (2) **No page
+  reads session config from the URL** (`URLSearchParams` appears 3×, none of them config; config lives in
+  `localStorage.cfg`), so **descriptions can only link the bare domain** — the deep-linked preset that the
+  "video is the ad" thesis depends on **does not exist yet.** Small feature; worth building before the
+  catalogue grows, since descriptions are painful to retrofit across 95 videos.
+  **Product opportunity:** relevance counts on-screen text in the first seconds, but our lead-in is a wordless
+  3-2-1 on a near-silent video with no transcript — showing `50 / 10 · 4 HOURS · SUNSET` during the lead-in
+  would fix it honestly. **Founder call — touches the `/stage` look.**
+
+- **2026-08-02 (YouTube channel strategy — strategy §10's "never revenue" is REVISED)** — Research +
+  strategy written to `2026-08-02-youtube-channel-strategy-design.md`. **The §10 tension flagged in the
+  session handoff is resolved with evidence: "marketing, never income" is true for LIVESTREAMS and false for
+  VODs.** A livestream serves one pre-roll per viewer (College Music: 38M watch-minutes → ~$1,300 lifetime);
+  a VOD ≥8 min carries **mid-rolls**, and this niche averages **2–4 h view duration** vs a ~7 min platform
+  average. The founder's reference channel **Timer Palette** (`@timer.palette`, vidIQ 2026-08-02): created
+  2025-02-10, **73.3K subs, 14.47M views, 592 videos, ~$3,273/month, ~$2.47 RPM**, 2 uploads/day, **zero
+  Shorts**. §10 and `docs/obs-stage-streaming-guide.md` §8 both updated; the guide's default workflow flips
+  from **YouTube Live → record-locally-then-upload**.
+  **The finding that governs everything:** their biggest video had **649 views at 2.5 months** and **2.67M at
+  13.5 months** — ignition at ~5.5 months, then compounding. ~50 of 592 videos carry ~85% of views. **This is
+  a library that ignites late, not a hit business; the channel cannot be judged before month 6.**
+  **Algorithm (2026):** five separate systems; **viewer satisfaction has overtaken raw watch time**, and
+  **session contribution** leads for long-form — a 2–4 h timer is an unusually good fit, and **repeat views**
+  (people re-run the same timer daily) are the format's superpower. **Search is our primary surface**
+  (`pomodoro timer` 415K/mo, `study with me` 2.53M/mo) — so `hourglass timer` (4K/mo) is the *differentiator,
+  not the query*.
+  **Risk:** the **inauthentic content** policy (renamed 2025-07-15) demonetises templated/mass-produced
+  uploads. Our defence is that `/stage` captures a **real-time render that never repeats a frame** — so
+  **never re-upload a render**, never use unowned music, keep the OBS project files as provenance, and carry
+  an originality declaration in the channel description.
+  **Product implication for the web build:** `/stage`'s catalogue axes are the content grid — interval ×
+  length × **time-of-day** (ours alone; nobody else's timer has a moving sky) × audio. Every description
+  links the exact preset URL that produced the video.
+  **Founder decisions, all resolved same day:** (1) **channel is branded Sustain and already live —
+  `@SustainTimer`**; (2) **audio = both, sequenced** — ship bell-only + ocean now, add our own synthesised
+  brown/pink/white noise beds once the pipeline is proven (`brown noise for studying` = 199K/mo, and §6.1.4
+  ships no music, so we generate rather than license); (3) **cadence = one capture every other day**
+  (~30 uploads/month with the bell-only twin — half Timer Palette's rate, so expect later ignition).
+  **Capture guide gained §3b/§3c/§6b:** Recording tab settings (**CQP 18, not CBR** — CBR is for streaming;
+  our frame is nearly all gradient, which is where banding shows), a pre-flight test-capture checklist, and
+  the **two-audio-track trick** — record once with the bell on Track 1 and the ambient bed on Track 2, then
+  `ffmpeg -c copy` splits one capture into two upload-ready SKUs. This scales to the phase-2 noise beds with
+  **no extra capture time**. **Untested and flagged:** whether the session bell is audible at all inside an
+  OBS Browser Source (§6 says no user gesture; §4's Begin click may supply one) — founder verifies on-device.
+  **One correction worth carrying:** do **not** copy Timer Palette's *"AI was not used"* declaration — our
+  plates **are** AI stills (strategy §12), so that would be false. Our honest and stronger claim is that each
+  video is a **real-time capture of our own render engine** — no loop, no slideshow, no session recorded twice.
 
 - **2026-08-02 (`/stage` = real Setup + chrome-free session; cycle apply; the "5 min" option was inert)** —
   `/stage` reworked from URL params to **the same app minus the session chrome**: configure on the real Setup
@@ -527,7 +715,8 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 - **2026-08-02 (`/stage` BUILT + OBS capture guide; scroll scrubbed to position; sunset accuracy)** —
   **`/stage`** (§18.7, first-push §4.4, strategy §10) ships as `src/pages/stage.astro`: a chrome-less
   fullscreen view reusing the **same** scene island ("the site is the studio; we do not build a second render
-  engine"), `noindex`, with `record` / `flow` / `loop` / `phase` / `timer` params and a long looping focus
+  engine"), `noindex`, with `record` / `stopstream` params *(as built; the `flow`/`loop`/`phase`/`timer`
+  params named in this entry were superseded by the `eabfb05` rewrite)* and a long looping focus
   block so the sand always falls. Capture guide added at `docs/obs-stage-streaming-guide.md` — **Browser
   Source only**, never Window/Display Capture (that screen-scrapes a throttled background tab, the cause of
   the freeze/black-screen glitch), plus current encoder settings (NVENC AV1 8000 Kbps / H.264 9000, CBR,

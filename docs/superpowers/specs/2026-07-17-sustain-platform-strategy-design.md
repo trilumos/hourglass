@@ -561,7 +561,17 @@ Zero billing code. Its only jobs: **rank, and convert to install.**
 - `<title>`/meta/**OpenGraph**, `sitemap.xml`, `robots.txt`, **Google Search Console** (verify via DNS).
 - **Backlink flywheel** — share links + embed widget + YouTube descriptions all point back.
 
-## 10. YouTube — marketing, never income
+## 10. YouTube — marketing **and** income (revised 2026-08-02)
+
+> **⚠️ REVISED.** This section originally concluded *"marketing, never income."* That is **true for
+> livestreams and false for VODs** — the difference is the ad format, not the content. A livestream serves
+> **one pre-roll per viewer**; a VOD ≥8 min carries **mid-rolls**, and this niche averages **2–4 h view
+> duration** against a ~7 min platform average. Evidence: **Timer Palette** — 592 VODs, 14.5M views, 73.3K
+> subs in 18 months, **~$3,273/month** (vidIQ), **~$2.47 RPM**. Against College Music's ~$1,300 *lifetime*
+> from a livestream. **Full working, algorithm model, catalogue grid and 90-day plan:**
+> `2026-08-02-youtube-channel-strategy-design.md`. The closing line below ("they monetize badly because they
+> have nothing to sell") still stands and now cuts twice in our favour: **VODs earn ad revenue AND carry the
+> link.** It was never either/or.
 
 The `/stage` page is pointed at by **OBS *Browser Source*** (never Window/Display Capture — that
 screen-scrapes a throttled background tab, which is the root cause of the founder's freeze/black-screen
@@ -571,9 +581,10 @@ the stream auto-archives as a VOD. ~6000 Kbps @ 1080p, NVENC if available.
 **The site is the studio. We do not build a second render engine.** A 4-hour video is 4 hours of frames
 (~864,000) — offline rendering is *strictly slower* than real-time and you'd wait 4 hours either way.
 
-**Model it as customer acquisition at ~$0 CAC, never as revenue.** The research is unambiguous: 24/7 lofi
-livestreams serve only **one pre-roll per viewer**, so College Music converted **38 million minutes of
-watch time into ~$1,300 lifetime**. Even Lofi Girl — the category monopoly — reports ~$28.6K income.
+**For a 24/7 livestream, model it as customer acquisition at ~$0 CAC, never as revenue.** The research is
+unambiguous *for that format*: 24/7 lofi livestreams serve only **one pre-roll per viewer**, so College Music
+converted **38 million minutes of watch time into ~$1,300 lifetime**. **Discrete VODs are the opposite case
+— see the revision note at the top of this section.** Even Lofi Girl — the category monopoly — reports ~$28.6K income.
 Channels earning $500–10K/mo do it on memberships, merch and sponsorship, and one operator nets ~$1,500/mo
 *after* $200–300/mo of server cost. **Those channels monetize badly because they have nothing to sell.**
 We do. Every video description links the exact preset URL that made it

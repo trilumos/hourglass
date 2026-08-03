@@ -1,7 +1,8 @@
 # Streaming `/stage` with OBS
 
-How to capture the Sustain living world for YouTube Live (or a local recording). Companion to the
-platform-strategy spec §10 ("YouTube — marketing, never income") and master spec §18.7.
+How to capture the Sustain living world as a YouTube VOD (or a live stream). Companion to the
+platform-strategy spec §10, master spec §18.7, and the channel strategy in
+`docs/superpowers/specs/2026-08-02-youtube-channel-strategy-design.md`.
 
 > **The site is the studio. We do not build a second render engine.** A 4-hour video is ~864,000 frames;
 > offline rendering is *strictly slower* than real-time and you would wait 4 hours either way.
@@ -56,6 +57,42 @@ Two practical notes:
   should be at least double the bitrate.
 - This scene is mostly slow gradients and a fine sand stream. Gradients are where low bitrates show banding,
   so do not go below ~6000 Kbps at 1080p even though the motion is gentle.
+
+## 3b. Recording settings — **this is the default workflow now**
+
+§3 is for streaming. We publish **VODs** (§8), so the settings that actually matter are here.
+
+**Settings → Output → Output Mode: Advanced → Recording**
+
+| Setting | Value | Why |
+|---|---|---|
+| Recording Format | **Hybrid MP4** — or **MKV** if using two audio tracks (§6b) | Both survive a crash mid-recording; a plain in-progress `.mp4` does not. Hybrid MP4 removes the remux step. |
+| Encoder | NVENC **AV1** (RTX 40/50) · NVENC H.264 · x264 | Same ladder as §3 |
+| **Rate Control** | **CQP** — *not* CBR | CBR exists to keep a live stream at a constant rate. For a file you are uploading, CQP spends bits where the picture needs them. |
+| **CQ Level** | **18** | 18–20 is the quality sweet spot; take 18 — our frame is almost entirely **gradient**, which is exactly where banding shows. |
+| Preset | P5 or P6 (Quality) | |
+| Profile | high | |
+| Audio Bitrate | **320 kbps** | YouTube recommends 384 kbps stereo; 320 is the practical max in OBS and is transparent for ambient beds. |
+
+**Settings → Video:** Base and Output both `1920×1080`, **30 fps**. The scene is slow; 30 halves the file and
+the encode cost with no visible loss, and it keeps us in YouTube's *standard* frame-rate tier.
+
+**Do not target YouTube's recommended upload bitrate** (8 Mbps for 1080p SDR at 30 fps, 12 Mbps at 60). That
+is the floor for a *delivered* file — YouTube re-encodes everything you send it, so the job here is to hand it
+the cleanest possible master. CQP 18 will land well above 8 Mbps during the sand fall and far below it while
+the sky sits still. That is correct behaviour, not a misconfiguration.
+
+**Disk.** Expect roughly **5–14 GB for a 4-hour capture**. At a session every other day that is well over
+100 GB/month, so **upload and then delete the master**. Keep the OBS **scene-collection JSON** and a couple of
+representative captures — that is the originality evidence (§8); the whole archive is not.
+
+## 3c. Sanity check before the first real capture
+
+Do a **10-minute test capture** and scrub it for three things, in this order:
+
+1. **Banding in the sky gradient** — the single most likely quality failure. If present, drop CQ to 16.
+2. **The sand stream reads cleanly** at 100% zoom.
+3. **The day cycle is visibly moving** across the ten minutes.
 
 ## 4. How `/stage` works
 
@@ -123,6 +160,45 @@ Browser Source never receives one. This is deliberate, not a bug:
 - If you specifically want the ocean/sand/birds bed, add those files as OBS Media Sources with loop enabled.
   They are in `web-astro/public/assets/audio/`.
 
+## 6b. Multi-track audio — OPTIONAL, and off by default
+
+> **The default workflow is one capture = one video.** No splitting, no muxing, no editing: configure the
+> roadmap row, press Begin, upload the file. The no-music videos are **their own rows** in
+> `docs/youtube/video-roadmap.md` (audio column reads *ALL sounds OFF*), captured normally.
+>
+> **Why not the split?** Timer Palette exports each session twice (ambient + bell-only) from one recording,
+> and the twin does pull ~10–30% extra views for no extra capture time. But it **doubles the titling and
+> uploading**, which is the founder's scarce resource — captures are unattended, desk work is not. Not worth
+> it at one capture every other day.
+
+Keep this section for later: if the catalogue ever outgrows capture time, one recording *can* carry several
+audio mixes.
+
+**Advanced Audio Properties** (right-click any source → *Advanced Audio Properties*), tick per source:
+
+| Source | Track 1 | Track 2 |
+|---|---|---|
+| Bell | ✅ | ✅ |
+| Ocean / ambient bed | — | ✅ |
+
+Then **Output → Recording → Audio Track: 1 and 2**, and record to **MKV** (multi-track MP4 is supported but
+has editor-compatibility quirks; MKV has none, and we are not editing — we are splitting).
+
+Two lossless commands, seconds each, no re-encode:
+
+```bash
+ffmpeg -i capture.mkv -map 0:v:0 -map 0:a:0 -c copy "bell-only.mp4"   # Track 1
+ffmpeg -i capture.mkv -map 0:v:0 -map 0:a:1 -c copy "ocean.mp4"       # Track 2
+```
+
+This scales directly to the noise beds in phase 2 (strategy §12): brown → Track 3, pink → Track 4, and each
+becomes one more upload off the *same* capture.
+
+> **✅ Confirmed on-device 2026-08-02: the bell IS audible in the capture.** Pressing **Begin** inside the
+> Browser Source counts as a user gesture in that browser context, which unblocks the page's Web Audio. So
+> §6's "a Browser Source never receives one" is true only for a source you never interact with — **interact
+> with it once and the scene's own audio works.** No post-mux fallback is needed.
+
 ## 7. Stopping Windows from interrupting a long capture
 
 **First, the diagnosis.** "It logs out the user but the processes keep running" is Windows **locking**, not
@@ -178,9 +254,32 @@ unbroken before you trust it with a real session.
 
 ## 8. Publishing
 
-Stream to YouTube Live; it auto-archives as a VOD. Per strategy §10, **treat this as customer acquisition at
-~$0 CAC, never as revenue** — the research there is blunt that lofi streams monetise badly (College Music
-converted 38M watch-minutes into ~$1,300 lifetime).
+**Publish discrete VODs, not a livestream.** This is the revenue decision and it is not close:
 
-The payoff is the link-back: **every description links the exact preset URL that produced the video**, e.g.
-`sustaintimer.com`. The video is the ad, and the ad is the product.
+- A **livestream** serves **one pre-roll per viewer** — College Music turned 38M watch-minutes into ~$1,300
+  *lifetime*. Treat a livestream as customer acquisition at ~$0 CAC, never as revenue.
+- A **VOD ≥8 minutes** carries **mid-roll** breaks, and this niche averages **2–4 hours of view duration**.
+  Timer Palette earns **~$3,273/month** from 592 such VODs.
+
+So the default workflow is: **record locally with `/stage` (§5), then upload.** Reserve YouTube Live for a
+24/7 Endless run used purely as a brand/subscriber surface.
+
+**Pomodoro beats a continuous timer here**, and for a non-obvious reason: YouTube's automatic mid-roll
+placement looks for *"natural visual or audio breaks."* A silent continuous timer has none; a Pomodoro
+session has **a bell and a break screen every 25–50 minutes by design**. The format manufactures its own ad
+slots. Keep **automatic mid-rolls on** (auto + manual together tested +5% over manual alone), and do **not**
+hand-stack a break every 8 minutes — interruptive slots now earn *less*.
+
+The second payoff is the link-back: **every description links the exact preset URL that produced the video**,
+e.g. `sustaintimer.com/?mode=pomodoro&work=50&break=10&phase=sunset`. The video is the ad, and the ad is the
+product.
+
+Full strategy — catalogue grid, titles, YPP math, the 90-day plan:
+`docs/superpowers/specs/2026-08-02-youtube-channel-strategy-design.md`.
+
+**One compliance note that matters more than any encoder setting.** YouTube's **inauthentic content** policy
+(renamed from "repetitious content" on 2025-07-15) demonetises mass-produced, templated, repetitive uploads.
+Our defence is that each capture is a **real-time render of a real running program** — the sand, the day
+cycle and the clock never repeat a frame. Therefore: **never upload the same render twice under different
+titles**, never add music we do not own (a Content ID claim takes 100% of that video's revenue), and keep the
+OBS project files — appeals in this area succeed on evidence of a real production process.
