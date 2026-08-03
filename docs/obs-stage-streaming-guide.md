@@ -139,7 +139,13 @@ browser — it cannot misfire while you are configuring the session.
 
 **One setting is required for it to work:**
 
-> Browser Source properties → **Page permissions → All access**
+> Browser Source properties → **Page permissions → `Full access to OBS (Start/Stop streaming without
+> warning, etc.)`** — the LAST entry in the dropdown.
+>
+> **Not "Advanced access".** `startRecording()` / `stopRecording()` require *ALL* permissions per the
+> obs-browser README, and "Advanced" (change scenes, replay buffer) is one level short. The symptom is
+> exact and misleading: **Begin works and the session runs perfectly, but the record timer never starts** —
+> because the page loaded fine, `window.obsstudio` exists, and only the recording calls are withheld.
 
 Without that, OBS does not expose the control functions and the page simply fades to black without stopping
 anything (harmless, just manual).
