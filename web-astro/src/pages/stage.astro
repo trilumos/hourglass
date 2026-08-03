@@ -122,6 +122,48 @@ import { LQIP } from '../scene/lqip.js';
       @keyframes countPulse{ from{ opacity:0; transform:scale(1.12) } 22%{ opacity:1; transform:none } to{ opacity:.85; transform:none } }
       #stageCount b{ animation:countPulse .9s cubic-bezier(.16,1,.3,1); }
 
+      /* ── Thumbnail studio ─────────────────────────────────────────────────────────────────────── */
+      #thumbWrap{ position:fixed; inset:0; z-index:120; display:none; align-items:center; justify-content:center;
+        background:rgba(4,8,18,.86); padding:2vmin; }
+      :root.thumb-open #thumbWrap{ display:flex; }
+      :root.thumb-open #begin{ display:none; }         /* no starting a session from behind the panel */
+      #thumbPanel{ width:min(1180px,96vw); max-height:96vh; overflow:auto; background:#0e1420;
+        border:1px solid #26303f; border-radius:14px; color:#e6edf3;
+        font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+      .th-head{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid #26303f; }
+      .th-head b{ font-size:15px; letter-spacing:.02em }
+      .th-hint{ color:#8b949e; font-size:12px; margin-right:auto }
+      #thumbClose{ background:none; border:0; color:#8b949e; font-size:17px; cursor:pointer; padding:2px 6px }
+      #thumbClose:hover{ color:#e6edf3 }
+      .th-body{ display:flex; gap:16px; padding:16px; flex-wrap:wrap }
+      .th-stageCol{ flex:1 1 620px; min-width:0 }
+      #thumbCv{ width:100%; height:auto; display:block; border-radius:10px; cursor:grab;
+        box-shadow:0 6px 26px rgba(0,0,0,.45) }
+      #thumbCv:active{ cursor:grabbing }
+      .th-mob{ display:flex; align-items:center; gap:12px; margin-top:12px }
+      #thumbMob{ width:320px; height:180px; flex:0 0 auto; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,.4) }
+      .th-mob span{ color:#8b949e; font-size:12px; line-height:1.5 }
+      .th-side{ flex:0 0 260px; display:flex; flex-direction:column; gap:12px }
+      .th-side label{ display:flex; flex-direction:column; gap:4px; font-size:12px; color:#8b949e }
+      .th-side label span{ color:#5c6673; font-size:11px }
+      .th-side input{ background:#161b22; border:1px solid #26303f; border-radius:7px; color:#e6edf3;
+        padding:7px 9px; font:inherit; font-size:13px }
+      .th-side input:focus{ outline:none; border-color:#eaca78 }
+      .th-btn{ padding:8px 12px; border-radius:8px; border:1px solid #26303f; background:#161b22;
+        color:#e6edf3; font:inherit; font-size:13px; cursor:pointer }
+      .th-btn:hover{ border-color:#eaca78 }
+      .th-pri{ background:#eaca78; border-color:#eaca78; color:#1a1200; font-weight:600 }
+      .th-note{ color:#5c6673; font-size:11px; line-height:1.6; margin:2px 0 0 }
+      .th-note em{ color:#8b949e; font-style:normal }
+      /* the injected trigger, beside Begin */
+      #thumbBtn{ position:fixed; left:50%; bottom:calc(var(--begin-b,4.2vh) + 62px); transform:translateX(-50%);
+        z-index:60; padding:9px 20px; border-radius:999px; cursor:pointer;
+        background:rgba(10,16,28,.5); border:1px solid rgba(255,250,240,.28); color:#fffaf0;
+        font-family:'Jost',system-ui,sans-serif; font-weight:300; font-size:13px; letter-spacing:.16em;
+        text-transform:uppercase; backdrop-filter:blur(6px); }
+      #thumbBtn:hover{ border-color:rgba(255,250,240,.6) }
+      :root.thumb-open #thumbBtn, :root:not(.setup-active) #thumbBtn{ display:none }
+
       /* ── the session ends → fade to black. Back / back-swipe is the way out. ─────────────────────── */
       #stageEnd{ position:fixed; inset:0; z-index:99; background:#000; opacity:0; pointer-events:none;
         transition:opacity 2.4s cubic-bezier(.4,0,.2,1); }
@@ -148,6 +190,37 @@ import { LQIP } from '../scene/lqip.js';
     <SceneWorld />
     <Setup />
     <Session />
+    <!-- ── Thumbnail studio (stage only) ─────────────────────────────────────────────────────────────
+         Lives HERE, not in Setup.astro, because Setup is shared with the public site and must not grow a
+         capture-only button. The trigger is injected next to Begin at runtime. -->
+    <div id="thumbWrap" aria-hidden="true">
+      <div id="thumbPanel">
+        <div class="th-head">
+          <b>Thumbnail</b>
+          <span class="th-hint">drag the text · scroll a block to resize</span>
+          <button id="thumbClose" title="Close">✕</button>
+        </div>
+        <div class="th-body">
+          <div class="th-stageCol">
+            <canvas id="thumbCv" width="1280" height="720"></canvas>
+            <div class="th-mob">
+              <canvas id="thumbMob" width="320" height="180"></canvas>
+              <span>320×180 — how it looks in a phone feed. If it does not read here, it does not read.</span>
+            </div>
+          </div>
+          <div class="th-side">
+            <label>Line 1 <span>big</span><input id="thL1" type="text" maxlength="24"></label>
+            <label>Line 2 <span>passes behind the glass</span><input id="thL2" type="text" maxlength="28"></label>
+            <label>Line 3 <span>small, bottom</span><input id="thL3" type="text" maxlength="32"></label>
+            <button id="thumbReset" class="th-btn">Reset to config</button>
+            <button id="thumbSave" class="th-btn th-pri">Download PNG</button>
+            <p class="th-note">Text is auto-filled from the session config. The hourglass is drawn back
+              <em>over</em> line 2, so it reads as depth rather than a sticker.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="stageIntro" class="stage-card" aria-hidden="true">
       <div class="brand">SUSTAIN</div>
       <div class="cfg" id="inCfg"></div>
@@ -448,6 +521,117 @@ import { LQIP } from '../scene/lqip.js';
           obsStop();
           rearm();
         });
+
+        // ── Thumbnail studio ────────────────────────────────────────────────────────────────────────
+        // 90+ thumbnails is too many to hand-make, and drift between them would cost the series its
+        // recognisability. So: text auto-fills from the same cfg that drove the capture, the crop is
+        // fixed for the whole catalogue, and the hourglass is composited back OVER line 2 so the type
+        // reads as depth. Everything is still draggable/resizable for CTR experiments.
+        var TH = {
+          top: { x:0.5,  y:0.20, size:0.135 },      // fractions of the frame, so they survive any export size
+          bot: { x:0.5,  y:0.90, size:0.045 },
+          l1:'', l2:'', l3:''
+        };
+        var thCv = document.getElementById('thumbCv'), thMob = document.getElementById('thumbMob');
+        var thL1 = document.getElementById('thL1'), thL2 = document.getElementById('thL2'), thL3 = document.getElementById('thL3');
+
+        function thDefaults(){
+          var c = readCfg(), m = c.totalMin || 0, h = Math.floor(m/60), mm = m%60;
+          TH.l1 = m ? (h ? (mm ? h+'H '+mm+'M' : h + (h===1?' HOUR':' HOURS')) : mm+' MIN') : 'ENDLESS';
+          TH.l2 = 'STUDY WITH ME';
+          TH.l3 = (c.mode === 'pomodoro' ? c.pomoFocus + '/' + c.pomoBreak + ' POMODORO'
+                 : c.mode === 'flow' ? 'FLOW' : c.mode === 'endless' ? 'ENDLESS' : 'CUSTOM')
+                 + '  ·  ' + lightLabel(c).toUpperCase();
+          thL1.value = TH.l1; thL2.value = TH.l2; thL3.value = TH.l3;
+        }
+        // Text is painted BEFORE the hourglass goes back on top (see SustainScene.thumbFrame), which is
+        // what puts line 2 behind the glass.
+        function thPaint(o, W, H){
+          o.textAlign = 'center'; o.textBaseline = 'middle';
+          o.shadowColor = 'rgba(0,0,0,.55)'; o.shadowBlur = Math.round(H*0.02); o.shadowOffsetY = Math.round(H*0.004);
+          var s1 = Math.round(H * TH.top.size), s2 = Math.round(s1 * 0.42);
+          o.fillStyle = '#fffaf0';
+          o.font = '300 ' + s1 + "px 'Jost',system-ui,sans-serif";
+          o.fillText(TH.l1, W*TH.top.x, H*TH.top.y);
+          o.font = '300 ' + s2 + "px 'Jost',system-ui,sans-serif";
+          o.letterSpacing = Math.round(s2*0.18) + 'px';
+          o.fillText(TH.l2, W*TH.top.x, H*TH.top.y + s1*0.78);
+          var s3 = Math.round(H * TH.bot.size);
+          o.font = '300 ' + s3 + "px 'Jost',system-ui,sans-serif";
+          o.letterSpacing = Math.round(s3*0.22) + 'px';
+          o.fillText(TH.l3, W*TH.bot.x, H*TH.bot.y);
+          o.letterSpacing = '0px'; o.shadowBlur = 0; o.shadowOffsetY = 0;
+        }
+        var thRAF = 0;
+        function thDraw(){
+          if (!window.SustainScene || !SustainScene.thumbFrame) return;
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint });
+          thCv.getContext('2d').drawImage(f, 0, 0, 1280, 720);
+          var mc = thMob.getContext('2d'); mc.imageSmoothingQuality = 'high';
+          mc.drawImage(f, 0, 0, 320, 180);
+          if (document.documentElement.classList.contains('thumb-open')) thRAF = requestAnimationFrame(thDraw);
+        }
+        function thOpen(){
+          thDefaults();
+          document.documentElement.classList.add('thumb-open');
+          (document.fonts ? document.fonts.ready : Promise.resolve()).then(function(){ thDraw(); });
+        }
+        function thClose(){
+          document.documentElement.classList.remove('thumb-open');
+          cancelAnimationFrame(thRAF);
+        }
+        // Drag whichever block you grabbed; wheel resizes it.
+        var thDragging = null;
+        function thHit(e){
+          var r = thCv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height;
+          return y < 0.62 ? TH.top : TH.bot;          // top block owns the upper ~2/3
+        }
+        thCv.addEventListener('pointerdown', function(e){
+          thDragging = thHit(e); thCv.setPointerCapture(e.pointerId);
+        });
+        thCv.addEventListener('pointermove', function(e){
+          if (!thDragging) return;
+          var r = thCv.getBoundingClientRect();
+          thDragging.x = Math.max(0.06, Math.min(0.94, (e.clientX - r.left) / r.width));
+          thDragging.y = Math.max(0.06, Math.min(0.94, (e.clientY - r.top) / r.height));
+        });
+        addEventListener('pointerup', function(){ thDragging = null; });
+        thCv.addEventListener('wheel', function(e){
+          e.preventDefault();
+          var b = thHit(e), k = e.deltaY < 0 ? 1.06 : 1/1.06;
+          b.size = Math.max(0.02, Math.min(0.30, b.size * k));
+        }, { passive:false });
+
+        [thL1, thL2, thL3].forEach(function(inp, i){
+          inp.addEventListener('input', function(){ TH[['l1','l2','l3'][i]] = inp.value; });
+        });
+        document.getElementById('thumbReset').addEventListener('click', function(){
+          TH.top = { x:0.5, y:0.20, size:0.135 }; TH.bot = { x:0.5, y:0.90, size:0.045 }; thDefaults();
+        });
+        document.getElementById('thumbClose').addEventListener('click', thClose);
+        document.getElementById('thumbSave').addEventListener('click', function(){
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint });
+          f.toBlob(function(b){
+            var c = readCfg(), name = 'thumb_' + (c.mode||'x') + '_' + (c.totalMin||0) + 'm_'
+                  + lightLabel(c).toLowerCase().replace(/\s+/g,'-') + '.png';
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(b); a.download = name; a.click();
+            setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+          }, 'image/png');
+        });
+        addEventListener('keydown', function(e){
+          if (e.key === 'Escape' && document.documentElement.classList.contains('thumb-open')){
+            e.preventDefault(); e.stopPropagation(); thClose();
+          }
+        }, true);
+
+        // Inject the trigger beside Begin — Setup.astro is shared with the public site and stays untouched.
+        (function(){
+          var b = document.createElement('button');
+          b.id = 'thumbBtn'; b.type = 'button'; b.textContent = 'Thumbnail';
+          b.addEventListener('click', thOpen);
+          document.body.appendChild(b);
+        })();
       })();
     </script>
   </body>

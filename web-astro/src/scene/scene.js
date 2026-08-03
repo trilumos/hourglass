@@ -2061,6 +2061,35 @@ function setNumTone(bgLuma){
 }
 
 // Setup drives the scene: preview a phase (index 0–5) or 'follow' the live clock, and toggle sun+moon.
+// ── Thumbnail crop — ONE fixed rect for the whole catalogue ──────────────────────────────────────────
+// Founder's rule: the hourglass and the sun/moon must both be visible, and the crop must NOT change from
+// video to video. Those pull against each other, because the body arcs right across the sky as the day
+// turns — so the rect is the UNION of the hourglass box with every celestial position across a full 24 h,
+// sampled from the same trackSun/trackMoon the scene itself uses. Computed once and cached: identical
+// framing on all 57 rows, which is what makes a series recognisable in a feed.
+// ── TUNABLE. Founder-verified by eye — adjust these two and re-export ────────────────────────────────
+//   HEIGHT : fraction of the plate's height the thumbnail keeps. 1 = the whole frame (no zoom).
+//   YBIAS  : 0 anchors the crop to the top of the plate, 1 to the bottom.
+// The output is 16:9 and the PLATE is 16:9, so a 16:9 crop is SQUARE in plate-fraction space: cropping
+// height by this much crops exactly as much width, which is what tightens the sides while the full
+// hourglass and the sky above it stay in shot.
+const THUMB_HEIGHT = 0.88, THUMB_YBIAS = 0.62;
+let _crop = null;                                       // cached: the rect never changes between videos
+function thumbCrop(aspect){
+  if (_crop && _crop.aspect === aspect) return _crop;
+  const target = aspect * (DH / DW);                    // 16:9 in plate-fraction space (≈1 for a 16:9 plate)
+  let h = Math.min(1, THUMB_HEIGHT), w = Math.min(1, h * target);
+  h = w / target;                                       // keep it exact if width clamped
+  // Horizontally centred on the hourglass AXIS, not the plate: the glass is what must sit in the middle.
+  let x = S.cx - w/2;
+  if (x < 0) x = 0; if (x + w > 1) x = 1 - w;
+  // Vertically biased low — the deck and the glass matter more than empty top sky, but leave enough sky
+  // that the sun/moon is still in shot for the lights we actually shoot.
+  let y = (1 - h) * THUMB_YBIAS;
+  if (y < 0) y = 0; if (y + h > 1) y = 1 - h;
+  return (_crop = { aspect, x, y, w, h });
+}
+
 window.SustainScene = {
   setDay: function(v){ if (v==='follow' || v==null){ S.live=1; } else { S.live=0; S.daytime=PH_HOUR[v|0]; } },
   // Continuous day position for the light-cycle: set an arbitrary reference hour (0–24, wraps); the scene
@@ -2100,6 +2129,62 @@ window.SustainScene = {
   flipEndless: function(){ session.flip(); },   // refill the endless glass; elapsed timer keeps running
   skipToBreak: function(){ return session.skipToBreak(); },   // pomodoro/custom: take the next scheduled break early
   skipBreak: function(){ return session.skipBreak(); },       // end the current rest early → focus resumes
+  // ── Thumbnail frame (/stage only) ──────────────────────────────────────────────────────────────
+  // Composites the live scene into a 1280x720 canvas, cropped to the founder's rule: THE HOURGLASS AND
+  // THE SUN/MOON MUST BOTH BE VISIBLE, everything else is expendable. The celestial body arcs with the
+  // time of day, so this cannot be a fixed rect — the crop is computed per light from the body's actual
+  // position. That is also the point: at 168px in a feed the hourglass has to dominate, and a wide
+  // seascape crop leaves it a sliver.
+  //
+  // Renders once immediately before reading the WebGL canvas, so it does not depend on
+  // preserveDrawingBuffer (which is off on constrained devices).
+  //   paint(ctx, W, H) — optional. Called AFTER the scene and BEFORE the hourglass is drawn back on top,
+  //   so anything painted there passes BEHIND the glass exactly like the session numerals do. That depth
+  //   is the whole trick: "Study with me" can sit across the hourglass and have the word it collides with
+  //   occluded, which is what stops thumbnail text reading as a flat sticker.
+  thumbFrame: function(opts){
+    opts = opts || {};
+    const W = opts.w || 1280, H = opts.h || 720;
+    U.uTime.value = tSec; renderer.render(scene, cam);      // fresh buffer, no preserveDrawingBuffer needed
+
+    const r = thumbCrop(W / H);
+    const out = document.createElement('canvas'); out.width = W; out.height = H;
+    const o = out.getContext('2d');
+    o.imageSmoothingQuality = 'high';
+    // Every layer is a different pixel size (dpr, mask resolution), so crop in each layer's OWN pixels.
+    const blit = (cv, ctx) => ctx.drawImage(cv,
+      r.x * cv.width, r.y * cv.height, r.w * cv.width, r.h * cv.height, 0, 0, W, H);
+
+    blit(glitterCv, o);
+    blit(sandCv, o);
+
+    if (typeof opts.paint === 'function') opts.paint(o, W, H);
+
+    // Hourglass back on top, silhouette only — same technique as drawOcc(): take the live plate and keep
+    // only the pixels inside the glass matte.
+    if (occGlassCv){
+      const t = document.createElement('canvas'); t.width = W; t.height = H;
+      const tc = t.getContext('2d');
+      tc.imageSmoothingQuality = 'high';
+      blit(glitterCv, tc);
+      tc.globalCompositeOperation = 'destination-in';
+      blit(occGlassCv, tc);
+      o.drawImage(t, 0, 0);
+      blit(sandCv, o);                                     // sand rides in front of the glass
+    }
+    return out;
+  },
+  // Expose the crop so a UI can show what will be kept, and so it can be tuned by eye.
+  thumbCropRect: function(aspect){ return thumbCrop(aspect || 16/9); },
+  // Mean luminance of a band, so overlay text can pick its own contrast the way the numerals do.
+  thumbLuma: function(cv, yFrac, hFrac){
+    const c = document.createElement('canvas'); c.width = 64; c.height = 36;
+    const g = c.getContext('2d');
+    g.drawImage(cv, 0, cv.height * yFrac, cv.width, cv.height * hFrac, 0, 0, 64, 36);
+    const d = g.getImageData(0, 0, 64, 36).data;
+    let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+    return s / (d.length / 4) / 255;
+  },
   setTimerVis: function(v){
     timerVis = (v==='hidden' ? 'hidden' : v==='hover' ? 'hover' : v==='flash' ? 'flash' : 'always');
     applyVis();
