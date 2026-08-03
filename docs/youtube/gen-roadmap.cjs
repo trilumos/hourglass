@@ -119,7 +119,14 @@ const presetURL = r => {
   return 'https://sustaintimer.com/?' + q.join('&');
 };
 // Chapters come straight off the real plan, so the long-break-every-4th rule is baked in.
-const chapters = r => { const plan=P.buildPlan(stOf(r)); const out=[]; let t=0,f=0,b=0;
+// The VIDEO clock is not the SESSION clock. /stage records the intro card (INTRO_MS 10 s) and the 3-2-1
+// countdown before the engine starts, so the first focus block begins 13 s into the file — every session
+// timestamp has to shift by that much or the chapters point at the wrong moments all the way through.
+// Keep in step with stage.astro: INTRO_MS/1000 + 3.
+const LEAD_IN = 13 / 60;                       // minutes, to match the plan's units
+// No closing chapter for the thank-you card: recording stops 5 s into it (OUTRO_STOP_MS), and a chapter
+// under 10 s is invalid and would silently kill the markers for the whole video. The last break absorbs it.
+const chapters = r => { const plan=P.buildPlan(stOf(r)); const out=[`${ts(0)} Intro`]; let t=LEAD_IN,f=0,b=0;
   for (const seg of plan){ if(seg.kind==='focus'){ out.push(`${ts(t)} Focus ${++f}`); } else { out.push(`${ts(t)} Break ${++b}`); } t+=seg.min; }
   return out; };
 const nBreaks = r => P.buildPlan(stOf(r)).filter(s=>s.kind!=='focus').length;
