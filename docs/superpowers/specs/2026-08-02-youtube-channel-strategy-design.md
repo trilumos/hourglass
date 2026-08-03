@@ -528,6 +528,111 @@ npx wrangler pages deploy tools/video-directory --project-name sustain-directory
 Keep it a **separate Pages project** from `sustaintimer.com` — it is an internal tool, and it already carries
 `noindex,nofollow`.
 
+## 16. The title template — LOCKED 2026-08-03
+
+Measured on the live SERP for `3 hour study with me pomodoro timer` (vidIQ, 2026-08-03). Every channel
+that wins this niche runs **one rigid skeleton and varies one or two words per upload**:
+
+| Channel | Views | Title | Variable |
+|---|---:|---|---|
+| Countdown Time | 687,672 / 472,688 / 436,770 | `{IV} Pomodoro Timer - 3 hour study \|\| No music - Study for dreams - Deep focus - Study timer` | interval ONLY |
+| Timer Palette | 546,673 / 239,288 / 117,648 | `50/10 Pomodoro Timer with {Noise} 🎧 3-Hour Study with Me for Deep Focus & ADHD ✨` | noise ONLY |
+| Mr. Tiny's Studio | 178,420 / 115,339 | `3-HOUR STUDY WITH ME \| {Time} Lofi \| Pomodoro timer 3x50 \| Study & Work \| Deep Focus \| Lofi {emoji}` | time of day |
+| iCanStudy | 13,210,854 | `3-HOUR STUDY WITH ME \| Hyper Efficient, Doctor, Focus Music, Pomodoro 50-10` | — |
+
+Both openings are proven at scale, so the opener is picked on volume: **study with me 2,525,198/mo**
+beats **50/10 pomodoro 47,568/mo** by 53×, and leads.
+
+### The locked skeleton
+
+```
+{N}-Hour Study With Me {emoji} {MODE PHRASE} for {BENEFIT} & ADHD | {Sound}, {Light}
+```
+
+Four slots move. Everything else is fixed forever. Mode phrase is one of three:
+
+| Mode | Phrase | Targets |
+|---|---|---|
+| Pomodoro / Custom | `{IV} Pomodoro Timer for Deep Focus` | pomodoro timer 427,868 · {iv} pomodoro 47,568 · deep focus 887,738 |
+| Bell-only twin | `{IV} Pomodoro Timer, No Music for Deep Focus` | pomodoro no music 9,661 **at competition 10.4** |
+| Flow | `Deep Work Timer, No Breaks for Flow State` | deep work 654,229 · flow state 316,535 |
+
+Emoji is tied to the sound, never decorative: 🌊 ocean · 🍃 land ambience · 🔔 bell-only.
+
+### Three fixes over the video-#1 wording
+
+1. **`Pomodoro 50/10` → `50/10 Pomodoro Timer`.** Word order is what exact-phrase matching sees. The
+   old order matched **neither** `50/10 pomodoro` (47,568/mo) **nor** `pomodoro timer` (427,868/mo).
+   Four words now carry both. This was the single biggest hole in the old title, and it applies
+   retroactively — **video #1's title should be updated.**
+2. **`Focus & ADHD` → `Deep Focus & ADHD`.** `deep focus` is 887,738/mo standing alone.
+3. **One emoji.** Every top performer here uses one or two. In a column of identically-shaped titles it
+   is the only glyph, which is what earns the eye in a sidebar.
+
+Hard cap 100 characters, enforced by the generator; when a long sound name would breach it the **tail**
+gives way, never the head — the sound is already in the description, the tags and the thumbnail.
+
+## 17. Session mix — REBUILT 2026-08-03 on measured volume
+
+Was 15 Pomodoro-only sessions at 1h/2h/4h. Now spans three modes and five durations:
+
+| Duration | Sessions | Why |
+|---|---:|---|
+| 3 hours | 5 | `study with me 3 hours` **125,629/mo** — was missing entirely |
+| 2 hours | 4 | `2 hour timer` 204,296/mo |
+| 4 hours | 3 | `study with me 4 hours` 44,753/mo |
+| 1 hour | 2 | `60 minute timer` 33,037/mo |
+| 5 hours | 1 | `5 hours study with me` 14,310/mo |
+
+Modes: **Pomodoro 8** (50/10, 25/5) · **Custom 4** (30/15, 40/10, 50/15, 60/20) · **Flow 3** (60/120/180m).
+
+Flow earns its place on `deep work` (654,229) and `flow state` (316,535), and **no competitor in this
+niche ships an unbroken block** — every one of them is a Pomodoro channel. Custom covers the long-block
+schedules Pomodoro's fixed ratio cannot express.
+
+**Flow ships without chapters.** One block yields two markers (Intro + Focus); YouTube requires three,
+and the outro cannot be the third because recording stops 5 s into it, under the 10 s per-chapter
+minimum. An unbroken session genuinely has no segments — inventing them would be dishonest metadata.
+
+## 18. Sleep / ambience content — REJECTED for this channel, 2026-08-03
+
+The volume is real and larger than our niche: `white noise` 2,267,059/mo · `sleep music` 1,941,376 ·
+`deep sleep music` 1,242,148 · `nature sounds` 504,753. It was still the wrong move, on four grounds:
+
+1. **Topic dilution.** YouTube builds a channel-level topic profile and uses it to decide who gets our
+   next upload. A channel that is unambiguously "focus timer" is why a 157-subscriber channel can pull
+   8,442 views. Splitting the signal between focus and sleep degrades targeting for **both**.
+2. **Zero funnel value.** Sustain is a focus timer. A viewer who came to fall asleep will never install
+   it. Every sleep view is a watch-hour with no downstream revenue — the opposite of §1's whole thesis.
+3. **Competition is 2× ours.** Those terms sit at 55–65 competition against 25–35 in the timer niche.
+   We would be entering the harder market with the weaker asset.
+4. **Production cost is prohibitive.** Sleep content is 8–10 h. One capture would consume a full
+   working day plus an overnight upload, against ~30 videos/month from the current list. And our
+   ambience is four short loops, which an audience listening for eight hours will hear seam.
+
+**Revisit trigger:** after YPP is cleared *and* the focus catalogue is self-sustaining, and then as a
+**separate channel**, not this one. Sleep is a real business; it is not this business.
+
+## 19. Batch-record and schedule — ADOPTED 2026-08-03
+
+Record several sessions on a free day, upload all as **Private**, configure fully, then use YouTube's
+native **Schedule** to release one per day. Correct on every axis that matters:
+
+- **The algorithm sees the publish time, not the capture time.** There is no penalty, no signal, no
+  difference. Consistency of *release* is what the system rewards, and scheduling delivers it perfectly.
+- **It removes the only real failure mode.** §2's ignition curve says the library does not pay out
+  until ~month 6. The one thing that reliably kills a channel before then is a missed run of uploads
+  during a busy week. A month scheduled in advance makes that impossible.
+- **Processing time stops being a risk.** HD/4K transcoding can take hours after upload; scheduling
+  guarantees the video is fully processed long before it goes live, so no viewer ever gets the 360p
+  first-impression that video #1 hit.
+- **Metadata quality goes up.** Configuring five videos in one sitting with the directory open beats
+  five rushed uploads.
+
+Two constraints: capture is real-time, so a day of recording is bounded by the clock — a 3 h session
+costs 3 h. Pair long captures with short ones. And **upload as Private, not Unlisted** — an Unlisted
+video is live and accumulates views before its scheduled slot, which is what happened to video #1.
+
 ## 15. Sources
 
 - [YouTube Partner Program overview & eligibility](https://support.google.com/youtube/answer/72851?hl=en)
