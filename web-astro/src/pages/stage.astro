@@ -209,8 +209,11 @@ import { LQIP } from '../scene/lqip.js';
           dawn:'a sky that warms from pre-dawn into full daylight',
           dusk:'a sky that deepens from sunset into night',
           day:'a whole day passing, dawn through to midnight',
+          custom:'a sky that moves through the light you chose',
           follow:'a sky that follows the real time of day'
         };
+        // Short forms for the config line, matching the roadmap's light names.
+        var CYCLE_LABEL = { dawn:'Dawn to Day', dusk:'Dusk to Night', day:'Full Day', custom:'Custom Light' };
         var SOUND_NAME = { sand:'falling sand', ocean:'ocean waves', breeze:'a shore breeze', birds:'seabirds' };
 
         function set(id, t){ var e = document.getElementById(id); if (e) e.textContent = t; }
@@ -223,10 +226,30 @@ import { LQIP } from '../scene/lqip.js';
         }
         function list(a){ return a.length < 2 ? (a[0] || '') : a.slice(0,-1).join(', ') + ' and ' + a[a.length-1]; }
 
+        // Which light is ACTUALLY going to render? Three cases, and the order matters.
+        //
+        // The trap: `cycle.preset` defaults to 'follow' and is NOT a choice the user made — Setup starts
+        // there and only changes it if the Advanced sheet is opened. Reading the preset first therefore
+        // made every held time-of-day describe itself as "a sky that follows the real time of day", even
+        // though the scene correctly rendered the picked phase. `cycle.seq` is no help either: it defaults
+        // to ['midday','sunset','midnight'] regardless of preset. Only these preset IDs really move.
+        var MOVING = { dawn:1, dusk:1, day:1, custom:1 };
+        function lightOf(c){
+          var pre = c.cycle && c.cycle.preset;
+          if (pre && MOVING[pre]) return CYCLE_PHRASE[pre] || CYCLE_PHRASE.custom;   // the sky travels
+          if (c.followDay) return CYCLE_PHRASE.follow;                               // tracks real time
+          return PHASE_PHRASE[c.phase | 0] || 'the shore';                           // one held light
+        }
+        function lightLabel(c){
+          var pre = c.cycle && c.cycle.preset;
+          if (pre && MOVING[pre]) return CYCLE_LABEL[pre] || 'Moving Light';
+          if (c.followDay) return 'Live Sky';
+          return (PHASE_NAME[c.phase | 0] || '').replace('-', ' ');
+        }
+
         function fillIntro(){
           var c = readCfg();
-          var light = (c.cycle && CYCLE_PHRASE[c.cycle.preset]) ? CYCLE_PHRASE[c.cycle.preset]
-                    : (c.followDay ? CYCLE_PHRASE.follow : (PHASE_PHRASE[c.phase | 0] || 'the shore'));
+          var light = lightOf(c);
           var snd = (c.sounds || []).map(function (s){ return SOUND_NAME[s]; }).filter(Boolean);
           var d = dur(c.totalMin);
 
@@ -236,7 +259,7 @@ import { LQIP } from '../scene/lqip.js';
           else if (c.mode === 'custom') bits.push('Custom ' + c.customInterval + ' / ' + c.customBreakLen);
           else                          bits.push('Endless');
           bits.push(c.totalMin ? d : 'no set end');
-          bits.push((PHASE_NAME[c.phase | 0] || '').replace('-', ' '));
+          bits.push(lightLabel(c));
           set('inCfg', bits.join('  ·  '));
 
           // ONE sentence. The card is on screen for 10s and a viewer should take it in at a glance —

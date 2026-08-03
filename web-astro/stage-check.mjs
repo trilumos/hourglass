@@ -31,6 +31,21 @@ ok(/done = false; counting = false;/.test(stage), 'rearm resets both flags');
 ok(/clearTimeout\(introT\); clearTimeout\(stopT\); clearTimeout\(fadeT\); clearTimeout\(homeT\)/.test(stage),
                                           'rearm clears every pending timer');
 
+// The card must describe the light that ACTUALLY renders. The bug this guards: cycle.preset defaults to
+// 'follow' without the user ever opening the Advanced sheet, so reading the preset first made every held
+// time-of-day announce itself as "a sky that follows the real time of day".
+console.log('\n/stage — the card must describe the light that renders');
+ok(/var MOVING = \{ dawn:1, dusk:1, day:1, custom:1 \}/.test(stage),
+                                          'only dawn/dusk/day/custom count as a moving sky');
+ok(!/var MOVING = \{[^}]*follow/.test(stage),
+                                          "'follow' is NOT in MOVING — it is the default preset, not a choice");
+ok(!/var MOVING = \{[^}]*hold/.test(stage), "'hold' is not moving either");
+ok(stage.indexOf('if (pre && MOVING[pre])') < stage.indexOf('if (c.followDay)'),
+                                          'lightOf order: moving cycle, then followDay, then the held phase');
+ok(/return PHASE_PHRASE\[c\.phase \| 0\]/.test(stage), 'a held time-of-day falls through to its own phrase');
+ok(/CYCLE_LABEL = \{ dawn:'Dawn to Day'/.test(stage), 'config line has short labels for moving skies');
+ok(/bits\.push\(lightLabel\(c\)\)/.test(stage), 'config line uses lightLabel, not the raw phase name');
+
 console.log('\nuser-facing site — must be unaffected');
 ok(!/OUTRO_STOP_MS|stageOutro|obsStop/.test(home), 'no capture code leaked into the home page');
 ok(/chrome-ready/.test(home), 'home still has its WebGL failsafe');
