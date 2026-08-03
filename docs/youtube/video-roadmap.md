@@ -324,10 +324,10 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -362,10 +362,10 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -400,12 +400,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
-02:00:13 Focus 3
-02:50:13 Break 3
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
+02:00:10 Focus 3
+02:50:10 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -440,12 +440,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
-02:00:13 Focus 3
-02:50:13 Break 3
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
+02:00:10 Focus 3
+02:50:10 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -480,14 +480,14 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
-02:00:13 Focus 3
-02:50:13 Break 3
-03:00:13 Focus 4
-03:50:13 Break 4
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
+02:00:10 Focus 3
+02:50:10 Break 3
+03:00:10 Focus 4
+03:50:10 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -522,14 +522,14 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
-02:00:13 Focus 3
-02:50:13 Break 3
-03:00:13 Focus 4
-03:50:13 Break 4
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
+02:00:10 Focus 3
+02:50:10 Break 3
+03:00:10 Focus 4
+03:50:10 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -564,8 +564,8 @@ One 50-minute block, with a soft bell to open and close it. The sky moves the wh
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
+00:00:10 Focus 1
+00:50:10 Break 1
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -600,8 +600,8 @@ One 50-minute block, with a soft bell to open and close it. The sky moves the wh
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
+00:00:10 Focus 1
+00:50:10 Break 1
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -636,12 +636,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
-02:00:13 Focus 3
-02:50:13 Break 3
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
+02:00:10 Focus 3
+02:50:10 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -676,12 +676,12 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:00:13 Focus 2
-01:50:13 Break 2
-02:00:13 Focus 3
-02:50:13 Break 3
+00:00:10 Focus 1
+00:50:10 Break 1
+01:00:10 Focus 2
+01:50:10 Break 2
+02:00:10 Focus 3
+02:50:10 Break 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -716,14 +716,14 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:25:13 Break 1
-00:30:13 Focus 2
-00:55:13 Break 2
-01:00:13 Focus 3
-01:25:13 Break 3
-01:30:13 Focus 4
-01:55:13 Break 4
+00:00:10 Focus 1
+00:25:10 Break 1
+00:30:10 Focus 2
+00:55:10 Break 2
+01:00:10 Focus 3
+01:25:10 Break 3
+01:30:10 Focus 4
+01:55:10 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -758,14 +758,14 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:25:13 Break 1
-00:30:13 Focus 2
-00:55:13 Break 2
-01:00:13 Focus 3
-01:25:13 Break 3
-01:30:13 Focus 4
-01:55:13 Break 4
+00:00:10 Focus 1
+00:25:10 Break 1
+00:30:10 Focus 2
+00:55:10 Break 2
+01:00:10 Focus 3
+01:25:10 Break 3
+01:30:10 Focus 4
+01:55:10 Break 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -800,18 +800,18 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:25:13 Break 1
-00:30:13 Focus 2
-00:55:13 Break 2
-01:00:13 Focus 3
-01:25:13 Break 3
-01:30:13 Focus 4
-01:55:13 Break 4
-02:00:13 Focus 5
-02:25:13 Break 5
-02:30:13 Focus 6
-02:55:13 Break 6
+00:00:10 Focus 1
+00:25:10 Break 1
+00:30:10 Focus 2
+00:55:10 Break 2
+01:00:10 Focus 3
+01:25:10 Break 3
+01:30:10 Focus 4
+01:55:10 Break 4
+02:00:10 Focus 5
+02:25:10 Break 5
+02:30:10 Focus 6
+02:55:10 Break 6
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -846,18 +846,18 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:25:13 Break 1
-00:30:13 Focus 2
-00:55:13 Break 2
-01:00:13 Focus 3
-01:25:13 Break 3
-01:30:13 Focus 4
-01:55:13 Break 4
-02:00:13 Focus 5
-02:25:13 Break 5
-02:30:13 Focus 6
-02:55:13 Break 6
+00:00:10 Focus 1
+00:25:10 Break 1
+00:30:10 Focus 2
+00:55:10 Break 2
+01:00:10 Focus 3
+01:25:10 Break 3
+01:30:10 Focus 4
+01:55:10 Break 4
+02:00:10 Focus 5
+02:25:10 Break 5
+02:30:10 Focus 6
+02:55:10 Break 6
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -892,22 +892,22 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:25:13 Break 1
-00:30:13 Focus 2
-00:55:13 Break 2
-01:00:13 Focus 3
-01:25:13 Break 3
-01:30:13 Focus 4
-01:55:13 Break 4
-02:00:13 Focus 5
-02:25:13 Break 5
-02:30:13 Focus 6
-02:55:13 Break 6
-03:00:13 Focus 7
-03:25:13 Break 7
-03:30:13 Focus 8
-03:55:13 Break 8
+00:00:10 Focus 1
+00:25:10 Break 1
+00:30:10 Focus 2
+00:55:10 Break 2
+01:00:10 Focus 3
+01:25:10 Break 3
+01:30:10 Focus 4
+01:55:10 Break 4
+02:00:10 Focus 5
+02:25:10 Break 5
+02:30:10 Focus 6
+02:55:10 Break 6
+03:00:10 Focus 7
+03:25:10 Break 7
+03:30:10 Focus 8
+03:55:10 Break 8
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -942,22 +942,22 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:25:13 Break 1
-00:30:13 Focus 2
-00:55:13 Break 2
-01:00:13 Focus 3
-01:25:13 Break 3
-01:30:13 Focus 4
-01:55:13 Break 4
-02:00:13 Focus 5
-02:25:13 Break 5
-02:30:13 Focus 6
-02:55:13 Break 6
-03:00:13 Focus 7
-03:25:13 Break 7
-03:30:13 Focus 8
-03:55:13 Break 8
+00:00:10 Focus 1
+00:25:10 Break 1
+00:30:10 Focus 2
+00:55:10 Break 2
+01:00:10 Focus 3
+01:25:10 Break 3
+01:30:10 Focus 4
+01:55:10 Break 4
+02:00:10 Focus 5
+02:25:10 Break 5
+02:30:10 Focus 6
+02:55:10 Break 6
+03:00:10 Focus 7
+03:25:10 Break 7
+03:30:10 Focus 8
+03:55:10 Break 8
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1178,11 +1178,11 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:05:13 Focus 2
-01:55:13 Break 2
-02:10:13 Focus 3
+00:00:10 Focus 1
+00:50:10 Break 1
+01:05:10 Focus 2
+01:55:10 Break 2
+02:10:10 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1217,11 +1217,11 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:50:13 Break 1
-01:05:13 Focus 2
-01:55:13 Break 2
-02:10:13 Focus 3
+00:00:10 Focus 1
+00:50:10 Break 1
+01:05:10 Focus 2
+01:55:10 Break 2
+02:10:10 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1256,15 +1256,15 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:40:13 Break 1
-00:50:13 Focus 2
-01:30:13 Break 2
-01:40:13 Focus 3
-02:20:13 Break 3
-02:30:13 Focus 4
-03:10:13 Break 4
-03:20:13 Focus 5
+00:00:10 Focus 1
+00:40:10 Break 1
+00:50:10 Focus 2
+01:30:10 Break 2
+01:40:10 Focus 3
+02:20:10 Break 3
+02:30:10 Focus 4
+03:10:10 Break 4
+03:20:10 Focus 5
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1299,15 +1299,15 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:40:13 Break 1
-00:50:13 Focus 2
-01:30:13 Break 2
-01:40:13 Focus 3
-02:20:13 Break 3
-02:30:13 Focus 4
-03:10:13 Break 4
-03:20:13 Focus 5
+00:00:10 Focus 1
+00:40:10 Break 1
+00:50:10 Focus 2
+01:30:10 Break 2
+01:40:10 Focus 3
+02:20:10 Break 3
+02:30:10 Focus 4
+03:10:10 Break 4
+03:20:10 Focus 5
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1342,11 +1342,11 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:30:13 Break 1
-00:45:13 Focus 2
-01:15:13 Break 2
-01:30:13 Focus 3
+00:00:10 Focus 1
+00:30:10 Break 1
+00:45:10 Focus 2
+01:15:10 Break 2
+01:30:10 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1381,11 +1381,11 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-00:30:13 Break 1
-00:45:13 Focus 2
-01:15:13 Break 2
-01:30:13 Focus 3
+00:00:10 Focus 1
+00:30:10 Break 1
+00:45:10 Focus 2
+01:15:10 Break 2
+01:30:10 Focus 3
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1420,13 +1420,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-01:00:13 Break 1
-01:20:13 Focus 2
-02:20:13 Break 2
-02:40:13 Focus 3
-03:40:13 Break 3
-04:00:13 Focus 4
+00:00:10 Focus 1
+01:00:10 Break 1
+01:20:10 Focus 2
+02:20:10 Break 2
+02:40:10 Focus 3
+03:40:10 Break 3
+04:00:10 Focus 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
@@ -1461,13 +1461,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 
 ⏱ Chapters
 00:00:00 Intro
-00:00:13 Focus 1
-01:00:13 Break 1
-01:20:13 Focus 2
-02:20:13 Break 2
-02:40:13 Focus 3
-03:40:13 Break 3
-04:00:13 Focus 4
+00:00:10 Focus 1
+01:00:10 Break 1
+01:20:10 Focus 2
+02:20:10 Break 2
+02:40:10 Focus 3
+03:40:10 Break 3
+04:00:10 Focus 4
 ```
 
 > ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip

@@ -656,6 +656,13 @@ one only padded the minutes.
 (`00:00:00` / `00:50:00` / `01:00:00`). Asserted in the generator: all chapters across all 30 videos
 now match `/^\d{2}:\d{2}:\d{2} \S/`.
 
+**Session start moved to the countdown (founder's call, 2026-08-03).** `Focus 1` is now stamped at
+10 s — where the 3-2-1 countdown begins — not 13 s where the engine fires. The viewer is already
+working by "3", so those seconds belong to the session. This makes the Intro chapter exactly 10 s,
+precisely YouTube's per-chapter minimum: legal, but with zero headroom. A `MIN_CHAPTER` assertion now
+walks every gap in every video (including the last chapter against real video length, lead-in + session
++ the 5 s of outro /stage records) and refuses to emit below 10 s. Verified to fire.
+
 **Why it was invisible:** YouTube renders *any* timestamp as a clickable blue link, whether or not it
 validates as a chapter. The description looked correct in every way while the progress bar stayed
 unsegmented — there is no error message anywhere in Studio.

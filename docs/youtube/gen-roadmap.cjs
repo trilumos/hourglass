@@ -58,6 +58,7 @@ const stOf = r =>
 // interval from r.iv, which only existed on Pomodoro rows. With three modes that is three ways to be
 // wrong, so the shape is read ONCE off the real plan and everything else consumes this.
 const totalOf = r => P.totalMinOf(P.buildPlan(stOf(r)));
+const MIN_CHAPTER = 10;                        // seconds; YouTube rejects the whole list below this
 const shapeOf = r => { const pl = P.buildPlan(stOf(r));
   const f = pl.filter(x=>x.kind==='focus'), b = pl.filter(x=>x.kind!=='focus');
   return { focus:f[0].min, brk:b.length?b[0].min:0, nFocus:f.length, nBreak:b.length,
@@ -184,7 +185,13 @@ const presetURL = r => {
 // countdown before the engine starts, so the first focus block begins 13 s into the file — every session
 // timestamp has to shift by that much or the chapters point at the wrong moments all the way through.
 // Keep in step with stage.astro: INTRO_MS/1000 + 3.
-const LEAD_IN = 13 / 60;                       // minutes, to match the plan's units
+// The 3-2-1 countdown belongs to the SESSION, not the intro — the founder's call, and it is the right
+// one: the viewer is already working by "3". So Focus 1 is stamped where the countdown starts, at
+// INTRO_MS/1000 = 10 s, not at 13 s where the engine actually fires.
+// That makes the Intro chapter exactly 10 s, which is precisely YouTube's per-chapter minimum. Legal,
+// but with zero headroom — so MIN_CHAPTER below asserts it rather than trusting it. If stage.astro's
+// INTRO_MS is ever shortened, the generator refuses to emit instead of silently killing chapters again.
+const LEAD_IN = 10 / 60;                       // minutes, to match the plan's units
 // No closing chapter for the thank-you card: recording stops 5 s into it (OUTRO_STOP_MS), and a chapter
 // under 10 s is invalid and would silently kill the markers for the whole video. The last break absorbs it.
 const chapters = r => { if (shapeOf(r).nBreak === 0) return [];
@@ -217,6 +224,17 @@ const sentence = r => {
 };
 const slug = r => `${{pomo:'P',flow:'F',custom:'C'}[r.kind]}${shapeOf(r).iv.replace('/','-')}`
   + `x${Math.round(totalOf(r)/60*10)/10}h_${r.light}_${r.sound.replace(/\+/g,'-')}`;
+// Video length = lead-in + session + the 5 s of outro that /stage records before it stops.
+const videoSec = r => Math.round(LEAD_IN*60 + totalOf(r)*60 + 5);
+for (const r of rows){
+  const ch = chapters(r); if (!ch.length) continue;
+  const at = ch.map(c => { const [h,m,sec] = c.split(' ')[0].split(':').map(Number); return h*3600+m*60+sec; });
+  at.push(videoSec(r));
+  for (let k = 0; k < at.length-1; k++){
+    const gap = at[k+1] - at[k];
+    if (gap < MIN_CHAPTER) throw new Error(`chapter ${k+1} of ${slug(r)} is ${gap}s (min ${MIN_CHAPTER}): ${ch[k]}`);
+  }
+}
 // ── Title formula — ONE skeleton, four slots ───────────────────────────────────────────────────────
 //
 //   {N}-Hour Study With Me {e} {MODE PHRASE} for Deep Focus & ADHD | {Sound} & {Light}
