@@ -347,23 +347,28 @@ rewritten from that data rather than frozen today.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, sunset ambience, अध्ययन टाइमर
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a sunset sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=sunset&sound=ocean
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=sunset&sound=ocean`
 
 </details>
 
@@ -380,23 +385,28 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, midnight ambience, temporizador de estudio
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a midnight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=midnight&sound=ocean
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=midnight&sound=ocean`
 
 </details>
 
@@ -413,23 +423,28 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, sunrise ambience, مؤقت للدراسة
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a sunrise sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a sunrise sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=sunrise&sound=ocean
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=sunrise&sound=ocean`
 
 </details>
 
@@ -446,23 +461,28 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, midday ambience, temporizador de estudo
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a midday sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a midday sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=midday&sound=ocean
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=midday&sound=ocean`
 
 </details>
 
@@ -479,23 +499,28 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, twilight ambience, 핑크 노이즈 공부
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a twilight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a twilight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=twilight&sound=ocean
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=twilight&sound=ocean`
 
 </details>
 
@@ -512,23 +537,28 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, pre-dawn ambience, timer belajar
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a pre-dawn sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a pre-dawn sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=pre-dawn&sound=ocean
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in the dark hour before dawn and eases toward first light as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=pre-dawn&sound=ocean`
 
 </details>
 
@@ -545,27 +575,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, sunset ambience, çalışma zamanlayıcısı
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a sunset sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=sunset&sound=ocean
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=sunset&sound=ocean`
 
 </details>
 
@@ -582,27 +617,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, midnight ambience, ポモドーロタイマー
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a midnight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=midnight&sound=ocean
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=midnight&sound=ocean`
 
 </details>
 
@@ -619,27 +659,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, sunrise ambience, अध्ययन टाइमर
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a sunrise sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a sunrise sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=sunrise&sound=ocean
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=sunrise&sound=ocean`
 
 </details>
 
@@ -656,27 +701,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, midday ambience, temporizador de estudio
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a midday sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a midday sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=midday&sound=ocean
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=midday&sound=ocean`
 
 </details>
 
@@ -693,27 +743,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, twilight ambience, مؤقت للدراسة
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a twilight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a twilight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=twilight&sound=ocean
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=twilight&sound=ocean`
 
 </details>
 
@@ -730,27 +785,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, pre-dawn ambience, temporizador de estudo
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a pre-dawn sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a pre-dawn sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=pre-dawn&sound=ocean
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in the dark hour before dawn and eases toward first light as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=pre-dawn&sound=ocean`
 
 </details>
 
@@ -767,27 +827,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 2 hour timer, 2 hour study timer, sunset ambience, 핑크 노이즈 공부
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a sunset sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=sunset&sound=ocean
+4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=sunset&sound=ocean`
 
 </details>
 
@@ -804,27 +869,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 2 hour timer, 2 hour study timer, midnight ambience, timer belajar
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a midnight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=midnight&sound=ocean
+4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=midnight&sound=ocean`
 
 </details>
 
@@ -841,27 +911,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 2 hour timer, 2 hour study timer, sunrise ambience, çalışma zamanlayıcısı
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a sunrise sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a sunrise sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=sunrise&sound=ocean
+4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=sunrise&sound=ocean`
 
 </details>
 
@@ -878,27 +953,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 2 hour timer, 2 hour study timer, midday ambience, ポモドーロタイマー
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a midday sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a midday sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=midday&sound=ocean
+4 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=4&phase=midday&sound=ocean`
 
 </details>
 
@@ -915,35 +995,40 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 4 hour timer, 4 hour study timer, sunset ambience, अध्ययन टाइमर
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a sunset sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=sunset&sound=ocean
+8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
-   2:00:00 Focus 5
-   2:25:00 Break 5
-   2:30:00 Focus 6
-   2:55:00 Break 6
-   3:00:00 Focus 7
-   3:25:00 Break 7
-   3:30:00 Focus 8
-   3:55:00 Break 8
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
+2:00:00 Focus 5
+2:25:00 Break 5
+2:30:00 Focus 6
+2:55:00 Break 6
+3:00:00 Focus 7
+3:25:00 Break 7
+3:30:00 Focus 8
+3:55:00 Break 8
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=sunset&sound=ocean`
 
 </details>
 
@@ -960,35 +1045,40 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 4 hour timer, 4 hour study timer, midnight ambience, temporizador de estudio
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a midnight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=midnight&sound=ocean
+8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
-   2:00:00 Focus 5
-   2:25:00 Break 5
-   2:30:00 Focus 6
-   2:55:00 Break 6
-   3:00:00 Focus 7
-   3:25:00 Break 7
-   3:30:00 Focus 8
-   3:55:00 Break 8
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
+2:00:00 Focus 5
+2:25:00 Break 5
+2:30:00 Focus 6
+2:55:00 Break 6
+3:00:00 Focus 7
+3:25:00 Break 7
+3:30:00 Focus 8
+3:55:00 Break 8
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=midnight&sound=ocean`
 
 </details>
 
@@ -1005,35 +1095,40 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 4 hour timer, 4 hour study timer, sunrise ambience, مؤقت للدراسة
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a sunrise sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a sunrise sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=sunrise&sound=ocean
+8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
-   2:00:00 Focus 5
-   2:25:00 Break 5
-   2:30:00 Focus 6
-   2:55:00 Break 6
-   3:00:00 Focus 7
-   3:25:00 Break 7
-   3:30:00 Focus 8
-   3:55:00 Break 8
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
+2:00:00 Focus 5
+2:25:00 Break 5
+2:30:00 Focus 6
+2:55:00 Break 6
+3:00:00 Focus 7
+3:25:00 Break 7
+3:30:00 Focus 8
+3:55:00 Break 8
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=sunrise&sound=ocean`
 
 </details>
 
@@ -1050,35 +1145,40 @@ Press play, start your block, and let the sand do the counting.
 
 > 25/5 pomodoro, 25 5 pomodoro, 25 minute pomodoro, 4 hour timer, 4 hour study timer, midday ambience, temporizador de estudo
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a midday sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 25/5 focus blocks with ocean waves under a midday sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=midday&sound=ocean
+8 focus blocks of 25 minutes, a 5-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session drifts from late morning into afternoon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   25:00 Break 1
-   30:00 Focus 2
-   55:00 Break 2
-   1:00:00 Focus 3
-   1:25:00 Break 3
-   1:30:00 Focus 4
-   1:55:00 Break 4
-   2:00:00 Focus 5
-   2:25:00 Break 5
-   2:30:00 Focus 6
-   2:55:00 Break 6
-   3:00:00 Focus 7
-   3:25:00 Break 7
-   3:30:00 Focus 8
-   3:55:00 Break 8
+0:00 Focus 1
+25:00 Break 1
+30:00 Focus 2
+55:00 Break 2
+1:00:00 Focus 3
+1:25:00 Break 3
+1:30:00 Focus 4
+1:55:00 Break 4
+2:00:00 Focus 5
+2:25:00 Break 5
+2:30:00 Focus 6
+2:55:00 Break 6
+3:00:00 Focus 7
+3:25:00 Break 7
+3:30:00 Focus 8
+3:55:00 Break 8
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=25&break=5&blocks=8&phase=midday&sound=ocean`
 
 </details>
 
@@ -1095,21 +1195,26 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 1 hour timer, 1 hour study timer, sunset ambience, 핑크 노이즈 공부
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-1 hour of ambient focus under a sunset sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+1 hour Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=1&phase=sunset&sound=ocean
+One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
+0:00 Focus 1
+50:00 Break 1
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=1&phase=sunset&sound=ocean`
 
 </details>
 
@@ -1126,21 +1231,26 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 1 hour timer, 1 hour study timer, midnight ambience, timer belajar
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-1 hour of ambient focus under a midnight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+1 hour Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=1&phase=midnight&sound=ocean
+One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
+0:00 Focus 1
+50:00 Break 1
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=1&phase=midnight&sound=ocean`
 
 </details>
 
@@ -1157,21 +1267,26 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 1 hour timer, 1 hour study timer, twilight ambience, çalışma zamanlayıcısı
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-1 hour of ambient focus under a twilight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+1 hour Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a twilight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=1&phase=twilight&sound=ocean
+One 50-minute block, with a soft bell to open and close it. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
+0:00 Focus 1
+50:00 Break 1
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=1&phase=twilight&sound=ocean`
 
 </details>
 
@@ -1188,25 +1303,30 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 3 hour timer, 3 hour study timer, sunset ambience, ポモドーロタイマー
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-3 hours of ambient focus under a sunset sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+3 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=3&phase=sunset&sound=ocean
+3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=3&phase=sunset&sound=ocean`
 
 </details>
 
@@ -1223,25 +1343,30 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 3 hour timer, 3 hour study timer, midnight ambience, अध्ययन टाइमर
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-3 hours of ambient focus under a midnight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+3 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=3&phase=midnight&sound=ocean
+3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=3&phase=midnight&sound=ocean`
 
 </details>
 
@@ -1258,25 +1383,30 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 3 hour timer, 3 hour study timer, twilight ambience, temporizador de estudio
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-3 hours of ambient focus under a twilight sky, with ocean waves.
-Press play, start your block, and let the sand do the counting.
+3 hours Study With Me pomodoro timer — 50/10 focus blocks with ocean waves under a twilight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=3&phase=twilight&sound=ocean
+3 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session deepens from the last light into dusk as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=3&phase=twilight&sound=ocean`
 
 </details>
 
@@ -1293,23 +1423,28 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, sunset ambience, silent timer, مؤقت للدراسة
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a sunset sky, with no music, bell only.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with no music, bell only under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=sunset&sound=
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=sunset&sound=`
 
 </details>
 
@@ -1326,23 +1461,28 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 2 hour timer, 2 hour study timer, midnight ambience, silent timer, temporizador de estudo
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-2 hours of ambient focus under a midnight sky, with no music, bell only.
-Press play, start your block, and let the sand do the counting.
+2 hours Study With Me pomodoro timer — 50/10 focus blocks with no music, bell only under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=midnight&sound=
+2 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=2&phase=midnight&sound=`
 
 </details>
 
@@ -1359,27 +1499,32 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, sunset ambience, silent timer, no music pomodoro, 핑크 노이즈 공부
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a sunset sky, with no music, bell only.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with no music, bell only under a sunset sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=sunset&sound=
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins in late-afternoon light and sinks to the horizon as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=sunset&sound=`
 
 </details>
 
@@ -1396,26 +1541,31 @@ Press play, start your block, and let the sand do the counting.
 
 > 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, midnight ambience, silent timer, timer belajar
 
-**Description:**
+**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,
+originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the
+head below changes per video, and it goes FIRST because the opening two lines are what appear in
+search and above the "…more" fold.
 
 ```
-4 hours of ambient focus under a midnight sky, with no music, bell only.
-Press play, start your block, and let the sand do the counting.
+4 hours Study With Me pomodoro timer — 50/10 focus blocks with no music, bell only under a midnight sky.
+A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.
 
-▶ Run this exact session yourself — free, no sign-up:
-   https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=midnight&sound=
+4 focus blocks of 50 minutes, a 10-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session settles from dusk into the small hours as you work.
 
 ⏱ Chapters
-   0:00 Focus 1
-   50:00 Break 1
-   1:00:00 Focus 2
-   1:50:00 Break 2
-   2:00:00 Focus 3
-   2:50:00 Break 3
-   3:00:00 Focus 4
-   3:50:00 Break 4
+0:00 Focus 1
+50:00 Break 1
+1:00:00 Focus 2
+1:50:00 Break 2
+2:00:00 Focus 3
+2:50:00 Break 3
+3:00:00 Focus 4
+3:50:00 Break 4
 
-{{BOILERPLATE}}
 ```
+
+> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip
+> `LINKS_OK = true` at the top of gen-roadmap.cjs the day verification lands and regenerate —
+> every row gains its deep link. Preset for this row: `https://sustaintimer.com/?mode=pomodoro&work=50&break=10&blocks=4&phase=midnight&sound=`
 
 </details>

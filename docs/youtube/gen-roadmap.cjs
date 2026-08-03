@@ -6,6 +6,10 @@
 //
 //   ROUND-HOUR track  → Custom mode, which CAN hit 60/120/180… exactly. Chases "N hour timer" queries.
 //   INTERVAL track    → Pomodoro mode, titled with its TRUE length. Chases "50/10 pomodoro" queries.
+// Flip to true the day YouTube grants link posting (advanced features). Until then descriptions carry NO
+// URL: an unverified channel cannot post them, and a stripped or blocked link is worse than none at all.
+// The preset for each row is still printed underneath, so nothing is lost — just not pasted yet.
+const LINKS_OK = false;
 const fs = require('fs');
 eval(fs.readFileSync(__dirname + '/../../web-astro/public/js/plan.js', 'utf8'));   // sets module.exports
 const P = module.exports;
@@ -115,6 +119,28 @@ const chapters = r => { const plan=P.buildPlan(stOf(r)); const out=[]; let t=0,f
   return out; };
 const nBreaks = r => P.buildPlan(stOf(r)).filter(s=>s.kind!=='focus').length;
 
+// One human sentence: the shape of the session, then what the sky actually does. Both are read off the
+// REAL plan and the light's drift window, so the description can never disagree with the video.
+const DRIFT = {
+  predawn:'begins in the dark hour before dawn and eases toward first light',
+  sunrise:'begins at first light and warms into full morning',
+  midday:'drifts from late morning into afternoon',
+  sunset:'begins in late-afternoon light and sinks to the horizon',
+  twilight:'deepens from the last light into dusk',
+  midnight:'settles from dusk into the small hours',
+  intoday:'warms from pre-dawn all the way into full daylight',
+  intonight:'deepens from sunset into night',
+  wholeday:'passes through a whole day, dawn through to midnight',
+};
+const sentence = r => {
+  const p = P.buildPlan(stOf(r));
+  const f = p.filter(x => x.kind === 'focus'), b = p.filter(x => x.kind !== 'focus');
+  const shape = f.length > 1
+    ? `${f.length} focus blocks of ${f[0].min} minutes` + (b.length ? `, a ${b[0].min}-minute break after each` : '') + ', and a soft bell on every change.'
+    : `One ${f.length ? f[0].min + '-minute' : ''} block, with a soft bell to open and close it.`;
+  return shape + ' The sky moves the whole way through — this session '
+       + (DRIFT[r.light] || 'follows the day') + ' as you work.';
+};
 const slug = r => (r.kind==='custom' ? `C${r.hours}h` : `P${r.iv.replace('/','-')}x${r.blocks}`)
   + `_${r.light}_${r.sound.replace(/\+/g,'-')}`;
 // ── Title formula ───────────────────────────────────────────────────────────────────────────────────
@@ -182,11 +208,21 @@ for (const r of rows.filter(x=>x.phase==='1')) { bi++;
     + `**Setup:** ${setupTxt} · ${LIGHT[r.light].setup} · ${soundSetup(r.sound)}\n\n`
     + `**Verified length: ${durPlain(m)} exactly.**\n\n**Title:** ${title(r)}\n\n`
     + `**Extra tags** — paste after the Upload-defaults tags (${tags(r,bi).length}/${TAG_BUDGET} chars):\n\n> ${tags(r,bi)}\n\n`
-    + `**Description:**\n\n\`\`\`\n`
-    + `${durPlain(m).replace(/^\w/,c=>c.toUpperCase())} of ambient focus under a ${LIGHT[r.light].cap.toLowerCase()} sky, with ${SOUND[r.sound].toLowerCase()}.\n`
-    + `Press play, start your block, and let the sand do the counting.\n\n`
-    + `▶ Run this exact session yourself — free, no sign-up:\n   ${presetURL(r)}\n\n`
-    + `⏱ Chapters\n${ch.map(c=>'   '+c).join('\n')}\n\n{{BOILERPLATE}}\n\`\`\`\n\n</details>\n`;
+    + `**Description — paste ABOVE the Upload-defaults text.** The standing block (channel blurb,\n`
+    + `originality declaration, hashtags) lives in Upload defaults and pre-fills every video; only the\n`
+    + `head below changes per video, and it goes FIRST because the opening two lines are what appear in\n`
+    + `search and above the "…more" fold.\n\n\`\`\`\n`
+    + `${durPlain(m)} Study With Me pomodoro timer — ${r.kind==='pomo' ? r.iv + ' focus blocks' : 'timed focus blocks'} `
+    + `with ${SOUND[r.sound].toLowerCase()} under a ${LIGHT[r.light].cap.toLowerCase()} sky.\n`
+    + `A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.\n\n`
+    + `${sentence(r)}\n\n`
+    + `⏱ Chapters\n${ch.join('\n')}\n\n`
+    + (LINKS_OK ? `▶ Run this exact session free:\n   ${presetURL(r).replace(/^https:\/\//, '')}\n` : '')
+    + `\`\`\`\n`
+    + (LINKS_OK ? '' : `\n> ⚠️ No preset link: this channel cannot post links yet (advanced features pending). Flip\n`
+        + `> \`LINKS_OK = true\` at the top of gen-roadmap.cjs the day verification lands and regenerate —\n`
+        + `> every row gains its deep link. Preset for this row: \`${presetURL(r)}\`\n`)
+    + `\n</details>\n`;
 }
 
 const head = fs.readFileSync(__dirname + '/_head.md','utf8');
