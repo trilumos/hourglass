@@ -11,12 +11,12 @@ eval(fs.readFileSync(__dirname + '/../../web-astro/public/js/plan.js', 'utf8'));
 const P = module.exports;
 
 const LIGHT = {
-  predawn:  { cap:'Pre-Dawn',      emo:'🌌', setup:'Hold one light → Pre-dawn',  cols:['Ivory #f2ecdd','White #ffffff'] },
-  sunrise:  { cap:'Sunrise',       emo:'🌅', setup:'Hold one light → Sunrise',   cols:['Ivory #f2ecdd','Charcoal #20242e'] },
-  midday:   { cap:'Midday',        emo:'☀️', setup:'Hold one light → Midday',    cols:['Charcoal #20242e','White #ffffff'] },
-  sunset:   { cap:'Sunset',        emo:'🌇', setup:'Hold one light → Sunset',    cols:['Ivory #f2ecdd','White #ffffff'] },
-  twilight: { cap:'Twilight',      emo:'🌆', setup:'Hold one light → Twilight',  cols:['Gold #eaca78','Ivory #f2ecdd'] },
-  midnight: { cap:'Midnight',      emo:'🌙', setup:'Hold one light → Midnight',  cols:['Gold #eaca78','White #ffffff'] },
+  predawn:  { cap:'Pre-Dawn',      emo:'🌌', setup:'Time of day → Pre-dawn',  cols:['Ivory #f2ecdd','White #ffffff'] },
+  sunrise:  { cap:'Sunrise',       emo:'🌅', setup:'Time of day → Sunrise',   cols:['Ivory #f2ecdd','Charcoal #20242e'] },
+  midday:   { cap:'Midday',        emo:'☀️', setup:'Time of day → Midday',    cols:['Charcoal #20242e','White #ffffff'] },
+  sunset:   { cap:'Sunset',        emo:'🌇', setup:'Time of day → Sunset',    cols:['Ivory #f2ecdd','White #ffffff'] },
+  twilight: { cap:'Twilight',      emo:'🌆', setup:'Time of day → Twilight',  cols:['Gold #eaca78','Ivory #f2ecdd'] },
+  midnight: { cap:'Midnight',      emo:'🌙', setup:'Time of day → Midnight',  cols:['Gold #eaca78','White #ffffff'] },
   intoday:  { cap:'Dawn to Day',   emo:'🌄', setup:'Cycle → Into the day',       cols:['Ivory #f2ecdd'] },
   intonight:{ cap:'Dusk to Night', emo:'🌃', setup:'Cycle → Into the night',     cols:['Ivory #f2ecdd','Gold #eaca78'] },
   wholeday: { cap:'Full Day',      emo:'🌍', setup:'Cycle → A whole day',        cols:['Ivory #f2ecdd'] },

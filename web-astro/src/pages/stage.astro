@@ -204,7 +204,20 @@ import { LQIP } from '../scene/lqip.js';
         // recording ends ON the thank-you card rather than on the fade-out or on black.
         var OUTRO_STOP_MS = 5000;
         var PHASE_NAME = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
-        var PHASE_PHRASE = ['a pre-dawn sky','a sunrise sky','a midday sky','a sunset sky','a twilight sky','a midnight sky'];
+        // A picked time of day is NOT a static sky. Session.astro's spanDrift() moves the light across that
+        // phase's witness window for the whole session (PH_SPAN: sunrise 5.0→8.2, sunset 16.3→18.8, …), so
+        // you watch the phase HAPPEN. Saying "a sunrise sky" undersold the one thing no other timer channel
+        // has — the sky actually travels.
+        // Every phrase starts "a sky ..." so it reads correctly after "under", and every one describes
+        // MOVEMENT, because that is what actually happens.
+        var PHASE_PHRASE = [
+          'a sky easing out of the dark hour into first light',
+          'a sky moving from first light into full morning',
+          'a sky drifting from late morning into afternoon',
+          'a sky sinking from afternoon light down to the horizon',
+          'a sky deepening from the last light into dusk',
+          'a sky settling from dusk into the small hours'
+        ];
         var CYCLE_PHRASE = {
           dawn:'a sky that warms from pre-dawn into full daylight',
           dusk:'a sky that deepens from sunset into night',
