@@ -33,7 +33,10 @@ import { LQIP } from '../scene/lqip.js';
       // Must run BEFORE the component modules: Session reads this class to skip the navigation guard.
       document.documentElement.classList.add('stage');
       if (/[?&]record=1\b/.test(location.search)) document.documentElement.classList.add('rec');
-      if (!location.hash) location.replace('#setup');
+      // ALWAYS start on Setup. The hash survives a reload, so `if (!location.hash)` meant that
+      // refreshing mid-session simply re-entered the session — leaving no way out of a stuck take
+      // inside OBS's chrome-less Interact window.
+      if (location.hash !== '#setup') location.replace('#setup');
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -197,6 +200,9 @@ import { LQIP } from '../scene/lqip.js';
         // the ONLY on-screen text in the whole capture, and relevance counts on-screen text in the first
         // seconds — so the config line doubles as the algorithm's read on what the video is.
         var INTRO_MS = 10000, OUTRO_MS = 7000;
+        // The card is on screen for OUTRO_MS, but OBS is told to stop at OUTRO_STOP_MS so the
+        // recording ends ON the thank-you card rather than on the fade-out or on black.
+        var OUTRO_STOP_MS = 5000;
         var PHASE_NAME = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
         var PHASE_PHRASE = ['a pre-dawn sky','a sunrise sky','a midday sky','a sunset sky','a twilight sky','a midnight sky'];
         var CYCLE_PHRASE = {
@@ -345,32 +351,67 @@ import { LQIP } from '../scene/lqip.js';
         addEventListener('pointerdown', function(){ if (location.hash === '#session') goFull(); });
         addEventListener('keydown', function(){ if (location.hash === '#session') goFull(); });
 
-        // Completion → fade to black, then tell OBS to stop.
-        // window.obsstudio is injected ONLY inside an OBS Browser Source, so this is a no-op in a normal
-        // browser. It needs the source's "Page permissions" set to ALL (Advanced access), otherwise the
-        // control functions are not exposed. We wait for the 2.4s fade to finish so the recording always
-        // ends on clean black, and we only ever fire once.
-        var done = false;
+        // window.obsstudio is injected ONLY inside an OBS Browser Source, so all of this is a no-op in a
+        // normal browser. It needs the source's Page permissions set to **Full access to OBS** — per the
+        // obs-browser README, startRecording/stopRecording require ALL permissions, and "Advanced access"
+        // is one level short. The symptom of getting that wrong is exact and misleading: Begin works, the
+        // session runs perfectly, and the record timer simply never starts.
+        function obsStop(){
+          try {
+            var obs = window.obsstudio;
+            if (obs && typeof obs.stopRecording === 'function') obs.stopRecording();
+            if (obs && typeof obs.stopStreaming === 'function' && /[?&]stopstream=1\b/.test(location.search)) obs.stopStreaming();
+          } catch (e) {}
+        }
+        // Back to Setup, fully re-armed for the next capture.
+        function rearm(){
+          done = false; counting = false;
+          clearTimeout(introT); clearTimeout(stopT); clearTimeout(fadeT); clearTimeout(homeT);
+          root.classList.remove('stage-intro'); root.classList.remove('stage-count');
+          root.classList.remove('stage-outro'); root.classList.remove('stage-done');
+          location.hash = 'setup';
+        }
+
+        // ── Completion ──────────────────────────────────────────────────────────────────────────────
+        // The tape should END on the thank-you card, not on black. So the card stays up the full 7 s for
+        // anyone watching the stage live, but the STOP signal fires at 5 s — the last thing on the
+        // recording is the card, with the fade and the re-arm happening after OBS has already closed the
+        // file. Without that split, every video ended with dead black frames.
+        var done = false, stopT = null, fadeT = null, homeT = null;
         setInterval(function () {
-          if (done || location.hash !== '#session' || !window.SustainScene || !SustainScene.sampleSession) return;
+          // `counting` covers the intro card AND the 3-2-1: during those the previous session's engine
+          // state can still read done:true for a beat before restartSession() parks the new one at zero.
+          // Without this guard a second capture could fire its outro instantly and record 12 s of card.
+          if (done || counting || location.hash !== '#session' || !window.SustainScene || !SustainScene.sampleSession) return;
           var r = SustainScene.sampleSession();
           if (!r || !r.done) return;
           done = true;
-          // Session over → thank-you card over the blurred scene (7s), THEN the fade to black, then stop.
           fillOutro();
           root.classList.add('stage-outro');
-          setTimeout(function () {
+
+          stopT = setTimeout(obsStop, OUTRO_STOP_MS);          // 5 s — recording ends on the card
+          fadeT = setTimeout(function () {                     // 7 s — card has had its full run
             root.classList.remove('stage-outro');
-            root.classList.add('stage-done');
-            setTimeout(function () {
-              try {
-                var obs = window.obsstudio;
-                if (obs && typeof obs.stopRecording === 'function') obs.stopRecording();
-                if (obs && typeof obs.stopStreaming === 'function' && /[?&]stopstream=1\b/.test(location.search)) obs.stopStreaming();
-              } catch (e) {}
-            }, 3200);
+            root.classList.add('stage-done');                  // 2.4 s fade to black
+            // ...and don't sit on black forever: go back to Setup so the next row can be set up
+            // immediately. Only after the fade has finished, so the stage still reads as "finished".
+            homeT = setTimeout(rearm, 3200);
           }, OUTRO_MS);
         }, 1000);
+
+        // ── Escape hatch ────────────────────────────────────────────────────────────────────────────
+        // OBS's Interact window has NO browser chrome — no Back button, no address bar — so a running
+        // session was a dead end. Refresh did not help either: the #session hash survives a reload, so
+        // the page just re-entered the session (which is why the bootstrap above now forces #setup on
+        // every load). Esc or Backspace bails out, and stops any recording in flight so abandoning a take
+        // cannot leave OBS quietly recording the Setup screen into a huge orphan file.
+        addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape' && e.key !== 'Backspace') return;
+          if (location.hash !== '#session') return;
+          e.preventDefault();
+          obsStop();
+          rearm();
+        });
       })();
     </script>
   </body>
