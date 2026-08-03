@@ -282,7 +282,10 @@ const title = r => {
 };
 for (const r of rows) if (title(r).length > 100)
   throw new Error(`title still too long (${title(r).length}): ${title(r)}`);
-const TAG_BUDGET = 500-353;
+// 500 is YouTube's hard cap on the whole tag field. The Upload-defaults block pre-fills 281 of it
+// (the channel-wide set: pomodoro, pomodoro timer, study with me, deep focus, ...), so this is what
+// is left for the per-video tags pasted after it. Re-measure if that default block is ever edited.
+const TAG_BUDGET = 500-281;
 const NONEN = ['ポモドーロタイマー','अध्ययन टाइमर','temporizador de estudio','مؤقت للدراسة',
                'temporizador de estudo','핑크 노이즈 공부','timer belajar','çalışma zamanlayıcısı'];
 // Tags carry what the title could not fit, in measured-volume order. The title already owns
