@@ -231,8 +231,12 @@ import { LQIP } from '../scene/lqip.js';
             <label>Bottom right <span>left-aligned from the axis</span><input id="thBR" type="text" maxlength="22"></label>
             <label class="th-rng">Bottom size <b id="thBotVal"></b>
               <input id="thBotSize" type="range" min="20" max="90" step="1"></label>
-            <label class="th-rng">Gap from axis <b id="thGapVal"></b>
-              <input id="thGap" type="range" min="0" max="220" step="1"></label>
+            <label class="th-rng">Left gap <b id="thGapLVal"></b>
+              <input id="thGapL" type="range" min="0" max="260" step="1"></label>
+            <label class="th-rng">Right gap <b id="thGapRVal"></b>
+              <input id="thGapR" type="range" min="0" max="260" step="1"></label>
+            <div class="th-seg">Widths
+              <button id="thEven" class="on">Equalise</button><button id="thNatural">Natural</button></div>
             <div class="th-seg">Divider
               <button data-sep="bar" class="on">Bar</button><button data-sep="dot">Dot</button><button data-sep="none">None</button>
             </div>
@@ -558,7 +562,7 @@ import { LQIP } from '../scene/lqip.js';
         var TH = {
           top: { x:0.5, y:0.20, size:0.135 },
           l2r: 0.52,                 // line 2 size, relative to line 1
-          bot: { y:0.90, size:0.045, gap:0.115, sep:'bar' },   // gap = distance of each word FROM THE AXIS
+          bot: { y:0.90, size:0.045, gapL:0.115, gapR:0.115, sep:'bar', even:true },  // even = track both words to ONE width
           occ: 1,                    // how strongly the hourglass hides line 2 (0 = not at all)
           l1:'', l2:'', bl:'', br:''
         };
@@ -601,11 +605,17 @@ import { LQIP } from '../scene/lqip.js';
         function thPaintOver(o, W, H){
           thType(o, H);
           var ax = W * thAxis(), s3 = Math.round(H * TH.bot.size), y = H * TH.bot.y;
-          var gap = W * TH.bot.gap;
           o.font = '550 ' + s3 + 'px ' + TH_FONT;
-          o.letterSpacing = Math.round(s3*0.22) + 'px';
-          o.textAlign = 'right'; o.fillText(TH.bl, ax - gap, y);
-          o.textAlign = 'left';  o.fillText(TH.br, ax + gap, y);
+          var base = s3 * 0.22;
+          // TRULY equidistant, inner AND outer, is impossible with words of different length — unless the
+          // two words occupy the SAME width. So track the shorter one out until it does. Letterspacing is
+          // the classic typographic fix for exactly this, and on all-caps display type it reads as
+          // deliberate rather than stretched.
+          var sp = thTrack(o, s3, base);
+          o.letterSpacing = sp.l + 'px';
+          o.textAlign = 'right'; o.fillText(TH.bl, ax - W*TH.bot.gapL, y);
+          o.letterSpacing = sp.r + 'px';
+          o.textAlign = 'left';  o.fillText(TH.br, ax + W*TH.bot.gapR, y);
           o.textAlign = 'center'; o.letterSpacing = '0px';
           if (TH.bot.sep === 'bar'){
             o.fillRect(Math.round(ax - Math.max(1, W/1000)), y - s3*0.55, Math.max(2, W/500), s3*1.1);
@@ -620,6 +630,20 @@ import { LQIP } from '../scene/lqip.js';
             o.beginPath(); o.moveTo(ax, 0); o.lineTo(ax, H); o.stroke();
             o.restore();
           }
+        }
+        // Returns the letterSpacing (px) for each bottom word so both render to one common width.
+        // Measured on a scratch context at the real font/size, so it is exact rather than estimated.
+        var _mc = document.createElement('canvas').getContext('2d');
+        function thTrack(o, s3, base){
+          var out = { l: Math.round(base), r: Math.round(base) };
+          if (!TH.bot.even || !TH.bl || !TH.br) return out;
+          _mc.font = '550 ' + s3 + 'px ' + TH_FONT;
+          var meas = function(txt, sp){ _mc.letterSpacing = sp + 'px'; return _mc.measureText(txt).width; };
+          var wl = meas(TH.bl, base), wr = meas(TH.br, base);
+          var target = Math.max(wl, wr);
+          if (wl < target) out.l = Math.round(base + (target - wl) / Math.max(1, TH.bl.length));
+          if (wr < target) out.r = Math.round(base + (target - wr) / Math.max(1, TH.br.length));
+          return out;
         }
         function thAxis(){ var r = SustainScene.thumbCropRect(16/9); return r && r.axis != null ? r.axis : 0.5; }
         var thRAF = 0;
@@ -642,9 +666,13 @@ import { LQIP } from '../scene/lqip.js';
         }
         // Drag whichever block you grabbed; wheel resizes it.
         var thDragging = null, thGuide = true;
+        // Which handle did you grab? Top block owns the upper ~2/3; below that, whichever SIDE of the
+        // hourglass axis you clicked — so the two bottom words drag independently.
         function thHit(e){
-          var r = thCv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height;
-          return y < 0.62 ? TH.top : TH.bot;          // top block owns the upper ~2/3
+          var r = thCv.getBoundingClientRect();
+          var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+          if (y < 0.62) return { kind:'top' };
+          return { kind:'bot', side: x < thAxis() ? 'L' : 'R' };
         }
         thCv.addEventListener('pointerdown', function(e){
           thDragging = thHit(e); thCv.setPointerCapture(e.pointerId);
@@ -652,17 +680,26 @@ import { LQIP } from '../scene/lqip.js';
         thCv.addEventListener('pointermove', function(e){
           if (!thDragging) return;
           var r = thCv.getBoundingClientRect();
-          var nx = Math.max(0.06, Math.min(0.94, (e.clientX - r.left) / r.width));
+          var nx = Math.max(0.02, Math.min(0.98, (e.clientX - r.left) / r.width));
+          var ny = Math.max(0.04, Math.min(0.97, (e.clientY - r.top) / r.height));
           var ax = thAxis();
-          if (Math.abs(nx - ax) < 0.012) nx = ax;      // snap to the glass centreline
-          thDragging.x = nx;
-          thDragging.y = Math.max(0.06, Math.min(0.94, (e.clientY - r.top) / r.height));
+          if (thDragging.kind === 'top'){
+            if (Math.abs(nx - ax) < 0.012) nx = ax;    // snap to the glass centreline
+            TH.top.x = nx; TH.top.y = ny;
+          } else {
+            // Horizontal drag becomes that side's OWN gap; vertical is shared so the row stays level.
+            if (thDragging.side === 'L') TH.bot.gapL = Math.max(0, ax - nx);
+            else                         TH.bot.gapR = Math.max(0, nx - ax);
+            TH.bot.y = ny; thSync();
+          }
         });
         addEventListener('pointerup', function(){ thDragging = null; });
         thCv.addEventListener('wheel', function(e){
           e.preventDefault();
-          var b = thHit(e), k = e.deltaY < 0 ? 1.06 : 1/1.06;
-          b.size = Math.max(0.02, Math.min(0.30, b.size * k));
+          var h = thHit(e), k = e.deltaY < 0 ? 1.06 : 1/1.06;
+          var b = h.kind === 'top' ? TH.top : TH.bot;
+          b.size = Math.max(0.015, Math.min(0.30, b.size * k));
+          thSync();
         }, { passive:false });
 
         // Sliders, not just the scroll wheel: a NUMBER is what keeps 90 thumbnails identical, and the
@@ -672,7 +709,8 @@ import { LQIP } from '../scene/lqip.js';
           $t('thL2Size').value  = Math.round(TH.l2r*100);        $t('thL2Val').textContent  = Math.round(TH.l2r*100);
           $t('thOcc').value     = Math.round(TH.occ*100);        $t('thOccVal').textContent = Math.round(TH.occ*100) + '%';
           $t('thBotSize').value = Math.round(TH.bot.size*1000);  $t('thBotVal').textContent = Math.round(TH.bot.size*1000);
-          $t('thGap').value     = Math.round(TH.bot.gap*1000);   $t('thGapVal').textContent = Math.round(TH.bot.gap*1000);
+          $t('thGapL').value = Math.round(TH.bot.gapL*1000); $t('thGapLVal').textContent = Math.round(TH.bot.gapL*1000);
+          $t('thGapR').value = Math.round(TH.bot.gapR*1000); $t('thGapRVal').textContent = Math.round(TH.bot.gapR*1000);
         }
         [[thL1,'l1'],[thL2,'l2'],[thBL,'bl'],[thBR,'br']].forEach(function(p){
           p[0].addEventListener('input', function(){ TH[p[1]] = p[0].value; });
@@ -682,16 +720,23 @@ import { LQIP } from '../scene/lqip.js';
         rng('thL2Size',  function(v){ TH.l2r = v/100; });
         rng('thOcc',     function(v){ TH.occ = v/100; });
         rng('thBotSize', function(v){ TH.bot.size = v/1000; });
-        rng('thGap',     function(v){ TH.bot.gap = v/1000; });
+        rng('thGapL',    function(v){ TH.bot.gapL = v/1000; });
+        rng('thGapR',    function(v){ TH.bot.gapR = v/1000; });
         Array.prototype.forEach.call(document.querySelectorAll('.th-seg button'), function(b){
           b.addEventListener('click', function(){
             TH.bot.sep = b.dataset.sep;
             Array.prototype.forEach.call(document.querySelectorAll('.th-seg button'), function(x){ x.classList.toggle('on', x===b); });
           });
         });
+        (function(){
+          var be = $t('thEven'), bn = $t('thNatural');
+          var set = function(v){ TH.bot.even = v; be.classList.toggle('on', v); bn.classList.toggle('on', !v); };
+          be.addEventListener('click', function(){ set(true); });
+          bn.addEventListener('click', function(){ set(false); });
+        })();
         document.getElementById('thumbReset').addEventListener('click', function(){
           TH.top = { x:0.5, y:0.20, size:0.135 }; TH.l2r = 0.52; TH.occ = 1;
-          TH.bot = { y:0.90, size:0.045, gap:0.115, sep:TH.bot.sep };
+          TH.bot = { y:0.90, size:0.045, gapL:0.115, gapR:0.115, sep:TH.bot.sep, even:TH.bot.even };
           thDefaults();
         });
         document.getElementById('thumbClose').addEventListener('click', thClose);

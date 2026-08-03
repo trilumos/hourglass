@@ -21,7 +21,12 @@ list is one theme's catalogue)*
 3. Press **Begin**. It fullscreens, counts 3-2-1, records itself, and stops itself on the fade to black.
 4. Upload the file as-is. Paste the **Title**, the **Keyword head + the standing tag block**, and the
    description from the matching block below.
-5. Tick `☐ → ☑` and drop the YouTube video ID in the last column.
+5. **Upload as UNLISTED.** YouTube processes every upload in low quality first and only builds the HD
+   renditions afterwards — hours later on a 2-hour file (Google's own example: a 60-minute video can take
+   up to 4 hours). Publishing before that finishes means your first viewers judge a 360p version of a
+   channel whose entire appeal is visual, and those first impressions are exactly what the algorithm
+   reads. Check the player's gear menu; when **1080p** is listed, switch the video to Public.
+6. Tick `☐ → ☑` and drop the YouTube video ID in the last column.
 
 **No-music videos are their own rows** (`…_bell`, audio column reads *ALL sounds OFF*), not a second export of
 an existing capture. `pomodoro timer no music` is a real query (5,302/mo) and it deserves a real capture —
