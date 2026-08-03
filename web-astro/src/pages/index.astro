@@ -220,6 +220,18 @@ const appLd = {
         // Setup's Back button always goes HOME (not history.back(), which could land on a spent #session).
         var back = document.getElementById('back');
         if (back) back.addEventListener('click', function (e){ e.preventDefault(); location.hash = 'home'; });
+        // The brandmark means "take me home", which includes the SCROLL. Its href="#home" alone cannot do
+        // that: on Home the hash does not change, so apply() early-returns as an in-page anchor; and coming
+        // back from Setup, sync() only resets scroll for s!=='home'. Either way the landing stays parked
+        // wherever it was left. So move the scroll here, explicitly. (All instances — the bar and the
+        // burger menu each render one.)
+        Array.prototype.forEach.call(document.querySelectorAll('.brandmark'), function (b){
+          b.addEventListener('click', function (e){
+            e.preventDefault();
+            if (screen() !== 'home') location.hash = 'home';
+            scrollTo({ top:0, left:0, behavior:'instant' });   // a logo click should land, not animate
+          });
+        });
         addEventListener('hashchange', apply);                 // View-Transition cross-fade (Back/swipe fire it too)
       })();
     </script>

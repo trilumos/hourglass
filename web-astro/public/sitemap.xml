@@ -3,6 +3,6 @@
      (master spec §3.1: /pomodoro-timer, /lofi-co-alternative, /guides/*) ship. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://sustaintimer.com/</loc><priority>1.0</priority></url>
-  <url><loc>https://sustaintimer.com/privacy</loc><priority>0.3</priority></url>
-  <url><loc>https://sustaintimer.com/terms</loc><priority>0.3</priority></url>
+  <url><loc>https://sustaintimer.com/privacy/</loc><priority>0.3</priority></url>
+  <url><loc>https://sustaintimer.com/terms/</loc><priority>0.3</priority></url>
 </urlset>

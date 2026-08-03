@@ -132,7 +132,7 @@ const esc = s => s.replace(/\|/g,'\\|');
 let tbl='', cur='', i=0, n=0;
 for (const r of rows) {
   if (r.phase!==cur){ cur=r.phase; const c=rows.filter(x=>x.phase===cur).length;
-    tbl += `\n### ${PH[cur][0].split(' — ')[0]} — ${PH[cur][0]}\n\n${PH[cur][1]}\n\n`
+    tbl += `\n### ${PH[cur][0]}\n\n${PH[cur][1]}\n\n`
       + `**${c} videos** (one capture each) · ~${(c/30).toFixed(1)} months at one capture a day\n\n`
       + '| ✓ | # | ID | Mode · timer · length · breaks | Time of day · Sun&moon | Numerals: show · place · fill · font · sep · colour | Audio (per-sound · master) | Title | Extra tags | Video ID |\n'
       + '|---|---|---|---|---|---|---|---|---|---|\n'; }

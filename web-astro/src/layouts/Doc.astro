@@ -12,7 +12,10 @@ const title = (frontmatter?.title ?? 'Sustain') + ' — Sustain';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={frontmatter?.description ?? ''} />
-    <link rel="canonical" href={SITE + Astro.url.pathname.replace(/\/$/, '')} />
+    {/* Canonical must be the URL actually SERVED. Pages 308-redirects /privacy -> /privacy/, so stripping
+        the trailing slash here pointed the canonical at a redirect — Google then had to resolve
+        sitemap -> redirect -> canonical -> redirect. Use the real pathname. */}
+    <link rel="canonical" href={SITE + Astro.url.pathname} />
     <link rel="icon" href="/favicon-round.png" type="image/png" />
     <meta name="theme-color" content="#0a1a2a" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

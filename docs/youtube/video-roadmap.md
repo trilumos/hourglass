@@ -247,7 +247,7 @@ touches the `/stage` lead-in look.
 
 ## The list
 
-### MONTH 1 — MONTH 1 — chosen from search volume, not taste
+### MONTH 1 — chosen from search volume, not taste
 
 Every row is **Custom mode**, the only mode that lands on an exact round hour. Titles lead with **study with me** (2,533,520/mo — six times `pomodoro timer`) and carry the duration, because `2 hour timer` alone is **204,296/mo**. **Midnight earns its slots on data**, not vibes: `study with me late night` is 6,242/mo.
 
@@ -286,7 +286,7 @@ Every row is **Custom mode**, the only mode that lands on an exact round hour. T
 | ☐ | 29 | `P50-10x4_sunset_bell` | **Pomodoro** · 50/10 · blocks **4** → 4 hour · 4 breaks | Hold one light → Sunset · Show | Always · horizon · outline · Jost · dot · White #ffffff | ALL sounds OFF — bell only | 4-Hour Study With Me \| No Music 🔔 Bell Only \| Sunset Focus Timer | 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, sunset ambience, silent timer, no music pomodoro, 핑크 노이즈 공부 **(145 ch)** | |
 | ☐ | 30 | `P50-10x4_midnight_bell` | **Pomodoro** · 50/10 · blocks **4** → 4 hour · 4 breaks | Hold one light → Midnight · Show | Always · ledge · solid · Serif · none · Gold #eaca78 | ALL sounds OFF — bell only | 4-Hour Study With Me \| No Music 🔔 Bell Only \| Midnight Focus Timer | 50/10 pomodoro, 50 10 pomodoro, 50 minute pomodoro, 4 hour timer, 4 hour study timer, midnight ambience, silent timer, timer belajar **(132 ch)** | |
 
-### MONTH 2+ — MONTH 2+ — a HOLDING list, not a plan
+### MONTH 2+ — a HOLDING list, not a plan
 
 **Do not shoot these blind.** Month 1’s Analytics decide which axis actually earned its views — duration, light, or sound — and Month 2 gets rewritten from that. These rows exist so the shape of the next expansion is visible, nothing more. Re-cut them with the directory’s **Export next month** once the numbers are in.
 
