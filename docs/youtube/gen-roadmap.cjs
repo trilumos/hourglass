@@ -317,7 +317,10 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
   return {
     day: i + 1,
     id: slug(r),
-    pairId: slug({ ...r, sound: 'ocn' }),        // the silent twin points at its own session
+    // Rows are emitted interleaved (session, then its bell twin), so a twin's partner is simply the
+    // row beside it. The old version hardcoded 'ocn' and pointed every silent row at a session that
+    // does not exist the moment sand/breeze/birds sessions are in the list.
+    pairId: slug(rows[r.sound==='bell' ? i-1 : i+1]),
     silent: r.sound === 'bell',
     mode: MODE[r.kind], interval: shapeOf(r).iv, blocks: shapeOf(r).nFocus,
     setup: setupOf(r).replace(/\*\*/g,''),

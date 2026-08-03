@@ -100,7 +100,7 @@
         +   '<span class="day">Day ' + v.day + '</span>'
         +   '<span class="kind">' + (v.silent ? '🔔' : '🌊') + '</span>'
         +   '<span class="ttl">' + esc(v.title) + '</span>'
-        +   '<span class="tag' + (v.silent ? ' b' : '') + '">' + (v.silent ? 'silent' : 'ocean') + '</span>'
+        +   '<span class="tag' + (v.silent ? ' b' : '') + '">' + (v.silent ? 'silent' : esc(v.mode.toLowerCase())) + '</span>'
         +   '<span class="tag">' + esc(v.duration) + '</span>'
         + '</div>'
         + '<div class="body">'

@@ -5,7 +5,7 @@
   {
    "day": 1,
    "id": "P50-10x2h_sunset_ocn",
-   "pairId": "P50-10x2h_sunset_ocn",
+   "pairId": "P50-10x2h_sunset_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -63,7 +63,7 @@
   {
    "day": 3,
    "id": "P50-10x3h_midnight_ocn-brz",
-   "pairId": "P50-10x3h_midnight_ocn",
+   "pairId": "P50-10x3h_midnight_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -94,7 +94,7 @@
   {
    "day": 4,
    "id": "P50-10x3h_midnight_bell",
-   "pairId": "P50-10x3h_midnight_ocn",
+   "pairId": "P50-10x3h_midnight_ocn-brz",
    "silent": true,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -125,7 +125,7 @@
   {
    "day": 5,
    "id": "P50-10x4h_sunrise_ocn-brd",
-   "pairId": "P50-10x4h_sunrise_ocn",
+   "pairId": "P50-10x4h_sunrise_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -158,7 +158,7 @@
   {
    "day": 6,
    "id": "P50-10x4h_sunrise_bell",
-   "pairId": "P50-10x4h_sunrise_ocn",
+   "pairId": "P50-10x4h_sunrise_ocn-brd",
    "silent": true,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -191,7 +191,7 @@
   {
    "day": 7,
    "id": "P50-10x1h_twilight_snd-brz",
-   "pairId": "P50-10x1h_twilight_ocn",
+   "pairId": "P50-10x1h_twilight_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -218,7 +218,7 @@
   {
    "day": 8,
    "id": "P50-10x1h_twilight_bell",
-   "pairId": "P50-10x1h_twilight_ocn",
+   "pairId": "P50-10x1h_twilight_snd-brz",
    "silent": true,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -245,7 +245,7 @@
   {
    "day": 9,
    "id": "P50-10x3h_sunset_ocn-snd-brd",
-   "pairId": "P50-10x3h_sunset_ocn",
+   "pairId": "P50-10x3h_sunset_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -276,7 +276,7 @@
   {
    "day": 10,
    "id": "P50-10x3h_sunset_bell",
-   "pairId": "P50-10x3h_sunset_ocn",
+   "pairId": "P50-10x3h_sunset_ocn-snd-brd",
    "silent": true,
    "mode": "Pomodoro",
    "interval": "50/10",
@@ -307,7 +307,7 @@
   {
    "day": 11,
    "id": "P25-5x2h_midnight_ocn",
-   "pairId": "P25-5x2h_midnight_ocn",
+   "pairId": "P25-5x2h_midnight_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "25/5",
@@ -373,7 +373,7 @@
   {
    "day": 13,
    "id": "P25-5x3h_sunset_ocn-snd",
-   "pairId": "P25-5x3h_sunset_ocn",
+   "pairId": "P25-5x3h_sunset_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "25/5",
@@ -410,7 +410,7 @@
   {
    "day": 14,
    "id": "P25-5x3h_sunset_bell",
-   "pairId": "P25-5x3h_sunset_ocn",
+   "pairId": "P25-5x3h_sunset_ocn-snd",
    "silent": true,
    "mode": "Pomodoro",
    "interval": "25/5",
@@ -447,7 +447,7 @@
   {
    "day": 15,
    "id": "P25-5x4h_midday_brz-brd",
-   "pairId": "P25-5x4h_midday_ocn",
+   "pairId": "P25-5x4h_midday_bell",
    "silent": false,
    "mode": "Pomodoro",
    "interval": "25/5",
@@ -488,7 +488,7 @@
   {
    "day": 16,
    "id": "P25-5x4h_midday_bell",
-   "pairId": "P25-5x4h_midday_ocn",
+   "pairId": "P25-5x4h_midday_brz-brd",
    "silent": true,
    "mode": "Pomodoro",
    "interval": "25/5",
@@ -529,7 +529,7 @@
   {
    "day": 17,
    "id": "F60mx1h_sunrise_ocn-brd",
-   "pairId": "F60mx1h_sunrise_ocn",
+   "pairId": "F60mx1h_sunrise_bell",
    "silent": false,
    "mode": "Flow",
    "interval": "60m",
@@ -552,7 +552,7 @@
   {
    "day": 18,
    "id": "F60mx1h_sunrise_bell",
-   "pairId": "F60mx1h_sunrise_ocn",
+   "pairId": "F60mx1h_sunrise_ocn-brd",
    "silent": true,
    "mode": "Flow",
    "interval": "60m",
@@ -575,7 +575,7 @@
   {
    "day": 19,
    "id": "F120mx2h_midnight_snd",
-   "pairId": "F120mx2h_midnight_ocn",
+   "pairId": "F120mx2h_midnight_bell",
    "silent": false,
    "mode": "Flow",
    "interval": "120m",
@@ -598,7 +598,7 @@
   {
    "day": 20,
    "id": "F120mx2h_midnight_bell",
-   "pairId": "F120mx2h_midnight_ocn",
+   "pairId": "F120mx2h_midnight_snd",
    "silent": true,
    "mode": "Flow",
    "interval": "120m",
@@ -621,7 +621,7 @@
   {
    "day": 21,
    "id": "F180mx3h_sunset_ocn-brz",
-   "pairId": "F180mx3h_sunset_ocn",
+   "pairId": "F180mx3h_sunset_bell",
    "silent": false,
    "mode": "Flow",
    "interval": "180m",
@@ -644,7 +644,7 @@
   {
    "day": 22,
    "id": "F180mx3h_sunset_bell",
-   "pairId": "F180mx3h_sunset_ocn",
+   "pairId": "F180mx3h_sunset_ocn-brz",
    "silent": true,
    "mode": "Flow",
    "interval": "180m",
@@ -667,7 +667,7 @@
   {
    "day": 23,
    "id": "C50-15x3h_twilight_ocn",
-   "pairId": "C50-15x3h_twilight_ocn",
+   "pairId": "C50-15x3h_twilight_bell",
    "silent": false,
    "mode": "Custom",
    "interval": "50/15",
@@ -727,7 +727,7 @@
   {
    "day": 25,
    "id": "C40-10x4h_predawn_snd-brz",
-   "pairId": "C40-10x4h_predawn_ocn",
+   "pairId": "C40-10x4h_predawn_bell",
    "silent": false,
    "mode": "Custom",
    "interval": "40/10",
@@ -761,7 +761,7 @@
   {
    "day": 26,
    "id": "C40-10x4h_predawn_bell",
-   "pairId": "C40-10x4h_predawn_ocn",
+   "pairId": "C40-10x4h_predawn_snd-brz",
    "silent": true,
    "mode": "Custom",
    "interval": "40/10",
@@ -795,7 +795,7 @@
   {
    "day": 27,
    "id": "C30-15x2h_midday_all4",
-   "pairId": "C30-15x2h_midday_ocn",
+   "pairId": "C30-15x2h_midday_bell",
    "silent": false,
    "mode": "Custom",
    "interval": "30/15",
@@ -825,7 +825,7 @@
   {
    "day": 28,
    "id": "C30-15x2h_midday_bell",
-   "pairId": "C30-15x2h_midday_ocn",
+   "pairId": "C30-15x2h_midday_all4",
    "silent": true,
    "mode": "Custom",
    "interval": "30/15",
@@ -855,7 +855,7 @@
   {
    "day": 29,
    "id": "C60-20x5h_sunrise_ocn-snd",
-   "pairId": "C60-20x5h_sunrise_ocn",
+   "pairId": "C60-20x5h_sunrise_bell",
    "silent": false,
    "mode": "Custom",
    "interval": "60/20",
@@ -887,7 +887,7 @@
   {
    "day": 30,
    "id": "C60-20x5h_sunrise_bell",
-   "pairId": "C60-20x5h_sunrise_ocn",
+   "pairId": "C60-20x5h_sunrise_ocn-snd",
    "silent": true,
    "mode": "Custom",
    "interval": "60/20",
