@@ -81,6 +81,22 @@ const appLd = {
         // so the refraction readback and the WebGL texture are unaffected.
         l.setAttribute('fetchpriority', 'high');
         document.head.appendChild(l);
+
+        // ── FAILSAFE: content must never be hostage to WebGL ────────────────────────────────────────
+        // The hero chrome (nav, headline, actions) is gated on `.chrome-ready`, which scene.js normally
+        // sets. scene.js has its own 3 s backstop — but that timer only exists ONCE THE MODULE HAS RUN,
+        // and the module is ~580 KB of Three.js. On a phone on mobile data it can be seconds before it
+        // even parses, and if WebGL is unavailable or the bundle fails outright it never runs at all.
+        // Either way the page sits on the blur placeholder with no content, which is what a real device
+        // showed (Brave: usable content, no scene — exactly the intended degraded state).
+        //
+        // This script is INLINE, so it always runs. Worst case the site degrades to a blurred backdrop
+        // with fully working content — never a blank page.
+        // Only `chrome-ready` — NEVER `scene-ready`. scene-ready flips the WebGL canvas opaque, and forcing
+        // that before the plate decodes is what produced sand-floating-on-white on a real phone.
+        setTimeout(function () {
+          document.documentElement.classList.add('chrome-ready');
+        }, 4000);   // > scene.js's own 3 s, so the normal path still wins and this never fires
       })();
     </script>
     <SceneWorld />

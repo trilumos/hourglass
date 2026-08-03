@@ -34,6 +34,26 @@ const BOTTOM_TRIM = 0.06;   // max fraction of the plate cropped off the bottom 
 // Hourglass width as a fraction of the plate width: the glass silhouette spans ~0.134 around axis S.cx, the
 // wooden posts + plinth ~0.234; 0.27 adds clearance. Published as --hg-w for the landing's centre gutter.
 const HG_FRAC = 0.27;
+
+// ── Power budget (must be defined before fit() — it sets the canvas size) ────────────────────────────
+// This scene is a full-screen FRAGMENT shader plus a per-frame 2D sand pass, so cost scales with PIXELS.
+// A modern phone reports devicePixelRatio 3: at the old `min(dpr,2)` cap a 390x844 viewport rendered
+// 780x1688 = 1.3M px every frame, forever, at 60fps. That is what heats a phone, flattens a battery, and
+// makes an old laptop's integrated GPU crawl. Budget by CAPABILITY, never by user-agent — an old laptop
+// and a new phone deserve the same mercy, and sniffing "is it mobile" gets both wrong.
+const LOW = (() => {
+  try {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+    const cores  = navigator.hardwareConcurrency || 4;
+    const mem    = navigator.deviceMemory || 4;            // undefined on Safari/Firefox -> assume mid
+    const coarse = matchMedia('(hover: none)').matches;    // phone / tablet
+    return coarse || cores <= 4 || mem <= 4;
+  } catch (e) { return false; }
+})();
+let _slow = false;                                          // set by the adaptive check in loop()
+// 1.25 still looks sharp for a soft painterly plate — it is a gradient, not text.
+const DPR_CAP = () => Math.min(devicePixelRatio || 1, (LOW || _slow) ? 1.25 : 2);
+
 function fit(){
   const vw = innerWidth, vh = innerHeight;
   if (vw/vh > AR) { DW = vw; DH = vw/AR; } else { DH = vh; DW = vh*AR; }   // COVER: fill the viewport, crop the overflow (locked plate rule — no side gaps)
@@ -54,7 +74,7 @@ function fit(){
   // the frame's REAL offset puts --hg-axis in exactly the same coordinate space as a fixed/absolute overlay.
   // (Named --hg-axis, NOT --hg-cx: that name is already taken by the numeral geometry set on #frame.)
   document.documentElement.style.setProperty('--hg-axis', (frame.offsetLeft + DW * S.cx) + 'px');
-  const dpr = Math.min(devicePixelRatio, 2);
+  const dpr = DPR_CAP();
   for (const cv of [glitterCv, sandCv, occCv]) {
     cv.width = DW*dpr; cv.height = DH*dpr; cv.style.width = DW+'px'; cv.style.height = DH+'px';
   }
@@ -67,7 +87,7 @@ function fit(){
 // preserveDrawingBuffer: the session occluder (#occ) copies this canvas via drawImage each frame; without
 // it, an antialiased buffer can read back empty on some GPUs. Small cost on a single fullscreen-quad shader.
 const renderer = new THREE.WebGLRenderer({ canvas: glitterCv, antialias:true, alpha:false, preserveDrawingBuffer:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setPixelRatio(DPR_CAP());
 // Identity colour pipeline: no input decode, no output encode. The texture's
 // sRGB bytes pass straight through to the sRGB canvas, so the background looks
 // EXACTLY like the PNG (no saturation/warm shift). Sparkle is added in the same
@@ -94,11 +114,20 @@ function plateTex(i){
 // Reveal the scene the moment the CURRENTLY-VISIBLE plate is decoded (the loop calls reveal() once uTex has
 // an image). A blur-up LQIP shows until then; a 3 s timeout is the backstop against a slow/failed plate.
 let _revealed = false;
+// `scene-ready` means ONE thing: the plate texture is decoded and the canvas has something real to draw.
+// It is never set on a timer. Forcing it on a timeout showed an empty canvas — on a phone that rendered as
+// the sand geometry floating on white, because the sand needs no plate texture while the glass, frame and
+// sky all come FROM the plate. (Reloading hid it: the plate was cached and decoded before the timer fired.)
 function reveal(){
-  if (_revealed) return; _revealed = true; document.documentElement.classList.add('scene-ready');
+  if (_revealed) return; _revealed = true;
+  document.documentElement.classList.add('scene-ready');
+  chromeReady();
   for (let i = 0; i < PLATES.length; i++) plateTex(i);   // warm the rest AFTER first paint (never before)
 }
-setTimeout(reveal, 3000);
+// `chrome-ready` means "the page is usable" and is deliberately independent of the GPU: the nav, headline
+// and actions must never wait on a texture. Safe to fire on a timer — it reveals no canvas.
+function chromeReady(){ document.documentElement.classList.add('chrome-ready'); }
+setTimeout(chromeReady, 3000);
 // The moon is PAINTED, not generated. Every procedural attempt — selenographic
 // maria, then ring craters — read as stains or pimples at this on-screen size.
 // plates/moon-tex.png is the founder's artwork, cropped to the opaque disc so the
@@ -1868,7 +1897,34 @@ function updateSession(){
   if (typeof updateSessionUI === 'function') updateSessionUI(r);   // wired in Tasks 5–7
   return r;
 }
-function loop(now){ const dt=Math.min((now-t0)/1000, 0.05); tSec+=dt; t0=now;   // clamp dt: no lurch after a hidden tab
+// Adaptive: measured frame time is the only signal that tells the truth about a device we guessed wrong on.
+let _frames = 0, _acc = 0;
+const FRAME_MS = () => (LOW || _slow) ? 33.3 : 0;            // 30fps when constrained, uncapped otherwise
+let _lastDraw = 0;
+
+function loop(now){
+  requestAnimationFrame(loop);                              // schedule first: a skipped frame must still re-arm
+
+  // Hidden tab: burn nothing. (visibilitychange already parks the CSS breathe; this parks the GPU.)
+  if (document.hidden) { t0 = now; return; }
+
+  // Frame cap. Skipping the DRAW while still advancing time keeps the day cycle and sand clock honest.
+  const cap = FRAME_MS();
+  if (cap && now - _lastDraw < cap - 1) return;
+  _lastDraw = now;
+
+  // Watch real frame cost for ~90 frames; if we are consistently missing 30fps, drop a tier for good.
+  if (!_slow && !LOW && _frames < 90) {
+    _acc += Math.min(now - t0, 100); _frames++;
+    if (_frames === 90 && _acc / 90 > 28) {                  // avg worse than ~35fps
+      _slow = true;
+      renderer.setPixelRatio(DPR_CAP());
+      fit();
+    }
+  }
+  return loopBody(now);
+}
+function loopBody(now){ const dt=Math.min((now-t0)/1000, 0.05); tSec+=dt; t0=now;   // clamp dt: no lurch after a hidden tab
   updateDayCycle();
   if (S._sunMoonOff){ U.uCelAamt.value=0; U.uCelBamt.value=0; }                 // Setup: sun & moon hidden
   if (document.documentElement.classList.contains('session-active')){           // numeral auto-contrast, live plate luminance
@@ -1898,7 +1954,7 @@ function loop(now){ const dt=Math.min((now-t0)/1000, 0.05); tSec+=dt; t0=now;   
     if(msg!==lastErr){ lastErr=msg; console.error(e);
       $('err').textContent='drawSand: '+msg; $('err').style.display='block'; }
   }
-  requestAnimationFrame(loop);
+  // (rAF is scheduled at the TOP of loop(), so a capped/skipped frame still re-arms.)
 }
 // Deploy runs LIVE: the hidden lab's phase-bind fires once on init and flips S.live=0 (to preview a phase).
 // Undo it here so the day cycle follows the REAL clock. Nothing in the deploy re-disables it (lab UI hidden).

@@ -95,7 +95,20 @@ const totalOf = r => P.totalMinOf(P.buildPlan(stOf(r)));
 const durTxt = m => { const h=Math.floor(m/60), mm=m%60;
   return h ? (mm ? `${h}h ${mm}m` : `${h}-Hour`) : `${mm}-Min`; };
 const durPlain = m => { const h=Math.floor(m/60), mm=m%60;
-  return h ? (mm ? `${h} hour ${mm} min` : `${h} hour`) : `${mm} min`; };
+  const hw = h===1 ? '1 hour' : `${h} hours`;
+  return h ? (mm ? `${hw} ${mm} min` : hw) : `${mm} min`; };
+// The deep link is built now, so descriptions carry the EXACT session, not just the domain.
+const TOD = { predawn:'pre-dawn', sunrise:'sunrise', midday:'midday', sunset:'sunset',
+              twilight:'twilight', midnight:'midnight' };
+const SND_ID = { ocn:'ocean', snd:'sand', brz:'breeze', brd:'birds' };
+const presetURL = r => {
+  const q = ['mode=' + (r.kind==='custom' ? 'custom' : 'pomodoro')];
+  if (r.kind !== 'custom'){ const [w,b]=r.iv.split('/');
+    q.push('work='+w, 'break='+b, 'blocks='+r.blocks); }
+  if (TOD[r.light]) q.push('phase=' + TOD[r.light]);
+  q.push('sound=' + (r.sound==='bell' ? '' : r.sound.split('+').map(k=>SND_ID[k]).join(',')));
+  return 'https://sustaintimer.com/?' + q.join('&');
+};
 // Chapters come straight off the real plan, so the long-break-every-4th rule is baked in.
 const chapters = r => { const plan=P.buildPlan(stOf(r)); const out=[]; let t=0,f=0,b=0;
   for (const seg of plan){ if(seg.kind==='focus'){ out.push(`${ts(t)} Focus ${++f}`); } else { out.push(`${ts(t)} Break ${++b}`); } t+=seg.min; }
@@ -160,7 +173,7 @@ for (const r of rows.filter(x=>x.phase==='1')) { bi++;
     + `**Description:**\n\n\`\`\`\n`
     + `${durPlain(m).replace(/^\w/,c=>c.toUpperCase())} of ambient focus under a ${LIGHT[r.light].cap.toLowerCase()} sky, with ${SOUND[r.sound].toLowerCase()}.\n`
     + `Press play, start your block, and let the sand do the counting.\n\n`
-    + `▶ Run this exact session yourself — free, no sign-up:\n   https://sustaintimer.com\n\n`
+    + `▶ Run this exact session yourself — free, no sign-up:\n   ${presetURL(r)}\n\n`
     + `⏱ Chapters\n${ch.map(c=>'   '+c).join('\n')}\n\n{{BOILERPLATE}}\n\`\`\`\n\n</details>\n`;
 }
 
