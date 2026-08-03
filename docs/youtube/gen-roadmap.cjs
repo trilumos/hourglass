@@ -60,31 +60,46 @@ const rows=[];
 const addC=(phase,hours,light,sound)=>rows.push({phase,kind:'custom',hours,light,sound});
 const addP=(phase,iv,blocks,light,sound)=>rows.push({phase,kind:'pomo',iv,blocks,light,sound});
 
-// ── MONTH 1 — 30 videos, chosen from search volume, not taste ────────────────────────────────────
-// vidIQ, 2026-08-03:  study with me 2,533,520/mo · 2 hour timer 204,296 · study with me pomodoro 47,568
-//                     study with me 4 hours 44,753 · 60 minute timer 33,037 · study timer 103,138
-//                     study with me late night 6,242  ← midnight is a QUERY, not just our aesthetic
-//                     study with me no break no music 4,388  ← the bell-only rows
-// REAL Pomodoro throughout: /stage's uniform mode makes 50/10 x N land on exactly N hours, so there is no
-// longer any Custom-mode workaround and no ambiguity about whether a video "is a Pomodoro".
-for (const l of ['sunset','midnight','sunrise','midday','twilight','predawn']) addP('1','50/10',2,l,'ocn'); // 2h x6
-for (const l of ['sunset','midnight','sunrise','midday','twilight','predawn']) addP('1','50/10',4,l,'ocn'); // 4h x6
-for (const l of ['sunset','midnight','sunrise','midday'])                      addP('1','25/5', 4,l,'ocn'); // 2h x4
-for (const l of ['sunset','midnight','sunrise','midday'])                      addP('1','25/5', 8,l,'ocn'); // 4h x4
-for (const l of ['sunset','midnight','twilight'])                              addP('1','50/10',1,l,'ocn'); // 1h x3
-for (const l of ['sunset','midnight','twilight'])                              addP('1','50/10',3,l,'ocn'); // 3h x3
-for (const b of [2,4]) for (const l of ['sunset','midnight'])                  addP('1','50/10',b,l,'bell');// x4
-
-// ── MONTH 2+ — a HOLDING list, not a plan ────────────────────────────────────────────────────────
-// Do not shoot these blind. Month 1's Analytics decide which axis actually earned its views, and Month 2
-// gets rewritten from that. They are here so the shape of the next expansion is visible, nothing more.
-for (const b of [6,8]) for (const l of ['sunset','midnight','twilight']) addP('2','50/10',b,l,'ocn');
-// Blocks chosen PER INTERVAL so uniform mode still lands on a round hour: total = blocks x (focus+break).
-// 30/10 cycles every 40m (x3=2h, x6=4h); 90/15 every 105m (x4=7h); 60/10 every 70m (x6=7h).
-for (const [iv,b] of [['30/10',3],['30/10',6],['90/15',4],['60/10',6]])
-  for (const l of ['sunset','midnight']) addP('2',iv,b,l,'ocn');
-for (const b of [2,4]) for (const l of ['intonight','intoday','wholeday']) addP('2','50/10',b,l,'ocn');
-for (const s2 of ['snd','brz','brd','ocn+brd','ocn+brz','ocn+snd','all4']) addP('2','50/10',4,'sunset',s2);
+// ── THE MONTH — 15 unique sessions, each shot TWICE ──────────────────────────────────────────────
+// Founder's schedule: every config is captured once with ocean and once bell-only, published on
+// consecutive days. Day 1 config A with sound, day 2 config A silent, day 3 config B with sound, and so
+// on. 15 x 2 = 30 videos a month, and only 15 sessions to think about.
+//
+// Two captures, never a re-export: /stage records what it is configured to record, and a silent version
+// is a different file, not a trimmed one. `pomodoro timer no music` is 5,302/mo on its own, and
+// `study with me no break no music` another 4,388 — the silent twin is chasing real queries, not padding.
+//
+// The 15 are chosen on search volume (vidIQ, 2026-08-03): study with me 2,533,520/mo · 2 hour timer
+// 204,296 · study timer 103,138 · study with me pomodoro 47,568 · study with me 4 hours 44,753 ·
+// 60 minute timer 33,037 · study with me late night 6,242 (midnight is a QUERY, not just our aesthetic).
+// [interval, blocks, light, sound] — the sound is MATCHED TO THE LIGHT, not rotated blindly. Seabirds at
+// midnight would be wrong, and a video that feels wrong is a video people leave. Dawn gets the birds,
+// midday gets the bright full shore, the night hours get the quiet mixes. Variety here also widens the
+// query surface: "ocean waves study", "brown noise"-adjacent sand, birdsong ambience are separate searches.
+// Day 1 stays ocean because it is already published.
+const UNIQUE = [
+  ['50/10', 2, 'sunset',   'ocn'],           // ← PUBLISHED 2026-08-03, do not change
+  ['50/10', 2, 'midnight', 'ocn+brz'],       // quiet night: sea and a little wind
+  ['50/10', 2, 'sunrise',  'ocn+brd'],       // dawn chorus
+  ['50/10', 2, 'midday',   'brz+brd'],       // bright, airy
+  ['50/10', 2, 'twilight', 'ocn+snd'],
+  ['50/10', 2, 'predawn',  'snd'],           // the stillest hour: only the sand
+  ['50/10', 4, 'sunset',   'ocn+brz'],
+  ['50/10', 4, 'midnight', 'ocn'],
+  ['50/10', 4, 'sunrise',  'ocn+snd+brd'],
+  ['50/10', 4, 'midday',   'all4'],          // full shore ambience
+  ['25/5',  4, 'sunset',   'snd+brz'],
+  ['25/5',  4, 'midnight', 'ocn+snd'],
+  ['25/5',  8, 'sunset',   'ocn+brd'],
+  ['25/5',  8, 'midnight', 'brz'],           // shore breeze alone
+  ['50/10', 1, 'sunset',   'snd+brz+brd'],
+];
+// Interleaved so the silent twin follows its own session the very next day — the pair reads as a
+// deliberate choice on the channel page rather than two unrelated uploads.
+UNIQUE.forEach(([iv, blocks, light, snd]) => {
+  addP('1', iv, blocks, light, snd);
+  addP('1', iv, blocks, light, 'bell');
+});
 
 const key = r => [r.kind, r.iv||'', r.blocks||r.hours, r.light, r.sound].join('|');
 { const seen=new Map();
@@ -101,6 +116,23 @@ const ts=m=>{const s=Math.round(m*60),h=Math.floor(s/3600),mm=Math.floor(s%3600/
   return h?`${h}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`
           :`${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;};
 const totalOf = r => P.totalMinOf(P.buildPlan(stOf(r)));
+// ── Guard-rails, asserted not trusted ────────────────────────────────────────────────────────────
+// A short block is a worse product: 15/5 means the viewer is interrupted every fifteen minutes, and a
+// sub-30-minute timer is not something anyone leaves running. Both would also read as filler in a
+// library, which is exactly what the inauthentic-content policy punishes. The generator refuses to emit
+// them rather than relying on whoever edits UNIQUE next month to remember.
+const slugOf = r => `P${r.iv.replace('/','-')}x${r.blocks}_${r.light}_${r.sound}`;
+const MIN_FOCUS = 25, MIN_BREAK = 5, MIN_TOTAL = 30;
+for (const r of rows){
+  if (r.kind !== 'pomo') continue;
+  const [w, b] = r.iv.split('/').map(Number);
+  if (w < MIN_FOCUS) throw new Error(`focus block too short: ${r.iv} (min ${MIN_FOCUS})`);
+  if (b < MIN_BREAK) throw new Error(`break too short: ${r.iv} (min ${MIN_BREAK})`);
+  const t = P.totalMinOf(P.buildPlan(stOf(r)));
+  if (t < MIN_TOTAL) throw new Error(`video too short: ${slugOf(r)} = ${t}min (min ${MIN_TOTAL})`);
+}
+console.log(`guard-rails: all ${rows.length} rows >= ${MIN_FOCUS}/${MIN_BREAK} and >= ${MIN_TOTAL}min ✓`);
+
 const durTxt = m => { const h=Math.floor(m/60), mm=m%60;
   return h ? (mm ? `${h}h ${mm}m` : `${h}-Hour`) : `${mm}-Min`; };
 const durPlain = m => { const h=Math.floor(m/60), mm=m%60;
@@ -167,11 +199,15 @@ const slug = r => (r.kind==='custom' ? `C${r.hours}h` : `P${r.iv.replace('/','-'
 //
 // Shape is Focus with Elora's — a 157-SUBSCRIBER channel that pulled 8,442 views on
 // "4 Hour Study with Me | Pomodoro Timer 50/10 | Deep Focus Lofi Music". The title did the work.
+// LOCKED to the format of video #1 (published 2026-08-03), which the founder settled on after testing
+// against vidIQ's scorer:
+//   2-Hour Study With Me | Pomodoro 50/10 for Focus & ADHD | Ocean Waves & Sunset
+// Front-loads "{N}-Hour Study With Me" — study with me is 2,525,198/mo, the biggest term in the niche —
+// then Pomodoro (982,562) and the interval, all inside the ~50 chars a phone shows. The sound and light
+// ride in the tail: still indexed, and the thumbnail already says which sky it is.
 const title = r => { const L=LIGHT[r.light], S=SOUND[r.sound], m=totalOf(r);
-  if (r.sound==='bell') return `${durTxt(m)} Study With Me ${L.cap} Pomodoro Timer ${r.iv} | No Music, Bell Only`;
-  return r.kind==='custom'
-    ? `${durTxt(m)} Study With Me ${L.cap} Pomodoro Timer | ${S} for Deep Focus & ADHD`
-    : `${durTxt(m)} Study With Me ${L.cap} Pomodoro Timer ${r.iv} | ${S} for Deep Focus & ADHD`; };
+  const head = `${durTxt(m)} Study With Me | Pomodoro ${r.kind==='custom' ? '' : r.iv + ' '}for Focus & ADHD`;
+  return r.sound === 'bell' ? `${head} | No Music, ${L.cap}` : `${head} | ${S} & ${L.cap}`; };
 const TAG_BUDGET = 500-353;
 const NONEN = ['ポモドーロタイマー','अध्ययन टाइमर','temporizador de estudio','مؤقت للدراسة',
                'temporizador de estudo','핑크 노이즈 공부','timer belajar','çalışma zamanlayıcısı'];
@@ -192,6 +228,31 @@ const PH = {
 };
 
 const esc = s => s.replace(/\|/g,'\\|');
+
+// ── Month plan as JSON ───────────────────────────────────────────────────────────────────────────
+// The directory page renders THIS, not the 900M-combination space. One source of truth: the checklist
+// you tick and the sheet you shoot from are generated together and cannot drift.
+const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
+  const m = totalOf(r);
+  return {
+    day: i + 1,
+    id: slug(r),
+    pairId: slug({ ...r, sound: 'ocn' }),        // the silent twin points at its own session
+    silent: r.sound === 'bell',
+    mode: 'Pomodoro', interval: r.iv, blocks: r.blocks,
+    minutes: m, duration: durPlain(m),
+    light: LIGHT[r.light].cap, lightSetup: LIGHT[r.light].setup,
+    sound: soundSetup(r.sound), audio: audioCell(r.sound),
+    numerals: `Always · ${PLACE[(i+1)%4]} · ${FILL[(i+1)%3]} · ${FONT[(i+1)%2]} · ${SEP[(i+1)%3]} · ${LIGHT[r.light].cols[(i+1) % LIGHT[r.light].cols.length]}`,
+    title: title(r), tags: tags(r, i+1), chapters: chapters(r),
+    preset: presetURL(r), sentence: sentence(r),
+  };
+});
+// Written next to the directory page so it can be fetched with no build step and no server.
+fs.writeFileSync(__dirname + '/../../tools/video-directory/month.json',
+  JSON.stringify({ month:'2026-08', label:'August 2026', videos:monthPlan }, null, 1));
+console.log(`month.json: ${monthPlan.length} videos (${monthPlan.filter(v=>!v.silent).length} sessions x 2)`);
+
 let tbl='', cur='', i=0, n=0;
 for (const r of rows) {
   if (r.phase!==cur){ cur=r.phase; const c=rows.filter(x=>x.phase===cur).length;
