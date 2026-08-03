@@ -77,3 +77,6 @@ android/key.properties
 /_internal/claude images to give/
 /_internal/glass UI examples/
 /_internal/Google Play Badge guidelines/
+
+# Cloudflare Wrangler local state/cache
+.wrangler/

@@ -73,8 +73,41 @@ import { LQIP } from '../scene/lqip.js';
       :root.rec { cursor:none; }
       :root.rec #frame { animation:none !important; }
 
-      /* ── 3-2-1 lead-in. The session is paused underneath, so the recording has time to spin up and the
-            first counted second is still on tape. ──────────────────────────────────────────────────── */
+      /* ── The stage is the whole edit ──────────────────────────────────────────────────────────────
+         Begin → recording starts → INTRO card (10s) → 3-2-1 → session → OUTRO card (7s) → fade to black
+         → stopRecording. Nothing is cut together afterwards; what OBS captures is the finished video.
+         Both cards read the session's own config, so they are never written by hand. ─────────────── */
+      :root.stage-count #frame,
+      :root.stage-intro #frame,
+      :root.stage-outro #frame{ filter:blur(12px) saturate(.95); }
+
+      /* Plain rgba scrim, never backdrop-filter: these cards fade their own opacity, and an animating
+         opacity above a backdrop-filter makes it sample an empty group until opacity hits exactly 1. */
+      .stage-card{ position:fixed; inset:0; z-index:98; display:none; flex-direction:column;
+        align-items:center; justify-content:center; text-align:center; pointer-events:none;
+        background:rgba(6,11,26,.44); padding:6vmin; opacity:0; }
+      :root.stage-intro #stageIntro, :root.stage-outro #stageOutro{ display:flex; animation:cardIn .9s cubic-bezier(.16,1,.3,1) forwards; }
+      @keyframes cardIn{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
+
+      .stage-card .brand{ font-family:'Playfair Display',Georgia,serif; font-weight:500;
+        font-size:clamp(20px,3.1vmin,34px); letter-spacing:.42em; text-indent:.42em;
+        color:#fffaf0; opacity:.86; margin-bottom:clamp(14px,2.6vmin,26px); }
+      .stage-card .cfg{ font-family:'Jost',system-ui,sans-serif; font-weight:300;
+        font-size:clamp(13px,1.75vmin,19px); letter-spacing:.3em; text-indent:.3em; text-transform:uppercase;
+        color:#eaca78; margin-bottom:clamp(20px,3.4vmin,38px); }
+      .stage-card h2{ font-family:'Newsreader',Georgia,serif; font-weight:400; margin:0;
+        font-size:clamp(21px,3.7vmin,42px); line-height:1.42; color:#fffaf0; max-width:22em;
+        text-shadow:0 2px 30px rgba(0,0,0,.4); }
+      .stage-card p{ font-family:'Newsreader',Georgia,serif; font-weight:300;
+        font-size:clamp(14px,1.95vmin,22px); line-height:1.62; color:#fffaf0; opacity:.8;
+        max-width:34em; margin:clamp(14px,2.3vmin,26px) 0 0; }
+      .stage-card .rule{ width:min(30vmin,240px); height:1px; margin:clamp(22px,3.6vmin,40px) 0 0;
+        background:linear-gradient(90deg,transparent,rgba(255,250,240,.42),transparent); }
+      .stage-card .fine{ font-family:'Jost',system-ui,sans-serif; font-weight:300;
+        font-size:clamp(11px,1.4vmin,15px); line-height:1.75; letter-spacing:.045em;
+        color:#fffaf0; opacity:.62; max-width:36em; margin-top:clamp(12px,2vmin,20px); }
+      .stage-card .fine b{ font-weight:400; opacity:.9; letter-spacing:.1em }
+
       :root.stage-count #frame{ filter:blur(12px) saturate(.95); }
       #stageCount{ position:fixed; inset:0; z-index:98; display:none;
         align-items:center; justify-content:center; pointer-events:none;
@@ -112,6 +145,20 @@ import { LQIP } from '../scene/lqip.js';
     <SceneWorld />
     <Setup />
     <Session />
+    <div id="stageIntro" class="stage-card" aria-hidden="true">
+      <div class="brand">SUSTAIN</div>
+      <div class="cfg" id="inCfg"></div>
+      <h2 id="inWhat"></h2>
+      <div class="rule"></div>
+      <div class="fine">Recorded in real time, never looped &nbsp;·&nbsp; <b>sustaintimer.com</b></div>
+    </div>
+    <div id="stageOutro" class="stage-card" aria-hidden="true">
+      <div class="brand">SUSTAIN</div>
+      <h2>Thank you for focusing.</h2>
+      <p id="outDone"></p>
+      <div class="rule"></div>
+      <div class="fine">Run this session any time, free — <b>sustaintimer.com</b></div>
+    </div>
     <div id="stageCount" aria-hidden="true"><b id="stageCountN">3</b></div>
     <div id="stageEnd" aria-hidden="true"></div>
 
@@ -130,7 +177,11 @@ import { LQIP } from '../scene/lqip.js';
             setup.setAttribute('aria-hidden', onSetup ? 'false' : 'true');
           }
           root.classList.toggle('setup-active', onSetup);
-          if (onSetup) root.classList.remove('stage-done');     // going back re-arms the stage
+          if (onSetup){                                          // going back re-arms the stage
+            root.classList.remove('stage-done');
+            root.classList.remove('stage-outro');
+            root.classList.remove('stage-intro');
+          }
         }
         sync();
         addEventListener('hashchange', sync);
@@ -141,55 +192,137 @@ import { LQIP } from '../scene/lqip.js';
         // scene, then resume. The engine is wall-clock based and subtracts paused time, so the block still
         // runs its exact configured length — and the first counted second is safely inside the recording
         // even if OBS took a moment to start.
-        var counting = false;
+        // ── The cards write themselves from the session's own config ───────────────────────────────
+        // Nothing here is typed per video: change the Setup and the copy changes with it. This is also
+        // the ONLY on-screen text in the whole capture, and relevance counts on-screen text in the first
+        // seconds — so the config line doubles as the algorithm's read on what the video is.
+        var INTRO_MS = 10000, OUTRO_MS = 7000;
+        var PHASE_NAME = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
+        var PHASE_PHRASE = ['a pre-dawn sky','a sunrise sky','a midday sky','a sunset sky','a twilight sky','a midnight sky'];
+        var CYCLE_PHRASE = {
+          dawn:'a sky that warms from pre-dawn into full daylight',
+          dusk:'a sky that deepens from sunset into night',
+          day:'a whole day passing, dawn through to midnight',
+          follow:'a sky that follows the real time of day'
+        };
+        var SOUND_NAME = { sand:'falling sand', ocean:'ocean waves', breeze:'a shore breeze', birds:'seabirds' };
+
+        function set(id, t){ var e = document.getElementById(id); if (e) e.textContent = t; }
+        function readCfg(){ try { return JSON.parse(localStorage.getItem('sustain.session') || '{}'); } catch (e){ return {}; } }
+        function dur(min){
+          if (!min) return 'an open-ended session';
+          var h = Math.floor(min / 60), m = min % 60;
+          if (!h) return m + ' minutes';
+          return h + (h === 1 ? ' hour' : ' hours') + (m ? ' ' + m + ' min' : '');
+        }
+        function list(a){ return a.length < 2 ? (a[0] || '') : a.slice(0,-1).join(', ') + ' and ' + a[a.length-1]; }
+
+        function fillIntro(){
+          var c = readCfg();
+          var light = (c.cycle && CYCLE_PHRASE[c.cycle.preset]) ? CYCLE_PHRASE[c.cycle.preset]
+                    : (c.followDay ? CYCLE_PHRASE.follow : (PHASE_PHRASE[c.phase | 0] || 'the shore'));
+          var snd = (c.sounds || []).map(function (s){ return SOUND_NAME[s]; }).filter(Boolean);
+          var d = dur(c.totalMin);
+
+          var bits = [];
+          if (c.mode === 'pomodoro')    bits.push(c.pomoFocus + ' / ' + c.pomoBreak + ' Pomodoro');
+          else if (c.mode === 'flow')   bits.push('Flow');
+          else if (c.mode === 'custom') bits.push('Custom ' + c.customInterval + ' / ' + c.customBreakLen);
+          else                          bits.push('Endless');
+          bits.push(c.totalMin ? d : 'no set end');
+          bits.push((PHASE_NAME[c.phase | 0] || '').replace('-', ' '));
+          set('inCfg', bits.join('  ·  '));
+
+          // ONE sentence. The card is on screen for 10s and a viewer should take it in at a glance —
+          // the block structure is already in the description's chapters, so it does not belong here too.
+          set('inWhat', d.charAt(0).toUpperCase() + d.slice(1) + ' of ambient focus under ' + light
+            + (snd.length ? ', with ' + list(snd) + '.' : ', in quiet.'));
+        }
+        function fillOutro(){
+          var c = readCfg();
+          set('outDone', c.totalMin ? 'You just completed ' + dur(c.totalMin) + ' of focused work.'
+                                    : 'You just completed a full session of focused work.');
+        }
+
+        var counting = false, introT = null;
         function leadIn(){
           if (counting) return;
           counting = true;
-          root.classList.add('stage-count');
-          var n = 3, el = document.getElementById('stageCountN');
-          if (el) el.textContent = String(n);
 
-          // Wait for the engine to actually be running, then park it at ZERO elapsed and frozen, so the
-          // numerals read the full block length (25:00, not 24:59) for the whole countdown.
+          // The recording is already rolling, so this card IS the opening frame of the video.
+          fillIntro();
+          root.classList.add('stage-intro');
+          var el = document.getElementById('stageCountN');
+          if (el) el.textContent = '3';
+
+          // Park the engine at ZERO the moment it exists and keep it parked through the card AND the
+          // count, so the numerals read the full block length (25:00, not 24:59) the whole way in.
+          // Budget generously: the card alone is 10s, so a 3s poll window would give up far too early.
           var armed = false, tries = 0;
           var wait = setInterval(function () {
             var S = window.SustainScene;
             var r = S && S.sampleSession && S.sampleSession();
-            if (!(r && r.kind && r.kind !== 'idle')) { if (++tries > 60) clearInterval(wait); return; }
+            if (!(r && r.kind && r.kind !== 'idle')) { if (++tries > 400) clearInterval(wait); return; }
             clearInterval(wait);
             try { if (S && S.restartSession){ S.restartSession(true); armed = true; } } catch (e) {}
           }, 50);
 
-          var tick = setInterval(function () {
-            n -= 1;
-            if (n > 0) {
-              if (el){ el.textContent = String(n); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
-              return;
-            }
-            clearInterval(tick); clearInterval(wait);
-            root.classList.remove('stage-count');
-            counting = false;
-            try {
-              var S = window.SustainScene;
-              // Restart from zero rather than resume, so the block begins at exactly its full length.
-              if (armed && S && S.restartSession) S.restartSession(false);
-              // ...and ring the start bell on the same beat the clock starts.
-              if (window.SustainAudio && window.SustainAudio.cue) window.SustainAudio.cue();
-            } catch (e) {}
-          }, 1000);
+          // 3 · 2 · 1 each get a tick; the BELL is reserved for the moment the clock actually starts, so
+          // the two sounds mean different things on the tape.
+          var beat = function(){ try { if (window.SustainAudio && window.SustainAudio.tick) window.SustainAudio.tick(); } catch (e) {} };
+
+          introT = setTimeout(function () {
+            root.classList.remove('stage-intro');
+            root.classList.add('stage-count');
+            beat();                                     // the "3" is already on screen
+            var n = 3;
+            var tick = setInterval(function () {
+              n -= 1;
+              if (n > 0) {
+                if (el){ el.textContent = String(n); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
+                beat();                                 // "2" and "1"
+                return;
+              }
+              clearInterval(tick); clearInterval(wait);
+              root.classList.remove('stage-count');
+              counting = false;
+              try {
+                var S = window.SustainScene;
+                // Restart from zero rather than resume, so the block begins at exactly its full length.
+                if (armed && S && S.restartSession) S.restartSession(false);
+                // ...and ring the start bell on the same beat the clock starts.
+                if (window.SustainAudio && window.SustainAudio.cue) window.SustainAudio.cue();
+              } catch (e) {}
+            }, 1000);
+          }, INTRO_MS);
         }
         addEventListener('hashchange', function(){
           if (location.hash === '#session') leadIn();
-          else { root.classList.remove('stage-count'); counting = false; }
+          else {
+            clearTimeout(introT);
+            root.classList.remove('stage-intro'); root.classList.remove('stage-count');
+            counting = false;
+          }
         });
 
         // Begin → fullscreen. requestFullscreen needs a user gesture, so it hangs off the Begin CLICK
         // rather than the hashchange (which fires in a later task and can lose the activation).
+        // Begin → fullscreen, EXCEPT under ?record=1.
+        //
+        // requestFullscreen makes the browser print its own "To exit full screen, press Esc" toast, and on
+        // Begin that toast lands squarely on the intro card — i.e. on tape. Inside an OBS Browser Source
+        // requestFullscreen was always a no-op (the source is already rendered at 1920×1080), so skipping
+        // it in the capture preset costs nothing and removes the toast from the recording entirely.
+        //
+        // Capturing a real browser window instead of a Browser Source? Press F11 BEFORE Begin — entering
+        // fullscreen yourself gets the toast over with while nothing is rolling.
+        var REC = /[?&]record=1\b/.test(location.search);
         function goFull(){
+          if (REC) return;
           try {
             var el = document.documentElement;
             if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(function(){});
-          } catch (e) {}                                     // inside an OBS Browser Source this is a no-op
+          } catch (e) {}
         }
         var beginBtn = document.getElementById('begin');
         if (beginBtn) beginBtn.addEventListener('click', function () {
@@ -223,14 +356,20 @@ import { LQIP } from '../scene/lqip.js';
           var r = SustainScene.sampleSession();
           if (!r || !r.done) return;
           done = true;
-          root.classList.add('stage-done');
+          // Session over → thank-you card over the blurred scene (7s), THEN the fade to black, then stop.
+          fillOutro();
+          root.classList.add('stage-outro');
           setTimeout(function () {
-            try {
-              var obs = window.obsstudio;
-              if (obs && typeof obs.stopRecording === 'function') obs.stopRecording();
-              if (obs && typeof obs.stopStreaming === 'function' && /[?&]stopstream=1\b/.test(location.search)) obs.stopStreaming();
-            } catch (e) {}
-          }, 3200);
+            root.classList.remove('stage-outro');
+            root.classList.add('stage-done');
+            setTimeout(function () {
+              try {
+                var obs = window.obsstudio;
+                if (obs && typeof obs.stopRecording === 'function') obs.stopRecording();
+                if (obs && typeof obs.stopStreaming === 'function' && /[?&]stopstream=1\b/.test(location.search)) obs.stopStreaming();
+              } catch (e) {}
+            }, 3200);
+          }, OUTRO_MS);
         }, 1000);
       })();
     </script>

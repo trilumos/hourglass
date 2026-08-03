@@ -2,7 +2,8 @@
 // Faithful, DOM-free port of lib/session/session_plan.dart (via web-prototype/gen_setup.py).
 // A plan is a list of {kind:'focus'|'rest', min}. The big readout and cadence subline are both
 // computed from a real plan, exactly like the app. Reused by home/session later.
-// Node self-test:  node js/plan.js --test
+// Node self-test (web-astro is `type:module`, so this file cannot be run directly as .js):
+//   cd web-astro/public && node -e "process.argv.push('--test');eval(require('fs').readFileSync('js/plan.js','utf8'))"
 (function (root) {
   'use strict';
 
@@ -34,12 +35,16 @@
   // ── Plan builders ─────────────────────────────────────────────────────────
   function flowBlock(m) { return [F(m)]; }
 
-  function pomodoroPlan(work, shortB, longB, blocks, longEvery) {
-    longEvery = longEvery || LONG_EVERY;
+  // `uniform` is the /stage capture mode (see buildPlan): every block identical, and the LAST block keeps
+  // its break instead of dropping it. That makes the total exactly blocks x (work + break) — so a 50/10
+  // runs to a round hour and a video can be titled "4-Hour" without lying. Never set for real users: a
+  // focus session should end on focus, not on a break.
+  function pomodoroPlan(work, shortB, longB, blocks, longEvery, uniform) {
+    longEvery = uniform ? 0 : (longEvery || LONG_EVERY);
     var s = [];
     for (var i = 0; i < blocks; i++) {
       s.push(F(work));
-      if (i !== blocks - 1) {
+      if (i !== blocks - 1 || uniform) {
         var n = i + 1;
         s.push(R(longEvery > 0 && n % longEvery === 0 ? longB : shortB));
       }
@@ -102,8 +107,9 @@
     // Pomodoro: ONE view, three settings — Focus, Break, Blocks. No duration/blocks duality.
     // Independently adjustable — never locked to a fixed 25/5 ratio (NN/g + category research).
     // The long break derives at 3× the short break, so it needs no extra field.
+    // st.uniform is set ONLY on /stage (Setup.astro) — see pomodoroPlan.
     if (st.mode === 'pomodoro')
-      return pomodoroPlan(st.pomoFocus, st.pomoBreak, st.pomoBreak * 3, st.blocks, LONG_EVERY);
+      return pomodoroPlan(st.pomoFocus, st.pomoBreak, st.pomoBreak * 3, st.blocks, LONG_EVERY, !!st.uniform);
     // Custom: breaks spread evenly by COUNT, or one break every INTERVAL of focus.
     // Two genuinely different needs — both kept.
     return st.customMode === 'interval'
@@ -197,6 +203,26 @@
     // Break-squeeze guard: 20m work, 3 breaks (→ chunks would be 5 → 4m < 5m) is refused
     ok(canAddBreak({ customWork: 20, customBreaks: 3 }) === false, 'guard: 20m/5chunks refused');
     ok(canAddBreak({ customWork: 60, customBreaks: 3 }) === true, 'guard: 60m/5chunks allowed');
+
+    // ── /stage uniform mode: the whole point is that a Pomodoro lands on a ROUND HOUR ──────────────
+    var uni = function (f, b, blocks) {
+      return totalMinOf(buildPlan({ mode:'pomodoro', pomoFocus:f, pomoBreak:b, blocks:blocks, uniform:true }));
+    };
+    var norm = function (f, b, blocks) {
+      return totalMinOf(buildPlan({ mode:'pomodoro', pomoFocus:f, pomoBreak:b, blocks:blocks }));
+    };
+    ok(uni(50, 10, 2) === 120,  'uniform 50/10 x2 = 2h exactly');
+    ok(uni(50, 10, 4) === 240,  'uniform 50/10 x4 = 4h exactly');
+    ok(uni(50, 10, 8) === 480,  'uniform 50/10 x8 = 8h exactly');
+    ok(uni(25,  5, 4) === 120,  'uniform 25/5  x4 = 2h exactly');
+    ok(uni(25,  5, 8) === 240,  'uniform 25/5  x8 = 4h exactly');
+    // every uniform total is blocks x (work + break) — no long break, trailing break kept
+    ok(uni(45, 15, 5) === 5 * 60, 'uniform total = blocks x (work+break)');
+    // ...and the USER-FACING plan is untouched: trailing break still dropped, long break still every 4th
+    ok(norm(50, 10, 4) === 230, 'normal 50/10 x4 unchanged (3h50m)');
+    ok(norm(50, 10, 5) === 310, 'normal 50/10 x5 unchanged = 5h10m (4th break is long: 10x3)');
+    ok(buildPlan({ mode:'pomodoro', pomoFocus:50, pomoBreak:10, blocks:2 }).length === 3,  'normal ends on FOCUS');
+    ok(buildPlan({ mode:'pomodoro', pomoFocus:50, pomoBreak:10, blocks:2, uniform:true }).length === 4, 'uniform ends on BREAK');
 
     console.log('plan.js: ' + n + ' assertions passed');
   }

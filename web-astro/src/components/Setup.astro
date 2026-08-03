@@ -650,6 +650,12 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     var st={ mode:'flow', flowMin:25,
       pomoFocus:25, pomoBreak:5, blocks:4,
       customMode:'count', customWork:120, customBreaks:3, customInterval:30, customBreakLen:10 };
+    // ── /stage ONLY ────────────────────────────────────────────────────────────────────────────────
+    // Uniform blocks + a trailing break (plan.js `pomodoroPlan`), so a Pomodoro totals exactly
+    // blocks x (focus + break): 50/10 x4 = 4h on the nose, and the video can be titled "4-Hour" honestly
+    // instead of being a 3h50m video wearing a round number. Never set for real users — their session
+    // should end on FOCUS, not on a break. Copied into cfg by Begin's `for (var k in st)`.
+    st.uniform = document.documentElement.classList.contains('stage');
     var STEPS=Plan.STEPS, fmt=Plan.fmt;
     var readoutKey=function(){ return st.mode==='flow' ? 'flowMin' : null; };
 
@@ -1234,6 +1240,9 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
       cfg.vol = masterPos;                                            // master 0-100
       cfg.soundVol = { sand:SOUND_VOL.sand, ocean:SOUND_VOL.ocean, breeze:SOUND_VOL.breeze, birds:SOUND_VOL.birds };
       cfg.intention = (qs('#intent') && qs('#intent').value.trim()) || '';
+      // Total length, computed HERE because this is where Plan lives. /stage's intro card reads it back to
+      // say "4 hours" without re-deriving the plan from mode-specific fields.
+      cfg.totalMin = st.mode==='endless' ? 0 : Plan.totalMinOf(Plan.buildPlan(st));
       cfg.sunmoon = segState.sunmoon;                                  // show | hide
       // advanced "Light through your session" — the phase sequence + timing the session progresses the sky through
       // the APPLIED cycle, not the draft: unapplied edits must not silently run (that is what the
@@ -1256,6 +1265,68 @@ input[type=range]::-moz-range-thumb{ width:calc(var(--sq)*.032); height:calc(var
     renderCyclePalette(); renderCycPresets();
     cycApplied = cycSnapshot();          // the defaults ARE in use, so the button starts disabled
     renderCycState();
+    // ── Deep link ────────────────────────────────────────────────────────────────────────────────────
+    // Every video description links the exact session that produced it (strategy §10 — "the video is the
+    // ad"). Params only SEED this screen: the visitor still sees Setup and still presses Begin, so nothing
+    // auto-starts and audio keeps the user gesture browsers require.
+    //   /?mode=pomodoro&work=50&break=10&hours=4&phase=sunset&sound=ocean
+    // Lazy on purpose: anything that already has a control is CLICKED rather than re-implemented — that is
+    // what keeps renderTimerDesc / applySepForMode / setSunMoon / applyScene / the cycle re-render correct
+    // for free. Only the plain numbers are written to `st`.
+    (function(){
+      var q = new URLSearchParams(location.search); if (!q.toString()) return;
+      var click = function(sel){ var el = qs(sel); if (el) el.click(); return !!el; };
+      var int = function(k, lo, hi){ var v = parseInt(q.get(k), 10); return isFinite(v) && v>=lo && v<=hi ? v : null; };
+
+      if (q.get('mode')) click('.mode[data-m="' + q.get('mode') + '"]');
+
+      var w = int('work',1,240), b = int('break',0,120), bl = int('blocks',1,24), fm = int('min',1,240);
+      if (w  != null){ st.pomoFocus = w; st.customInterval = w; }
+      if (b  != null){ st.pomoBreak = b; st.customBreakLen = b; }
+      if (bl != null) st.blocks  = bl;
+      if (fm != null) st.flowMin = fm;
+      // ?hours=4 is the roadmap's unit; turn it into whole blocks of the chosen interval.
+      var hrs = parseFloat(q.get('hours'));
+      if (isFinite(hrs) && hrs > 0 && st.mode === 'pomodoro'){
+        var cyc = st.pomoFocus + st.pomoBreak;
+        if (cyc > 0) st.blocks = Math.max(1, Math.min(24, Math.round(hrs * 60 / cyc)));
+      }
+      renderAll(); setPill();
+
+      if (q.get('phase')) click('[data-tod="' + q.get('phase') + '"]');
+      if (q.get('cycle') && click('[data-cyc="' + q.get('cycle') + '"]')) cycApplied = cycSnapshot();
+
+      // sound=ocean,birds  •  sound= (empty) means bell-only, so an EMPTY value is still meaningful
+      if (q.get('sound') !== null){
+        var want = (q.get('sound') || '').split(',').map(function(s){ return s.trim(); });
+        SOUNDS.forEach(function(s){
+          if (!!s.on !== (want.indexOf(s.id) >= 0)) click('[data-snd="' + s.id + '"]');
+        });
+      }
+
+      // font is a CSS stack ("'Newsreader',serif") — far too awkward for a URL, so accept friendly aliases.
+      var FONT = { serif:"'Newsreader',serif", jost:"'Jost',sans-serif", sans:"'Jost',sans-serif" };
+      [['vis','timershow'],['place','place'],['fill','fill'],['sep','sep'],['sunmoon','sunmoon'],['font','font']]
+        .forEach(function(p){
+          var v = q.get(p[0]); if (!v) return;
+          if (p[0] === 'font') v = FONT[v.toLowerCase()] || v;
+          var btn = qsa('[data-seg="' + p[1] + '"] button').filter(function(x){ return x.dataset.v === v; })[0];
+          if (btn) btn.click();
+        });
+
+      var col = q.get('color');
+      if (col && /^#?[0-9a-f]{6}$/i.test(col)){
+        var ci = qs('#numColor');
+        if (ci){ ci.value = (col[0] === '#' ? col : '#' + col); ci.dispatchEvent(new Event('input', { bubbles:true })); }
+      }
+
+      // ...and LAND them on Setup. index.astro treats any hash that is not #setup/#session as Home, so a
+      // link carrying only query params would seed this screen invisibly and drop the visitor on the hero —
+      // which is exactly what a YouTube description link must not do. This runs before index's controller
+      // reads the hash, so its first paint is already Setup.
+      if (!location.hash || location.hash === '#home') location.hash = 'setup';
+    })();
+
     qs('#cycApply').addEventListener('click', function(){
       cycApplied = cycSnapshot();
       // Deliberately does NOT touch the live scene: spec §5 — a chosen cycle takes effect when the SESSION

@@ -157,6 +157,23 @@ function cue(){
     .then(buf=>{ cueBuf=buf; play(buf); }).catch(()=>{});
 }
 
+// ── countdown tick — SYNTHESISED, deliberately not a sample. No asset to source, no licence to track, and
+// it stays 100% ours (strategy §4 — every element of the video must be original). A soft wood-block blip:
+// a short sine dropping 880→440 Hz under a fast exponential decay. Quieter than the bell (0.22 vs 0.55) so
+// the bell still lands as the moment the session actually starts.
+function tickSound(){
+  ensureAudio(); if(AC.state==='suspended') AC.resume();
+  const t=AC.currentTime, osc=AC.createOscillator(), g=AC.createGain();
+  osc.type='sine';
+  osc.frequency.setValueAtTime(880, t);
+  osc.frequency.exponentialRampToValueAtTime(440, t+0.09);
+  g.gain.setValueAtTime(0.0001, t);                        // exponential ramps cannot start at 0
+  g.gain.exponentialRampToValueAtTime(0.22, t+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.20);
+  osc.connect(g).connect(AC.destination);
+  osc.start(t); osc.stop(t+0.22);
+}
+
 window.SustainAudio = {
   // Configure + play the user's mix live. cfg: {sounds:[ids], vol:0-100, soundVol:{id:0-100}}.
   set(cfg){
@@ -172,5 +189,6 @@ window.SustainAudio = {
   mute(on){ muted=on; if(AC&&master) master.gain.setTargetAtTime(gainFor(), AC.currentTime, 0.15); },
   duck(on){ ducked=on; if(AC&&master && !muted) master.gain.setTargetAtTime(gainFor(), AC.currentTime, 0.6); },   // hush ambient on breaks
   cue,
+  tick: tickSound,
   stop(){ if(!AC) return; Object.keys(AUDIO_FILE).forEach(stopSound); if(master) master.gain.setTargetAtTime(0, AC.currentTime, 0.2); }
 };
