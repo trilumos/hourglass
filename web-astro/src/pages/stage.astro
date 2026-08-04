@@ -620,6 +620,21 @@ import { LQIP } from '../scene/lqip.js';
         // EXACTLY the timer's face: 'NumSans' is the self-hosted jost-550.woff2 the numerals use, at its
         // one real weight (550). Google-Jost at 300 was a different typeface weight and read thinner.
         var TH_FONT = "'NumSans','Jost',system-ui,sans-serif";
+        // The moon at midnight and the sun at midday both ride high enough to collide with the
+        // STUDY WITH ME line. Moving the celestial body would change the recorded VIDEO, not just the
+        // thumbnail, so the heading drops instead — thumbnail only, and only on those two skies.
+        // It rides ON TOP of the saved base position, so one locked layout still serves all six.
+        // Keyed on the PHASE INDEX, not lightOf() — that returns a prose phrase ("the shore"), never
+        // a phase name, so a name lookup would silently never match.
+        // PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'] -> 2 and 5.
+        var TH_DROP = { 2:0.10, 5:0.10 };
+        function thDrop(){
+          try { var c = readCfg();
+                var ph = (c.cycle && c.cycle.preset != null && MOVING[c.cycle.preset]) ? null : (c.phase | 0);
+                return ph == null ? 0 : (TH_DROP[ph] || 0);
+          } catch (e){ return 0; }
+        }
+        function thTopY(){ return TH.top.y + thDrop(); }
         function thType(o, H){
           o.textAlign = 'center'; o.textBaseline = 'middle'; o.fillStyle = '#fffaf0';
           o.shadowColor = 'rgba(0,0,0,.55)'; o.shadowBlur = Math.round(H*0.02); o.shadowOffsetY = Math.round(H*0.004);
@@ -629,10 +644,10 @@ import { LQIP } from '../scene/lqip.js';
           thType(o, H);
           var s1 = Math.round(H * TH.top.size), s2 = Math.round(s1 * TH.l2r);
           o.font = '550 ' + s1 + 'px ' + TH_FONT;
-          o.fillText(TH.l1, W*TH.top.x, H*TH.top.y);
+          o.fillText(TH.l1, W*TH.top.x, H*thTopY());
           o.font = '550 ' + s2 + 'px ' + TH_FONT;
           o.letterSpacing = Math.round(s2*0.16) + 'px';
-          o.fillText(TH.l2, W*TH.top.x, H*TH.top.y + s1*0.78);
+          o.fillText(TH.l2, W*TH.top.x, H*thTopY() + s1*0.78);
           o.letterSpacing = '0px'; o.shadowBlur = 0; o.shadowOffsetY = 0;
         }
         // IN FRONT — the bottom row. Both words are pinned the SAME distance either side of the
@@ -679,7 +694,7 @@ import { LQIP } from '../scene/lqip.js';
             var act = thDragging || thHover;
             var hx = act.kind === 'top' ? W*TH.top.x
                    : act.side === 'L' ? ax - W*TH.bot.gapL : ax + W*TH.bot.gapR;
-            var hy = act.kind === 'top' ? H*(TH.top.y + TH.top.size*0.4) : H*TH.bot.y;
+            var hy = act.kind === 'top' ? H*(thTopY() + TH.top.size*0.4) : H*TH.bot.y;
             o.save();
             o.strokeStyle = thDragging ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.5)';
             o.lineWidth = Math.max(1.5, W/500);
@@ -723,7 +738,7 @@ import { LQIP } from '../scene/lqip.js';
           // top block: both lines as ONE box, because they drag as one
           var w1 = mw(TH.l1, s1), w2 = mw(TH.l2, s2, Math.round(s2*720*0.16));
           var tw = Math.max(w1, w2), th = s1 * 1.55;
-          out.push({ kind:'top', x:TH.top.x, y:TH.top.y + s1*0.39, w:tw*1.08, h:th });
+          out.push({ kind:'top', x:TH.top.x, y:thTopY() + s1*0.39, w:tw*1.08, h:th });
           // bottom pair, each measured with its own tracking so the boxes match what is drawn
           var sp = thTrack(_mc, Math.round(s3*720), Math.round(s3*720*0.22));
           out.push({ kind:'bot', side:'L', x:(ax - TH.bot.gapL) - mw(TH.bl, s3, sp.l)/2,
@@ -905,7 +920,7 @@ import { LQIP } from '../scene/lqip.js';
             if (b){ if (Math.abs(nx - ax) < 0.012) nx = ax; b.x = nx; b.y = ny; }
           } else if (thDragging.kind === 'top'){
             if (Math.abs(nx - ax) < 0.012) nx = ax;    // snap to the glass centreline
-            TH.top.x = nx; TH.top.y = ny;
+            TH.top.x = nx; TH.top.y = ny - thDrop();   // store the base, not the dropped position
           } else {
             // Horizontal drag becomes that side's OWN gap; vertical is shared so the row stays level.
             if (thDragging.side === 'L') TH.bot.gapL = Math.max(0, ax - nx);
