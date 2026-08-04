@@ -719,6 +719,28 @@ All of it is **asserted after generation**, not assumed — visibility, fill, co
 rules, and full twin parity across `numerals`, `lightSetup`, `mode`, `interval`, `blocks`, `duration`
 and `setup`. Every one of these has shipped wrong once already.
 
+## 22. The reservoir under the rules — 746,496 videos
+
+| Dimension | Count | What varies |
+|---|---:|---|
+| Look | **48** | 6 legal (placement, separator) pairs x 2 fills x 2 fonts x 2 colours |
+| Sound | **16** | 15 non-empty mixes of ocean/sand/breeze/birds + bell-only |
+| Sky | **6** | pre-dawn, sunrise, midday, sunset, twilight, midnight |
+| Session | **162** | 91 Pomodoro + 11 Flow + 60 Custom, under >=25/5 and round-hour |
+| **Total** | **746,496** | |
+
+**As shipped: 373,248**, because colour is bound to the sky for legibility rather than left free.
+
+The rules *shrink* the space and that is the point. Unconstrained the look space is 4 placements x 3
+separators x 3 fills x 2 fonts x 5 colours = 360; the rules cut it to 48, and every survivor is
+publishable. Sessions alone, ignoring look entirely, still give **15,552** genuinely distinct videos.
+
+**Combination count is a ceiling, not a plan.** 746,496 is 2,045 years at one a day. The binding
+constraints are elsewhere: capture is real-time (a 3-hour video costs 3 hours, so 1-2 recordings a day),
+and per section 4 a large stock of near-identical permutations is a *liability* under the
+inauthentic-content policy, not an asset. This is why the monthly 15 are chosen against measured search
+volume rather than drawn from this space at random.
+
 ## 15. Sources
 
 - [YouTube Partner Program overview & eligibility](https://support.google.com/youtube/answer/72851?hl=en)
