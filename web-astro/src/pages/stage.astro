@@ -205,7 +205,7 @@ import { LQIP } from '../scene/lqip.js';
       <div id="thumbPanel">
         <div class="th-head">
           <b>Thumbnail</b>
-          <span class="th-hint">drag the text · scroll a block to resize</span>
+          <span class="th-hint">heading + bottom row locked · drag or scroll the sound row</span>
           <button id="thumbClose" title="Close">✕</button>
         </div>
         <div class="th-body">
@@ -738,6 +738,13 @@ import { LQIP } from '../scene/lqip.js';
           var act = thDragging || thHover;
           o.save();
           thRects().forEach(function(r){
+            if (r.kind !== 'extra'){                        // locked: faint, dashed, never active
+              o.strokeStyle = 'rgba(255,250,240,.14)';
+              o.lineWidth = Math.max(1, W/1100); o.setLineDash([W*0.004, W*0.008]);
+              o.strokeRect(Math.round((r.x - r.w/2)*W), Math.round((r.y - r.h/2)*H),
+                           Math.round(r.w*W), Math.round(r.h*H));
+              return;
+            }
             var on = act && act.kind === r.kind
                   && (r.kind !== 'bot' || act.side === r.side)
                   && (r.kind !== 'extra' || act.i === r.i);
@@ -852,24 +859,25 @@ import { LQIP } from '../scene/lqip.js';
         // Grab the NEAREST handle, not whatever a y-threshold guesses. A single dividing line was
         // fragile — anything that moved the bottom row near it, or any CSS scaling of the canvas, made
         // every click resolve to the heading. Distance to the real anchor always picks what you aimed at.
+        // Only FREE boxes are grabbable. The heading and the bottom pair are the series template —
+        // the thing that makes 90 thumbnails read as one channel — and a stray drag on either is
+        // invisible at 1280 wide, surfacing only as drift once the videos sit side by side on the
+        // channel page. Their sliders still set them deliberately; the pointer cannot nudge them.
+        // (Replaces a nearest-anchor scheme that had no knowledge of free boxes at all, which is the
+        // real reason the sound row could never be dragged.)
         function thHit(e){
-          var p = thPt(e), ax = thAxis();
-          var cand = [
-            { kind:'top',                x:TH.top.x,       y:TH.top.y + TH.top.size*0.4 },
-            { kind:'bot', side:'L', x:ax - TH.bot.gapL, y:TH.bot.y },
-            { kind:'bot', side:'R', x:ax + TH.bot.gapR, y:TH.bot.y }
-          ];
-          var best = cand[0], bd = 1e9;
-          for (var i = 0; i < cand.length; i++){
-            var dx = (p.x - cand[i].x), dy = (p.y - cand[i].y) * 1.78;   // 16:9 -> compare in square space
-            var d = dx*dx + dy*dy;
-            if (d < bd){ bd = d; best = cand[i]; }
+          var p = thPt(e), rs = thRects();
+          for (var j = rs.length - 1; j >= 0; j--){          // last drawn sits on top
+            var r = rs[j];
+            if (r.kind !== 'extra') continue;
+            if (Math.abs(p.x - r.x) <= r.w/2 && Math.abs(p.y - r.y) <= r.h/2) return r;
           }
-          return best;
+          return null;
         }
         var thHover = null;
         thCv.addEventListener('pointerdown', function(e){
-          thDragging = thHit(e); thCv.setPointerCapture(e.pointerId);
+          var h = thHit(e); if (!h) return;                 // nothing grabbable there
+          thDragging = h; thCv.setPointerCapture(e.pointerId);
         });
         thCv.addEventListener('pointermove', function(e){ if (!thDragging) thHover = thHit(e); });
         thCv.addEventListener('pointerleave', function(){ thHover = null; });
@@ -898,8 +906,9 @@ import { LQIP } from '../scene/lqip.js';
         });
         thCv.addEventListener('wheel', function(e){
           e.preventDefault();
-          var h = thHit(e), k = e.deltaY < 0 ? 1.06 : 1/1.06;
-          var b = h.kind === 'top' ? TH.top : TH.bot;
+          var h = thHit(e); if (!h) return;                 // locked blocks ignore the wheel
+          var k = e.deltaY < 0 ? 1.06 : 1/1.06;
+          var b = TH.extra[h.i]; if (!b) return;
           b.size = Math.max(0.015, Math.min(0.30, b.size * k));
           thSync();
         }, { passive:false });
