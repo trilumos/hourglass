@@ -780,6 +780,57 @@ did. Offsetting the index does not fix that, it only relocates the clash (the fi
 from session 2 to session 13). The generator instead walks forward until it produces a look no pinned
 session has taken, and asserts afterwards that all 15 sessions are visually distinct.
 
+## 23. Never publish the same video twice — the ledger
+
+This is the one failure that is genuinely unrecoverable. Re-uploading a session already on the channel
+is exactly what the inauthentic-content policy in section 4 exists to catch, and no amount of good
+metadata undoes it. Human memory is not an adequate control across ~30 videos a month for years.
+
+`docs/youtube/published.json` is the permanent record of every video actually **recorded**, committed
+to git. Keyed on the slug, which encodes mode + interval + length + sky + sound — everything that makes
+a video that video. **Numerals are deliberately not in the key**: the same session in a different
+numeral colour is the same video to a viewer and to YouTube, and treating it as new is precisely the
+self-deception that gets channels struck.
+
+Each entry carries its month, so the current month's own recorded rows do not trip the check. Any id
+reappearing under a *different* month throws:
+
+```
+Error: REPEAT UPLOAD BLOCKED — 1 video(s) already recorded:
+  P50-10x3h_midnight_ocn-brz  first recorded 2026-07-15 (2026-07)
+```
+
+Verified to fire, and verified to pass when clean.
+
+**Workflow:** tick in the directory as you record → **Export ledger** → commit the file to
+`docs/youtube/`. The generator enforces it from then on.
+
+## 24. Month-by-month, not a year plan — decided 2026-08-04
+
+The founder asked whether to generate the remaining 2026 months (Aug–Dec, ~151 videos) up front.
+**No.** Month at a time, regenerated each month.
+
+- **The data to plan it with does not exist yet.** One video is published. After a month, Analytics
+  reports which durations retain, which skies get clicked, and whether bell-only twins underperform
+  their ambience versions. A December list written in August ignores all of it.
+- **Section 2's ignition curve makes this worse, not better.** Months 1–3 are when the most is learned
+  and should be reshaping months 4–12. Locking the year in on day 2 discards that.
+- **No efficiency gain.** Generating a month is one command.
+- **A stale list stops being used**, and a plan nobody trusts is worse than no plan.
+- **The year list was never the repeat protection** — section 23's ledger is, and it works at any
+  horizon.
+
+The month also runs from the first upload to the end of that calendar month, not a flat 30 days:
+August holds **29** videos (3rd–31st). An odd day count leaves the last session's bell twin without a
+slot, so `month.json` carries `carryTwin` naming the video that must open the following month.
+
+### The directory has two panels
+
+**To record** — this month, unticked, in shooting order. **Recorded** — every video ever published,
+grouped by month, newest first, persisting across regenerations forever. Ticking moves a row down and
+stores a full **snapshot** rather than an id, because next month's `month.json` will not contain this
+month's videos and an archive that cannot render without them is not an archive.
+
 ## 15. Sources
 
 - [YouTube Partner Program overview & eligibility](https://support.google.com/youtube/answer/72851?hl=en)

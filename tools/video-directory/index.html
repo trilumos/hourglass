@@ -58,131 +58,199 @@
   .cp button{ position:absolute; top:0; right:0; padding:3px 9px; font-size:11px }
   .note{ color:var(--dim); font-size:12px; margin-top:14px }
   .empty{ padding:40px; text-align:center; color:var(--dim) }
+  .sec-h{ font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.09em;
+          color:var(--dim); margin:26px 0 11px; display:flex; align-items:baseline; gap:9px }
+  main > .sec-h:first-child{ margin-top:4px }
+  .sec-n{ font-variant-numeric:tabular-nums; color:var(--acc); letter-spacing:0 }
+  .sec-sub{ text-transform:none; letter-spacing:0; font-weight:400; font-size:12px; opacity:.7 }
+  .arch-m{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim);
+           margin:16px 0 7px; padding-top:12px; border-top:1px dashed var(--line) }
+  .arch{ display:flex; align-items:center; gap:12px; padding:8px 13px; border:1px solid var(--line);
+         border-radius:9px; background:var(--panel); margin-bottom:6px }
+  .arch .d{ font-variant-numeric:tabular-nums; color:var(--dim); font-size:12px; flex:0 0 auto }
+  .arch .t{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+            font-size:13px; color:var(--dim) }
+  .arch .u{ flex:0 0 auto; padding:2px 8px; font-size:11px; border-radius:99px; border:1px solid var(--line);
+            background:none; color:var(--dim); cursor:pointer }
+  .arch .u:hover{ border-color:var(--acc); color:var(--acc) }
 </style>
 </head>
 <body>
 <header>
   <h1>Sustain — <span id="mLabel">this month</span></h1>
-  <p class="sub">15 sessions across Pomodoro, Flow and Custom — each shot twice: once with ambience, once bell-only. Shoot top-down.</p>
+  <p class="sub" id="sub">Each session is shot twice: once with ambience, once bell-only. Shoot top-down, one a day.</p>
   <div class="bar">
     <div class="prog"><i id="pFill"></i></div>
     <span class="count" id="pCount">0 / 0</span>
     <button id="jump">Jump to next</button>
-    <button id="exp">Export ticks</button>
+    <button id="exp">Export ledger</button>
     <button id="imp">Import</button>
     <input type="file" id="file" accept="application/json" hidden>
   </div>
 </header>
-<main id="list"><div class="empty">Loading month.json…</div></main>
+<main>
+  <h2 class="sec-h">To record <span class="sec-n" id="todoN"></span></h2>
+  <div id="list"><div class="empty">Loading month.json…</div></div>
+
+  <h2 class="sec-h">Recorded <span class="sec-n" id="doneN"></span>
+    <span class="sec-sub">every video ever published, all months</span></h2>
+  <div id="archive"><div class="empty">Nothing recorded yet.</div></div>
+</main>
 
 <script>
 (function(){
   'use strict';
-  var KEY = 'sustain.month.done';
-  var done = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
-  var save = function(){ localStorage.setItem(KEY, JSON.stringify([].slice.call(done))); };
-  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>]/g, function(c){
+  // A tick is not a checkbox — it is an entry in a permanent record of what has been published, which
+  // is the only thing standing between us and re-uploading a session we already ran. So it stores a
+  // SNAPSHOT of the row, not just an id: next month's month.json will not contain this month's videos,
+  // and an archive that cannot render without them is not an archive.
+  var ARCH = 'sustain.recorded', OLD = 'sustain.month.done';
+  var arch = JSON.parse(localStorage.getItem(ARCH) || '{}');
+  var save = function(){ localStorage.setItem(ARCH, JSON.stringify(arch)); };
+  var esc  = function(x){ return String(x == null ? '' : x).replace(/[&<>]/g, function(c){
     return { '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c]; }); };
+  var $ = function(id){ return document.getElementById(id); };
+  var plan = null;
 
-  fetch('./month.json').then(function(r){ return r.json(); }).then(render).catch(function(e){
-    document.getElementById('list').innerHTML =
-      '<div class="empty">Could not load <code>month.json</code>.<br>Run <code>node docs/youtube/gen-roadmap.cjs</code> and redeploy.</div>';
-  });
-
-  function render(plan){
-    document.getElementById('mLabel').textContent = plan.label;
-    var list = document.getElementById('list');
-    list.innerHTML = plan.videos.map(function(v){
-      var d = done.has(v.id);
-      return '<div class="row' + (d ? ' done' : '') + '" data-id="' + v.id + '">'
-        + '<div class="head">'
-        +   '<input type="checkbox"' + (d ? ' checked' : '') + '>'
-        +   '<span class="day">Day ' + v.day + '</span>'
-        +   '<span class="kind">' + (v.silent ? '🔔' : '🌊') + '</span>'
-        +   '<span class="ttl">' + esc(v.title) + '</span>'
-        +   '<span class="tag' + (v.silent ? ' b' : '') + '">' + (v.silent ? 'silent' : esc(v.mode.toLowerCase())) + '</span>'
-        +   '<span class="tag">' + esc(v.duration) + '</span>'
-        + '</div>'
-        + '<div class="body">'
-        +   '<div class="grid">'
-        +     cell('Mode', v.mode + ' ' + v.interval)
-        +     cell('Blocks', v.blocks + ' → ' + v.duration)
-        +     cell('Setup', v.setup)
-        +     cell('Time of day', v.lightSetup)
-        +     cell('Sound', v.sound)
-        +     cell('Audio levels', v.audio)
-        +     cell('Numerals', v.numerals)
-        +   '</div>'
-        +   copy('Title', v.title)
-        +   copy('Tags — paste after the Upload-defaults tags', v.tags)
-        +   copy('Description — paste ABOVE the Upload-defaults text', descOf(v))
-        +   '<p class="note">ID <code>' + esc(v.id) + '</code>'
-        +     (v.silent ? ' · silent twin of <code>' + esc(v.pairId) + '</code> — identical config, all sounds off' : '')
-        +   '</p>'
-        + '</div></div>';
-    }).join('');
-
-    list.addEventListener('click', function(e){
-      var row = e.target.closest('.row'); if (!row) return;
-      if (e.target.matches('input[type=checkbox]')){
-        var id = row.dataset.id;
-        e.target.checked ? done.add(id) : done.delete(id);
-        row.classList.toggle('done', e.target.checked);
-        save(); progress(plan);
-        return;
-      }
-      if (e.target.closest('.cp button')) return;      // copy buttons must not collapse the row
-      if (e.target.closest('.head')) row.classList.toggle('open');
-    });
-    list.addEventListener('click', function(e){
-      var b = e.target.closest('.cp button'); if (!b) return;
-      var txt = b.parentNode.querySelector('pre').textContent;
-      navigator.clipboard.writeText(txt).then(function(){
-        var old = b.textContent; b.textContent = 'copied'; setTimeout(function(){ b.textContent = old; }, 1200);
+  fetch('./month.json').then(function(r){ return r.json(); }).then(function(pl){
+    plan = pl;
+    // One-time lift from the old id-only key, while those ids are still in month.json to snapshot.
+    var old = JSON.parse(localStorage.getItem(OLD) || '[]');
+    if (old.length && !Object.keys(arch).length){
+      old.forEach(function(id){
+        var v = pl.videos.filter(function(x){ return x.id === id; })[0];
+        if (v) arch[id] = snap(v);
       });
-    });
-    progress(plan);
-    document.getElementById('jump').addEventListener('click', function(){ jump(plan); });
-    jump(plan);
-  }
-
-  function cell(k, v){ return '<div class="cell"><b>' + k + '</b><span>' + esc(v) + '</span></div>'; }
-  function copy(k, v){
-    return '<div class="cp"><b>' + esc(k) + '</b><button>copy</button><pre>' + esc(v) + '</pre></div>';
-  }
-  // The generator emits the finished head (v.desc) — this page must not re-word it. The old version
-  // rebuilt the sentence here and hardcoded "pomodoro timer" and "ocean waves", which went wrong the
-  // moment Flow and non-ocean sessions existed.
-  function descOf(v){ return v.desc; }
-  function progress(plan){
-    var n = plan.videos.filter(function(v){ return done.has(v.id); }).length;
-    document.getElementById('pCount').textContent = n + ' / ' + plan.videos.length;
-    document.getElementById('pFill').style.width = (n / plan.videos.length * 100) + '%';
-  }
-  // Highlight and scroll to the first unticked row — the one to shoot today.
-  function jump(plan){
-    var next = plan.videos.filter(function(v){ return !done.has(v.id); })[0];
-    [].forEach.call(document.querySelectorAll('.row.next'), function(r){ r.classList.remove('next'); });
-    if (!next) return;
-    var el = document.querySelector('.row[data-id="' + next.id + '"]');
-    if (el){ el.classList.add('next', 'open'); el.scrollIntoView({ behavior:'smooth', block:'center' }); }
-  }
-
-  document.getElementById('exp').addEventListener('click', function(){
-    var b = new Blob([JSON.stringify({ done:[].slice.call(done) }, null, 1)], { type:'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(b); a.download = 'sustain-month-done.json'; a.click();
+      save(); localStorage.removeItem(OLD);
+    }
+    render();
+  }).catch(function(){
+    $('list').innerHTML = '<div class="empty">Could not load <code>month.json</code>.<br>'
+      + 'Run <code>node docs/youtube/gen-roadmap.cjs</code> and redeploy.</div>';
   });
-  var file = document.getElementById('file');
-  document.getElementById('imp').addEventListener('click', function(){ file.click(); });
-  file.addEventListener('change', function(){
-    var f = file.files[0]; if (!f) return;
+
+  function snap(v){
+    return { id:v.id, date:v.date, title:v.title, duration:v.duration, mode:v.mode,
+             interval:v.interval, light:v.light, month:plan.month, monthLabel:plan.label };
+  }
+
+  function render(){
+    $('mLabel').textContent = plan.label;
+    $('sub').textContent = plan.videos.length + ' videos, ' + plan.start
+      + ' to the end of the month. Each session is shot twice — once with ambience, once bell-only.'
+      + (plan.carryTwin ? ' The last session’s bell twin opens next month.' : '');
+
+    var todo = plan.videos.filter(function(v){ return !arch[v.id]; });
+    $('todoN').textContent = todo.length + ' left';
+    $('list').innerHTML = todo.length ? todo.map(row).join('')
+      : '<div class="empty">Every video this month is recorded. Generate next month’s list.</div>';
+
+    var all = Object.keys(arch).map(function(k){ return arch[k]; })
+      .sort(function(x, y){ return (y.date || '').localeCompare(x.date || ''); });
+    $('doneN').textContent = all.length + ' total';
+    $('archive').innerHTML = all.length ? group(all)
+      : '<div class="empty">Nothing recorded yet.</div>';
+
+    var n = plan.videos.length - todo.length;
+    $('pCount').textContent = n + ' / ' + plan.videos.length;
+    $('pFill').style.width = (n / plan.videos.length * 100) + '%';
+
+    var first = document.querySelector('#list .row');
+    if (first) first.classList.add('next', 'open');
+  }
+
+  // Grouped by month so the record reads as a history, not one undifferentiated list.
+  function group(all){
+    var out = '', month = '';
+    all.forEach(function(v){
+      if (v.monthLabel !== month){ month = v.monthLabel;
+        out += '<p class="arch-m">' + esc(month) + '</p>'; }
+      out += '<div class="arch" data-id="' + esc(v.id) + '">'
+           + '<span class="d">' + esc(v.date || '—') + '</span>'
+           + '<span class="t">' + esc(v.title) + '</span>'
+           + '<button class="u" title="Move back to To record">untick</button></div>';
+    });
+    return out;
+  }
+
+  function row(v){
+    return '<div class="row" data-id="' + esc(v.id) + '">'
+      + '<div class="head">'
+      +   '<input type="checkbox">'
+      +   '<span class="day">' + esc((v.date || '').slice(5)) + '</span>'
+      +   '<span class="kind">' + (v.silent ? '🔔' : '🌊') + '</span>'
+      +   '<span class="ttl">' + esc(v.title) + '</span>'
+      +   '<span class="tag' + (v.silent ? ' b' : '') + '">'
+      +     (v.silent ? 'silent' : esc(String(v.mode).toLowerCase())) + '</span>'
+      +   '<span class="tag">' + esc(v.duration) + '</span>'
+      + '</div>'
+      + '<div class="body"><div class="grid">'
+      +   cell('Mode', v.mode + ' ' + v.interval) + cell('Blocks', v.blocks + ' → ' + v.duration)
+      +   cell('Setup', v.setup) + cell('Time of day', v.lightSetup)
+      +   cell('Sound', v.sound) + cell('Audio levels', v.audio) + cell('Numerals', v.numerals)
+      + '</div>'
+      +   copy('Title', v.title)
+      +   copy('Tags — paste after the Upload-defaults tags', v.tags)
+      +   copy('Description — paste ABOVE the Upload-defaults text', v.desc)
+      +   '<p class="note">ID <code>' + esc(v.id) + '</code>'
+      +     (v.silent ? ' · silent twin of <code>' + esc(v.pairId)
+                      + '</code> — identical config, all sounds off' : '')
+      +   '</p>'
+      + '</div></div>';
+  }
+  function cell(k, v){ return '<div class="cell"><b>' + k + '</b><span>' + esc(v) + '</span></div>'; }
+  function copy(k, v){ return '<div class="cp"><b>' + esc(k) + '</b><button>copy</button><pre>'
+    + esc(v) + '</pre></div>'; }
+
+  document.addEventListener('click', function(e){
+    var cp = e.target.closest('.cp button');
+    if (cp){ navigator.clipboard.writeText(cp.parentNode.querySelector('pre').textContent)
+      .then(function(){ var t = cp.textContent; cp.textContent = 'copied';
+        setTimeout(function(){ cp.textContent = t; }, 1200); }); return; }
+
+    var un = e.target.closest('.arch .u');
+    if (un){ delete arch[un.closest('.arch').dataset.id]; save(); render(); return; }
+
+    var r = e.target.closest('.row'); if (!r) return;
+    if (e.target.matches('input[type=checkbox]')){
+      var v = plan.videos.filter(function(x){ return x.id === r.dataset.id; })[0];
+      if (v){ arch[v.id] = snap(v); save(); render(); }
+      return;
+    }
+    if (e.target.closest('.head')) r.classList.toggle('open');
+  });
+
+  // Exports in published.json's shape so it drops straight into docs/youtube/ and the generator's
+  // repeat check starts enforcing it. That check is what makes a duplicate upload impossible.
+  $('exp').addEventListener('click', function(){
+    var out = Object.keys(arch).map(function(k){ return arch[k]; })
+      .sort(function(x, y){ return (x.date || '').localeCompare(y.date || ''); })
+      .map(function(v){ return { id:v.id, month:v.month, date:v.date, title:v.title }; });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type:'application/json' }));
+    a.download = 'published.json'; a.click();
+  });
+  $('imp').addEventListener('click', function(){ $('file').click(); });
+  $('file').addEventListener('change', function(){
+    var f = $('file').files[0]; if (!f) return;
     var rd = new FileReader();
     rd.onload = function(){
-      try { (JSON.parse(rd.result).done || []).forEach(function(id){ done.add(id); }); save(); location.reload(); }
-      catch (err){ alert('Not a valid export file.'); }
+      try {
+        var d = JSON.parse(rd.result);
+        (Array.isArray(d) ? d : d.done || []).forEach(function(v){
+          if (typeof v === 'string'){
+            var m = plan.videos.filter(function(x){ return x.id === v; })[0];
+            if (m) arch[v] = snap(m);
+          } else arch[v.id] = Object.assign({ monthLabel: v.monthLabel || v.month }, v);
+        });
+        save(); render();
+      } catch (err){ alert('Not a valid ledger file.'); }
     };
     rd.readAsText(f);
+  });
+  $('jump').addEventListener('click', function(){
+    var el = document.querySelector('#list .row');
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
   });
 })();
 </script>

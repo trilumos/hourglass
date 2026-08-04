@@ -1,9 +1,13 @@
 {
  "month": "2026-08",
  "label": "August 2026",
+ "start": "2026-08-03",
+ "days": 29,
+ "carryTwin": "C60-20x5h_sunrise_bell",
  "videos": [
   {
    "day": 1,
+   "date": "2026-08-03",
    "id": "P50-10x2h_sunset_ocn",
    "pairId": "P50-10x2h_sunset_bell",
    "silent": false,
@@ -32,6 +36,7 @@
   },
   {
    "day": 2,
+   "date": "2026-08-04",
    "id": "P50-10x2h_sunset_bell",
    "pairId": "P50-10x2h_sunset_ocn",
    "silent": true,
@@ -60,6 +65,7 @@
   },
   {
    "day": 3,
+   "date": "2026-08-05",
    "id": "P50-10x3h_midnight_ocn-brz",
    "pairId": "P50-10x3h_midnight_bell",
    "silent": false,
@@ -73,7 +79,7 @@
    "lightSetup": "Time of day → Midnight",
    "sound": "Ocean + Shore breeze",
    "audio": "Ocean 100 · Shore breeze 55 — master 100",
-   "numerals": "Always · ledge · solid · Serif · none · White #ffffff",
+   "numerals": "Always · ledge · solid · Jost · none · White #ffffff",
    "title": "3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean & Breeze, Midnight",
    "tags": "50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة",
    "chapters": [
@@ -90,6 +96,7 @@
   },
   {
    "day": 4,
+   "date": "2026-08-06",
    "id": "P50-10x3h_midnight_bell",
    "pairId": "P50-10x3h_midnight_ocn-brz",
    "silent": true,
@@ -103,7 +110,7 @@
    "lightSetup": "Time of day → Midnight",
    "sound": "ALL sounds OFF — bell only",
    "audio": "ALL sounds OFF — bell only",
-   "numerals": "Always · ledge · solid · Serif · none · White #ffffff",
+   "numerals": "Always · ledge · solid · Jost · none · White #ffffff",
    "title": "3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Midnight",
    "tags": "50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo",
    "chapters": [
@@ -120,6 +127,7 @@
   },
   {
    "day": 5,
+   "date": "2026-08-07",
    "id": "P50-10x4h_sunrise_ocn-brd",
    "pairId": "P50-10x4h_sunrise_bell",
    "silent": false,
@@ -152,6 +160,7 @@
   },
   {
    "day": 6,
+   "date": "2026-08-08",
    "id": "P50-10x4h_sunrise_bell",
    "pairId": "P50-10x4h_sunrise_ocn-brd",
    "silent": true,
@@ -184,6 +193,7 @@
   },
   {
    "day": 7,
+   "date": "2026-08-09",
    "id": "P50-10x1h_twilight_snd-brz",
    "pairId": "P50-10x1h_twilight_bell",
    "silent": false,
@@ -207,6 +217,7 @@
   },
   {
    "day": 8,
+   "date": "2026-08-10",
    "id": "P50-10x1h_twilight_bell",
    "pairId": "P50-10x1h_twilight_snd-brz",
    "silent": true,
@@ -230,6 +241,7 @@
   },
   {
    "day": 9,
+   "date": "2026-08-11",
    "id": "P50-10x3h_sunset_ocn-snd-brd",
    "pairId": "P50-10x3h_sunset_bell",
    "silent": false,
@@ -243,7 +255,7 @@
    "lightSetup": "Time of day → Sunset",
    "sound": "Ocean + Sand + Seabirds",
    "audio": "Ocean 100 · Sand 55 · Seabirds 40 — master 90",
-   "numerals": "5 min · horizon · solid · Serif · dot · Charcoal #20242e",
+   "numerals": "Always · horizon · solid · Serif · dot · Charcoal #20242e",
    "title": "3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean, Sand & Seabirds, Sunset",
    "tags": "50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, अध्ययन टाइमर",
    "chapters": [
@@ -260,6 +272,7 @@
   },
   {
    "day": 10,
+   "date": "2026-08-12",
    "id": "P50-10x3h_sunset_bell",
    "pairId": "P50-10x3h_sunset_ocn-snd-brd",
    "silent": true,
@@ -273,7 +286,7 @@
    "lightSetup": "Time of day → Sunset",
    "sound": "ALL sounds OFF — bell only",
    "audio": "ALL sounds OFF — bell only",
-   "numerals": "5 min · horizon · solid · Serif · dot · Charcoal #20242e",
+   "numerals": "Always · horizon · solid · Serif · dot · Charcoal #20242e",
    "title": "3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunset",
    "tags": "50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio",
    "chapters": [
@@ -290,6 +303,7 @@
   },
   {
    "day": 11,
+   "date": "2026-08-13",
    "id": "P25-5x2h_midnight_ocn",
    "pairId": "P25-5x2h_midnight_bell",
    "silent": false,
@@ -322,6 +336,7 @@
   },
   {
    "day": 12,
+   "date": "2026-08-14",
    "id": "P25-5x2h_midnight_bell",
    "pairId": "P25-5x2h_midnight_ocn",
    "silent": true,
@@ -354,6 +369,7 @@
   },
   {
    "day": 13,
+   "date": "2026-08-15",
    "id": "P25-5x3h_sunset_ocn-snd",
    "pairId": "P25-5x3h_sunset_bell",
    "silent": false,
@@ -390,6 +406,7 @@
   },
   {
    "day": 14,
+   "date": "2026-08-16",
    "id": "P25-5x3h_sunset_bell",
    "pairId": "P25-5x3h_sunset_ocn-snd",
    "silent": true,
@@ -426,6 +443,7 @@
   },
   {
    "day": 15,
+   "date": "2026-08-17",
    "id": "P25-5x4h_midday_brz-brd",
    "pairId": "P25-5x4h_midday_bell",
    "silent": false,
@@ -466,6 +484,7 @@
   },
   {
    "day": 16,
+   "date": "2026-08-18",
    "id": "P25-5x4h_midday_bell",
    "pairId": "P25-5x4h_midday_brz-brd",
    "silent": true,
@@ -506,6 +525,7 @@
   },
   {
    "day": 17,
+   "date": "2026-08-19",
    "id": "F60mx1h_sunrise_ocn-brd",
    "pairId": "F60mx1h_sunrise_bell",
    "silent": false,
@@ -529,6 +549,7 @@
   },
   {
    "day": 18,
+   "date": "2026-08-20",
    "id": "F60mx1h_sunrise_bell",
    "pairId": "F60mx1h_sunrise_ocn-brd",
    "silent": true,
@@ -552,6 +573,7 @@
   },
   {
    "day": 19,
+   "date": "2026-08-21",
    "id": "F120mx2h_midnight_snd",
    "pairId": "F120mx2h_midnight_bell",
    "silent": false,
@@ -565,7 +587,7 @@
    "lightSetup": "Time of day → Midnight",
    "sound": "Sand",
    "audio": "Sand 100 — master 100",
-   "numerals": "Never · numerals hidden — nothing else to set",
+   "numerals": "Always · top · solid · Serif · dot · White #ffffff",
    "title": "2-Hour Study With Me 🍃 Deep Work Timer, No Breaks for Flow State & ADHD | Falling Sand & Midnight",
    "tags": "deep work, flow state, deep work timer, study with me no break, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة",
    "chapters": [],
@@ -575,6 +597,7 @@
   },
   {
    "day": 20,
+   "date": "2026-08-22",
    "id": "F120mx2h_midnight_bell",
    "pairId": "F120mx2h_midnight_snd",
    "silent": true,
@@ -588,7 +611,7 @@
    "lightSetup": "Time of day → Midnight",
    "sound": "ALL sounds OFF — bell only",
    "audio": "ALL sounds OFF — bell only",
-   "numerals": "Never · numerals hidden — nothing else to set",
+   "numerals": "Always · top · solid · Serif · dot · White #ffffff",
    "title": "2-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD | Midnight",
    "tags": "deep work, flow state, deep work timer, study with me no break, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo",
    "chapters": [],
@@ -598,6 +621,7 @@
   },
   {
    "day": 21,
+   "date": "2026-08-23",
    "id": "F180mx3h_sunset_ocn-brz",
    "pairId": "F180mx3h_sunset_bell",
    "silent": false,
@@ -621,6 +645,7 @@
   },
   {
    "day": 22,
+   "date": "2026-08-24",
    "id": "F180mx3h_sunset_bell",
    "pairId": "F180mx3h_sunset_ocn-brz",
    "silent": true,
@@ -644,6 +669,7 @@
   },
   {
    "day": 23,
+   "date": "2026-08-25",
    "id": "C50-15x3h_twilight_ocn",
    "pairId": "C50-15x3h_twilight_bell",
    "silent": false,
@@ -673,6 +699,7 @@
   },
   {
    "day": 24,
+   "date": "2026-08-26",
    "id": "C50-15x3h_twilight_bell",
    "pairId": "C50-15x3h_twilight_ocn",
    "silent": true,
@@ -702,6 +729,7 @@
   },
   {
    "day": 25,
+   "date": "2026-08-27",
    "id": "C40-10x4h_predawn_snd-brz",
    "pairId": "C40-10x4h_predawn_bell",
    "silent": false,
@@ -735,6 +763,7 @@
   },
   {
    "day": 26,
+   "date": "2026-08-28",
    "id": "C40-10x4h_predawn_bell",
    "pairId": "C40-10x4h_predawn_snd-brz",
    "silent": true,
@@ -768,6 +797,7 @@
   },
   {
    "day": 27,
+   "date": "2026-08-29",
    "id": "C30-15x2h_midday_all4",
    "pairId": "C30-15x2h_midday_bell",
    "silent": false,
@@ -797,6 +827,7 @@
   },
   {
    "day": 28,
+   "date": "2026-08-30",
    "id": "C30-15x2h_midday_bell",
    "pairId": "C30-15x2h_midday_all4",
    "silent": true,
@@ -826,6 +857,7 @@
   },
   {
    "day": 29,
+   "date": "2026-08-31",
    "id": "C60-20x5h_sunrise_ocn-snd",
    "pairId": "C60-20x5h_sunrise_bell",
    "silent": false,
@@ -839,7 +871,7 @@
    "lightSetup": "Time of day → Sunrise",
    "sound": "Ocean + Sand",
    "audio": "Ocean 100 · Sand 55 — master 100",
-   "numerals": "5 min · ledge · solid · Jost · none · Charcoal #20242e",
+   "numerals": "Always · top · glass · Jost · dot · Charcoal #20242e",
    "title": "5-Hour Study With Me 🌊 60/20 Pomodoro Timer for Deep Focus & ADHD | Ocean & Sand, Sunrise",
    "tags": "60/20 pomodoro, 60 minute pomodoro, pomodoro technique, 5 hour timer, study with me 5 hours, sunrise ambience, pomodoro adhd, 핑크 노이즈 공부",
    "chapters": [
@@ -853,37 +885,6 @@
    ],
    "desc": "5 hours Study With Me custom timer — 60/20 focus blocks with ocean & sand under a sunrise sky.\nA calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.\n\n4 focus blocks of 60 minutes, a 20-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.\n\n⏱ Chapters\n00:00:00 Focus 1\n01:00:00 Break 1\n01:20:00 Focus 2\n02:20:00 Break 2\n02:40:00 Focus 3\n03:40:00 Break 3\n04:00:00 Focus 4\n\n",
    "preset": "https://sustaintimer.com/?mode=custom&phase=sunrise&sound=ocean,sand",
-   "sentence": "4 focus blocks of 60 minutes, a 20-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work."
-  },
-  {
-   "day": 30,
-   "id": "C60-20x5h_sunrise_bell",
-   "pairId": "C60-20x5h_sunrise_ocn-snd",
-   "silent": true,
-   "mode": "Custom",
-   "interval": "60/20",
-   "blocks": 4,
-   "setup": "By count · work 240m · breaks 3 · break length 20m",
-   "minutes": 300,
-   "duration": "5 hours",
-   "light": "Sunrise",
-   "lightSetup": "Time of day → Sunrise",
-   "sound": "ALL sounds OFF — bell only",
-   "audio": "ALL sounds OFF — bell only",
-   "numerals": "5 min · ledge · solid · Jost · none · Charcoal #20242e",
-   "title": "5-Hour Study With Me 🔔 60/20 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunrise",
-   "tags": "60/20 pomodoro, 60 minute pomodoro, pomodoro technique, 5 hour timer, study with me 5 hours, sunrise ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar",
-   "chapters": [
-    "00:00:00 Focus 1",
-    "01:00:00 Break 1",
-    "01:20:00 Focus 2",
-    "02:20:00 Break 2",
-    "02:40:00 Focus 3",
-    "03:40:00 Break 3",
-    "04:00:00 Focus 4"
-   ],
-   "desc": "5 hours Study With Me custom timer — 60/20 focus blocks with no music, bell only under a sunrise sky.\nA calm, no-talking study timer for deep focus, ADHD, exam revision, coding and long work sessions.\n\n4 focus blocks of 60 minutes, a 20-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work.\n\n⏱ Chapters\n00:00:00 Focus 1\n01:00:00 Break 1\n01:20:00 Focus 2\n02:20:00 Break 2\n02:40:00 Focus 3\n03:40:00 Break 3\n04:00:00 Focus 4\n\n",
-   "preset": "https://sustaintimer.com/?mode=custom&phase=sunrise&sound=",
    "sentence": "4 focus blocks of 60 minutes, a 20-minute break after each, and a soft bell on every change. The sky moves the whole way through — this session begins at first light and warms into full morning as you work."
   }
  ]

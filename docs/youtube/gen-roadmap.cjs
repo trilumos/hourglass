@@ -71,18 +71,22 @@ const shapeOf = r => { const pl = P.buildPlan(stOf(r));
 // beats 30 videos that merely prove no permutation repeats.
 //
 // Locked for every YouTube video (founder, 2026-08-04):
-//   visibility  Always, 5 min or Never. NEVER hover — Setup DEFAULTS to hover, which is the single
-//               most dangerous setting on the page: miss it and the numbers fade out mid-recording.
+//   visibility  Always, unless a row opts in to 5 min AND its title says so. Never and hover are both
+//               banned — hover is Setup's DEFAULT and the most dangerous setting here: miss it and
+//               the numbers fade out mid-recording.
 //   separator   middle and ledge take NONE, ever. horizon and top take colon or dot.
 //   fill        solid or glass only. Never outline.
 //   colour      White #ffffff always legal. Charcoal #20242e ONLY on sun sessions (midday, sunrise,
 //               sunset) — never on pre-dawn, twilight or midnight, which have no sun at all.
-// Always dominates on purpose. The title promises a "Pomodoro Timer", and a screen with no visible
-// timer is a promise the video does not keep — satisfaction is the dominant ranking signal, so that
-// mismatch costs more than the variety gains. 5 min is a genuine variant; Never is legal but rationed
-// to roughly one session in ten, and belongs on videos whose title does not lead on the timer.
-const VIS_CYCLE = ['Always','Always','Always','Always','5 min',
-                   'Always','Always','Always','Always','Never'];
+// Visibility is ALWAYS unless a session explicitly opts out. 5 min and Never break the pattern a
+// viewer expects from a video titled "Pomodoro Timer", so they are only defensible when the title, the
+// tags and the intro card all say so up front — and that needs a query to title against. There isn't
+// one (vidIQ 2026-08-04): `hour glass timer` 0/mo, while `visual timer` 4,876 and `sand timer` 4,725
+// both sit in a toddler/classroom cluster (visual timer for kids, toddler sand timer, egg timer,
+// occupational therapy timer) — a different audience entirely, and the same mismatch that got the
+// classroom tags pulled. `hourglass` 50,361 is the shape, not the timer.
+// Never is therefore dropped outright. 5 min survives — the video is still visibly a timer — but is
+// opt-in, never cycled: put vis:'5 min' on a UNIQUE row and write the title to match when you do.
 // Only the six (placement, separator) pairs the rules actually permit. Nothing else can be generated.
 const PLACE_SEP = [
   ['middle',  'none'],   ['horizon', 'colon'], ['ledge', 'none'],
@@ -114,21 +118,25 @@ const PINNED = { 0: 'Always · horizon · glass · Serif · colon · White #ffff
 // The pin sits outside the cycle, so it can land on a config the cycle was going to produce anyway —
 // it did: session 1's pinned horizon/glass/colon collided with session 2's generated one. Offsetting
 // the placement lookup past the pinned sessions keeps every session visually distinct.
-const numeralsOf = (r, si) => { if (PINNED[si]) return PINNED[si];
-  const vis = VIS_CYCLE[si % VIS_CYCLE.length];
-  // With the numerals hidden there is nothing to place, fill, letter or colour. Listing settings that
-  // do not render just invites five minutes of pointless tapping before a recording.
-  if (vis === 'Never') return 'Never · numerals hidden — nothing else to set';
-  // A pinned session sits outside the cycle, so the cycle can land on a look it already owns — simply
-  // offsetting the index does not fix that, it relocates the clash. Walk forward instead until the
-  // generated look is one no pinned session has taken.
-  const taken = Object.values(PINNED);
-  for (let k = si; ; k++){
+// Memoised per session: every look must be unique across the month, which needs memory of what has
+// already been handed out. Skipping only the PINNED values was not enough — with 15 sessions against
+// 24 shown-variants per colour, two collided on ledge/solid/Jost the moment visibility stopped
+// separating them. Called more than once per session (JSON and markdown table), so the cache is also
+// what keeps those two outputs in agreement.
+const _look = new Map();
+const numeralsOf = (r, si) => {
+  if (_look.has(si)) return _look.get(si);
+  const put = v => { _look.set(si, v); return v; };
+  if (PINNED[si]) return put(PINNED[si]);
+  const vis = r.vis || 'Always';
+  const taken = new Set([...Object.values(PINNED), ..._look.values()]);
+  for (let k = si; k < si + PLACE_SEP.length * 4; k++){
     const [place, sep] = PLACE_SEP[k % PLACE_SEP.length];
     const look = `${vis} · ${place} · ${FILL[(k + Math.floor(k/PLACE_SEP.length)) % 2]}`
-               + ` · ${FONT[Math.floor(si/2) % 2]} · ${sep} · ${numColour(r.light)}`;
-    if (!taken.includes(look)) return look;
+               + ` · ${FONT[Math.floor(k/2) % 2]} · ${sep} · ${numColour(r.light)}`;
+    if (!taken.has(look)) return put(look);
   }
+  throw new Error(`no distinct look left for session ${si + 1} (${r.light}) — widen the look space`);
 };
 
 
@@ -137,6 +145,21 @@ const addC=(phase,hours,light,sound)=>rows.push({phase,kind:'custom',hours,light
 const addP=(phase,iv,blocks,light,sound)=>rows.push({phase,kind:'pomo',iv,blocks,light,sound});
 const addF=(phase,mins,light,sound)=>rows.push({phase,kind:'flow',mins,light,sound});
 const addX=(phase,work,breaks,len,light,sound)=>rows.push({phase,kind:'custom',work,breaks,len,light,sound});
+
+// The month runs from the FIRST upload to the last day of that calendar month, not for a flat 30
+// days. August opened on the 3rd, so it holds 29 videos, not 30 — a list that overflows into
+// September is a list you stop trusting by the third week.
+// The repeat ledger keys off MONTH, so bump START when generating a new month, and change UNIQUE at
+// the same time or the repeat check will (correctly) refuse to build.
+const START = '2026-08-03';
+const MONTH = START.slice(0, 7);
+const MONTH_LABEL = new Date(START + 'T00:00:00Z')
+  .toLocaleDateString('en-US', { month:'long', year:'numeric', timeZone:'UTC' });
+const DAYS = (() => { const d = new Date(START + 'T00:00:00Z');
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  return last - d.getUTCDate() + 1; })();
+const dayDate = n => { const d = new Date(START + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n - 1); return d.toISOString().slice(0, 10); };
 
 // ── THE MONTH — 15 unique sessions, each shot TWICE ──────────────────────────────────────────────
 // Founder's schedule: every config is captured once with ocean and once bell-only, published on
@@ -413,10 +436,10 @@ const esc = s => s.replace(/\|/g,'\\|');
 // ── Month plan as JSON ───────────────────────────────────────────────────────────────────────────
 // The directory page renders THIS, not the 900M-combination space. One source of truth: the checklist
 // you tick and the sheet you shoot from are generated together and cannot drift.
-const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
+const monthPlan = rows.filter(r => r.phase === '1').slice(0, DAYS).map((r, i) => {
   const m = totalOf(r);
   return {
-    day: i + 1,
+    day: i + 1, date: dayDate(i + 1),
     id: slug(r),
     // Rows are emitted interleaved (session, then its bell twin), so a twin's partner is simply the
     // row beside it. The old version hardcoded 'ocn' and pointed every silent row at a session that
@@ -433,6 +456,31 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
     preset: presetURL(r), sentence: sentence(r),
   };
 });
+// ── Never publish the same video twice ───────────────────────────────────────────────────────────
+// This is the one failure that is genuinely unrecoverable: re-uploading a session already on the
+// channel is exactly what the inauthentic-content policy exists to catch (see section 4), and no
+// amount of good metadata undoes it. Human memory is not an adequate control across 30 videos a month
+// for years, so the ledger is.
+//
+// published.json is the permanent record of every video actually RECORDED, committed to git. It is
+// keyed on the slug, which encodes mode + interval + length + sky + sound — everything that makes a
+// video that video. Numerals are deliberately NOT in the key: the same session under a different
+// numeral colour is the same video to a viewer and to YouTube, and treating it as new is precisely the
+// self-deception that gets channels struck.
+//
+// The month is part of each entry so this month's own recorded rows do not trip the check. Any id that
+// reappears under a DIFFERENT month is a genuine repeat and throws.
+{ const LEDGER = __dirname + '/published.json';
+  const past = fs.existsSync(LEDGER) ? JSON.parse(fs.readFileSync(LEDGER, 'utf8')) : [];
+  const elsewhere = new Map(past.filter(p => p.month !== MONTH).map(p => [p.id, p]));
+  const repeats = monthPlan.filter(v => elsewhere.has(v.id));
+  if (repeats.length) throw new Error(
+    `REPEAT UPLOAD BLOCKED — ${repeats.length} video(s) already recorded:`
+    + repeats.map(v => `\n  ${v.id}  first recorded ${elsewhere.get(v.id).date} (${elsewhere.get(v.id).month})`).join('')
+    + `\nChange the offending rows in UNIQUE. Never publish a session twice.`);
+  console.log(`repeat check: ${monthPlan.length} vs ${past.length} already recorded ✓`);
+}
+
 // ── The numeral rules are asserted, not assumed ──────────────────────────────────────────────────
 // Every one of these has already shipped wrong once. A generator that can still emit a bad config is
 // a generator that eventually will.
@@ -440,9 +488,8 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
   for (const v of monthPlan){
     const [vis, place, fill, font, sep, ...col] = v.numerals.split(' · ');
     const colour = col.join(' · ');
-    if (!['Always','5 min','Never'].includes(vis))
-      throw new Error(`${v.id}: visibility "${vis}" — Always, 5 min or Never only. NEVER hover (Setup's default).`);
-    if (vis === 'Never') continue;              // nothing renders, so nothing else to validate
+    if (!['Always','5 min'].includes(vis))
+      throw new Error(`${v.id}: visibility "${vis}" — Always or 5 min only. Never and hover are both out.`);
     if (!OK_FILL.includes(fill))     throw new Error(`${v.id}: fill "${fill}" — only ${OK_FILL.join('/')}`);
     if (!OK_COL.includes(colour))    throw new Error(`${v.id}: colour "${colour}" — only white or charcoal`);
     if (colour.startsWith('Charcoal') && !['Midday','Sunrise','Sunset'].includes(v.light))
@@ -469,7 +516,11 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
 
 // Written next to the directory page so it can be fetched with no build step and no server.
 fs.writeFileSync(__dirname + '/../../tools/video-directory/month.json',
-  JSON.stringify({ month:'2026-08', label:'August 2026', videos:monthPlan }, null, 1));
+  JSON.stringify({ month:MONTH, label:MONTH_LABEL, start:START, days:DAYS,
+     // An odd day count leaves the last session without its bell twin inside this month. Name it, so
+     // next month's list opens with it instead of silently losing the pair.
+     carryTwin: monthPlan.length % 2 ? slug(rows.filter(r => r.phase === '1')[monthPlan.length]) : null,
+     videos:monthPlan }, null, 1));
 console.log(`month.json: ${monthPlan.length} videos (${monthPlan.filter(v=>!v.silent).length} sessions x 2)`);
 
 let tbl='', cur='', i=0, n=0;
