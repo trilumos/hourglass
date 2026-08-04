@@ -189,8 +189,7 @@
       +   cell('Setup', v.setup) + cell('Time of day', v.lightSetup)
       +   cell('Sound', v.sound) + cell('Audio levels', v.audio) + cell('Numerals', v.numerals)
       + '</div>'
-      +   copy('Thumbnail text', (v.thumb || []).join('
-'))
+      +   copy('Thumbnail text', (v.thumb || []).join(String.fromCharCode(10)))
       +   copy('Title', v.title)
       +   copy('Tags — paste after the Upload-defaults tags', v.tags)
       +   copy('Description — paste ABOVE the Upload-defaults text', v.desc)
