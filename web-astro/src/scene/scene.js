@@ -2022,9 +2022,13 @@ function numFor(place){
 let numSep = 'colon';   // user's divider pick, only used by Top/Horizon
 function sepForPlace(place){ return (place==='middle' || place==='ledge') ? 'none' : (numSep==='dot' ? 'dot' : 'colon'); }
 // Vertical correction for the serif face, in the same % units as dy. Positive pushes DOWN.
-const SERIF_DY = 3.2;
+const SERIF_DY = 1.5;
 function isSerifNum(){
-  return !/NumSans/.test(frame.style.getPropertyValue('--num-font') || '');
+  try {
+    const v = frame.style.getPropertyValue('--num-font')
+           || getComputedStyle(frame).getPropertyValue('--num-font') || '';
+    return !/NumSans/.test(v);
+  } catch (e){ return false; }
 }
 function applyNum(place){                          // designed geometry (X fixed per mode) + tuned size/dy; selects the active place → occluder follows
   // Phones get TOP only. The other placements sit beside or across the glass, and a portrait viewport has no
