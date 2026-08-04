@@ -590,12 +590,14 @@ import { LQIP } from '../scene/lqip.js';
 
         // One word per sound, because the bottom strip has to read at 168px in a feed. The full
         // names ("Ocean & Seabirds") are for the description; here they would be illegible.
-        var TH_SND = { ocean:'WAVES', sand:'SAND', breeze:'BREEZE', birds:'BIRDS' };
+        var TH_SND  = { ocean:'OCEAN', sand:'SAND', breeze:'BREEZE', birds:'SEABIRDS' };
+        var TH_SOLO = { ocean:'OCEAN WAVES', sand:'FALLING SAND', breeze:'SEA BREEZE', birds:'SEABIRDS' };
         function thSoundLabel(c){
           var on = (c.sounds || []).filter(function(k){ return TH_SND[k]; });
           if (!on.length) return 'NO MUSIC';
-          if (on.length === 4) return 'FULL SHORE';       // four words will not read at feed size
-          return on.map(function(k){ return TH_SND[k]; }).join('   ');
+          if (on.length === 1) return TH_SOLO[on[0]];
+          if (on.length === 2) return TH_SND[on[0]] + ' & ' + TH_SND[on[1]];
+          return 'FULL SHORE';                            // three or more will not read at feed size
         }
         // Everything the setup screen already knows, in the order you are most likely to want it.
         // "Add text" walks this list, so a new box arrives carrying real content rather than "TEXT".

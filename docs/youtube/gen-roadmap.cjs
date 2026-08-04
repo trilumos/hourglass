@@ -396,14 +396,18 @@ ${ch.join('\n')}
 // Kept in step with stage.astro's thDefaults()/thSoundLabel(), with one deliberate difference: a
 // CUSTOM row shows its real interval rather than the word CUSTOM, because the title already says
 // "50/15 Pomodoro Timer" and the thumbnail should not contradict it. That one field needs typing.
-const TH_SND = { ocn:'WAVES', snd:'SAND', brz:'BREEZE', brd:'BIRDS' };
+const TH_SND  = { ocn:'OCEAN', snd:'SAND', brz:'BREEZE', brd:'SEABIRDS' };
+const TH_SOLO = { ocn:'OCEAN WAVES', snd:'FALLING SAND', brz:'SEA BREEZE', brd:'SEABIRDS' };
+const thumbSound = k => k === 'bell' ? 'NO MUSIC'
+  : k === 'all4' ? 'FULL SHORE'
+  : (p => p.length === 1 ? TH_SOLO[p[0]]
+       : p.length === 2 ? `${TH_SND[p[0]]} & ${TH_SND[p[1]]}`
+       : 'FULL SHORE')(k.split('+'));
 const thumbOf = r => {
   const m = totalOf(r), h = Math.floor(m/60), mm = m%60;
   const l1 = h ? (mm ? `${h}H ${mm}M` : `${h} ${h === 1 ? 'HOUR' : 'HOURS'}`) : `${mm} MIN`;
   const mode = r.kind === 'flow' ? 'DEEP WORK' : `${shapeOf(r).iv} POMODORO`;
-  const snd = r.sound === 'bell' ? 'NO MUSIC'
-            : r.sound === 'all4' ? 'FULL SHORE'
-            : r.sound.split('+').map(k => TH_SND[k]).join('   ');
+  const snd = thumbSound(r.sound);
   return [l1, 'STUDY WITH ME', `${mode}   ${LIGHT[r.light].cap.toUpperCase()}`, snd];
 };
 const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
