@@ -205,7 +205,7 @@ import { LQIP } from '../scene/lqip.js';
       <div id="thumbPanel">
         <div class="th-head">
           <b>Thumbnail</b>
-          <span class="th-hint">heading + bottom row locked · drag or scroll the sound row</span>
+          <span class="th-hint">drag or scroll any UNLOCKED box · lock it once it is where you want</span>
           <button id="thumbClose" title="Close">✕</button>
         </div>
         <div class="th-body">
@@ -242,6 +242,7 @@ import { LQIP } from '../scene/lqip.js';
             </div>
 
             <hr class="th-hr">
+            <div class="th-seg">Lock <button id="thLockTop">Heading</button><button id="thLockBot">Bottom row</button></div>
             <div class="th-seg">Text boxes <button id="thAdd">+ Add text</button><button id="thSndRow">+ Sound row</button></div>
             <div id="thExtra"></div>
             <label class="th-rng">Sound row size <b id="thSndVal"></b>
@@ -578,7 +579,10 @@ import { LQIP } from '../scene/lqip.js';
           // coupled behaviour — the top pair moves as one, the bottom pair stays pinned either
           // side of the hourglass axis and tracked to a common width — because that coupling is
           // what makes 90 thumbnails line up. Anything beyond it is a plain box you place freely.
-          extra: []
+          extra: [],
+          // Per-box locks. Nothing starts locked — which box is fixed is the founder's call,
+          // not a decision baked into the editor.
+          lock: { top:false, bot:false }
         };
         var thCv = document.getElementById('thumbCv'), thMob = document.getElementById('thumbMob');
         var $t = function(id){ return document.getElementById(id); };
@@ -738,7 +742,7 @@ import { LQIP } from '../scene/lqip.js';
           var act = thDragging || thHover;
           o.save();
           thRects().forEach(function(r){
-            if (r.kind !== 'extra'){                        // locked: faint, dashed, never active
+            if (thLocked(r)){                               // locked: faint, dashed, never active
               o.strokeStyle = 'rgba(255,250,240,.14)';
               o.lineWidth = Math.max(1, W/1100); o.setLineDash([W*0.004, W*0.008]);
               o.strokeRect(Math.round((r.x - r.w/2)*W), Math.round((r.y - r.h/2)*H),
@@ -804,7 +808,9 @@ import { LQIP } from '../scene/lqip.js';
             top:{ x:TH.top.x, y:TH.top.y, size:TH.top.size }, l2r:TH.l2r, occ:TH.occ,
             bot:{ y:TH.bot.y, size:TH.bot.size, gapL:TH.bot.gapL, gapR:TH.bot.gapR,
                   sep:TH.bot.sep, even:TH.bot.even },
-            snd: sb ? { y:sb.y, size:sb.size, x:sb.x, alpha:sb.alpha, spread:sb.spread } : null
+            lock: { top:TH.lock.top, bot:TH.lock.bot },
+            snd: sb ? { y:sb.y, size:sb.size, x:sb.x, alpha:sb.alpha, spread:sb.spread,
+                        lock:sb.lock } : null
           })); } catch (e){}
         }
         // Restores geometry only — never text, which must follow the session that is being recorded.
@@ -817,15 +823,17 @@ import { LQIP } from '../scene/lqip.js';
           if (d.bot) { TH.bot.y = d.bot.y; TH.bot.size = d.bot.size;
                        TH.bot.gapL = d.bot.gapL; TH.bot.gapR = d.bot.gapR;
                        TH.bot.sep = d.bot.sep; TH.bot.even = d.bot.even; }
+          if (d.lock){ TH.lock.top = !!d.lock.top; TH.lock.bot = !!d.lock.bot; }
           if (d.snd){                       // recreate the row, then put it back where it was
             thSoundRow();
             var b = thSndBox();
             if (b){ b.y = d.snd.y; b.size = d.snd.size;
                     if (d.snd.x != null) b.x = d.snd.x;
                     if (d.snd.alpha != null) b.alpha = d.snd.alpha;
-                    if (d.snd.spread != null) b.spread = d.snd.spread; }
+                    if (d.snd.spread != null) b.spread = d.snd.spread;
+                    b.lock = !!d.snd.lock; }
           }
-          markSepSeg();
+          markSepSeg(); thLockUI();
         }
         // Keep the divider/width buttons showing what was actually restored.
         function markSepSeg(){
@@ -865,11 +873,16 @@ import { LQIP } from '../scene/lqip.js';
         // channel page. Their sliders still set them deliberately; the pointer cannot nudge them.
         // (Replaces a nearest-anchor scheme that had no knowledge of free boxes at all, which is the
         // real reason the sound row could never be dragged.)
+        // One place decides whether a box can move, so drag, wheel and the border style can
+        // never disagree about it.
+        function thLocked(r){
+          return r.kind === 'extra' ? !!(TH.extra[r.i] && TH.extra[r.i].lock) : !!TH.lock[r.kind];
+        }
         function thHit(e){
           var p = thPt(e), rs = thRects();
           for (var j = rs.length - 1; j >= 0; j--){          // last drawn sits on top
             var r = rs[j];
-            if (r.kind !== 'extra') continue;
+            if (thLocked(r)) continue;
             if (Math.abs(p.x - r.x) <= r.w/2 && Math.abs(p.y - r.y) <= r.h/2) return r;
           }
           return null;
@@ -908,7 +921,8 @@ import { LQIP } from '../scene/lqip.js';
           e.preventDefault();
           var h = thHit(e); if (!h) return;                 // locked blocks ignore the wheel
           var k = e.deltaY < 0 ? 1.06 : 1/1.06;
-          var b = TH.extra[h.i]; if (!b) return;
+          var b = h.kind === 'extra' ? TH.extra[h.i] : h.kind === 'top' ? TH.top : TH.bot;
+          if (!b) return;
           b.size = Math.max(0.015, Math.min(0.30, b.size * k));
           thSync();
         }, { passive:false });
@@ -960,6 +974,16 @@ import { LQIP } from '../scene/lqip.js';
           thExtraUI();
         }
         $t('thSndRow').addEventListener('click', thSoundRow);
+        function thLockUI(){
+          $t('thLockTop').classList.toggle('on', !!TH.lock.top);
+          $t('thLockTop').textContent = TH.lock.top ? 'Heading LOCKED' : 'Heading unlocked';
+          $t('thLockBot').classList.toggle('on', !!TH.lock.bot);
+          $t('thLockBot').textContent = TH.lock.bot ? 'Bottom row LOCKED' : 'Bottom row unlocked';
+        }
+        $t('thLockTop').addEventListener('click', function(){
+          TH.lock.top = !TH.lock.top; thLockUI(); thSaveLayout(); });
+        $t('thLockBot').addEventListener('click', function(){
+          TH.lock.bot = !TH.lock.bot; thLockUI(); thSaveLayout(); });
         function thSndBox(){ return TH.extra.filter(function(b){ return b.role === 'sound'; })[0]; }
         $t('thSndSize').addEventListener('input', function(){
           var b = thSndBox(); if (!b) return;
@@ -972,7 +996,9 @@ import { LQIP } from '../scene/lqip.js';
         function thExtraUI(){
           var wrap = $t('thExtra');
           wrap.innerHTML = TH.extra.map(function(b, i){
-            return '<div class="th-xrow"><input type="text" maxlength="28" data-i="' + i + '" value="'
+            return '<div class="th-xrow"><button data-lock="' + i + '">'
+                 + (b.lock ? 'LOCKED' : 'unlocked') + '</button>'
+                 + '<input type="text" maxlength="28" data-i="' + i + '" value="'
                  + String(b.text).replace(/"/g, '&quot;') + '"><button data-del="' + i + '">✕</button></div>';
           }).join('');
           thCheck();
@@ -995,8 +1021,10 @@ import { LQIP } from '../scene/lqip.js';
           TH.extra[+i].text = e.target.value; thCheck();
         });
         $t('thExtra').addEventListener('click', function(e){
+          var lk = e.target.dataset.lock;
+          if (lk != null){ TH.extra[+lk].lock = !TH.extra[+lk].lock; thExtraUI(); thSaveLayout(); return; }
           var d = e.target.dataset.del; if (d == null) return;
-          TH.extra.splice(+d, 1); thExtraUI();
+          TH.extra.splice(+d, 1); thExtraUI(); thSaveLayout();
         });
         function rng(id, set){ $t(id).addEventListener('input', function(){ set(+this.value); thSync(); }); }
         rng('thTopSize', function(v){ TH.top.size = v/1000; });
