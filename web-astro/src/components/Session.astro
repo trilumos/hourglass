@@ -188,6 +188,7 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
   .paused-grace{ font-weight:500; font-size:clamp(12px,1.5vw,16px); letter-spacing:.06em; color:var(--gold); opacity:0; transition:opacity .3s var(--e-std); }
   .paused-grace.show{ opacity:1; }
   /* break screen — like Paused: blurred scene, no hourglass/sound, a simple countdown + End break */
+  html.stage .kofi{ display:none !important; }   /* never in a recording — see note above */
   .kofi{ display:inline-flex; align-items:center; gap:.55em; margin:1.3em auto 0; padding:.66em 1.2em;
          background:#FF5E5B; color:#fff; border-radius:999px; text-decoration:none;
          font-size:.88rem; font-weight:600; line-height:1; white-space:nowrap;
