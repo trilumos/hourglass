@@ -241,6 +241,11 @@ import { LQIP } from '../scene/lqip.js';
               <button data-sep="bar" class="on">Bar</button><button data-sep="dot">Dot</button><button data-sep="none">None</button>
             </div>
 
+            <hr class="th-hr">
+            <div class="th-seg">Text boxes <button id="thAdd">+ Add text</button></div>
+            <div id="thExtra"></div>
+            <p class="th-warn" id="thWarn"></p>
+
             <button id="thumbReset" class="th-btn">Reset to config</button>
             <button id="thumbSave" class="th-btn th-pri">Download PNG</button>
             <p class="th-note">Auto-filled from the session config. The divider is pinned to the
@@ -570,6 +575,22 @@ import { LQIP } from '../scene/lqip.js';
         var $t = function(id){ return document.getElementById(id); };
         var thL1 = $t('thL1'), thL2 = $t('thL2'), thBL = $t('thBL'), thBR = $t('thBR');
 
+        // One word per sound, because the bottom strip has to read at 168px in a feed. The full
+        // names ("Ocean & Seabirds") are for the description; here they would be illegible.
+        var TH_SND = { ocean:'WAVES', sand:'SAND', breeze:'BREEZE', birds:'BIRDS' };
+        function thSoundLabel(c){
+          var on = (c.sounds || []).filter(function(k){ return TH_SND[k]; });
+          if (!on.length) return 'NO MUSIC';
+          if (on.length === 4) return 'FULL SHORE';       // four words will not read at feed size
+          return on.map(function(k){ return TH_SND[k]; }).join('   ');
+        }
+        // Everything the setup screen already knows, in the order you are most likely to want it.
+        // "Add text" walks this list, so a new box arrives carrying real content rather than "TEXT".
+        function thPool(){
+          var c = readCfg();
+          return [thSoundLabel(c), lightLabel(c).toUpperCase(), 'STUDY WITH ME',
+                  (c.mode === 'pomodoro' ? c.pomoFocus + '/' + c.pomoBreak + ' POMODORO' : 'FOCUS')];
+        }
         function thDefaults(){
           var c = readCfg(), m = c.totalMin || 0, h = Math.floor(m/60), mm = m%60;
           TH.l1 = m ? (h ? (mm ? h+'H '+mm+'M' : h + (h===1?' HOUR':' HOURS')) : mm+' MIN') : 'ENDLESS';
@@ -578,6 +599,7 @@ import { LQIP } from '../scene/lqip.js';
                  : c.mode === 'flow' ? 'FLOW' : c.mode === 'endless' ? 'ENDLESS' : 'CUSTOM');
           TH.br = lightLabel(c).toUpperCase();
           thL1.value = TH.l1; thL2.value = TH.l2; thBL.value = TH.bl; thBR.value = TH.br;
+          TH.extra.length = 0; if ($t('thExtra')) thExtraUI();
           thSync();
         }
         // Text is painted BEFORE the hourglass goes back on top (see SustainScene.thumbFrame), which is
@@ -658,6 +680,50 @@ import { LQIP } from '../scene/lqip.js';
           if (wr < target) out.r = Math.round(base + (target - wr) / Math.max(1, TH.br.length));
           return out;
         }
+        // Every box's rect in frame fractions, measured at the real font and size rather than
+        // guessed. Borders draw from this, and so does hit-testing: a rect hit says exactly what you
+        // grabbed, where the old nearest-anchor scheme could still hand you the wrong block when two
+        // anchors sat close together.
+        function thRects(){
+          var ax = thAxis(), out = [];
+          var s1 = TH.top.size, s2 = s1 * TH.l2r, s3 = TH.bot.size;
+          var mw = function(txt, px, sp){
+            _mc.font = '550 ' + Math.round(px * 720) + 'px ' + TH_FONT;
+            _mc.letterSpacing = (sp || 0) + 'px';
+            var w = _mc.measureText(txt).width / 1280; _mc.letterSpacing = '0px'; return w;
+          };
+          // top block: both lines as ONE box, because they drag as one
+          var w1 = mw(TH.l1, s1), w2 = mw(TH.l2, s2, Math.round(s2*720*0.16));
+          var tw = Math.max(w1, w2), th = s1 * 1.55;
+          out.push({ kind:'top', x:TH.top.x, y:TH.top.y + s1*0.39, w:tw*1.08, h:th });
+          // bottom pair, each measured with its own tracking so the boxes match what is drawn
+          var sp = thTrack(_mc, Math.round(s3*720), Math.round(s3*720*0.22));
+          out.push({ kind:'bot', side:'L', x:(ax - TH.bot.gapL) - mw(TH.bl, s3, sp.l)/2,
+                     y:TH.bot.y, w:mw(TH.bl, s3, sp.l)*1.08, h:s3*1.7 });
+          out.push({ kind:'bot', side:'R', x:(ax + TH.bot.gapR) + mw(TH.br, s3, sp.r)/2,
+                     y:TH.bot.y, w:mw(TH.br, s3, sp.r)*1.08, h:s3*1.7 });
+          TH.extra.forEach(function(b, i){
+            out.push({ kind:'extra', i:i, x:b.x, y:b.y, w:mw(b.text, b.size)*1.10, h:b.size*1.7 });
+          });
+          return out;
+        }
+        // Editor only — thGuide is off for the export, so no border ever reaches a published PNG.
+        function thBorders(o, W, H){
+          if (!thGuide) return;
+          var act = thDragging || thHover;
+          o.save();
+          thRects().forEach(function(r){
+            var on = act && act.kind === r.kind
+                  && (r.kind !== 'bot' || act.side === r.side)
+                  && (r.kind !== 'extra' || act.i === r.i);
+            o.strokeStyle = on ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.30)';
+            o.lineWidth = Math.max(1, W/900);
+            o.setLineDash(on ? [] : [W*0.006, W*0.006]);
+            var x = (r.x - r.w/2)*W, y = (r.y - r.h/2)*H;
+            o.strokeRect(Math.round(x), Math.round(y), Math.round(r.w*W), Math.round(r.h*H));
+          });
+          o.restore();
+        }
         function thAxis(){ var r = SustainScene.thumbCropRect(16/9); return r && r.axis != null ? r.axis : 0.5; }
         var thRAF = 0;
         function thDraw(){
@@ -716,7 +782,10 @@ import { LQIP } from '../scene/lqip.js';
           var nx = Math.max(0.02, Math.min(0.98, p.x));
           var ny = Math.max(0.04, Math.min(0.97, p.y));
           var ax = thAxis();
-          if (thDragging.kind === 'top'){
+          if (thDragging.kind === 'extra'){
+            var b = TH.extra[thDragging.i];
+            if (b){ if (Math.abs(nx - ax) < 0.012) nx = ax; b.x = nx; b.y = ny; }
+          } else if (thDragging.kind === 'top'){
             if (Math.abs(nx - ax) < 0.012) nx = ax;    // snap to the glass centreline
             TH.top.x = nx; TH.top.y = ny;
           } else {
@@ -746,7 +815,45 @@ import { LQIP } from '../scene/lqip.js';
           $t('thGapR').value = Math.round(TH.bot.gapR*1000); $t('thGapRVal').textContent = Math.round(TH.bot.gapR*1000);
         }
         [[thL1,'l1'],[thL2,'l2'],[thBL,'bl'],[thBR,'br']].forEach(function(p){
-          p[0].addEventListener('input', function(){ TH[p[1]] = p[0].value; });
+          p[0].addEventListener('input', function(){ TH[p[1]] = p[0].value; thCheck(); });
+        });
+        // A new box lands in clear space below the heading, carrying the next unused config string —
+        // "add text" that makes you then type the thing the app already knows is just friction.
+        function thAddBox(){
+          var pool = thPool(), used = TH.extra.map(function(b){ return b.text; })
+            .concat([TH.l1, TH.l2, TH.bl, TH.br]);
+          var text = pool.filter(function(t){ return used.indexOf(t) < 0; })[0] || 'TEXT';
+          TH.extra.push({ text:text, x:thAxis(), y:0.72 + TH.extra.length*0.07, size:TH.bot.size });
+          thExtraUI();
+        }
+        function thExtraUI(){
+          var wrap = $t('thExtra');
+          wrap.innerHTML = TH.extra.map(function(b, i){
+            return '<div class="th-xrow"><input type="text" maxlength="28" data-i="' + i + '" value="'
+                 + String(b.text).replace(/"/g, '&quot;') + '"><button data-del="' + i + '">✕</button></div>';
+          }).join('');
+          thCheck();
+        }
+        // The one thumbnail rule with the most evidence behind it: three words, five at the absolute
+        // outside. Easy to break the moment free text boxes exist, and invisible at 1280 wide — you
+        // only find out in the feed. So it is checked here rather than discovered later.
+        function thCheck(){
+          var words = [TH.l1, TH.l2, TH.bl, TH.br]
+            .concat(TH.extra.map(function(b){ return b.text; }))
+            .join(' ').trim().split(/\s+/).filter(Boolean).length;
+          var el = $t('thWarn');
+          el.textContent = words > 5
+            ? words + ' words. Three is the rule, five is the ceiling — this will not read at 320×180.'
+            : words > 3 ? words + ' words. Three reads best in a feed.' : '';
+        }
+        $t('thAdd').addEventListener('click', thAddBox);
+        $t('thExtra').addEventListener('input', function(e){
+          var i = e.target.dataset.i; if (i == null) return;
+          TH.extra[+i].text = e.target.value; thCheck();
+        });
+        $t('thExtra').addEventListener('click', function(e){
+          var d = e.target.dataset.del; if (d == null) return;
+          TH.extra.splice(+d, 1); thExtraUI();
         });
         function rng(id, set){ $t(id).addEventListener('input', function(){ set(+this.value); thSync(); }); }
         rng('thTopSize', function(v){ TH.top.size = v/1000; });

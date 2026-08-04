@@ -76,7 +76,8 @@ const shapeOf = r => { const pl = P.buildPlan(stOf(r));
 //               the numbers fade out mid-recording.
 //   separator   middle and ledge take NONE, ever. horizon and top take colon or dot.
 //   fill        solid or glass only. Never outline.
-//   colour      White #ffffff always legal. Charcoal #20242e ONLY on sun sessions (midday, sunrise,
+//   colour      SOLID fill only — glass hardcodes its own translucent white and ignores the swatch.
+//               White #ffffff always legal. Charcoal #20242e ONLY on sun sessions (midday, sunrise,
 //               sunset) — never on pre-dawn, twilight or midnight, which have no sun at all.
 // Visibility is ALWAYS unless a session explicitly opts out. 5 min and Never break the pattern a
 // viewer expects from a video titled "Pomodoro Timer", so they are only defensible when the title, the
@@ -114,7 +115,7 @@ const numColour = light => SUN[light] ? 'Charcoal #20242e' : 'White #ffffff';
 // config is pinned to what is actually on screen in that video rather than generated — otherwise its
 // bell twin, which is day 2, would not be a twin at all. It happens to be legal under the rules:
 // horizon takes a colon, glass is permitted, White is legal on every sky.
-const PINNED = { 0: 'Always · horizon · glass · Serif · colon · White #ffffff' };
+const PINNED = { 0: 'Always · horizon · glass · Jost · colon' };
 // The pin sits outside the cycle, so it can land on a config the cycle was going to produce anyway —
 // it did: session 1's pinned horizon/glass/colon collided with session 2's generated one. Offsetting
 // the placement lookup past the pinned sessions keeps every session visually distinct.
@@ -132,8 +133,12 @@ const numeralsOf = (r, si) => {
   const taken = new Set([...Object.values(PINNED), ..._look.values()]);
   for (let k = si; k < si + PLACE_SEP.length * 4; k++){
     const [place, sep] = PLACE_SEP[k % PLACE_SEP.length];
-    const look = `${vis} · ${place} · ${FILL[(k + Math.floor(k/PLACE_SEP.length)) % 2]}`
-               + ` · ${FONT[Math.floor(k/2) % 2]} · ${sep} · ${numColour(r.light)}`;
+    const fill = FILL[(k + Math.floor(k/PLACE_SEP.length)) % 2];
+    // Glass ignores the colour swatch outright — SceneWorld.astro:540 hardcodes
+    // rgba(255,255,255,.26) for [data-fill="glass"]. Listing a colour on a glass row would be a
+    // setting that changes nothing, which is worse than no setting at all.
+    const look = `${vis} · ${place} · ${fill} · ${FONT[Math.floor(k/2) % 2]} · ${sep}`
+               + (fill === 'solid' ? ` · ${numColour(r.light)}` : '');
     if (!taken.has(look)) return put(look);
   }
   throw new Error(`no distinct look left for session ${si + 1} (${r.light}) — widen the look space`);
@@ -488,10 +493,15 @@ const monthPlan = rows.filter(r => r.phase === '1').slice(0, DAYS).map((r, i) =>
   for (const v of monthPlan){
     const [vis, place, fill, font, sep, ...col] = v.numerals.split(' · ');
     const colour = col.join(' · ');
+    if (fill === 'glass' && colour)
+      throw new Error(`${v.id}: glass row carries colour "${colour}" — glass ignores the swatch`);
+    if (fill === 'solid' && !colour)
+      throw new Error(`${v.id}: solid row has no colour`);
     if (!['Always','5 min'].includes(vis))
       throw new Error(`${v.id}: visibility "${vis}" — Always or 5 min only. Never and hover are both out.`);
     if (!OK_FILL.includes(fill))     throw new Error(`${v.id}: fill "${fill}" — only ${OK_FILL.join('/')}`);
-    if (!OK_COL.includes(colour))    throw new Error(`${v.id}: colour "${colour}" — only white or charcoal`);
+    if (colour && !OK_COL.includes(colour))
+      throw new Error(`${v.id}: colour "${colour}" — only white or charcoal`);
     if (colour.startsWith('Charcoal') && !['Midday','Sunrise','Sunset'].includes(v.light))
       throw new Error(`${v.id}: charcoal on "${v.light}" — no sun in that session; sun sessions only`);
     if ((place === 'middle' || place === 'ledge') && sep !== 'none')

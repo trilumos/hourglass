@@ -719,14 +719,14 @@ All of it is **asserted after generation**, not assumed — visibility, fill, co
 rules, and full twin parity across `numerals`, `lightSetup`, `mode`, `interval`, `blocks`, `duration`
 and `setup`. Every one of these has shipped wrong once already.
 
-## 22. The reservoir under the rules — 1,135,296 videos
+## 22. The reservoir under the rules — 933,120 videos
 
 | Dimension | Count | What varies |
 |---|---:|---|
-| Look x sky | **438** | see below — colour depends on the sky, so it sums rather than multiplies |
+| Look x sky | **360** | see below — colour depends on the sky, so it sums rather than multiplies |
 | Sound | **16** | 15 non-empty mixes of ocean/sand/breeze/birds + bell-only |
 | Session | **162** | 91 Pomodoro + 11 Flow + 60 Custom, under >=25/5 and round-hour |
-| **Total** | **1,135,296** | |
+| **Total** | **933,120** | |
 
 Look breaks down as 6 legal `(placement, separator)` pairs x 2 fills x 2 fonts = 24 shown-numeral
 variants; x2 visibility (Always, 5 min); plus **one** hidden variant per sky, because with numerals off
@@ -767,10 +767,21 @@ the sun is above the horizon for the bulk of both, so dark numerals read cleanly
 White reads on every sky, so white stays the default and charcoal is the exception. Asserted: charcoal
 on any non-sun sky throws.
 
+### Colour belongs to SOLID fill only
+
+`SceneWorld.astro:540` hardcodes `#frame[data-fill="glass"] .clocknum { color:rgba(255,255,255,.26) }` —
+**glass ignores the colour swatch entirely.** So a glass row has exactly one appearance and the
+directory prints no colour for it; listing one would be a setting that changes nothing, which is worse
+than no setting at all. Only `solid` multiplies by colour. Asserted both ways: a glass row carrying a
+colour throws, and so does a solid row missing one.
+
+This is also why the reservoir dropped from 1,135,296 to **933,120** — fill and colour are not
+independent axes.
+
 ### Session 1 is pinned, not generated
 
 Video #1 (`IRTdF6rgjpQ`) was recorded before these rules existed, as
-`Always · horizon · glass · Serif · colon · White #ffffff`. Its config is pinned to that so day 2 — its
+`Always · horizon · glass · Jost · colon` — glass, so no colour applies. Its config is pinned to that so day 2 — its
 bell twin — actually matches what is on screen. It is legal under the rules by coincidence. The pin is
 keyed by position, so the generator throws if `UNIQUE` is reordered and session 1 stops being the
 published video.
