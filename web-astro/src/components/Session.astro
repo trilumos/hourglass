@@ -23,6 +23,8 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     <div class="break-word">BREAK</div>
     <div class="break-time" id="breakTime">00:00</div>
     <button class="frost end-break" id="endBreakBtn">End break</button>
+    <a class="kofi" href="https://ko-fi.com/sustain" target="_blank" rel="noopener noreferrer">
+      Sustain is free, with no ads — support it</a>
   </div>
   <div id="flip"></div>
 
@@ -35,6 +37,8 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     <h2 class="popcard-title">Well done</h2>
     <p class="popcard-sub">You focused <b id="doneMin">0m</b> today.</p>
     <div class="popcard-btns"><button id="again" class="pop-ghost">Again</button><button id="doneEnd" class="pop-primary">End</button></div>
+    <a class="kofi" href="https://ko-fi.com/sustain" target="_blank" rel="noopener noreferrer">
+      If Sustain helped, buy me a coffee</a>
   </div></div>
   <div class="pop" id="sessionOver" hidden><div class="frost popcard">
     <h2 class="popcard-title">This session has ended</h2>
@@ -184,6 +188,10 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
   .paused-grace{ font-weight:500; font-size:clamp(12px,1.5vw,16px); letter-spacing:.06em; color:var(--gold); opacity:0; transition:opacity .3s var(--e-std); }
   .paused-grace.show{ opacity:1; }
   /* break screen — like Paused: blurred scene, no hourglass/sound, a simple countdown + End break */
+  .kofi{ display:block; margin:1.15em auto 0; text-align:center; font-size:.78rem; letter-spacing:.02em;
+         color:rgba(255,250,240,.42); text-decoration:none; transition:color .25s; }
+  .kofi:hover, .kofi:focus-visible{ color:var(--gold, #eaca78); text-decoration:underline; }
+  #breakScreen .kofi{ margin-top:1.6em; }
   #breakScreen{ position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:.5em; opacity:0; pointer-events:none; transition:opacity .45s var(--e-std);
     -webkit-backdrop-filter:blur(16px) saturate(.9); backdrop-filter:blur(16px) saturate(.9); background:rgba(8,12,20,.18); }
