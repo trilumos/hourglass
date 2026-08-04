@@ -18,7 +18,9 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     <svg class="ic-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="8,5 19,12 8,19"/></svg>
   </button>
 
-  <div id="paused" aria-hidden="true"><div class="paused-word">Paused</div><div class="paused-grace" id="pauseGrace"></div></div>
+  <div id="paused" aria-hidden="true"><div class="paused-word">Paused</div><div class="paused-grace" id="pauseGrace"></div>
+    <a class="kofi" href="https://ko-fi.com/sustain" target="_blank" rel="noopener noreferrer">
+      Sustain is free, with no ads — support it</a></div>
   <div id="breakScreen" aria-hidden="true">
     <div class="break-word">BREAK</div>
     <div class="break-time" id="breakTime">00:00</div>
@@ -155,6 +157,7 @@ const PHASES = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
     font-size:clamp(11px,1.15vw,13px); color:var(--ink-dim); cursor:pointer;
     padding:.5em .9em; border-radius:100px; border:none; background:none; transition:color .2s,background .2s; }
   #breakBtn[hidden]{ display:none; }
+  #pause[hidden]{ display:none; }        /* .frost sets display, which outranks [hidden] */
   #breakBtn:hover, #breakBtn:focus-visible{ color:var(--ink); background:rgba(255,255,255,.08); }
   #intentTop{ position:absolute; top:clamp(16px,2.6vw,30px); left:50%; transform:translateX(-50%); z-index:5;
     max-width:56vw; text-align:center; font-weight:400; font-size:clamp(12px,1.5vw,17px); letter-spacing:.03em;
