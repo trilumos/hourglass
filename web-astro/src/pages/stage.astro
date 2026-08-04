@@ -242,7 +242,7 @@ import { LQIP } from '../scene/lqip.js';
             </div>
 
             <hr class="th-hr">
-            <div class="th-seg">Text boxes <button id="thAdd">+ Add text</button></div>
+            <div class="th-seg">Text boxes <button id="thAdd">+ Add text</button><button id="thSndRow">+ Sound row</button></div>
             <div id="thExtra"></div>
             <p class="th-warn" id="thWarn"></p>
 
@@ -569,7 +569,12 @@ import { LQIP } from '../scene/lqip.js';
           l2r: 0.52,                 // line 2 size, relative to line 1
           bot: { y:0.90, size:0.045, gapL:0.115, gapR:0.115, sep:'bar', even:true },  // even = track both words to ONE width
           occ: 1,                    // how strongly the hourglass hides line 2 (0 = not at all)
-          l1:'', l2:'', bl:'', br:''
+          l1:'', l2:'', bl:'', br:'',
+          // Free text boxes, on top of the four structural slots above. The four keep their
+          // coupled behaviour — the top pair moves as one, the bottom pair stays pinned either
+          // side of the hourglass axis and tracked to a common width — because that coupling is
+          // what makes 90 thumbnails line up. Anything beyond it is a plain box you place freely.
+          extra: []
         };
         var thCv = document.getElementById('thumbCv'), thMob = document.getElementById('thumbMob');
         var $t = function(id){ return document.getElementById(id); };
@@ -645,6 +650,27 @@ import { LQIP } from '../scene/lqip.js';
             o.beginPath(); o.arc(ax, y, Math.max(2, s3*0.11), 0, 6.284); o.fill();
           }
           o.shadowBlur = 0; o.shadowOffsetY = 0;
+          // Free boxes ride in front, each at its own size and opacity.
+          TH.extra.forEach(function(b){
+            thType(o, H);
+            o.globalAlpha = b.alpha == null ? 1 : b.alpha;
+            var bs = Math.round(H*b.size);
+            o.font = '550 ' + bs + 'px ' + TH_FONT;
+            // A multi-word sound row is tracked out until it spans the same width as the bottom
+            // pair, so the two read as one block rather than a wide line above a narrow one.
+            if (b.role === 'sound' && /\s/.test(String(b.text).trim())){
+              _mc.font = '550 ' + bs + 'px ' + TH_FONT; _mc.letterSpacing = '0px';
+              var want = (TH.bot.gapL + TH.bot.gapR) * W + thPairWidth(o, H);
+              var have = _mc.measureText(b.text).width;
+              if (have > 0 && want > have)
+                o.letterSpacing = Math.round((want - have) / Math.max(1, String(b.text).length)) + 'px';
+            }
+            o.textAlign = 'center';
+            o.fillText(b.text, W*b.x, H*b.y);
+            o.letterSpacing = '0px'; o.globalAlpha = 1;
+            o.shadowBlur = 0; o.shadowOffsetY = 0;
+          });
+          thBorders(o, W, H);
           // Handle markers: a ring on whatever is grabbed or hovered, so it is never ambiguous which
           // block a drag will move. Editor-only — suppressed in the export with the guide.
           if (thGuide && (thDragging || thHover)){
@@ -723,6 +749,16 @@ import { LQIP } from '../scene/lqip.js';
             o.strokeRect(Math.round(x), Math.round(y), Math.round(r.w*W), Math.round(r.h*H));
           });
           o.restore();
+        }
+        // What the bottom pair actually occupies once tracking is applied — the target the sound row
+        // stretches to. Measured, not derived, because thTrack's output depends on both words.
+        function thPairWidth(o, H){
+          var s3 = Math.round(H * TH.bot.size), sp = thTrack(o, s3, Math.round(s3*0.22));
+          _mc.font = '550 ' + s3 + 'px ' + TH_FONT;
+          _mc.letterSpacing = sp.l + 'px'; var wl = _mc.measureText(TH.bl).width;
+          _mc.letterSpacing = sp.r + 'px'; var wr = _mc.measureText(TH.br).width;
+          _mc.letterSpacing = '0px';
+          return wl + wr;
         }
         function thAxis(){ var r = SustainScene.thumbCropRect(16/9); return r && r.axis != null ? r.axis : 0.5; }
         var thRAF = 0;
@@ -826,6 +862,24 @@ import { LQIP } from '../scene/lqip.js';
           TH.extra.push({ text:text, x:thAxis(), y:0.72 + TH.extra.length*0.07, size:TH.bot.size });
           thExtraUI();
         }
+        // The sound row is the one extra box every video in the series wants, so it gets a preset
+        // rather than four manual adjustments. Placed on the hourglass axis like the bottom pair,
+        // sized at 75% of it and slightly dimmed: mode and time are the video's identity, the sound
+        // is the variant, and equal weight would have the two rows competing.
+        // Re-clicking updates the existing row instead of stacking duplicates — the sound changes far
+        // more often than the layout does.
+        function thSoundRow(){
+          var size = TH.bot.size * 0.75;
+          // Sit it below the pair, but never let the box run off the bottom of the frame.
+          var y = Math.min(TH.bot.y + TH.bot.size * 1.35, 0.975 - size * 0.85);
+          var box = TH.extra.filter(function(b){ return b.role === 'sound'; })[0];
+          var isNew = !box; if (isNew) box = {};
+          box.role = 'sound'; box.text = thSoundLabel(readCfg());
+          box.x = thAxis(); box.y = y; box.size = size; box.alpha = 0.85;
+          if (isNew) TH.extra.push(box);
+          thExtraUI();
+        }
+        $t('thSndRow').addEventListener('click', thSoundRow);
         function thExtraUI(){
           var wrap = $t('thExtra');
           wrap.innerHTML = TH.extra.map(function(b, i){
