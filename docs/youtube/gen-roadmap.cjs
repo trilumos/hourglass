@@ -64,8 +64,37 @@ const shapeOf = r => { const pl = P.buildPlan(stOf(r));
   return { focus:f[0].min, brk:b.length?b[0].min:0, nFocus:f.length, nBreak:b.length,
            iv: b.length ? `${f[0].min}/${b[0].min}` : `${f[0].min}m` }; };
 
-const PLACE=['middle','horizon','ledge','top'], FILL=['solid','glass','outline'],
-      FONT=['Serif','Jost'], SEP=['none','colon','dot'];
+// ── Numerals: RULES, not permutations ────────────────────────────────────────────────────────────
+// The old version cycled place/fill/font/separator/colour off the ROW index, which did two bad things:
+// it made a bell twin differ from its own session (row 1 vs row 2 were different videos visually), and
+// it emitted combinations that simply look wrong. A library of 30 videos that each look considered
+// beats 30 videos that merely prove no permutation repeats.
+//
+// Locked for every YouTube video (founder, 2026-08-04):
+//   visibility  ALWAYS. Never hover, 5min or never — Setup DEFAULTS to hover, so this is the single
+//               most dangerous setting on the page: miss it and the numbers fade out mid-recording.
+//   separator   middle and ledge take NONE, ever. horizon and top take colon or dot.
+//   fill        solid or glass only. Never outline.
+//   colour      white or charcoal only. Charcoal #20242e is the palette's black (no pure black swatch).
+const VIS = 'Always';
+// Only the six (placement, separator) pairs the rules actually permit. Nothing else can be generated.
+const PLACE_SEP = [
+  ['middle',  'none'],   ['horizon', 'colon'], ['ledge', 'none'],
+  ['top',     'dot'],    ['horizon', 'dot'],   ['top',   'colon'],
+];
+const FILL = ['solid','glass'], FONT = ['Serif','Jost'];
+// Colour is legibility, not variety: dark numerals on the bright skies, white on everything dim.
+const BRIGHT = { midday:1, sunrise:1 };
+const numColour = light => BRIGHT[light] ? 'Charcoal #20242e' : 'White #ffffff';
+// Driven by the SESSION index, never the row index — that is what makes a bell twin identical to the
+// session it pairs with.
+// The +floor(si/6) matters: fill has period 2 and PLACE_SEP period 6, so a plain si%2 keeps them in
+// phase forever — every middle and ledge comes out solid, every top comes out glass. Flipping the fill
+// phase each time the placement cycle wraps breaks that, so a placement is seen in both fills.
+const numeralsOf = (r, si) => { const [place, sep] = PLACE_SEP[si % PLACE_SEP.length];
+  return `${VIS} · ${place} · ${FILL[(si + Math.floor(si/PLACE_SEP.length)) % 2]}`
+       + ` · ${FONT[Math.floor(si/2) % 2]} · ${sep} · ${numColour(r.light)}`; };
+
 
 const rows=[];
 const addC=(phase,hours,light,sound)=>rows.push({phase,kind:'custom',hours,light,sound});
@@ -363,11 +392,35 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
     minutes: m, duration: durPlain(m),
     light: LIGHT[r.light].cap, lightSetup: LIGHT[r.light].setup,
     sound: soundSetup(r.sound), audio: audioCell(r.sound),
-    numerals: `Always · ${PLACE[(i+1)%4]} · ${FILL[(i+1)%3]} · ${FONT[(i+1)%2]} · ${SEP[(i+1)%3]} · ${LIGHT[r.light].cols[(i+1) % LIGHT[r.light].cols.length]}`,
+    numerals: numeralsOf(r, Math.floor(i/2)),
     title: title(r), tags: tags(r, i+1), chapters: chapters(r), desc: descHead(r),
     preset: presetURL(r), sentence: sentence(r),
   };
 });
+// ── The numeral rules are asserted, not assumed ──────────────────────────────────────────────────
+// Every one of these has already shipped wrong once. A generator that can still emit a bad config is
+// a generator that eventually will.
+{ const OK_FILL = ['solid','glass'], OK_COL = ['White #ffffff','Charcoal #20242e'];
+  for (const v of monthPlan){
+    const [vis, place, fill, font, sep, ...col] = v.numerals.split(' · ');
+    const colour = col.join(' · ');
+    if (vis !== 'Always')            throw new Error(`${v.id}: visibility is "${vis}" — must be Always (Setup defaults to hover)`);
+    if (!OK_FILL.includes(fill))     throw new Error(`${v.id}: fill "${fill}" — only ${OK_FILL.join('/')}`);
+    if (!OK_COL.includes(colour))    throw new Error(`${v.id}: colour "${colour}" — only white or charcoal`);
+    if ((place === 'middle' || place === 'ledge') && sep !== 'none')
+      throw new Error(`${v.id}: ${place} must have NO separator, got "${sep}"`);
+    if ((place === 'horizon' || place === 'top') && !['colon','dot'].includes(sep))
+      throw new Error(`${v.id}: ${place} needs colon or dot, got "${sep}"`);
+  }
+  // A bell twin is the same video with the sound off. Anything else visible must match exactly.
+  for (const v of monthPlan.filter(x => x.silent)){
+    const twin = monthPlan.find(x => x.id === v.pairId);
+    for (const k of ['numerals','lightSetup','mode','interval','blocks','duration','setup'])
+      if (v[k] !== twin[k]) throw new Error(`${v.id} differs from its session ${twin.id} on ${k}: "${v[k]}" vs "${twin[k]}"`);
+  }
+  console.log(`numeral rules + twin parity: ${monthPlan.length} videos ✓`);
+}
+
 // Written next to the directory page so it can be fetched with no build step and no server.
 fs.writeFileSync(__dirname + '/../../tools/video-directory/month.json',
   JSON.stringify({ month:'2026-08', label:'August 2026', videos:monthPlan }, null, 1));
@@ -385,7 +438,7 @@ for (const r of rows) {
   const cfg = `**${MODE[r.kind]}** · ${setupOf(r)} → ${durPlain(m)} · ${sh.nBreak} breaks`;
   const col=L.cols[i%L.cols.length];
   tbl += `| ☐ | ${String(n).padStart(2,'0')} | \`${slug(r)}\` | ${cfg} | ${L.setup} · Show `
-      +  `| Always · ${PLACE[i%4]} · ${FILL[i%3]} · ${FONT[i%2]} · ${SEP[i%3]} · ${col} `
+      +  `| ${numeralsOf(r, Math.floor((i-1)/2))} `
       +  `| ${audioCell(r.sound)} | ${esc(title(r))} | ${tags(r,i)} **(${tags(r,i).length} ch)** | |\n`;
 }
 

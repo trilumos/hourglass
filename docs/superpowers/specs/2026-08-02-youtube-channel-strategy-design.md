@@ -683,6 +683,42 @@ YouTube ignores — emitting them just reproduces the silent rejection. Below th
 validates as a chapter. The description looked correct in every way while the progress bar stayed
 unsegmented — there is no error message anywhere in Studio.
 
+## 21. Numeral rules — LOCKED 2026-08-04
+
+The directory used to cycle placement/fill/font/separator/colour off the ROW index. Two failures:
+
+1. **A bell twin differed from its own session.** Rows are interleaved (session, twin), so the twin
+   picked up the next index and came out a visually different video. A twin is the same session with
+   the sound off; everything visible must be identical.
+2. **It emitted combinations that look wrong**, because nothing encoded what actually looks good — only
+   that no permutation repeated. Thirty considered videos beat thirty proofs of combinatorial coverage.
+
+### The rules
+
+| Setting | Rule |
+|---|---|
+| **Timer display** | **Always.** Never hover / 5 min / never. |
+| **Separator** | `middle` and `ledge` → **none, ever**. `horizon` and `top` → colon or dot. |
+| **Fill** | solid or glass only. **Never outline.** |
+| **Colour** | white or charcoal only. |
+
+**Timer display is the dangerous one:** Setup defaults `timershow` to `hover`, so a session recorded
+without explicitly setting Always will have the numbers fade out mid-video.
+
+**Charcoal `#20242e` is the palette's black** — the swatch row is White / Ivory / Gold / Sky / Charcoal,
+with no pure black. Colour is assigned by legibility, not variety: charcoal on the bright skies
+(midday, sunrise), white on everything dim.
+
+Only the six permitted `(placement, separator)` pairs can be generated at all — an illegal pair has no
+representation in the source. Fill phase flips each time the placement cycle wraps, because fill has
+period 2 against placement's period 6: a plain `si % 2` locks them in phase forever and every `middle`
+comes out solid, every `top` glass. That in-phase artifact is exactly the mechanical look the rules
+exist to prevent.
+
+All of it is **asserted after generation**, not assumed — visibility, fill, colour, both separator
+rules, and full twin parity across `numerals`, `lightSetup`, `mode`, `interval`, `blocks`, `duration`
+and `setup`. Every one of these has shipped wrong once already.
+
 ## 15. Sources
 
 - [YouTube Partner Program overview & eligibility](https://support.google.com/youtube/answer/72851?hl=en)
