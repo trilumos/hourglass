@@ -389,6 +389,23 @@ const descHead = r => { const m=totalOf(r), ch=chapters(r);
 ${ch.join('\n')}
 
 ` : ''); };
+// ── Thumbnail text ───────────────────────────────────────────────────────────────────────────────
+// Four lines, matching the studio's own layout: heading, subhead, the locked bottom pair, then the
+// sound row. One word per sound because the strip has to read at 168px in a feed — the descriptive
+// names ("Ocean & Seabirds") are for the description, and would be illegible here.
+// Kept in step with stage.astro's thDefaults()/thSoundLabel(), with one deliberate difference: a
+// CUSTOM row shows its real interval rather than the word CUSTOM, because the title already says
+// "50/15 Pomodoro Timer" and the thumbnail should not contradict it. That one field needs typing.
+const TH_SND = { ocn:'WAVES', snd:'SAND', brz:'BREEZE', brd:'BIRDS' };
+const thumbOf = r => {
+  const m = totalOf(r), h = Math.floor(m/60), mm = m%60;
+  const l1 = h ? (mm ? `${h}H ${mm}M` : `${h} ${h === 1 ? 'HOUR' : 'HOURS'}`) : `${mm} MIN`;
+  const mode = r.kind === 'flow' ? 'DEEP WORK' : `${shapeOf(r).iv} POMODORO`;
+  const snd = r.sound === 'bell' ? 'NO MUSIC'
+            : r.sound === 'all4' ? 'FULL SHORE'
+            : r.sound.split('+').map(k => TH_SND[k]).join('   ');
+  return [l1, 'STUDY WITH ME', `${mode}   ${LIGHT[r.light].cap.toUpperCase()}`, snd];
+};
 const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
 const modePhrase = r => { const sh = shapeOf(r);
   if (r.kind==='flow')   return 'Deep Work Timer, No Breaks for Flow State & ADHD';
@@ -457,6 +474,7 @@ const monthPlan = rows.filter(r => r.phase === '1').slice(0, DAYS).map((r, i) =>
     light: LIGHT[r.light].cap, lightSetup: LIGHT[r.light].setup,
     sound: soundSetup(r.sound), audio: audioCell(r.sound),
     numerals: numeralsOf(r, Math.floor(i/2)),
+    thumb: thumbOf(r),
     title: title(r), tags: tags(r, i+1), chapters: chapters(r), desc: descHead(r),
     preset: presetURL(r), sentence: sentence(r),
   };
