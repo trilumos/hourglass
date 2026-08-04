@@ -2021,11 +2021,6 @@ function numFor(place){
 // between the wide-flanked numbers); Top/Horizon = the user's colon|dot, never none.
 let numSep = 'colon';   // user's divider pick, only used by Top/Horizon
 function sepForPlace(place){ return (place==='middle' || place==='ledge') ? 'none' : (numSep==='dot' ? 'dot' : 'colon'); }
-// Vertical correction for the serif face, in the same % units as dy. Positive pushes DOWN.
-const SERIF_DY = 3.2;
-function isSerifNum(){
-  return !/NumSans/.test(frame.style.getPropertyValue('--num-font') || '');
-}
 function applyNum(place){                          // designed geometry (X fixed per mode) + tuned size/dy; selects the active place → occluder follows
   // Phones get TOP only. The other placements sit beside or across the glass, and a portrait viewport has no
   // room for that. The size/gap themselves are re-expressed in viewport units by the portrait CSS in
@@ -2034,12 +2029,7 @@ function applyNum(place){                          // designed geometry (X fixed
   if (narrowVP()) place = 'top';
   const d = NUM_DEF[place] || NUM_DEF.middle, n = numFor(place);
   frame.style.setProperty('--num-size', String(n.size));
-  // Newsreader and Jost do not sit at the same height in an identical line box: the serif has a taller
-  // ascender and a lower cap-height ratio, so centring the BOX centres the two faces differently and
-  // Newsreader's digits ride high. Invisible at middle/ledge/top, obvious at horizon where they are
-  // measured against the waterline. dy is per-mode design geometry, so the correction rides on top of
-  // it rather than replacing it -- one constant, applied only to the serif.
-  frame.style.setProperty('--dy', (n.dy + (isSerifNum() ? SERIF_DY : 0)) + '%');
+  frame.style.setProperty('--dy', n.dy + '%');
   frame.style.setProperty('--gap', d.gap);
   frame.style.setProperty('--tb-top', d.tbtop);
   frame.style.setProperty('--hg-cx', d.hgcx);
