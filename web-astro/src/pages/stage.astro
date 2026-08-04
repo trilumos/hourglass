@@ -1,0 +1,1054 @@
+---
+// /stage — the STUDIO (master spec §18.7, first-push §4.4, strategy §10).
+//
+// The SAME app, minus the session chrome. You configure a session on the REAL Setup screen (identical to
+// production: mode, durations, intention, sounds + mixer, theme / time-of-day, number look), press Begin,
+// and the session then runs with NO UI at all: no pause/resume, no break button, no settings gear, no give
+// up, no popcards, no navigation guard. It simply follows the config to the end and fades to black.
+// Browser Back (or a back swipe) is the way out.
+//
+// It is pointed at by OBS **Browser Source** — never Window/Display Capture, which screen-scrapes a
+// throttled background tab (strategy §10 names that as the cause of the freeze/black-screen glitch).
+// Setup guide: docs/obs-stage-streaming-guide.md
+//
+// "The site is the studio. We do not build a second render engine." — every screen here is the real one.
+//
+// ?record=1  capture preset: hides the cursor and stops the breathing zoom.
+//
+// noindex: a capture surface, not a page for humans.
+import SceneWorld from '../components/SceneWorld.astro';
+import Setup from '../components/Setup.astro';
+import Session from '../components/Session.astro';
+import { LQIP } from '../scene/lqip.js';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sustain — Stage</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/favicon-round.png" type="image/png" />
+    <script is:inline>
+      // Must run BEFORE the component modules: Session reads this class to skip the navigation guard.
+      document.documentElement.classList.add('stage');
+      if (/[?&]record=1\b/.test(location.search)) document.documentElement.classList.add('rec');
+      // ALWAYS start on Setup. The hash survives a reload, so `if (!location.hash)` meant that
+      // refreshing mid-session simply re-entered the session — leaving no way out of a stuck take
+      // inside OBS's chrome-less Interact window.
+      if (location.hash !== '#setup') location.replace('#setup');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,200..500&family=Jost:wght@200..600&display=swap"
+      rel="stylesheet"
+    />
+    <style is:global>
+      @font-face{ font-family:'NumSerif'; font-weight:550; font-display:swap; src:url('/assets/fonts/newsreader-550.woff2') format('woff2'); }
+      @font-face{ font-family:'NumSans';  font-weight:550; font-display:swap; src:url('/assets/fonts/jost-550.woff2') format('woff2'); }
+
+      /* The stage never scrolls. */
+      :root.stage, :root.stage body { height:100%; overflow:hidden; }
+
+      /* ── the whole point: a session with NO interface ──────────────────────────────────────────────
+         Everything the user would touch during a session is removed. The engine still drives breaks,
+         segment advances and completion exactly as in production; only the controls are gone. */
+      :root.stage #gear,
+      :root.stage #giveup,
+      :root.stage #pause,
+      :root.stage #breakBtn,
+      :root.stage #intentTop,
+      :root.stage #seglabel,
+      :root.stage #giveupConfirm,
+      :root.stage #doneCard,
+      :root.stage #sessionOver,
+      :root.stage #paused,
+      :root.stage #endBreakBtn,
+      :root.stage #numEditToggle,
+      :root.stage #numEditor,
+      /* by ID, NOT by .sheet/.sheet-scrim: Setup's Advanced sheet uses those same class names, so a class
+         selector here silently killed Advanced settings on the stage's Setup screen too */
+      :root.stage #setSheet,
+      :root.stage #setScrim { display:none !important; }
+
+      /* capture preset */
+      :root.rec { cursor:none; }
+      :root.rec #frame { animation:none !important; }
+
+      /* ── The stage is the whole edit ──────────────────────────────────────────────────────────────
+         Begin → recording starts → INTRO card (10s) → 3-2-1 → session → OUTRO card (7s) → fade to black
+         → stopRecording. Nothing is cut together afterwards; what OBS captures is the finished video.
+         Both cards read the session's own config, so they are never written by hand. ─────────────── */
+      :root.stage-count #frame,
+      :root.stage-intro #frame,
+      :root.stage-outro #frame{ filter:blur(12px) saturate(.95); }
+
+      /* Plain rgba scrim, never backdrop-filter: these cards fade their own opacity, and an animating
+         opacity above a backdrop-filter makes it sample an empty group until opacity hits exactly 1. */
+      .stage-card{ position:fixed; inset:0; z-index:98; display:none; flex-direction:column;
+        align-items:center; justify-content:center; text-align:center; pointer-events:none;
+        background:rgba(6,11,26,.44); padding:6vmin; opacity:0; }
+      :root.stage-intro #stageIntro, :root.stage-outro #stageOutro{ display:flex; animation:cardIn .9s cubic-bezier(.16,1,.3,1) forwards; }
+      @keyframes cardIn{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
+
+      .stage-card .brand{ font-family:'Playfair Display',Georgia,serif; font-weight:500;
+        font-size:clamp(20px,3.1vmin,34px); letter-spacing:.42em; text-indent:.42em;
+        color:#fffaf0; opacity:.86; margin-bottom:clamp(14px,2.6vmin,26px); }
+      .stage-card .cfg{ font-family:'Jost',system-ui,sans-serif; font-weight:300;
+        font-size:clamp(13px,1.75vmin,19px); letter-spacing:.3em; text-indent:.3em; text-transform:uppercase;
+        color:#eaca78; margin-bottom:clamp(20px,3.4vmin,38px); }
+      .stage-card h2{ font-family:'Newsreader',Georgia,serif; font-weight:400; margin:0;
+        font-size:clamp(21px,3.7vmin,42px); line-height:1.42; color:#fffaf0; max-width:22em;
+        text-shadow:0 2px 30px rgba(0,0,0,.4); }
+      .stage-card p{ font-family:'Newsreader',Georgia,serif; font-weight:300;
+        font-size:clamp(14px,1.95vmin,22px); line-height:1.62; color:#fffaf0; opacity:.8;
+        max-width:34em; margin:clamp(14px,2.3vmin,26px) 0 0; }
+      .stage-card .rule{ width:min(30vmin,240px); height:1px; margin:clamp(22px,3.6vmin,40px) 0 0;
+        background:linear-gradient(90deg,transparent,rgba(255,250,240,.42),transparent); }
+      .stage-card .fine{ font-family:'Jost',system-ui,sans-serif; font-weight:300;
+        font-size:clamp(11px,1.4vmin,15px); line-height:1.75; letter-spacing:.045em;
+        color:#fffaf0; opacity:.62; max-width:36em; margin-top:clamp(12px,2vmin,20px); }
+      .stage-card .fine b{ font-weight:400; opacity:.9; letter-spacing:.1em }
+
+      :root.stage-count #frame{ filter:blur(12px) saturate(.95); }
+      #stageCount{ position:fixed; inset:0; z-index:98; display:none;
+        align-items:center; justify-content:center; pointer-events:none;
+        background:rgba(6,11,26,.34); }
+      :root.stage-count #stageCount{ display:flex; }
+      #stageCount b{ font-family:'NumSerif', Georgia, serif; font-weight:550; color:#fffaf0;
+        font-size:min(28vh, 34vw); line-height:1; letter-spacing:-.02em;
+        text-shadow:0 2px 40px rgba(0,0,0,.35); }
+      @keyframes countPulse{ from{ opacity:0; transform:scale(1.12) } 22%{ opacity:1; transform:none } to{ opacity:.85; transform:none } }
+      #stageCount b{ animation:countPulse .9s cubic-bezier(.16,1,.3,1); }
+
+      /* ── Thumbnail studio ─────────────────────────────────────────────────────────────────────── */
+      #thumbWrap{ position:fixed; inset:0; z-index:120; display:none; align-items:center; justify-content:center;
+        background:rgba(4,8,18,.86); padding:2vmin; }
+      :root.thumb-open #thumbWrap{ display:flex; }
+      :root.thumb-open #begin{ display:none; }         /* no starting a session from behind the panel */
+      #thumbPanel{ width:min(1180px,96vw); max-height:96vh; overflow:auto; background:#0e1420;
+        border:1px solid #26303f; border-radius:14px; color:#e6edf3;
+        font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+      .th-head{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid #26303f; }
+      .th-head b{ font-size:15px; letter-spacing:.02em }
+      .th-hint{ color:#8b949e; font-size:12px; margin-right:auto }
+      #thumbClose{ background:none; border:0; color:#8b949e; font-size:17px; cursor:pointer; padding:2px 6px }
+      #thumbClose:hover{ color:#e6edf3 }
+      .th-body{ display:flex; gap:16px; padding:16px; flex-wrap:wrap }
+      .th-stageCol{ flex:1 1 620px; min-width:0 }
+      #thumbCv{ width:100%; height:auto; display:block; border-radius:10px; cursor:grab;
+        box-shadow:0 6px 26px rgba(0,0,0,.45) }
+      #thumbCv:active{ cursor:grabbing }
+      .th-mob{ display:flex; align-items:center; gap:12px; margin-top:12px }
+      #thumbMob{ width:320px; height:180px; flex:0 0 auto; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,.4) }
+      .th-mob span{ color:#8b949e; font-size:12px; line-height:1.5 }
+      .th-side{ flex:0 0 260px; display:flex; flex-direction:column; gap:12px }
+      .th-side label{ display:flex; flex-direction:column; gap:4px; font-size:12px; color:#8b949e }
+      .th-side label span{ color:#5c6673; font-size:11px }
+      .th-side input{ background:#161b22; border:1px solid #26303f; border-radius:7px; color:#e6edf3;
+        padding:7px 9px; font:inherit; font-size:13px }
+      .th-side input:focus{ outline:none; border-color:#eaca78 }
+      .th-btn{ padding:8px 12px; border-radius:8px; border:1px solid #26303f; background:#161b22;
+        color:#e6edf3; font:inherit; font-size:13px; cursor:pointer }
+      .th-btn:hover{ border-color:#eaca78 }
+      .th-pri{ background:#eaca78; border-color:#eaca78; color:#1a1200; font-weight:600 }
+      .th-note{ color:#5c6673; font-size:11px; line-height:1.6; margin:2px 0 0 }
+      .th-note em{ color:#8b949e; font-style:normal }
+      .th-rng{ gap:6px !important }
+      .th-rng b{ color:#eaca78; font-weight:500; font-size:11px; font-variant-numeric:tabular-nums }
+      .th-rng input[type=range]{ width:100%; accent-color:#eaca78; padding:0; background:none; border:0 }
+      .th-hr{ border:0; border-top:1px solid #26303f; margin:4px 0 }
+      .th-seg{ display:flex; align-items:center; gap:6px; font-size:12px; color:#8b949e; flex-wrap:wrap }
+      .th-seg button{ padding:5px 10px; border-radius:7px; border:1px solid #26303f; background:#161b22;
+        color:#8b949e; font:inherit; font-size:12px; cursor:pointer }
+      .th-seg button.on{ border-color:#eaca78; color:#e6edf3 }
+      /* the injected trigger, beside Begin */
+      #thumbBtn{ position:fixed; left:50%; bottom:calc(var(--begin-b,4.2vh) + 62px); transform:translateX(-50%);
+        z-index:60; padding:9px 20px; border-radius:999px; cursor:pointer;
+        background:rgba(10,16,28,.5); border:1px solid rgba(255,250,240,.28); color:#fffaf0;
+        font-family:'Jost',system-ui,sans-serif; font-weight:300; font-size:13px; letter-spacing:.16em;
+        text-transform:uppercase; backdrop-filter:blur(6px); }
+      #thumbBtn:hover{ border-color:rgba(255,250,240,.6) }
+      :root.thumb-open #thumbBtn, :root:not(.setup-active) #thumbBtn{ display:none }
+
+      /* ── the session ends → fade to black. Back / back-swipe is the way out. ─────────────────────── */
+      #stageEnd{ position:fixed; inset:0; z-index:99; background:#000; opacity:0; pointer-events:none;
+        transition:opacity 2.4s cubic-bezier(.4,0,.2,1); }
+      :root.stage-done #stageEnd{ opacity:1; pointer-events:auto; }
+    </style>
+  </head>
+  <body>
+    <div id="lqip"></div>
+    <script is:inline define:vars={{ LQIP }}>
+      // Same blur-up as the app so a capture never opens on a black frame.
+      (function () {
+        var h = new Date().getHours() + new Date().getMinutes() / 60;
+        var i = h < 4.9 ? 5 : h < 6.1 ? 0 : h < 8.4 ? 1 : h < 18.2 ? 2 : h < 19.65 ? 3 : h < 21.75 ? 4 : 5;
+        var el = document.getElementById('lqip');
+        if (el && LQIP[i]) el.style.backgroundImage = 'url(' + LQIP[i] + ')';
+        var names = ['pre-dawn', 'sunrise', 'midday', 'sunset', 'twilight', 'midnight'];
+        var l = document.createElement('link');
+        l.rel = 'preload'; l.as = 'image'; l.href = '/plates-phases/' + names[i] + '.webp';
+        l.setAttribute('fetchpriority', 'high');       // no crossorigin — see index.astro
+        document.head.appendChild(l);
+      })();
+    </script>
+
+    <SceneWorld />
+    <Setup />
+    <Session />
+    <!-- ── Thumbnail studio (stage only) ─────────────────────────────────────────────────────────────
+         Lives HERE, not in Setup.astro, because Setup is shared with the public site and must not grow a
+         capture-only button. The trigger is injected next to Begin at runtime. -->
+    <div id="thumbWrap" aria-hidden="true">
+      <div id="thumbPanel">
+        <div class="th-head">
+          <b>Thumbnail</b>
+          <span class="th-hint">heading + bottom row locked · drag or scroll the sound row</span>
+          <button id="thumbClose" title="Close">✕</button>
+        </div>
+        <div class="th-body">
+          <div class="th-stageCol">
+            <canvas id="thumbCv" width="1280" height="720"></canvas>
+            <div class="th-mob">
+              <canvas id="thumbMob" width="320" height="180"></canvas>
+              <span>320×180 — how it looks in a phone feed. If it does not read here, it does not read.</span>
+            </div>
+          </div>
+          <div class="th-side">
+            <label>Line 1 <span>big</span><input id="thL1" type="text" maxlength="24"></label>
+            <label>Line 2 <span>passes behind the glass</span><input id="thL2" type="text" maxlength="28"></label>
+            <label class="th-rng">Top size <b id="thTopVal"></b>
+              <input id="thTopSize" type="range" min="60" max="220" step="1"></label>
+            <label class="th-rng">Line 2 size <b id="thL2Val"></b>
+              <input id="thL2Size" type="range" min="25" max="90" step="1"></label>
+            <label class="th-rng">Behind the glass <b id="thOccVal"></b>
+              <input id="thOcc" type="range" min="0" max="100" step="1"></label>
+
+            <hr class="th-hr">
+            <label>Bottom left <span>right-aligned to the axis</span><input id="thBL" type="text" maxlength="22"></label>
+            <label>Bottom right <span>left-aligned from the axis</span><input id="thBR" type="text" maxlength="22"></label>
+            <label class="th-rng">Bottom size <b id="thBotVal"></b>
+              <input id="thBotSize" type="range" min="20" max="90" step="1"></label>
+            <label class="th-rng">Left gap <b id="thGapLVal"></b>
+              <input id="thGapL" type="range" min="0" max="260" step="1"></label>
+            <label class="th-rng">Right gap <b id="thGapRVal"></b>
+              <input id="thGapR" type="range" min="0" max="260" step="1"></label>
+            <div class="th-seg">Widths
+              <button id="thEven" class="on">Equalise</button><button id="thNatural">Natural</button></div>
+            <div class="th-seg">Divider
+              <button data-sep="bar" class="on">Bar</button><button data-sep="dot">Dot</button><button data-sep="none">None</button>
+            </div>
+
+            <hr class="th-hr">
+            <div class="th-seg">Text boxes <button id="thAdd">+ Add text</button><button id="thSndRow">+ Sound row</button></div>
+            <div id="thExtra"></div>
+            <label class="th-rng">Sound row size <b id="thSndVal"></b>
+              <input id="thSndSize" type="range" min="15" max="90" step="1"></label>
+            <label class="th-rng">Sound row spread <b id="thSndSprVal"></b>
+              <input id="thSndSpread" type="range" min="0" max="120" step="1"></label>
+            <p class="th-warn" id="thWarn"></p>
+
+            <button id="thumbReset" class="th-btn">Reset to config</button>
+            <button id="thumbSave" class="th-btn th-pri">Download PNG</button>
+            <p class="th-note">Auto-filled from the session config. The divider is pinned to the
+              <em>hourglass axis</em>, and both bottom words sit the same distance from it — so every
+              thumbnail in the series lines up identically.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stageIntro" class="stage-card" aria-hidden="true">
+      <div class="brand">SUSTAIN</div>
+      <div class="cfg" id="inCfg"></div>
+      <h2 id="inWhat"></h2>
+      <div class="rule"></div>
+      <div class="fine">Recorded in real time, never looped &nbsp;·&nbsp; <b>sustaintimer.com</b></div>
+    </div>
+    <div id="stageOutro" class="stage-card" aria-hidden="true">
+      <div class="brand">SUSTAIN</div>
+      <h2>Thank you for focusing.</h2>
+      <p id="outDone"></p>
+      <div class="rule"></div>
+      <div class="fine">Run this session any time, free — <b>sustaintimer.com</b></div>
+    </div>
+    <div id="stageCount" aria-hidden="true"><b id="stageCountN">3</b></div>
+    <div id="stageEnd" aria-hidden="true"></div>
+
+    <script is:inline>
+      // A two-state router: Setup ⇄ Session. Setup and Session each own their own behaviour off the hash;
+      // this only does what index.astro's controller does for the app — toggle Setup's visibility and the
+      // scene's glass blur — minus Home, the landing story and the scroll machinery.
+      (function () {
+        var root  = document.documentElement;
+        var setup = document.getElementById('setupScreen');
+
+        function sync(){
+          var onSetup = location.hash !== '#session';
+          if (setup){
+            setup.classList.toggle('on', onSetup);
+            setup.setAttribute('aria-hidden', onSetup ? 'false' : 'true');
+          }
+          root.classList.toggle('setup-active', onSetup);
+          if (onSetup){                                          // going back re-arms the stage
+            root.classList.remove('stage-done');
+            root.classList.remove('stage-outro');
+            root.classList.remove('stage-intro');
+          }
+        }
+        sync();
+        addEventListener('hashchange', sync);
+
+        // ── 3-2-1 lead-in ────────────────────────────────────────────────────────────────────────────
+        // Session's own hashchange runs first (its inline script is earlier in the document), so by the
+        // time we get here the engine has started. We immediately PAUSE it and count 3-2-1 over a blurred
+        // scene, then resume. The engine is wall-clock based and subtracts paused time, so the block still
+        // runs its exact configured length — and the first counted second is safely inside the recording
+        // even if OBS took a moment to start.
+        // ── The cards write themselves from the session's own config ───────────────────────────────
+        // Nothing here is typed per video: change the Setup and the copy changes with it. This is also
+        // the ONLY on-screen text in the whole capture, and relevance counts on-screen text in the first
+        // seconds — so the config line doubles as the algorithm's read on what the video is.
+        var INTRO_MS = 10000, OUTRO_MS = 7000;
+        // The card is on screen for OUTRO_MS, but OBS is told to stop at OUTRO_STOP_MS so the
+        // recording ends ON the thank-you card rather than on the fade-out or on black.
+        var OUTRO_STOP_MS = 5000;
+        var PHASE_NAME = ['pre-dawn','sunrise','midday','sunset','twilight','midnight'];
+        // A picked time of day is NOT a static sky. Session.astro's spanDrift() moves the light across that
+        // phase's witness window for the whole session (PH_SPAN: sunrise 5.0→8.2, sunset 16.3→18.8, …), so
+        // you watch the phase HAPPEN. Saying "a sunrise sky" undersold the one thing no other timer channel
+        // has — the sky actually travels.
+        // Every phrase starts "a sky ..." so it reads correctly after "under", and every one describes
+        // MOVEMENT, because that is what actually happens.
+        var PHASE_PHRASE = [
+          'a sky easing out of the dark hour into first light',
+          'a sky moving from first light into full morning',
+          'a sky drifting from late morning into afternoon',
+          'a sky sinking from afternoon light down to the horizon',
+          'a sky deepening from the last light into dusk',
+          'a sky settling from dusk into the small hours'
+        ];
+        var CYCLE_PHRASE = {
+          dawn:'a sky that warms from pre-dawn into full daylight',
+          dusk:'a sky that deepens from sunset into night',
+          day:'a whole day passing, dawn through to midnight',
+          custom:'a sky that moves through the light you chose',
+          follow:'a sky that follows the real time of day'
+        };
+        // Short forms for the config line, matching the roadmap's light names.
+        var CYCLE_LABEL = { dawn:'Dawn to Day', dusk:'Dusk to Night', day:'Full Day', custom:'Custom Light' };
+        var SOUND_NAME = { sand:'falling sand', ocean:'ocean waves', breeze:'a shore breeze', birds:'seabirds' };
+
+        function set(id, t){ var e = document.getElementById(id); if (e) e.textContent = t; }
+        function readCfg(){ try { return JSON.parse(localStorage.getItem('sustain.session') || '{}'); } catch (e){ return {}; } }
+        function dur(min){
+          if (!min) return 'an open-ended session';
+          var h = Math.floor(min / 60), m = min % 60;
+          if (!h) return m + ' minutes';
+          return h + (h === 1 ? ' hour' : ' hours') + (m ? ' ' + m + ' min' : '');
+        }
+        function list(a){ return a.length < 2 ? (a[0] || '') : a.slice(0,-1).join(', ') + ' and ' + a[a.length-1]; }
+
+        // Which light is ACTUALLY going to render? Three cases, and the order matters.
+        //
+        // The trap: `cycle.preset` defaults to 'follow' and is NOT a choice the user made — Setup starts
+        // there and only changes it if the Advanced sheet is opened. Reading the preset first therefore
+        // made every held time-of-day describe itself as "a sky that follows the real time of day", even
+        // though the scene correctly rendered the picked phase. `cycle.seq` is no help either: it defaults
+        // to ['midday','sunset','midnight'] regardless of preset. Only these preset IDs really move.
+        var MOVING = { dawn:1, dusk:1, day:1, custom:1 };
+        function lightOf(c){
+          var pre = c.cycle && c.cycle.preset;
+          if (pre && MOVING[pre]) return CYCLE_PHRASE[pre] || CYCLE_PHRASE.custom;   // the sky travels
+          if (c.followDay) return CYCLE_PHRASE.follow;                               // tracks real time
+          return PHASE_PHRASE[c.phase | 0] || 'the shore';                           // one held light
+        }
+        function lightLabel(c){
+          var pre = c.cycle && c.cycle.preset;
+          if (pre && MOVING[pre]) return CYCLE_LABEL[pre] || 'Moving Light';
+          if (c.followDay) return 'Live Sky';
+          return (PHASE_NAME[c.phase | 0] || '').replace('-', ' ');
+        }
+
+        function fillIntro(){
+          var c = readCfg();
+          var light = lightOf(c);
+          var snd = (c.sounds || []).map(function (s){ return SOUND_NAME[s]; }).filter(Boolean);
+          var d = dur(c.totalMin);
+
+          var bits = [];
+          if (c.mode === 'pomodoro')    bits.push(c.pomoFocus + ' / ' + c.pomoBreak + ' Pomodoro');
+          else if (c.mode === 'flow')   bits.push('Flow');
+          else if (c.mode === 'custom') bits.push('Custom ' + c.customInterval + ' / ' + c.customBreakLen);
+          else                          bits.push('Endless');
+          bits.push(c.totalMin ? d : 'no set end');
+          bits.push(lightLabel(c));
+          set('inCfg', bits.join('  ·  '));
+
+          // ONE sentence. The card is on screen for 10s and a viewer should take it in at a glance —
+          // the block structure is already in the description's chapters, so it does not belong here too.
+          set('inWhat', d.charAt(0).toUpperCase() + d.slice(1) + ' of ambient focus under ' + light
+            + (snd.length ? ', with ' + list(snd) + '.' : ', in quiet.'));
+        }
+        function fillOutro(){
+          var c = readCfg();
+          set('outDone', c.totalMin ? 'You just completed ' + dur(c.totalMin) + ' of focused work.'
+                                    : 'You just completed a full session of focused work.');
+        }
+
+        var counting = false, introT = null;
+        function leadIn(){
+          if (counting) return;
+          counting = true;
+
+          // The recording is already rolling, so this card IS the opening frame of the video.
+          fillIntro();
+          root.classList.add('stage-intro');
+          var el = document.getElementById('stageCountN');
+          if (el) el.textContent = '3';
+
+          // Park the engine at ZERO the moment it exists and keep it parked through the card AND the
+          // count, so the numerals read the full block length (25:00, not 24:59) the whole way in.
+          // Budget generously: the card alone is 10s, so a 3s poll window would give up far too early.
+          var armed = false, tries = 0;
+          var wait = setInterval(function () {
+            var S = window.SustainScene;
+            var r = S && S.sampleSession && S.sampleSession();
+            if (!(r && r.kind && r.kind !== 'idle')) { if (++tries > 400) clearInterval(wait); return; }
+            clearInterval(wait);
+            try { if (S && S.restartSession){ S.restartSession(true); armed = true; } } catch (e) {}
+          }, 50);
+
+          // 3 · 2 · 1 each get a tick; the BELL is reserved for the moment the clock actually starts, so
+          // the two sounds mean different things on the tape.
+          var beat = function(){ try { if (window.SustainAudio && window.SustainAudio.tick) window.SustainAudio.tick(); } catch (e) {} };
+
+          introT = setTimeout(function () {
+            root.classList.remove('stage-intro');
+            root.classList.add('stage-count');
+            beat();                                     // the "3" is already on screen
+            var n = 3;
+            var tick = setInterval(function () {
+              n -= 1;
+              if (n > 0) {
+                if (el){ el.textContent = String(n); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
+                beat();                                 // "2" and "1"
+                return;
+              }
+              clearInterval(tick); clearInterval(wait);
+              root.classList.remove('stage-count');
+              counting = false;
+              try {
+                var S = window.SustainScene;
+                // Restart from zero rather than resume, so the block begins at exactly its full length.
+                if (armed && S && S.restartSession) S.restartSession(false);
+                // ...and ring the start bell on the same beat the clock starts.
+                if (window.SustainAudio && window.SustainAudio.cue) window.SustainAudio.cue();
+              } catch (e) {}
+            }, 1000);
+          }, INTRO_MS);
+        }
+        addEventListener('hashchange', function(){
+          if (location.hash === '#session') leadIn();
+          else {
+            clearTimeout(introT);
+            root.classList.remove('stage-intro'); root.classList.remove('stage-count');
+            counting = false;
+          }
+        });
+
+        // Begin → fullscreen. requestFullscreen needs a user gesture, so it hangs off the Begin CLICK
+        // rather than the hashchange (which fires in a later task and can lose the activation).
+        // Begin → fullscreen, EXCEPT under ?record=1.
+        //
+        // requestFullscreen makes the browser print its own "To exit full screen, press Esc" toast, and on
+        // Begin that toast lands squarely on the intro card — i.e. on tape. Inside an OBS Browser Source
+        // requestFullscreen was always a no-op (the source is already rendered at 1920×1080), so skipping
+        // it in the capture preset costs nothing and removes the toast from the recording entirely.
+        //
+        // Capturing a real browser window instead of a Browser Source? Press F11 BEFORE Begin — entering
+        // fullscreen yourself gets the toast over with while nothing is rolling.
+        var REC = /[?&]record=1\b/.test(location.search);
+        function goFull(){
+          if (REC) return;
+          try {
+            var el = document.documentElement;
+            if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(function(){});
+          } catch (e) {}
+        }
+        var beginBtn = document.getElementById('begin');
+        if (beginBtn) beginBtn.addEventListener('click', function () {
+          goFull();
+          // ...and roll. Same OBS Browser Source API as the auto-stop; a no-op in a normal browser, and it
+          // needs the source's Page permissions set to ALL. Guarded on getStatus so pressing Begin twice
+          // cannot start a second recording.
+          try {
+            var obs = window.obsstudio;
+            if (!obs || typeof obs.startRecording !== 'function') return;
+            if (typeof obs.getStatus === 'function') {
+              obs.getStatus(function (st) { if (!st || !st.recording) obs.startRecording(); });
+            } else {
+              obs.startRecording();
+            }
+          } catch (e) {}
+        });
+        // If Esc drops out of fullscreen mid-session, the next interaction puts it back (a gesture is the
+        // only thing the browser will accept).
+        addEventListener('pointerdown', function(){ if (location.hash === '#session') goFull(); });
+        addEventListener('keydown', function(){ if (location.hash === '#session') goFull(); });
+
+        // window.obsstudio is injected ONLY inside an OBS Browser Source, so all of this is a no-op in a
+        // normal browser. It needs the source's Page permissions set to **Full access to OBS** — per the
+        // obs-browser README, startRecording/stopRecording require ALL permissions, and "Advanced access"
+        // is one level short. The symptom of getting that wrong is exact and misleading: Begin works, the
+        // session runs perfectly, and the record timer simply never starts.
+        function obsStop(){
+          try {
+            var obs = window.obsstudio;
+            if (obs && typeof obs.stopRecording === 'function') obs.stopRecording();
+            if (obs && typeof obs.stopStreaming === 'function' && /[?&]stopstream=1\b/.test(location.search)) obs.stopStreaming();
+          } catch (e) {}
+        }
+        // Back to Setup, fully re-armed for the next capture.
+        function rearm(){
+          done = false; counting = false;
+          clearTimeout(introT); clearTimeout(stopT); clearTimeout(fadeT); clearTimeout(homeT);
+          root.classList.remove('stage-intro'); root.classList.remove('stage-count');
+          root.classList.remove('stage-outro'); root.classList.remove('stage-done');
+          location.hash = 'setup';
+        }
+
+        // ── Completion ──────────────────────────────────────────────────────────────────────────────
+        // The tape should END on the thank-you card, not on black. So the card stays up the full 7 s for
+        // anyone watching the stage live, but the STOP signal fires at 5 s — the last thing on the
+        // recording is the card, with the fade and the re-arm happening after OBS has already closed the
+        // file. Without that split, every video ended with dead black frames.
+        var done = false, stopT = null, fadeT = null, homeT = null;
+        setInterval(function () {
+          // `counting` covers the intro card AND the 3-2-1: during those the previous session's engine
+          // state can still read done:true for a beat before restartSession() parks the new one at zero.
+          // Without this guard a second capture could fire its outro instantly and record 12 s of card.
+          if (done || counting || location.hash !== '#session' || !window.SustainScene || !SustainScene.sampleSession) return;
+          var r = SustainScene.sampleSession();
+          if (!r || !r.done) return;
+          done = true;
+          fillOutro();
+          root.classList.add('stage-outro');
+
+          stopT = setTimeout(obsStop, OUTRO_STOP_MS);          // 5 s — recording ends on the card
+          fadeT = setTimeout(function () {                     // 7 s — card has had its full run
+            root.classList.remove('stage-outro');
+            root.classList.add('stage-done');                  // 2.4 s fade to black
+            // ...and don't sit on black forever: go back to Setup so the next row can be set up
+            // immediately. Only after the fade has finished, so the stage still reads as "finished".
+            homeT = setTimeout(rearm, 3200);
+          }, OUTRO_MS);
+        }, 1000);
+
+        // ── Escape hatch ────────────────────────────────────────────────────────────────────────────
+        // OBS's Interact window has NO browser chrome — no Back button, no address bar — so a running
+        // session was a dead end. Refresh did not help either: the #session hash survives a reload, so
+        // the page just re-entered the session (which is why the bootstrap above now forces #setup on
+        // every load). Esc or Backspace bails out, and stops any recording in flight so abandoning a take
+        // cannot leave OBS quietly recording the Setup screen into a huge orphan file.
+        addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape' && e.key !== 'Backspace') return;
+          if (location.hash !== '#session') return;
+          e.preventDefault();
+          obsStop();
+          rearm();
+        });
+
+        // ── Thumbnail studio ────────────────────────────────────────────────────────────────────────
+        // 90+ thumbnails is too many to hand-make, and drift between them would cost the series its
+        // recognisability. So: text auto-fills from the same cfg that drove the capture, the crop is
+        // fixed for the whole catalogue, and the hourglass is composited back OVER line 2 so the type
+        // reads as depth. Everything is still draggable/resizable for CTR experiments.
+        // All sizes/offsets are FRACTIONS of the frame, so a value is identical at 1280x720 and at
+        // 320x180 — which is what lets a slider produce the same look on every video in the series.
+        var TH = {
+          top: { x:0.5, y:0.20, size:0.135 },
+          l2r: 0.52,                 // line 2 size, relative to line 1
+          bot: { y:0.90, size:0.045, gapL:0.115, gapR:0.115, sep:'bar', even:true },  // even = track both words to ONE width
+          occ: 1,                    // how strongly the hourglass hides line 2 (0 = not at all)
+          l1:'', l2:'', bl:'', br:'',
+          // Free text boxes, on top of the four structural slots above. The four keep their
+          // coupled behaviour — the top pair moves as one, the bottom pair stays pinned either
+          // side of the hourglass axis and tracked to a common width — because that coupling is
+          // what makes 90 thumbnails line up. Anything beyond it is a plain box you place freely.
+          extra: []
+        };
+        var thCv = document.getElementById('thumbCv'), thMob = document.getElementById('thumbMob');
+        var $t = function(id){ return document.getElementById(id); };
+        var thL1 = $t('thL1'), thL2 = $t('thL2'), thBL = $t('thBL'), thBR = $t('thBR');
+
+        // One word per sound, because the bottom strip has to read at 168px in a feed. The full
+        // names ("Ocean & Seabirds") are for the description; here they would be illegible.
+        var TH_SND = { ocean:'WAVES', sand:'SAND', breeze:'BREEZE', birds:'BIRDS' };
+        function thSoundLabel(c){
+          var on = (c.sounds || []).filter(function(k){ return TH_SND[k]; });
+          if (!on.length) return 'NO MUSIC';
+          if (on.length === 4) return 'FULL SHORE';       // four words will not read at feed size
+          return on.map(function(k){ return TH_SND[k]; }).join('   ');
+        }
+        // Everything the setup screen already knows, in the order you are most likely to want it.
+        // "Add text" walks this list, so a new box arrives carrying real content rather than "TEXT".
+        function thPool(){
+          var c = readCfg();
+          return [thSoundLabel(c), lightLabel(c).toUpperCase(), 'STUDY WITH ME',
+                  (c.mode === 'pomodoro' ? c.pomoFocus + '/' + c.pomoBreak + ' POMODORO' : 'FOCUS')];
+        }
+        function thDefaults(){
+          var c = readCfg(), m = c.totalMin || 0, h = Math.floor(m/60), mm = m%60;
+          TH.l1 = m ? (h ? (mm ? h+'H '+mm+'M' : h + (h===1?' HOUR':' HOURS')) : mm+' MIN') : 'ENDLESS';
+          TH.l2 = 'STUDY WITH ME';
+          TH.bl = (c.mode === 'pomodoro' ? c.pomoFocus + '/' + c.pomoBreak + ' POMODORO'
+                 : c.mode === 'flow' ? 'FLOW' : c.mode === 'endless' ? 'ENDLESS' : 'CUSTOM');
+          TH.br = lightLabel(c).toUpperCase();
+          thL1.value = TH.l1; thL2.value = TH.l2; thBL.value = TH.bl; thBR.value = TH.br;
+          TH.extra.length = 0; if ($t('thExtra')) thExtraUI();
+          thSync();
+        }
+        // Text is painted BEFORE the hourglass goes back on top (see SustainScene.thumbFrame), which is
+        // what puts line 2 behind the glass.
+        // EXACTLY the timer's face: 'NumSans' is the self-hosted jost-550.woff2 the numerals use, at its
+        // one real weight (550). Google-Jost at 300 was a different typeface weight and read thinner.
+        var TH_FONT = "'NumSans','Jost',system-ui,sans-serif";
+        function thType(o, H){
+          o.textAlign = 'center'; o.textBaseline = 'middle'; o.fillStyle = '#fffaf0';
+          o.shadowColor = 'rgba(0,0,0,.55)'; o.shadowBlur = Math.round(H*0.02); o.shadowOffsetY = Math.round(H*0.004);
+        }
+        // BEHIND the glass — the top block, so the stand and cap cut across it.
+        function thPaint(o, W, H){
+          thType(o, H);
+          var s1 = Math.round(H * TH.top.size), s2 = Math.round(s1 * TH.l2r);
+          o.font = '550 ' + s1 + 'px ' + TH_FONT;
+          o.fillText(TH.l1, W*TH.top.x, H*TH.top.y);
+          o.font = '550 ' + s2 + 'px ' + TH_FONT;
+          o.letterSpacing = Math.round(s2*0.16) + 'px';
+          o.fillText(TH.l2, W*TH.top.x, H*TH.top.y + s1*0.78);
+          o.letterSpacing = '0px'; o.shadowBlur = 0; o.shadowOffsetY = 0;
+        }
+        // IN FRONT — the bottom row. Both words are pinned the SAME distance either side of the
+        // hourglass axis with the divider exactly on it, so every thumbnail in the series lines up.
+        function thPaintOver(o, W, H){
+          thType(o, H);
+          var ax = W * thAxis(), s3 = Math.round(H * TH.bot.size), y = H * TH.bot.y;
+          o.font = '550 ' + s3 + 'px ' + TH_FONT;
+          var base = s3 * 0.22;
+          // TRULY equidistant, inner AND outer, is impossible with words of different length — unless the
+          // two words occupy the SAME width. So track the shorter one out until it does. Letterspacing is
+          // the classic typographic fix for exactly this, and on all-caps display type it reads as
+          // deliberate rather than stretched.
+          var sp = thTrack(o, s3, base);
+          o.letterSpacing = sp.l + 'px';
+          o.textAlign = 'right'; o.fillText(TH.bl, ax - W*TH.bot.gapL, y);
+          o.letterSpacing = sp.r + 'px';
+          o.textAlign = 'left';  o.fillText(TH.br, ax + W*TH.bot.gapR, y);
+          o.textAlign = 'center'; o.letterSpacing = '0px';
+          if (TH.bot.sep === 'bar'){
+            o.fillRect(Math.round(ax - Math.max(1, W/1000)), y - s3*0.55, Math.max(2, W/500), s3*1.1);
+          } else if (TH.bot.sep === 'dot'){
+            o.beginPath(); o.arc(ax, y, Math.max(2, s3*0.11), 0, 6.284); o.fill();
+          }
+          o.shadowBlur = 0; o.shadowOffsetY = 0;
+          // Free boxes ride in front, each at its own size and opacity.
+          TH.extra.forEach(function(b){
+            thType(o, H);
+            o.globalAlpha = b.alpha == null ? 1 : b.alpha;
+            var bs = Math.round(H*b.size);
+            o.font = '550 ' + bs + 'px ' + TH_FONT;
+            // A multi-word sound row is tracked out until it spans the same width as the bottom
+            // pair, so the two read as one block rather than a wide line above a narrow one.
+            o.letterSpacing = thExtraTrack(b, H) + 'px';
+            o.textAlign = 'center';
+            o.fillText(b.text, W*b.x, H*b.y);
+            o.letterSpacing = '0px'; o.globalAlpha = 1;
+            o.shadowBlur = 0; o.shadowOffsetY = 0;
+          });
+          thBorders(o, W, H);
+          // Handle markers: a ring on whatever is grabbed or hovered, so it is never ambiguous which
+          // block a drag will move. Editor-only — suppressed in the export with the guide.
+          if (thGuide && (thDragging || thHover)){
+            var act = thDragging || thHover;
+            var hx = act.kind === 'top' ? W*TH.top.x
+                   : act.side === 'L' ? ax - W*TH.bot.gapL : ax + W*TH.bot.gapR;
+            var hy = act.kind === 'top' ? H*(TH.top.y + TH.top.size*0.4) : H*TH.bot.y;
+            o.save();
+            o.strokeStyle = thDragging ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.5)';
+            o.lineWidth = Math.max(1.5, W/500);
+            o.beginPath(); o.arc(hx, hy, Math.max(8, W*0.014), 0, 6.284); o.stroke();
+            o.restore();
+          }
+          if (thDragging && thGuide){
+            o.save();
+            o.strokeStyle = Math.abs(TH.top.x - thAxis()) < 0.004 ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.35)';
+            o.lineWidth = Math.max(1, Math.round(W/640)); o.setLineDash([H*0.02, H*0.02]);
+            o.beginPath(); o.moveTo(ax, 0); o.lineTo(ax, H); o.stroke();
+            o.restore();
+          }
+        }
+        // Returns the letterSpacing (px) for each bottom word so both render to one common width.
+        // Measured on a scratch context at the real font/size, so it is exact rather than estimated.
+        var _mc = document.createElement('canvas').getContext('2d');
+        function thTrack(o, s3, base){
+          var out = { l: Math.round(base), r: Math.round(base) };
+          if (!TH.bot.even || !TH.bl || !TH.br) return out;
+          _mc.font = '550 ' + s3 + 'px ' + TH_FONT;
+          var meas = function(txt, sp){ _mc.letterSpacing = sp + 'px'; return _mc.measureText(txt).width; };
+          var wl = meas(TH.bl, base), wr = meas(TH.br, base);
+          var target = Math.max(wl, wr);
+          if (wl < target) out.l = Math.round(base + (target - wl) / Math.max(1, TH.bl.length));
+          if (wr < target) out.r = Math.round(base + (target - wr) / Math.max(1, TH.br.length));
+          return out;
+        }
+        // Every box's rect in frame fractions, measured at the real font and size rather than
+        // guessed. Borders draw from this, and so does hit-testing: a rect hit says exactly what you
+        // grabbed, where the old nearest-anchor scheme could still hand you the wrong block when two
+        // anchors sat close together.
+        function thRects(){
+          var ax = thAxis(), out = [];
+          var s1 = TH.top.size, s2 = s1 * TH.l2r, s3 = TH.bot.size;
+          var mw = function(txt, px, sp){
+            _mc.font = '550 ' + Math.round(px * 720) + 'px ' + TH_FONT;
+            _mc.letterSpacing = (sp || 0) + 'px';
+            var w = _mc.measureText(txt).width / 1280; _mc.letterSpacing = '0px'; return w;
+          };
+          // top block: both lines as ONE box, because they drag as one
+          var w1 = mw(TH.l1, s1), w2 = mw(TH.l2, s2, Math.round(s2*720*0.16));
+          var tw = Math.max(w1, w2), th = s1 * 1.55;
+          out.push({ kind:'top', x:TH.top.x, y:TH.top.y + s1*0.39, w:tw*1.08, h:th });
+          // bottom pair, each measured with its own tracking so the boxes match what is drawn
+          var sp = thTrack(_mc, Math.round(s3*720), Math.round(s3*720*0.22));
+          out.push({ kind:'bot', side:'L', x:(ax - TH.bot.gapL) - mw(TH.bl, s3, sp.l)/2,
+                     y:TH.bot.y, w:mw(TH.bl, s3, sp.l)*1.08, h:s3*1.7 });
+          out.push({ kind:'bot', side:'R', x:(ax + TH.bot.gapR) + mw(TH.br, s3, sp.r)/2,
+                     y:TH.bot.y, w:mw(TH.br, s3, sp.r)*1.08, h:s3*1.7 });
+          TH.extra.forEach(function(b, i){
+            var sp = thExtraTrack(b, 720);
+            out.push({ kind:'extra', i:i, x:b.x, y:b.y, w:mw(b.text, b.size, sp)*1.10, h:b.size*1.7 });
+          });
+          return out;
+        }
+        // Editor only — thGuide is off for the export, so no border ever reaches a published PNG.
+        function thBorders(o, W, H){
+          if (!thGuide) return;
+          var act = thDragging || thHover;
+          o.save();
+          thRects().forEach(function(r){
+            if (r.kind !== 'extra'){                        // locked: faint, dashed, never active
+              o.strokeStyle = 'rgba(255,250,240,.14)';
+              o.lineWidth = Math.max(1, W/1100); o.setLineDash([W*0.004, W*0.008]);
+              o.strokeRect(Math.round((r.x - r.w/2)*W), Math.round((r.y - r.h/2)*H),
+                           Math.round(r.w*W), Math.round(r.h*H));
+              return;
+            }
+            var on = act && act.kind === r.kind
+                  && (r.kind !== 'bot' || act.side === r.side)
+                  && (r.kind !== 'extra' || act.i === r.i);
+            o.strokeStyle = on ? 'rgba(234,202,120,.95)' : 'rgba(255,250,240,.30)';
+            o.lineWidth = Math.max(1, W/900);
+            o.setLineDash(on ? [] : [W*0.006, W*0.006]);
+            var x = (r.x - r.w/2)*W, y = (r.y - r.h/2)*H;
+            o.strokeRect(Math.round(x), Math.round(y), Math.round(r.w*W), Math.round(r.h*H));
+          });
+          o.restore();
+        }
+        // Extra letterspacing for a multi-word sound row: enough to span the same width as the
+        // bottom pair. Returned in px at the fixed 720-high frame everything else is measured in, so
+        // paint and hit-test cannot disagree — they call this same function.
+        function thExtraTrack(b, H){
+          if (!b || !b.spread) return 0;
+          return Math.round(b.spread * (H / 720));      // stored at the 720-high reference frame
+        }
+        // Seeded ONCE, when the row is created: match the bottom pair's span so the two read as one
+        // block. After that it is yours — the slider owns it and the pair cannot move it.
+        function thSeedSpread(b){
+          if (!b || !/\s/.test(String(b.text).trim())) { if (b) b.spread = 0; return; }
+          var bs = Math.round(720 * b.size);
+          _mc.font = '550 ' + bs + 'px ' + TH_FONT; _mc.letterSpacing = '0px';
+          var want = (TH.bot.gapL + TH.bot.gapR) * 1280 + thPairWidth(null, 720);
+          var have = _mc.measureText(b.text).width;
+          _mc.letterSpacing = '0px';
+          b.spread = (have > 0 && want > have)
+            ? Math.round((want - have) / Math.max(1, String(b.text).length)) : 0;
+        }
+        // What the bottom pair actually occupies once tracking is applied — the target the sound row
+        // stretches to. Measured, not derived, because thTrack's output depends on both words.
+        function thPairWidth(o, H){
+          var s3 = Math.round(H * TH.bot.size), sp = thTrack(o, s3, Math.round(s3*0.22));
+          _mc.font = '550 ' + s3 + 'px ' + TH_FONT;
+          _mc.letterSpacing = sp.l + 'px'; var wl = _mc.measureText(TH.bl).width;
+          _mc.letterSpacing = sp.r + 'px'; var wr = _mc.measureText(TH.br).width;
+          _mc.letterSpacing = '0px';
+          return wl + wr;
+        }
+        function thAxis(){ var r = SustainScene.thumbCropRect(16/9); return r && r.axis != null ? r.axis : 0.5; }
+        var thRAF = 0;
+        function thDraw(){
+          if (!window.SustainScene || !SustainScene.thumbFrame) return;
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver, occAlpha:TH.occ });
+          thCv.getContext('2d').drawImage(f, 0, 0, 1280, 720);
+          var mc = thMob.getContext('2d'); mc.imageSmoothingQuality = 'high';
+          mc.drawImage(f, 0, 0, 320, 180);
+          if (document.documentElement.classList.contains('thumb-open')) thRAF = requestAnimationFrame(thDraw);
+        }
+        var TH_KEY = 'sustain.thumb.layout';
+        var _thQuiet = 0;          // >0 while defaults/restore run, so neither can clobber the store
+        function thSaveLayout(){
+          if (_thQuiet) return;
+          var sb = thSndBox();
+          try { localStorage.setItem(TH_KEY, JSON.stringify({
+            top:{ x:TH.top.x, y:TH.top.y, size:TH.top.size }, l2r:TH.l2r, occ:TH.occ,
+            bot:{ y:TH.bot.y, size:TH.bot.size, gapL:TH.bot.gapL, gapR:TH.bot.gapR,
+                  sep:TH.bot.sep, even:TH.bot.even },
+            snd: sb ? { y:sb.y, size:sb.size, x:sb.x, alpha:sb.alpha, spread:sb.spread } : null
+          })); } catch (e){}
+        }
+        // Restores geometry only — never text, which must follow the session that is being recorded.
+        function thLoadLayout(){
+          var d; try { d = JSON.parse(localStorage.getItem(TH_KEY) || 'null'); } catch (e){}
+          if (!d) return;
+          if (d.top) { TH.top.x = d.top.x; TH.top.y = d.top.y; TH.top.size = d.top.size; }
+          if (d.l2r != null) TH.l2r = d.l2r;
+          if (d.occ != null) TH.occ = d.occ;
+          if (d.bot) { TH.bot.y = d.bot.y; TH.bot.size = d.bot.size;
+                       TH.bot.gapL = d.bot.gapL; TH.bot.gapR = d.bot.gapR;
+                       TH.bot.sep = d.bot.sep; TH.bot.even = d.bot.even; }
+          if (d.snd){                       // recreate the row, then put it back where it was
+            thSoundRow();
+            var b = thSndBox();
+            if (b){ b.y = d.snd.y; b.size = d.snd.size;
+                    if (d.snd.x != null) b.x = d.snd.x;
+                    if (d.snd.alpha != null) b.alpha = d.snd.alpha;
+                    if (d.snd.spread != null) b.spread = d.snd.spread; }
+          }
+          markSepSeg();
+        }
+        // Keep the divider/width buttons showing what was actually restored.
+        function markSepSeg(){
+          Array.prototype.forEach.call(document.querySelectorAll('.th-seg [data-sep]'), function(b){
+            b.classList.toggle('on', b.dataset.sep === TH.bot.sep); });
+          if ($t('thEven')) $t('thEven').classList.toggle('on', !!TH.bot.even);
+          if ($t('thNatural')) $t('thNatural').classList.toggle('on', !TH.bot.even);
+        }
+        function thOpen(){
+          _thQuiet++;
+          thDefaults();            // text from the session config
+          thLoadLayout();          // geometry from last time — never text
+          _thQuiet--;
+          thExtraUI(); thSync();
+          document.documentElement.classList.add('thumb-open');
+          (document.fonts ? document.fonts.ready : Promise.resolve()).then(function(){ thDraw(); });
+        }
+        function thClose(){
+          document.documentElement.classList.remove('thumb-open');
+          cancelAnimationFrame(thRAF);
+        }
+        // Drag whichever block you grabbed; wheel resizes it.
+        var thDragging = null, thGuide = true;
+        // Which handle did you grab? Top block owns the upper ~2/3; below that, whichever SIDE of the
+        // hourglass axis you clicked — so the two bottom words drag independently.
+        // Pointer -> frame fractions. The canvas is CSS-scaled, so always go through the rect.
+        function thPt(e){
+          var r = thCv.getBoundingClientRect();
+          return { x:(e.clientX - r.left) / r.width, y:(e.clientY - r.top) / r.height };
+        }
+        // Grab the NEAREST handle, not whatever a y-threshold guesses. A single dividing line was
+        // fragile — anything that moved the bottom row near it, or any CSS scaling of the canvas, made
+        // every click resolve to the heading. Distance to the real anchor always picks what you aimed at.
+        // Only FREE boxes are grabbable. The heading and the bottom pair are the series template —
+        // the thing that makes 90 thumbnails read as one channel — and a stray drag on either is
+        // invisible at 1280 wide, surfacing only as drift once the videos sit side by side on the
+        // channel page. Their sliders still set them deliberately; the pointer cannot nudge them.
+        // (Replaces a nearest-anchor scheme that had no knowledge of free boxes at all, which is the
+        // real reason the sound row could never be dragged.)
+        function thHit(e){
+          var p = thPt(e), rs = thRects();
+          for (var j = rs.length - 1; j >= 0; j--){          // last drawn sits on top
+            var r = rs[j];
+            if (r.kind !== 'extra') continue;
+            if (Math.abs(p.x - r.x) <= r.w/2 && Math.abs(p.y - r.y) <= r.h/2) return r;
+          }
+          return null;
+        }
+        var thHover = null;
+        thCv.addEventListener('pointerdown', function(e){
+          var h = thHit(e); if (!h) return;                 // nothing grabbable there
+          thDragging = h; thCv.setPointerCapture(e.pointerId);
+        });
+        thCv.addEventListener('pointermove', function(e){ if (!thDragging) thHover = thHit(e); });
+        thCv.addEventListener('pointerleave', function(){ thHover = null; });
+        thCv.addEventListener('pointermove', function(e){
+          if (!thDragging) return;
+          var p = thPt(e);
+          var nx = Math.max(0.02, Math.min(0.98, p.x));
+          var ny = Math.max(0.04, Math.min(0.97, p.y));
+          var ax = thAxis();
+          if (thDragging.kind === 'extra'){
+            var b = TH.extra[thDragging.i];
+            if (b){ if (Math.abs(nx - ax) < 0.012) nx = ax; b.x = nx; b.y = ny; }
+          } else if (thDragging.kind === 'top'){
+            if (Math.abs(nx - ax) < 0.012) nx = ax;    // snap to the glass centreline
+            TH.top.x = nx; TH.top.y = ny;
+          } else {
+            // Horizontal drag becomes that side's OWN gap; vertical is shared so the row stays level.
+            if (thDragging.side === 'L') TH.bot.gapL = Math.max(0, ax - nx);
+            else                         TH.bot.gapR = Math.max(0, nx - ax);
+            TH.bot.y = ny; thSync();
+          }
+        });
+        addEventListener('pointerup', function(){
+          if (thDragging) thSaveLayout();       // drags move geometry without touching a slider
+          thDragging = null;
+        });
+        thCv.addEventListener('wheel', function(e){
+          e.preventDefault();
+          var h = thHit(e); if (!h) return;                 // locked blocks ignore the wheel
+          var k = e.deltaY < 0 ? 1.06 : 1/1.06;
+          var b = TH.extra[h.i]; if (!b) return;
+          b.size = Math.max(0.015, Math.min(0.30, b.size * k));
+          thSync();
+        }, { passive:false });
+
+        // Sliders, not just the scroll wheel: a NUMBER is what keeps 90 thumbnails identical, and the
+        // readout is the thing you copy to the next video.
+        function thSync(){
+          thSaveLayout();
+          $t('thTopSize').value = Math.round(TH.top.size*1000);  $t('thTopVal').textContent = Math.round(TH.top.size*1000);
+          $t('thL2Size').value  = Math.round(TH.l2r*100);        $t('thL2Val').textContent  = Math.round(TH.l2r*100);
+          $t('thOcc').value     = Math.round(TH.occ*100);        $t('thOccVal').textContent = Math.round(TH.occ*100) + '%';
+          $t('thBotSize').value = Math.round(TH.bot.size*1000);  $t('thBotVal').textContent = Math.round(TH.bot.size*1000);
+          $t('thGapL').value = Math.round(TH.bot.gapL*1000); $t('thGapLVal').textContent = Math.round(TH.bot.gapL*1000);
+          var _sb = thSndBox();
+          $t('thSndSize').value = Math.round((_sb ? _sb.size : TH.bot.size*0.75)*1000);
+          $t('thSndVal').textContent = _sb ? Math.round(_sb.size*1000) : '—';
+          $t('thSndSpread').value = _sb ? (_sb.spread || 0) : 0;
+          $t('thSndSprVal').textContent = _sb ? Math.round(_sb.spread || 0) : '—';
+          $t('thGapR').value = Math.round(TH.bot.gapR*1000); $t('thGapRVal').textContent = Math.round(TH.bot.gapR*1000);
+        }
+        [[thL1,'l1'],[thL2,'l2'],[thBL,'bl'],[thBR,'br']].forEach(function(p){
+          p[0].addEventListener('input', function(){ TH[p[1]] = p[0].value; thCheck(); });
+        });
+        // A new box lands in clear space below the heading, carrying the next unused config string —
+        // "add text" that makes you then type the thing the app already knows is just friction.
+        function thAddBox(){
+          var pool = thPool(), used = TH.extra.map(function(b){ return b.text; })
+            .concat([TH.l1, TH.l2, TH.bl, TH.br]);
+          var text = pool.filter(function(t){ return used.indexOf(t) < 0; })[0] || 'TEXT';
+          TH.extra.push({ text:text, x:thAxis(), y:0.72 + TH.extra.length*0.07, size:TH.bot.size });
+          thExtraUI();
+        }
+        // The sound row is the one extra box every video in the series wants, so it gets a preset
+        // rather than four manual adjustments. Placed on the hourglass axis like the bottom pair,
+        // sized at 75% of it and slightly dimmed: mode and time are the video's identity, the sound
+        // is the variant, and equal weight would have the two rows competing.
+        // Re-clicking updates the existing row instead of stacking duplicates — the sound changes far
+        // more often than the layout does.
+        function thSoundRow(){
+          var size = TH.bot.size * 0.75;
+          // Sit it below the pair, but never let the box run off the bottom of the frame.
+          var y = Math.min(TH.bot.y + TH.bot.size * 1.35, 0.975 - size * 0.85);
+          var box = TH.extra.filter(function(b){ return b.role === 'sound'; })[0];
+          var isNew = !box; if (isNew) box = {};
+          box.role = 'sound'; box.text = thSoundLabel(readCfg());
+          if (isNew){ box.x = thAxis(); box.y = y; box.size = size; box.alpha = 0.85;
+                      thSeedSpread(box); TH.extra.push(box); }
+          // Re-clicking refreshes the TEXT for the new session but leaves the geometry you set alone.
+          thExtraUI();
+        }
+        $t('thSndRow').addEventListener('click', thSoundRow);
+        function thSndBox(){ return TH.extra.filter(function(b){ return b.role === 'sound'; })[0]; }
+        $t('thSndSize').addEventListener('input', function(){
+          var b = thSndBox(); if (!b) return;
+          b.size = +this.value / 1000; thSync();
+        });
+        $t('thSndSpread').addEventListener('input', function(){
+          var b = thSndBox(); if (!b) return;
+          b.spread = +this.value; thSync();
+        });
+        function thExtraUI(){
+          var wrap = $t('thExtra');
+          wrap.innerHTML = TH.extra.map(function(b, i){
+            return '<div class="th-xrow"><input type="text" maxlength="28" data-i="' + i + '" value="'
+                 + String(b.text).replace(/"/g, '&quot;') + '"><button data-del="' + i + '">✕</button></div>';
+          }).join('');
+          thCheck();
+        }
+        // The one thumbnail rule with the most evidence behind it: three words, five at the absolute
+        // outside. Easy to break the moment free text boxes exist, and invisible at 1280 wide — you
+        // only find out in the feed. So it is checked here rather than discovered later.
+        function thCheck(){
+          var words = [TH.l1, TH.l2, TH.bl, TH.br]
+            .concat(TH.extra.map(function(b){ return b.text; }))
+            .join(' ').trim().split(/\s+/).filter(Boolean).length;
+          var el = $t('thWarn');
+          el.textContent = words > 5
+            ? words + ' words. Three is the rule, five is the ceiling — this will not read at 320×180.'
+            : words > 3 ? words + ' words. Three reads best in a feed.' : '';
+        }
+        $t('thAdd').addEventListener('click', thAddBox);
+        $t('thExtra').addEventListener('input', function(e){
+          var i = e.target.dataset.i; if (i == null) return;
+          TH.extra[+i].text = e.target.value; thCheck();
+        });
+        $t('thExtra').addEventListener('click', function(e){
+          var d = e.target.dataset.del; if (d == null) return;
+          TH.extra.splice(+d, 1); thExtraUI();
+        });
+        function rng(id, set){ $t(id).addEventListener('input', function(){ set(+this.value); thSync(); }); }
+        rng('thTopSize', function(v){ TH.top.size = v/1000; });
+        rng('thL2Size',  function(v){ TH.l2r = v/100; });
+        rng('thOcc',     function(v){ TH.occ = v/100; });
+        rng('thBotSize', function(v){ TH.bot.size = v/1000; });
+        rng('thGapL',    function(v){ TH.bot.gapL = v/1000; });
+        rng('thGapR',    function(v){ TH.bot.gapR = v/1000; });
+        Array.prototype.forEach.call(document.querySelectorAll('.th-seg button'), function(b){
+          b.addEventListener('click', function(){
+            TH.bot.sep = b.dataset.sep;
+            Array.prototype.forEach.call(document.querySelectorAll('.th-seg button'), function(x){ x.classList.toggle('on', x===b); });
+          });
+        });
+        (function(){
+          var be = $t('thEven'), bn = $t('thNatural');
+          var set = function(v){ TH.bot.even = v; be.classList.toggle('on', v); bn.classList.toggle('on', !v); };
+          be.addEventListener('click', function(){ set(true); });
+          bn.addEventListener('click', function(){ set(false); });
+        })();
+        document.getElementById('thumbReset').addEventListener('click', function(){
+          TH.top = { x:0.5, y:0.20, size:0.135 }; TH.l2r = 0.52; TH.occ = 1;
+          TH.bot = { y:0.90, size:0.045, gapL:0.115, gapR:0.115, sep:TH.bot.sep, even:TH.bot.even };
+          thDefaults();
+        });
+        document.getElementById('thumbClose').addEventListener('click', thClose);
+        document.getElementById('thumbSave').addEventListener('click', function(){
+          thGuide = false;
+          var f = SustainScene.thumbFrame({ w:1280, h:720, paint:thPaint, paintOver:thPaintOver, occAlpha:TH.occ });
+          thGuide = true;
+          f.toBlob(function(b){
+            var c = readCfg(), name = 'thumb_' + (c.mode||'x') + '_' + (c.totalMin||0) + 'm_'
+                  + lightLabel(c).toLowerCase().replace(/\s+/g,'-') + '.png';
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(b); a.download = name; a.click();
+            setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+          }, 'image/png');
+        });
+        addEventListener('keydown', function(e){
+          if (e.key === 'Escape' && document.documentElement.classList.contains('thumb-open')){
+            e.preventDefault(); e.stopPropagation(); thClose();
+          }
+        }, true);
+
+        // Inject the trigger beside Begin — Setup.astro is shared with the public site and stays untouched.
+        (function(){
+          var b = document.createElement('button');
+          b.id = 'thumbBtn'; b.type = 'button'; b.textContent = 'Thumbnail';
+          b.addEventListener('click', thOpen);
+          document.body.appendChild(b);
+        })();
+      })();
+    </script>
+  </body>
+</html>
