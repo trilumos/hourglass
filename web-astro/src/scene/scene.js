@@ -45,7 +45,12 @@ const LOW = (() => {
   try {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
     const cores  = navigator.hardwareConcurrency || 4;
-    const mem    = navigator.deviceMemory || 4;            // undefined on Safari/Firefox -> assume mid
+    // 8, not 4. deviceMemory is unsupported in Firefox and in OBS's CEF build, and a fallback of 4
+    // fails this function's own `mem <= 4` test — so EVERY Firefox was classified LOW no matter what
+    // hardware it ran on. LOW drops preserveDrawingBuffer, and the session occluder works by copying
+    // the live WebGL canvas, so it copied a blank buffer and the numerals rendered with no depth at
+    // all. Unknown memory now means unknown, not "assume the worst".
+    const mem    = navigator.deviceMemory || 8;
     const coarse = matchMedia('(hover: none)').matches;    // phone / tablet
     return coarse || cores <= 4 || mem <= 4;
   } catch (e) { return false; }
