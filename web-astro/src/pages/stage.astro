@@ -244,6 +244,8 @@ import { LQIP } from '../scene/lqip.js';
             <hr class="th-hr">
             <div class="th-seg">Text boxes <button id="thAdd">+ Add text</button><button id="thSndRow">+ Sound row</button></div>
             <div id="thExtra"></div>
+            <label class="th-rng">Sound row size <b id="thSndVal"></b>
+              <input id="thSndSize" type="range" min="15" max="90" step="1"></label>
             <p class="th-warn" id="thWarn"></p>
 
             <button id="thumbReset" class="th-btn">Reset to config</button>
@@ -658,13 +660,7 @@ import { LQIP } from '../scene/lqip.js';
             o.font = '550 ' + bs + 'px ' + TH_FONT;
             // A multi-word sound row is tracked out until it spans the same width as the bottom
             // pair, so the two read as one block rather than a wide line above a narrow one.
-            if (b.role === 'sound' && /\s/.test(String(b.text).trim())){
-              _mc.font = '550 ' + bs + 'px ' + TH_FONT; _mc.letterSpacing = '0px';
-              var want = (TH.bot.gapL + TH.bot.gapR) * W + thPairWidth(o, H);
-              var have = _mc.measureText(b.text).width;
-              if (have > 0 && want > have)
-                o.letterSpacing = Math.round((want - have) / Math.max(1, String(b.text).length)) + 'px';
-            }
+            o.letterSpacing = thExtraTrack(b, H) + 'px';
             o.textAlign = 'center';
             o.fillText(b.text, W*b.x, H*b.y);
             o.letterSpacing = '0px'; o.globalAlpha = 1;
@@ -729,7 +725,8 @@ import { LQIP } from '../scene/lqip.js';
           out.push({ kind:'bot', side:'R', x:(ax + TH.bot.gapR) + mw(TH.br, s3, sp.r)/2,
                      y:TH.bot.y, w:mw(TH.br, s3, sp.r)*1.08, h:s3*1.7 });
           TH.extra.forEach(function(b, i){
-            out.push({ kind:'extra', i:i, x:b.x, y:b.y, w:mw(b.text, b.size)*1.10, h:b.size*1.7 });
+            var sp = thExtraTrack(b, 720);
+            out.push({ kind:'extra', i:i, x:b.x, y:b.y, w:mw(b.text, b.size, sp)*1.10, h:b.size*1.7 });
           });
           return out;
         }
@@ -749,6 +746,19 @@ import { LQIP } from '../scene/lqip.js';
             o.strokeRect(Math.round(x), Math.round(y), Math.round(r.w*W), Math.round(r.h*H));
           });
           o.restore();
+        }
+        // Extra letterspacing for a multi-word sound row: enough to span the same width as the
+        // bottom pair. Returned in px at the fixed 720-high frame everything else is measured in, so
+        // paint and hit-test cannot disagree — they call this same function.
+        function thExtraTrack(b, H){
+          if (!b || b.role !== 'sound' || !/\s/.test(String(b.text).trim())) return 0;
+          var bs = Math.round(H * b.size);
+          _mc.font = '550 ' + bs + 'px ' + TH_FONT; _mc.letterSpacing = '0px';
+          var want = (TH.bot.gapL + TH.bot.gapR) * (H * 16/9) + thPairWidth(null, H);
+          var have = _mc.measureText(b.text).width;
+          _mc.letterSpacing = '0px';
+          return (have > 0 && want > have)
+            ? Math.round((want - have) / Math.max(1, String(b.text).length)) : 0;
         }
         // What the bottom pair actually occupies once tracking is applied — the target the sound row
         // stretches to. Measured, not derived, because thTrack's output depends on both words.
@@ -770,8 +780,46 @@ import { LQIP } from '../scene/lqip.js';
           mc.drawImage(f, 0, 0, 320, 180);
           if (document.documentElement.classList.contains('thumb-open')) thRAF = requestAnimationFrame(thDraw);
         }
+        var TH_KEY = 'sustain.thumb.layout';
+        function thSaveLayout(){
+          var sb = thSndBox();
+          try { localStorage.setItem(TH_KEY, JSON.stringify({
+            top:{ x:TH.top.x, y:TH.top.y, size:TH.top.size }, l2r:TH.l2r, occ:TH.occ,
+            bot:{ y:TH.bot.y, size:TH.bot.size, gapL:TH.bot.gapL, gapR:TH.bot.gapR,
+                  sep:TH.bot.sep, even:TH.bot.even },
+            snd: sb ? { y:sb.y, size:sb.size, x:sb.x, alpha:sb.alpha } : null
+          })); } catch (e){}
+        }
+        // Restores geometry only — never text, which must follow the session that is being recorded.
+        function thLoadLayout(){
+          var d; try { d = JSON.parse(localStorage.getItem(TH_KEY) || 'null'); } catch (e){}
+          if (!d) return;
+          if (d.top) { TH.top.x = d.top.x; TH.top.y = d.top.y; TH.top.size = d.top.size; }
+          if (d.l2r != null) TH.l2r = d.l2r;
+          if (d.occ != null) TH.occ = d.occ;
+          if (d.bot) { TH.bot.y = d.bot.y; TH.bot.size = d.bot.size;
+                       TH.bot.gapL = d.bot.gapL; TH.bot.gapR = d.bot.gapR;
+                       TH.bot.sep = d.bot.sep; TH.bot.even = d.bot.even; }
+          if (d.snd){                       // recreate the row, then put it back where it was
+            thSoundRow();
+            var b = thSndBox();
+            if (b){ b.y = d.snd.y; b.size = d.snd.size;
+                    if (d.snd.x != null) b.x = d.snd.x;
+                    if (d.snd.alpha != null) b.alpha = d.snd.alpha; }
+          }
+          markSepSeg();
+        }
+        // Keep the divider/width buttons showing what was actually restored.
+        function markSepSeg(){
+          Array.prototype.forEach.call(document.querySelectorAll('.th-seg [data-sep]'), function(b){
+            b.classList.toggle('on', b.dataset.sep === TH.bot.sep); });
+          if ($t('thEven')) $t('thEven').classList.toggle('on', !!TH.bot.even);
+          if ($t('thNatural')) $t('thNatural').classList.toggle('on', !TH.bot.even);
+        }
         function thOpen(){
           thDefaults();
+          thLoadLayout();
+          thExtraUI(); thSync();
           document.documentElement.classList.add('thumb-open');
           (document.fonts ? document.fonts.ready : Promise.resolve()).then(function(){ thDraw(); });
         }
@@ -831,7 +879,10 @@ import { LQIP } from '../scene/lqip.js';
             TH.bot.y = ny; thSync();
           }
         });
-        addEventListener('pointerup', function(){ thDragging = null; });
+        addEventListener('pointerup', function(){
+          if (thDragging) thSaveLayout();       // drags move geometry without touching a slider
+          thDragging = null;
+        });
         thCv.addEventListener('wheel', function(e){
           e.preventDefault();
           var h = thHit(e), k = e.deltaY < 0 ? 1.06 : 1/1.06;
@@ -843,11 +894,15 @@ import { LQIP } from '../scene/lqip.js';
         // Sliders, not just the scroll wheel: a NUMBER is what keeps 90 thumbnails identical, and the
         // readout is the thing you copy to the next video.
         function thSync(){
+          thSaveLayout();
           $t('thTopSize').value = Math.round(TH.top.size*1000);  $t('thTopVal').textContent = Math.round(TH.top.size*1000);
           $t('thL2Size').value  = Math.round(TH.l2r*100);        $t('thL2Val').textContent  = Math.round(TH.l2r*100);
           $t('thOcc').value     = Math.round(TH.occ*100);        $t('thOccVal').textContent = Math.round(TH.occ*100) + '%';
           $t('thBotSize').value = Math.round(TH.bot.size*1000);  $t('thBotVal').textContent = Math.round(TH.bot.size*1000);
           $t('thGapL').value = Math.round(TH.bot.gapL*1000); $t('thGapLVal').textContent = Math.round(TH.bot.gapL*1000);
+          var _sb = thSndBox();
+          $t('thSndSize').value = Math.round((_sb ? _sb.size : TH.bot.size*0.75)*1000);
+          $t('thSndVal').textContent = _sb ? Math.round(_sb.size*1000) : '—';
           $t('thGapR').value = Math.round(TH.bot.gapR*1000); $t('thGapRVal').textContent = Math.round(TH.bot.gapR*1000);
         }
         [[thL1,'l1'],[thL2,'l2'],[thBL,'bl'],[thBR,'br']].forEach(function(p){
@@ -880,6 +935,11 @@ import { LQIP } from '../scene/lqip.js';
           thExtraUI();
         }
         $t('thSndRow').addEventListener('click', thSoundRow);
+        function thSndBox(){ return TH.extra.filter(function(b){ return b.role === 'sound'; })[0]; }
+        $t('thSndSize').addEventListener('input', function(){
+          var b = thSndBox(); if (!b) return;
+          b.size = +this.value / 1000; thSync();
+        });
         function thExtraUI(){
           var wrap = $t('thExtra');
           wrap.innerHTML = TH.extra.map(function(b, i){
