@@ -71,28 +71,52 @@ const shapeOf = r => { const pl = P.buildPlan(stOf(r));
 // beats 30 videos that merely prove no permutation repeats.
 //
 // Locked for every YouTube video (founder, 2026-08-04):
-//   visibility  ALWAYS. Never hover, 5min or never — Setup DEFAULTS to hover, so this is the single
+//   visibility  Always, 5 min or Never. NEVER hover — Setup DEFAULTS to hover, which is the single
 //               most dangerous setting on the page: miss it and the numbers fade out mid-recording.
 //   separator   middle and ledge take NONE, ever. horizon and top take colon or dot.
 //   fill        solid or glass only. Never outline.
-//   colour      white or charcoal only. Charcoal #20242e is the palette's black (no pure black swatch).
-const VIS = 'Always';
+//   colour      White #ffffff always legal. Charcoal #20242e ONLY on day sessions — a session whose
+//               sky never reaches pre-dawn, twilight or midnight at any point.
+// Always dominates on purpose. The title promises a "Pomodoro Timer", and a screen with no visible
+// timer is a promise the video does not keep — satisfaction is the dominant ranking signal, so that
+// mismatch costs more than the variety gains. 5 min is a genuine variant; Never is legal but rationed
+// to roughly one session in ten, and belongs on videos whose title does not lead on the timer.
+const VIS_CYCLE = ['Always','Always','Always','Always','5 min',
+                   'Always','Always','Always','Always','Never'];
 // Only the six (placement, separator) pairs the rules actually permit. Nothing else can be generated.
 const PLACE_SEP = [
   ['middle',  'none'],   ['horizon', 'colon'], ['ledge', 'none'],
   ['top',     'dot'],    ['horizon', 'dot'],   ['top',   'colon'],
 ];
 const FILL = ['solid','glass'], FONT = ['Serif','Jost'];
-// Colour is legibility, not variety: dark numerals on the bright skies, white on everything dim.
-const BRIGHT = { midday:1, sunrise:1 };
-const numColour = light => BRIGHT[light] ? 'Charcoal #20242e' : 'White #ffffff';
+// Charcoal is legal only where the sky never darkens — and because the sky DRIFTS across a session,
+// that is a question about the whole span, not the starting phase. From Session.astro:367, PH_SPAN in
+// hours: pre-dawn 3.5-6.1 | sunrise 5.0-8.2 | midday 8.2-16.5 | sunset 16.3-18.8 | twilight 18.2-19.6
+// | midnight 20.0-28.5. Overlapping each span against the three dark windows:
+//   sunrise  opens at 5.0, inside pre-dawn's 3.5-6.1        -> dark
+//   sunset   runs to 18.8, inside twilight's 18.2-19.6      -> dark
+//   midnight ends at 28.5 = 04:30, back inside pre-dawn     -> dark
+//   midday   8.2-16.5 touches none of them                  -> the ONLY day session
+// White reads on every sky, so it is the default and charcoal is the exception, not the alternate.
+const DAY = { midday:1 };
+const numColour = light => DAY[light] ? 'Charcoal #20242e' : 'White #ffffff';
 // Driven by the SESSION index, never the row index — that is what makes a bell twin identical to the
 // session it pairs with.
 // The +floor(si/6) matters: fill has period 2 and PLACE_SEP period 6, so a plain si%2 keeps them in
 // phase forever — every middle and ledge comes out solid, every top comes out glass. Flipping the fill
 // phase each time the placement cycle wraps breaks that, so a placement is seen in both fills.
-const numeralsOf = (r, si) => { const [place, sep] = PLACE_SEP[si % PLACE_SEP.length];
-  return `${VIS} · ${place} · ${FILL[(si + Math.floor(si/PLACE_SEP.length)) % 2]}`
+// Session 1 was recorded and published (IRTdF6rgjpQ, 2026-08-03) before these rules existed, so its
+// config is pinned to what is actually on screen in that video rather than generated — otherwise its
+// bell twin, which is day 2, would not be a twin at all. It happens to be legal under the rules:
+// horizon takes a colon, glass is permitted, White is legal on every sky.
+const PINNED = { 0: 'Always · horizon · glass · Serif · colon · White #ffffff' };
+const numeralsOf = (r, si) => { if (PINNED[si]) return PINNED[si];
+  const vis = VIS_CYCLE[si % VIS_CYCLE.length];
+  // With the numerals hidden there is nothing to place, fill, letter or colour. Listing settings that
+  // do not render just invites five minutes of pointless tapping before a recording.
+  if (vis === 'Never') return 'Never · numerals hidden — nothing else to set';
+  const [place, sep] = PLACE_SEP[si % PLACE_SEP.length];
+  return `${vis} · ${place} · ${FILL[(si + Math.floor(si/PLACE_SEP.length)) % 2]}`
        + ` · ${FONT[Math.floor(si/2) % 2]} · ${sep} · ${numColour(r.light)}`; };
 
 
@@ -404,9 +428,13 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
   for (const v of monthPlan){
     const [vis, place, fill, font, sep, ...col] = v.numerals.split(' · ');
     const colour = col.join(' · ');
-    if (vis !== 'Always')            throw new Error(`${v.id}: visibility is "${vis}" — must be Always (Setup defaults to hover)`);
+    if (!['Always','5 min','Never'].includes(vis))
+      throw new Error(`${v.id}: visibility "${vis}" — Always, 5 min or Never only. NEVER hover (Setup's default).`);
+    if (vis === 'Never') continue;              // nothing renders, so nothing else to validate
     if (!OK_FILL.includes(fill))     throw new Error(`${v.id}: fill "${fill}" — only ${OK_FILL.join('/')}`);
     if (!OK_COL.includes(colour))    throw new Error(`${v.id}: colour "${colour}" — only white or charcoal`);
+    if (colour.startsWith('Charcoal') && !/^Midday/.test(v.light))
+      throw new Error(`${v.id}: charcoal on "${v.light}" — that sky reaches pre-dawn/twilight/midnight; day sessions only`);
     if ((place === 'middle' || place === 'ledge') && sep !== 'none')
       throw new Error(`${v.id}: ${place} must have NO separator, got "${sep}"`);
     if ((place === 'horizon' || place === 'top') && !['colon','dot'].includes(sep))
@@ -418,6 +446,9 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
     for (const k of ['numerals','lightSetup','mode','interval','blocks','duration','setup'])
       if (v[k] !== twin[k]) throw new Error(`${v.id} differs from its session ${twin.id} on ${k}: "${v[k]}" vs "${twin[k]}"`);
   }
+  if (monthPlan[0].id !== 'P50-10x2h_sunset_ocn')
+    throw new Error(`session 1 is now ${monthPlan[0].id} — the PINNED config belongs to the PUBLISHED `
+      + `video P50-10x2h_sunset_ocn. Re-key or drop the pin before reordering UNIQUE.`);
   console.log(`numeral rules + twin parity: ${monthPlan.length} videos ✓`);
 }
 

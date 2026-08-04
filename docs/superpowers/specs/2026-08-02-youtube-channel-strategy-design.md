@@ -719,27 +719,59 @@ All of it is **asserted after generation**, not assumed — visibility, fill, co
 rules, and full twin parity across `numerals`, `lightSetup`, `mode`, `interval`, `blocks`, `duration`
 and `setup`. Every one of these has shipped wrong once already.
 
-## 22. The reservoir under the rules — 746,496 videos
+## 22. The reservoir under the rules — 886,464 videos
 
 | Dimension | Count | What varies |
 |---|---:|---|
-| Look | **48** | 6 legal (placement, separator) pairs x 2 fills x 2 fonts x 2 colours |
+| Look x sky | **342** | see below — colour depends on the sky, so it sums rather than multiplies |
 | Sound | **16** | 15 non-empty mixes of ocean/sand/breeze/birds + bell-only |
-| Sky | **6** | pre-dawn, sunrise, midday, sunset, twilight, midnight |
 | Session | **162** | 91 Pomodoro + 11 Flow + 60 Custom, under >=25/5 and round-hour |
-| **Total** | **746,496** | |
+| **Total** | **886,464** | |
 
-**As shipped: 373,248**, because colour is bound to the sky for legibility rather than left free.
+Look breaks down as 6 legal `(placement, separator)` pairs x 2 fills x 2 fonts = 24 shown-numeral
+variants; x2 visibility (Always, 5 min); plus **one** hidden variant per sky, because with numerals off
+there is nothing to place, fill, letter or colour — counting `Never` as a third multiplier would treble
+-count videos that look identical. Colour then adds a second option on day skies only.
 
-The rules *shrink* the space and that is the point. Unconstrained the look space is 4 placements x 3
-separators x 3 fills x 2 fonts x 5 colours = 360; the rules cut it to 48, and every survivor is
-publishable. Sessions alone, ignoring look entirely, still give **15,552** genuinely distinct videos.
+Ignoring look entirely there are still **15,552** distinct sessions (sound x sky x session config).
 
-**Combination count is a ceiling, not a plan.** 746,496 is 2,045 years at one a day. The binding
+**Combination count is a ceiling, not a plan.** 886,464 is 2,429 years at one a day. The binding
 constraints are elsewhere: capture is real-time (a 3-hour video costs 3 hours, so 1-2 recordings a day),
 and per section 4 a large stock of near-identical permutations is a *liability* under the
-inauthentic-content policy, not an asset. This is why the monthly 15 are chosen against measured search
-volume rather than drawn from this space at random.
+inauthentic-content policy, not an asset. The monthly 15 are chosen against measured search volume, not
+drawn from this space at random.
+
+### Visibility — Always, 5 min or Never. NEVER hover.
+
+Setup defaults `timershow` to **hover**, which fades the numbers out mid-recording. It is the single
+most dangerous setting on the page and is asserted on every row. `Always` dominates the schedule on
+purpose: the title promises a "Pomodoro Timer", and a screen with no visible timer is a promise the
+video does not keep. `Never` is rationed to about one session in ten.
+
+### Charcoal is restricted to day sessions
+
+The sky **drifts** across a session, so this is a question about the whole span, not the starting
+phase. Overlapping `PH_SPAN` (`Session.astro:367`) against the three dark windows:
+
+| Preset | Span (h) | Verdict |
+|---|---|---|
+| pre-dawn | 3.5–6.1 | dark |
+| sunrise | 5.0–8.2 | opens at 5.0, inside pre-dawn's 3.5–6.1 → **dark** |
+| **midday** | **8.2–16.5** | **touches none — the only day session** |
+| sunset | 16.3–18.8 | runs to 18.8, inside twilight's 18.2–19.6 → **dark** |
+| twilight | 18.2–19.6 | dark |
+| midnight | 20.0–28.5 | ends at 28.5 = 04:30, back in pre-dawn → **dark** |
+
+White reads on every sky, so white is the default and charcoal is the exception. Asserted: a charcoal
+row on any non-midday sky throws.
+
+### Session 1 is pinned, not generated
+
+Video #1 (`IRTdF6rgjpQ`) was recorded before these rules existed, as
+`Always · horizon · glass · Serif · colon · White #ffffff`. Its config is pinned to that so day 2 — its
+bell twin — actually matches what is on screen. It is legal under the rules by coincidence. The pin is
+keyed by position, so the generator throws if `UNIQUE` is reordered and session 1 stops being the
+published video.
 
 ## 15. Sources
 
