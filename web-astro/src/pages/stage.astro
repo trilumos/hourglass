@@ -246,6 +246,8 @@ import { LQIP } from '../scene/lqip.js';
             <div id="thExtra"></div>
             <label class="th-rng">Sound row size <b id="thSndVal"></b>
               <input id="thSndSize" type="range" min="15" max="90" step="1"></label>
+            <label class="th-rng">Sound row spread <b id="thSndSprVal"></b>
+              <input id="thSndSpread" type="range" min="0" max="120" step="1"></label>
             <p class="th-warn" id="thWarn"></p>
 
             <button id="thumbReset" class="th-btn">Reset to config</button>
@@ -751,13 +753,19 @@ import { LQIP } from '../scene/lqip.js';
         // bottom pair. Returned in px at the fixed 720-high frame everything else is measured in, so
         // paint and hit-test cannot disagree — they call this same function.
         function thExtraTrack(b, H){
-          if (!b || b.role !== 'sound' || !/\s/.test(String(b.text).trim())) return 0;
-          var bs = Math.round(H * b.size);
+          if (!b || !b.spread) return 0;
+          return Math.round(b.spread * (H / 720));      // stored at the 720-high reference frame
+        }
+        // Seeded ONCE, when the row is created: match the bottom pair's span so the two read as one
+        // block. After that it is yours — the slider owns it and the pair cannot move it.
+        function thSeedSpread(b){
+          if (!b || !/\s/.test(String(b.text).trim())) { if (b) b.spread = 0; return; }
+          var bs = Math.round(720 * b.size);
           _mc.font = '550 ' + bs + 'px ' + TH_FONT; _mc.letterSpacing = '0px';
-          var want = (TH.bot.gapL + TH.bot.gapR) * (H * 16/9) + thPairWidth(null, H);
+          var want = (TH.bot.gapL + TH.bot.gapR) * 1280 + thPairWidth(null, 720);
           var have = _mc.measureText(b.text).width;
           _mc.letterSpacing = '0px';
-          return (have > 0 && want > have)
+          b.spread = (have > 0 && want > have)
             ? Math.round((want - have) / Math.max(1, String(b.text).length)) : 0;
         }
         // What the bottom pair actually occupies once tracking is applied — the target the sound row
@@ -781,13 +789,15 @@ import { LQIP } from '../scene/lqip.js';
           if (document.documentElement.classList.contains('thumb-open')) thRAF = requestAnimationFrame(thDraw);
         }
         var TH_KEY = 'sustain.thumb.layout';
+        var _thQuiet = 0;          // >0 while defaults/restore run, so neither can clobber the store
         function thSaveLayout(){
+          if (_thQuiet) return;
           var sb = thSndBox();
           try { localStorage.setItem(TH_KEY, JSON.stringify({
             top:{ x:TH.top.x, y:TH.top.y, size:TH.top.size }, l2r:TH.l2r, occ:TH.occ,
             bot:{ y:TH.bot.y, size:TH.bot.size, gapL:TH.bot.gapL, gapR:TH.bot.gapR,
                   sep:TH.bot.sep, even:TH.bot.even },
-            snd: sb ? { y:sb.y, size:sb.size, x:sb.x, alpha:sb.alpha } : null
+            snd: sb ? { y:sb.y, size:sb.size, x:sb.x, alpha:sb.alpha, spread:sb.spread } : null
           })); } catch (e){}
         }
         // Restores geometry only — never text, which must follow the session that is being recorded.
@@ -805,7 +815,8 @@ import { LQIP } from '../scene/lqip.js';
             var b = thSndBox();
             if (b){ b.y = d.snd.y; b.size = d.snd.size;
                     if (d.snd.x != null) b.x = d.snd.x;
-                    if (d.snd.alpha != null) b.alpha = d.snd.alpha; }
+                    if (d.snd.alpha != null) b.alpha = d.snd.alpha;
+                    if (d.snd.spread != null) b.spread = d.snd.spread; }
           }
           markSepSeg();
         }
@@ -817,8 +828,10 @@ import { LQIP } from '../scene/lqip.js';
           if ($t('thNatural')) $t('thNatural').classList.toggle('on', !TH.bot.even);
         }
         function thOpen(){
-          thDefaults();
-          thLoadLayout();
+          _thQuiet++;
+          thDefaults();            // text from the session config
+          thLoadLayout();          // geometry from last time — never text
+          _thQuiet--;
           thExtraUI(); thSync();
           document.documentElement.classList.add('thumb-open');
           (document.fonts ? document.fonts.ready : Promise.resolve()).then(function(){ thDraw(); });
@@ -903,6 +916,8 @@ import { LQIP } from '../scene/lqip.js';
           var _sb = thSndBox();
           $t('thSndSize').value = Math.round((_sb ? _sb.size : TH.bot.size*0.75)*1000);
           $t('thSndVal').textContent = _sb ? Math.round(_sb.size*1000) : '—';
+          $t('thSndSpread').value = _sb ? (_sb.spread || 0) : 0;
+          $t('thSndSprVal').textContent = _sb ? Math.round(_sb.spread || 0) : '—';
           $t('thGapR').value = Math.round(TH.bot.gapR*1000); $t('thGapRVal').textContent = Math.round(TH.bot.gapR*1000);
         }
         [[thL1,'l1'],[thL2,'l2'],[thBL,'bl'],[thBR,'br']].forEach(function(p){
@@ -930,8 +945,9 @@ import { LQIP } from '../scene/lqip.js';
           var box = TH.extra.filter(function(b){ return b.role === 'sound'; })[0];
           var isNew = !box; if (isNew) box = {};
           box.role = 'sound'; box.text = thSoundLabel(readCfg());
-          box.x = thAxis(); box.y = y; box.size = size; box.alpha = 0.85;
-          if (isNew) TH.extra.push(box);
+          if (isNew){ box.x = thAxis(); box.y = y; box.size = size; box.alpha = 0.85;
+                      thSeedSpread(box); TH.extra.push(box); }
+          // Re-clicking refreshes the TEXT for the new session but leaves the geometry you set alone.
           thExtraUI();
         }
         $t('thSndRow').addEventListener('click', thSoundRow);
@@ -939,6 +955,10 @@ import { LQIP } from '../scene/lqip.js';
         $t('thSndSize').addEventListener('input', function(){
           var b = thSndBox(); if (!b) return;
           b.size = +this.value / 1000; thSync();
+        });
+        $t('thSndSpread').addEventListener('input', function(){
+          var b = thSndBox(); if (!b) return;
+          b.spread = +this.value; thSync();
         });
         function thExtraUI(){
           var wrap = $t('thExtra');
