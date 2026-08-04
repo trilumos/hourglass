@@ -75,8 +75,8 @@ const shapeOf = r => { const pl = P.buildPlan(stOf(r));
 //               most dangerous setting on the page: miss it and the numbers fade out mid-recording.
 //   separator   middle and ledge take NONE, ever. horizon and top take colon or dot.
 //   fill        solid or glass only. Never outline.
-//   colour      White #ffffff always legal. Charcoal #20242e ONLY on day sessions — a session whose
-//               sky never reaches pre-dawn, twilight or midnight at any point.
+//   colour      White #ffffff always legal. Charcoal #20242e ONLY on sun sessions (midday, sunrise,
+//               sunset) — never on pre-dawn, twilight or midnight, which have no sun at all.
 // Always dominates on purpose. The title promises a "Pomodoro Timer", and a screen with no visible
 // timer is a promise the video does not keep — satisfaction is the dominant ranking signal, so that
 // mismatch costs more than the variety gains. 5 min is a genuine variant; Never is legal but rationed
@@ -89,17 +89,18 @@ const PLACE_SEP = [
   ['top',     'dot'],    ['horizon', 'dot'],   ['top',   'colon'],
 ];
 const FILL = ['solid','glass'], FONT = ['Serif','Jost'];
-// Charcoal is legal only where the sky never darkens — and because the sky DRIFTS across a session,
-// that is a question about the whole span, not the starting phase. From Session.astro:367, PH_SPAN in
-// hours: pre-dawn 3.5-6.1 | sunrise 5.0-8.2 | midday 8.2-16.5 | sunset 16.3-18.8 | twilight 18.2-19.6
-// | midnight 20.0-28.5. Overlapping each span against the three dark windows:
-//   sunrise  opens at 5.0, inside pre-dawn's 3.5-6.1        -> dark
-//   sunset   runs to 18.8, inside twilight's 18.2-19.6      -> dark
-//   midnight ends at 28.5 = 04:30, back inside pre-dawn     -> dark
-//   midday   8.2-16.5 touches none of them                  -> the ONLY day session
-// White reads on every sky, so it is the default and charcoal is the exception, not the alternate.
-const DAY = { midday:1 };
-const numColour = light => DAY[light] ? 'Charcoal #20242e' : 'White #ffffff';
+// Charcoal is legal on the SUN sessions and nowhere else. The test is whether the sun is actually in
+// the session, not whether the span brushes a dark window at its edge — sunrise and sunset inevitably
+// graze pre-dawn and twilight (PH_SPAN, Session.astro:367: sunrise opens 5.0 inside pre-dawn's
+// 3.5-6.1; sunset runs to 18.8 inside twilight's 18.2-19.6) but the sun is above the horizon for the
+// bulk of both, so dark numerals read.
+//   midday 8.2-16.5   full sun          -> charcoal OK
+//   sunrise 5.0-8.2   sun rises ~6:00   -> charcoal OK
+//   sunset 16.3-18.8  sun sets ~18:30   -> charcoal OK
+//   pre-dawn / twilight / midnight      -> no sun at all, white only
+// White reads on every sky, so it stays the default and charcoal is the exception.
+const SUN = { midday:1, sunrise:1, sunset:1 };
+const numColour = light => SUN[light] ? 'Charcoal #20242e' : 'White #ffffff';
 // Driven by the SESSION index, never the row index — that is what makes a bell twin identical to the
 // session it pairs with.
 // The +floor(si/6) matters: fill has period 2 and PLACE_SEP period 6, so a plain si%2 keeps them in
@@ -110,14 +111,25 @@ const numColour = light => DAY[light] ? 'Charcoal #20242e' : 'White #ffffff';
 // bell twin, which is day 2, would not be a twin at all. It happens to be legal under the rules:
 // horizon takes a colon, glass is permitted, White is legal on every sky.
 const PINNED = { 0: 'Always · horizon · glass · Serif · colon · White #ffffff' };
+// The pin sits outside the cycle, so it can land on a config the cycle was going to produce anyway —
+// it did: session 1's pinned horizon/glass/colon collided with session 2's generated one. Offsetting
+// the placement lookup past the pinned sessions keeps every session visually distinct.
 const numeralsOf = (r, si) => { if (PINNED[si]) return PINNED[si];
   const vis = VIS_CYCLE[si % VIS_CYCLE.length];
   // With the numerals hidden there is nothing to place, fill, letter or colour. Listing settings that
   // do not render just invites five minutes of pointless tapping before a recording.
   if (vis === 'Never') return 'Never · numerals hidden — nothing else to set';
-  const [place, sep] = PLACE_SEP[si % PLACE_SEP.length];
-  return `${vis} · ${place} · ${FILL[(si + Math.floor(si/PLACE_SEP.length)) % 2]}`
-       + ` · ${FONT[Math.floor(si/2) % 2]} · ${sep} · ${numColour(r.light)}`; };
+  // A pinned session sits outside the cycle, so the cycle can land on a look it already owns — simply
+  // offsetting the index does not fix that, it relocates the clash. Walk forward instead until the
+  // generated look is one no pinned session has taken.
+  const taken = Object.values(PINNED);
+  for (let k = si; ; k++){
+    const [place, sep] = PLACE_SEP[k % PLACE_SEP.length];
+    const look = `${vis} · ${place} · ${FILL[(k + Math.floor(k/PLACE_SEP.length)) % 2]}`
+               + ` · ${FONT[Math.floor(si/2) % 2]} · ${sep} · ${numColour(r.light)}`;
+    if (!taken.includes(look)) return look;
+  }
+};
 
 
 const rows=[];
@@ -433,8 +445,8 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
     if (vis === 'Never') continue;              // nothing renders, so nothing else to validate
     if (!OK_FILL.includes(fill))     throw new Error(`${v.id}: fill "${fill}" — only ${OK_FILL.join('/')}`);
     if (!OK_COL.includes(colour))    throw new Error(`${v.id}: colour "${colour}" — only white or charcoal`);
-    if (colour.startsWith('Charcoal') && !/^Midday/.test(v.light))
-      throw new Error(`${v.id}: charcoal on "${v.light}" — that sky reaches pre-dawn/twilight/midnight; day sessions only`);
+    if (colour.startsWith('Charcoal') && !['Midday','Sunrise','Sunset'].includes(v.light))
+      throw new Error(`${v.id}: charcoal on "${v.light}" — no sun in that session; sun sessions only`);
     if ((place === 'middle' || place === 'ledge') && sep !== 'none')
       throw new Error(`${v.id}: ${place} must have NO separator, got "${sep}"`);
     if ((place === 'horizon' || place === 'top') && !['colon','dot'].includes(sep))
@@ -446,6 +458,9 @@ const monthPlan = rows.filter(r => r.phase === '1').map((r, i) => {
     for (const k of ['numerals','lightSetup','mode','interval','blocks','duration','setup'])
       if (v[k] !== twin[k]) throw new Error(`${v.id} differs from its session ${twin.id} on ${k}: "${v[k]}" vs "${twin[k]}"`);
   }
+  { const looks = monthPlan.filter(v => !v.silent).map(v => v.numerals);
+    const dupe = looks.find((x, n) => looks.indexOf(x) !== n);
+    if (dupe) throw new Error(`two sessions share a look: ${dupe}`); }
   if (monthPlan[0].id !== 'P50-10x2h_sunset_ocn')
     throw new Error(`session 1 is now ${monthPlan[0].id} — the PINNED config belongs to the PUBLISHED `
       + `video P50-10x2h_sunset_ocn. Re-key or drop the pin before reordering UNIQUE.`);

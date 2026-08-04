@@ -719,14 +719,14 @@ All of it is **asserted after generation**, not assumed — visibility, fill, co
 rules, and full twin parity across `numerals`, `lightSetup`, `mode`, `interval`, `blocks`, `duration`
 and `setup`. Every one of these has shipped wrong once already.
 
-## 22. The reservoir under the rules — 886,464 videos
+## 22. The reservoir under the rules — 1,135,296 videos
 
 | Dimension | Count | What varies |
 |---|---:|---|
-| Look x sky | **342** | see below — colour depends on the sky, so it sums rather than multiplies |
+| Look x sky | **438** | see below — colour depends on the sky, so it sums rather than multiplies |
 | Sound | **16** | 15 non-empty mixes of ocean/sand/breeze/birds + bell-only |
 | Session | **162** | 91 Pomodoro + 11 Flow + 60 Custom, under >=25/5 and round-hour |
-| **Total** | **886,464** | |
+| **Total** | **1,135,296** | |
 
 Look breaks down as 6 legal `(placement, separator)` pairs x 2 fills x 2 fonts = 24 shown-numeral
 variants; x2 visibility (Always, 5 min); plus **one** hidden variant per sky, because with numerals off
@@ -748,22 +748,24 @@ most dangerous setting on the page and is asserted on every row. `Always` domina
 purpose: the title promises a "Pomodoro Timer", and a screen with no visible timer is a promise the
 video does not keep. `Never` is rationed to about one session in ten.
 
-### Charcoal is restricted to day sessions
+### Charcoal is restricted to SUN sessions
 
-The sky **drifts** across a session, so this is a question about the whole span, not the starting
-phase. Overlapping `PH_SPAN` (`Session.astro:367`) against the three dark windows:
+The test is whether the sun is **in** the session — not whether the span brushes a dark window at its
+edge. Sunrise and sunset inevitably graze pre-dawn and twilight (`PH_SPAN`, `Session.astro:367`:
+sunrise opens at 5.0 inside pre-dawn's 3.5–6.1; sunset runs to 18.8 inside twilight's 18.2–19.6), but
+the sun is above the horizon for the bulk of both, so dark numerals read cleanly.
 
-| Preset | Span (h) | Verdict |
+| Preset | Span (h) | Charcoal |
 |---|---|---|
-| pre-dawn | 3.5–6.1 | dark |
-| sunrise | 5.0–8.2 | opens at 5.0, inside pre-dawn's 3.5–6.1 → **dark** |
-| **midday** | **8.2–16.5** | **touches none — the only day session** |
-| sunset | 16.3–18.8 | runs to 18.8, inside twilight's 18.2–19.6 → **dark** |
-| twilight | 18.2–19.6 | dark |
-| midnight | 20.0–28.5 | ends at 28.5 = 04:30, back in pre-dawn → **dark** |
+| sunrise | 5.0–8.2 | ✅ sun rises ~6:00 |
+| midday | 8.2–16.5 | ✅ full sun |
+| sunset | 16.3–18.8 | ✅ sun sets ~18:30 |
+| pre-dawn | 3.5–6.1 | ❌ no sun |
+| twilight | 18.2–19.6 | ❌ sun already set |
+| midnight | 20.0–28.5 | ❌ no sun |
 
-White reads on every sky, so white is the default and charcoal is the exception. Asserted: a charcoal
-row on any non-midday sky throws.
+White reads on every sky, so white stays the default and charcoal is the exception. Asserted: charcoal
+on any non-sun sky throws.
 
 ### Session 1 is pinned, not generated
 
@@ -772,6 +774,11 @@ Video #1 (`IRTdF6rgjpQ`) was recorded before these rules existed, as
 bell twin — actually matches what is on screen. It is legal under the rules by coincidence. The pin is
 keyed by position, so the generator throws if `UNIQUE` is reordered and session 1 stops being the
 published video.
+
+A pinned session sits **outside** the cycle, so the cycle can land on a look it already owns — and it
+did. Offsetting the index does not fix that, it only relocates the clash (the first attempt moved it
+from session 2 to session 13). The generator instead walks forward until it produces a look no pinned
+session has taken, and asserts afterwards that all 15 sessions are visually distinct.
 
 ## 15. Sources
 
