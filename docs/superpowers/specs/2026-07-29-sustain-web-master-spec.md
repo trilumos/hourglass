@@ -508,7 +508,67 @@ soundscapes-beyond-basic (fast-follow) · flip-to-start ritual (v1 auto-starts).
 
 ---
 
+## 21b. Numeral rendering — two bugs found 2026-08-04, and the testing habit that hid them
+
+Both surfaced as one symptom: session numerals sitting above the horizon with no depth. They are
+unrelated, and the first was live on production for weeks.
+
+### 21b.1 Every Firefox was classified LOW — occlusion silently dead
+
+`scene.js:44`
+
+```js
+const mem = navigator.deviceMemory || 4;   // "undefined on Safari/Firefox -> assume mid"
+return coarse || cores <= 4 || mem <= 4;   // ...but 4 <= 4 is true
+```
+
+`deviceMemory` is unsupported in Firefox and in OBS's CEF build, so `mem` fell back to `4` — a value
+that **fails the very threshold on the next line**. Every Firefox was LOW regardless of hardware, and
+so was the OBS Browser Source. The comment claimed it assumed mid; the constant assumed the worst.
+
+LOW drops `preserveDrawingBuffer`, and the session occluder works by copying the live WebGL canvas each
+frame (`drawOcc`). Without it the copy is blank, the matte composite produces nothing, and the numerals
+render flat in front of the hourglass. At `horizon` the sea matte is also what holds them at the
+waterline, so they sat visibly high there — which is why it read as a *placement* bug rather than a
+*compositing* one, and cost four wrong hypotheses (font metrics, OBS sizing, aspect ratio, font
+loading) before the real cause.
+
+**Fixed:** fallback is `8`. Unknown memory means unknown. A genuine 4 GB phone still classifies LOW.
+
+### 21b.2 The serif face rides high in the same line box
+
+Newsreader has a taller ascender and a lower cap-height ratio than Jost, so centring the *box* centres
+the two faces differently. Invisible at `middle`/`ledge`/`top`; obvious at `horizon`, the only
+placement measured against something in the scene.
+
+**Fixed:** `SERIF_DY = 1.5`, added on top of the per-mode `dy` rather than replacing it, so the locked
+design geometry is untouched and one constant covers every placement. Value bracketed on-device — 3.2
+submerged the digits, 0 left them high.
+
+`isSerifNum()` also reads `getComputedStyle` as a fallback: `frame.style` carries **inline** styles
+only, and the default `--num-font` lives in a CSS rule on `#frame`, so it returned `''` on any path
+running before `Session.astro` sets it. Wrapped in `try/catch` — a cosmetic nudge must never be able to
+throw, because a throw in `scene.js` means `.scene-ready` never lands and the page stays on the blurred
+LQIP placeholder with no scene at all.
+
+### 21b.3 The habit that hid it
+
+A warm Chrome is not a test environment. Bug 21b.1 was invisible there for weeks — cached assets and a
+browser that reports `deviceMemory` — while **every Firefox visitor and every 4-core machine saw the
+broken build**. It surfaced only when the founder opened the site in a fresh Firefox.
+
+**Rule: verify anything visual in a fresh profile — new browser or private window — before locking it.**
+Warm-cache Chrome confirms nothing about what a first-time visitor sees.
+
 ## 22. Changelog (append on every web change)
+
+- **2026-08-04** — Numeral occlusion fixed at the root: `navigator.deviceMemory || 4` failed its own
+  `mem <= 4` test, classifying every Firefox and OBS's CEF build as LOW and disabling
+  `preserveDrawingBuffer`, which the session occluder depends on. Live on production for weeks; see
+  §21b. Serif numerals additionally corrected with `SERIF_DY = 1.5` for Newsreader's line-box metrics.
+  Ko-fi support buttons added to the break, pause and session-complete screens, hidden under
+  `html.stage` so they never appear in a recording. Pause button `[hidden]` override added — `#pause`
+  declares `display:flex`, which outranks the attribute, so it had stayed visible through every break.
 
 - **2026-08-03b (deep-link lands on Setup; /stage `uniform` Pomodoro; Month-1 list from search volume)** —
   **Deep link fixed:** params were being applied **invisibly**. `index.astro`'s `screen()` treats any hash
