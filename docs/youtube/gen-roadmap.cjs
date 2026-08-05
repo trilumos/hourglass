@@ -408,24 +408,39 @@ const thumbOf = r => {
   const l1 = h ? (mm ? `${h}H ${mm}M` : `${h} ${h === 1 ? 'HOUR' : 'HOURS'}`) : `${mm} MIN`;
   const mode = r.kind === 'flow' ? 'DEEP WORK' : `${shapeOf(r).iv} POMODORO`;
   const snd = thumbSound(r.sound);
-  return [l1, 'STUDY WITH ME', `${mode}   ${LIGHT[r.light].cap.toUpperCase()}`, snd];
+  // POMODORO + the interval is the headline, as one unit -- "50/10 pomodoro" is 47,568/mo on its own
+  // and it is exactly what Timer Palette leads with. STUDY WITH ME comes OFF the thumbnail: it stays
+  // in the title where it still indexes, but at 168px there is no room for a promise a faceless timer
+  // cannot keep. Six words instead of eight, closer to the 3-5 that actually read in a feed.
+  return [mode, l1, `${LIGHT[r.light].cap.toUpperCase()}   ${snd}`];
 };
 const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
+// Opens the title now, so it carries no trailing benefit clause -- that moves after Study With Me.
 const modePhrase = r => { const sh = shapeOf(r);
-  if (r.kind==='flow')   return 'Deep Work Timer, No Breaks for Flow State & ADHD';
-  if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer, No Music for Deep Focus & ADHD`;
-  return `${sh.iv} Pomodoro Timer for Deep Focus & ADHD`;
+  if (r.kind==='flow')   return 'Deep Work Timer, No Breaks';
+  if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer, No Music`;
+  return `${sh.iv} Pomodoro Timer`;
 };
+const benefit = r => r.kind==='flow' ? 'for Flow State & ADHD' : 'for Deep Focus & ADHD';
 // A title YouTube truncates is a title nobody reads: 100 is the hard cap, ~70 is what Search shows.
 // The head carries every keyword that matters, so when a long sound name pushes past the cap the TAIL
 // gives way — the sound is already named in the description, the tags and the thumbnail.
 // "Ocean & Seabirds & Sunrise" reads like a typo, so a multi-word sound meets the light on a comma.
+// TIMER FIRST. The previous order led on "Study With Me" because it is 2,525,198/mo against 47,568
+// for 50/10 pomodoro — but that optimised for IMPRESSIONS, not for matched intent, and the result was
+// 900 impressions to ~15 views on videos 1-2. Study-with-me searchers expect a PERSON: the CHI 2021
+// study found the product there is companionship, peer pressure and emotional support. We are faceless,
+// so our thumbnail reads as the wrong result in that row, and the few who click bounce.
+// Every faceless timer channel in the measured SERP leads with the timer and keeps study-with-me in the
+// tail: Timer Palette 546,673 ("50/10 Pomodoro Timer with Brown Noise ... 3-Hour Study with Me"),
+// Countdown Time 687,672. Every channel LEADING with STUDY WITH ME has a person on camera.
+// Word order does not change indexing — both phrases still match — only what a human reads first.
 const title = r => {
-  const head = `${durTxt(totalOf(r))} Study With Me ${EMOJI(r)} ${modePhrase(r)}`;
-  const L = LIGHT[r.light].cap, S = SOUND[r.sound];
-  if (r.sound === 'bell') return `${head} | ${L}`;
-  const full = `${head} | ${S}${/ & /.test(S) ? ',' : ' &'} ${L}`;
-  return full.length <= 100 ? full : `${head} | ${L}`;
+  const head = `${modePhrase(r)} ${EMOJI(r)} ${durTxt(totalOf(r))} Study With Me`;
+  const L = LIGHT[r.light].cap, S = SOUND[r.sound], h2 = `${head} ${benefit(r)}`;
+  if (r.sound === 'bell') return `${h2} | ${L}`;
+  const full = `${h2} | ${S}${/ & /.test(S) ? ',' : ' &'} ${L}`;
+  return full.length <= 100 ? full : `${h2} | ${L}`;
 };
 for (const r of rows) if (title(r).length > 100)
   throw new Error(`title still too long (${title(r).length}): ${title(r)}`);

@@ -260,36 +260,36 @@ Every row is **Custom mode**, the only mode that lands on an exact round hour. T
 
 | ✓ | # | ID | Mode · timer · length · breaks | Time of day · Sun&moon | Numerals: show · place · fill · font · sep · colour | Audio (per-sound · master) | Title | Extra tags | Video ID |
 |---|---|---|---|---|---|---|---|---|---|
-| ☐ | 01 | `P50-10x2h_sunset_ocn` | **Pomodoro** · focus **50m** · break **10m** · blocks **2** → 2 hours · 2 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · colon | Ocean 100 — master 100 | 2-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD \| Ocean Waves & Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, sunset ambience, pomodoro adhd, अध्ययन टाइमर **(137 ch)** | |
-| ☐ | 02 | `P50-10x2h_sunset_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **2** → 2 hours · 2 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · colon | ALL sounds OFF — bell only | 2-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD \| Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(187 ch)** | |
-| ☐ | 03 | `P50-10x3h_midnight_ocn-brz` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Midnight · Show | Always · horizon · glass · Serif · colon | Ocean 100 · Shore breeze 55 — master 100 | 3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD \| Ocean & Breeze, Midnight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة **(139 ch)** | |
-| ☐ | 04 | `P50-10x3h_midnight_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Midnight · Show | Always · horizon · glass · Serif · colon | ALL sounds OFF — bell only | 3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD \| Midnight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(188 ch)** | |
-| ☐ | 05 | `P50-10x4h_sunrise_ocn-brd` | **Pomodoro** · focus **50m** · break **10m** · blocks **4** → 4 hours · 4 breaks | Time of day → Sunrise · Show | Always · ledge · solid · Jost · none · Charcoal #20242e | Ocean 100 · Seabirds 55 — master 100 | 4-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD \| Ocean & Seabirds, Sunrise | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, sunrise ambience, pomodoro adhd, 핑크 노이즈 공부 **(135 ch)** | |
-| ☐ | 06 | `P50-10x4h_sunrise_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **4** → 4 hours · 4 breaks | Time of day → Sunrise · Show | Always · ledge · solid · Jost · none · Charcoal #20242e | ALL sounds OFF — bell only | 4-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD \| Sunrise | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, sunrise ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(178 ch)** | |
-| ☐ | 07 | `P50-10x1h_twilight_snd-brz` | **Pomodoro** · focus **50m** · break **10m** · blocks **1** → 1 hour · 1 breaks | Time of day → Twilight · Show | Always · top · glass · Jost · dot | Sand 100 · Shore breeze 55 — master 100 | 1-Hour Study With Me 🍃 50/10 Pomodoro Timer for Deep Focus & ADHD \| Sand & Breeze, Twilight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 1 hour timer, study with me 1 hours, twilight ambience, pomodoro adhd, çalışma zamanlayıcısı **(148 ch)** | |
-| ☐ | 08 | `P50-10x1h_twilight_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **1** → 1 hour · 1 breaks | Time of day → Twilight · Show | Always · top · glass · Jost · dot | ALL sounds OFF — bell only | 1-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD \| Twilight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 1 hour timer, study with me 1 hours, twilight ambience, pomodoro adhd, pomodoro no music, silent study timer, ポモドーロタイマー **(175 ch)** | |
-| ☐ | 09 | `P50-10x3h_sunset_ocn-snd-brd` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Sunset · Show | Always · horizon · solid · Serif · dot · Charcoal #20242e | Ocean 100 · Sand 55 · Seabirds 40 — master 90 | 3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD \| Ocean, Sand & Seabirds, Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, अध्ययन टाइमर **(137 ch)** | |
-| ☐ | 10 | `P50-10x3h_sunset_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Sunset · Show | Always · horizon · solid · Serif · dot · Charcoal #20242e | ALL sounds OFF — bell only | 3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD \| Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(187 ch)** | |
-| ☐ | 11 | `P25-5x2h_midnight_ocn` | **Pomodoro** · focus **25m** · break **5m** · blocks **4** → 2 hours · 4 breaks | Time of day → Midnight · Show | Always · top · glass · Serif · colon | Ocean 100 — master 100 | 2-Hour Study With Me 🌊 25/5 Pomodoro Timer for Deep Focus & ADHD \| Ocean Waves & Midnight | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة **(138 ch)** | |
-| ☐ | 12 | `P25-5x2h_midnight_bell` | **Pomodoro** · focus **25m** · break **5m** · blocks **4** → 2 hours · 4 breaks | Time of day → Midnight · Show | Always · top · glass · Serif · colon | ALL sounds OFF — bell only | 2-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD \| Midnight | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(187 ch)** | |
-| ☐ | 13 | `P25-5x3h_sunset_ocn-snd` | **Pomodoro** · focus **25m** · break **5m** · blocks **6** → 3 hours · 6 breaks | Time of day → Sunset · Show | Always · middle · glass · Jost · none | Ocean 100 · Sand 55 — master 100 | 3-Hour Study With Me 🌊 25/5 Pomodoro Timer for Deep Focus & ADHD \| Ocean & Sand, Sunset | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, 핑크 노이즈 공부 **(133 ch)** | |
-| ☐ | 14 | `P25-5x3h_sunset_bell` | **Pomodoro** · focus **25m** · break **5m** · blocks **6** → 3 hours · 6 breaks | Time of day → Sunset · Show | Always · middle · glass · Jost · none | ALL sounds OFF — bell only | 3-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD \| Sunset | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(176 ch)** | |
-| ☐ | 15 | `P25-5x4h_midday_brz-brd` | **Pomodoro** · focus **25m** · break **5m** · blocks **8** → 4 hours · 8 breaks | Time of day → Midday · Show | Always · horizon · solid · Jost · colon · Charcoal #20242e | Shore breeze 100 · Seabirds 55 — master 100 | 4-Hour Study With Me 🍃 25/5 Pomodoro Timer for Deep Focus & ADHD \| Breeze & Seabirds, Midday | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, midday ambience, pomodoro adhd, çalışma zamanlayıcısı **(145 ch)** | |
-| ☐ | 16 | `P25-5x4h_midday_bell` | **Pomodoro** · focus **25m** · break **5m** · blocks **8** → 4 hours · 8 breaks | Time of day → Midday · Show | Always · horizon · solid · Jost · colon · Charcoal #20242e | ALL sounds OFF — bell only | 4-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD \| Midday | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, midday ambience, pomodoro adhd, pomodoro no music, silent study timer, ポモドーロタイマー **(172 ch)** | |
-| ☐ | 17 | `F60mx1h_sunrise_ocn-brd` | **Flow** · flow length **60m** → 1 hour · 0 breaks | Time of day → Sunrise · Show | Always · ledge · glass · Serif · none | Ocean 100 · Seabirds 55 — master 100 | 1-Hour Study With Me 🌊 Deep Work Timer, No Breaks for Flow State & ADHD \| Ocean & Seabirds, Sunrise | deep work, flow state, deep work timer, study with me no break, 1 hour timer, study with me 1 hours, sunrise ambience, pomodoro adhd, अध्ययन टाइमर **(146 ch)** | |
-| ☐ | 18 | `F60mx1h_sunrise_bell` | **Flow** · flow length **60m** → 1 hour · 0 breaks | Time of day → Sunrise · Show | Always · ledge · glass · Serif · none | ALL sounds OFF — bell only | 1-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD \| Sunrise | deep work, flow state, deep work timer, study with me no break, 1 hour timer, study with me 1 hours, sunrise ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(196 ch)** | |
-| ☐ | 19 | `F120mx2h_midnight_snd` | **Flow** · flow length **120m** → 2 hours · 0 breaks | Time of day → Midnight · Show | Always · top · solid · Serif · dot · White #ffffff | Sand 100 — master 100 | 2-Hour Study With Me 🍃 Deep Work Timer, No Breaks for Flow State & ADHD \| Falling Sand & Midnight | deep work, flow state, deep work timer, study with me no break, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة **(147 ch)** | |
-| ☐ | 20 | `F120mx2h_midnight_bell` | **Flow** · flow length **120m** → 2 hours · 0 breaks | Time of day → Midnight · Show | Always · top · solid · Serif · dot · White #ffffff | ALL sounds OFF — bell only | 2-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD \| Midnight | deep work, flow state, deep work timer, study with me no break, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(196 ch)** | |
-| ☐ | 21 | `F180mx3h_sunset_ocn-brz` | **Flow** · flow length **180m** → 3 hours · 0 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · dot | Ocean 100 · Shore breeze 55 — master 100 | 3-Hour Study With Me 🌊 Deep Work Timer, No Breaks for Flow State & ADHD \| Ocean & Breeze, Sunset | deep work, flow state, deep work timer, study with me no break, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, 핑크 노이즈 공부 **(142 ch)** | |
-| ☐ | 22 | `F180mx3h_sunset_bell` | **Flow** · flow length **180m** → 3 hours · 0 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · dot | ALL sounds OFF — bell only | 3-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD \| Sunset | deep work, flow state, deep work timer, study with me no break, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(185 ch)** | |
-| ☐ | 23 | `C50-15x3h_twilight_ocn` | **Custom** · By count · work **150m** · breaks **2** · break length **15m** → 3 hours · 2 breaks | Time of day → Twilight · Show | Always · top · solid · Jost · colon · White #ffffff | Ocean 100 — master 100 | 3-Hour Study With Me 🌊 50/15 Pomodoro Timer for Deep Focus & ADHD \| Ocean Waves & Twilight | 50/15 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, twilight ambience, pomodoro adhd, çalışma zamanlayıcısı **(148 ch)** | |
-| ☐ | 24 | `C50-15x3h_twilight_bell` | **Custom** · By count · work **150m** · breaks **2** · break length **15m** → 3 hours · 2 breaks | Time of day → Twilight · Show | Always · top · solid · Jost · colon · White #ffffff | ALL sounds OFF — bell only | 3-Hour Study With Me 🔔 50/15 Pomodoro Timer, No Music for Deep Focus & ADHD \| Twilight | 50/15 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, twilight ambience, pomodoro adhd, pomodoro no music, silent study timer, ポモドーロタイマー **(175 ch)** | |
-| ☐ | 25 | `C40-10x4h_predawn_snd-brz` | **Custom** · By count · work **200m** · breaks **4** · break length **10m** → 4 hours · 4 breaks | Time of day → Pre-dawn · Show | Always · middle · solid · Serif · none · White #ffffff | Sand 100 · Shore breeze 55 — master 100 | 4-Hour Study With Me 🍃 40/10 Pomodoro Timer for Deep Focus & ADHD \| Sand & Breeze, Pre-Dawn | 40/10 pomodoro, 40 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, pre-dawn ambience, pomodoro adhd, अध्ययन टाइमर **(139 ch)** | |
-| ☐ | 26 | `C40-10x4h_predawn_bell` | **Custom** · By count · work **200m** · breaks **4** · break length **10m** → 4 hours · 4 breaks | Time of day → Pre-dawn · Show | Always · middle · solid · Serif · none · White #ffffff | ALL sounds OFF — bell only | 4-Hour Study With Me 🔔 40/10 Pomodoro Timer, No Music for Deep Focus & ADHD \| Pre-Dawn | 40/10 pomodoro, 40 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, pre-dawn ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(189 ch)** | |
-| ☐ | 27 | `C30-15x2h_midday_all4` | **Custom** · By count · work **90m** · breaks **2** · break length **15m** → 2 hours · 2 breaks | Time of day → Midday · Show | Always · top · solid · Serif · dot · Charcoal #20242e | Ocean 100 · Sand 55 · Shore breeze 40 · Seabirds 30 — master 85 | 2-Hour Study With Me 🍃 30/15 Pomodoro Timer for Deep Focus & ADHD \| Full Shore Ambience & Midday | 30/15 pomodoro, 30 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midday ambience, pomodoro adhd, مؤقت للدراسة **(137 ch)** | |
-| ☐ | 28 | `C30-15x2h_midday_bell` | **Custom** · By count · work **90m** · breaks **2** · break length **15m** → 2 hours · 2 breaks | Time of day → Midday · Show | Always · top · solid · Serif · dot · Charcoal #20242e | ALL sounds OFF — bell only | 2-Hour Study With Me 🔔 30/15 Pomodoro Timer, No Music for Deep Focus & ADHD \| Midday | 30/15 pomodoro, 30 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midday ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(186 ch)** | |
-| ☐ | 29 | `C60-20x5h_sunrise_ocn-snd` | **Custom** · By count · work **240m** · breaks **3** · break length **20m** → 5 hours · 3 breaks | Time of day → Sunrise · Show | Always · top · solid · Jost · colon · Charcoal #20242e | Ocean 100 · Sand 55 — master 100 | 5-Hour Study With Me 🌊 60/20 Pomodoro Timer for Deep Focus & ADHD \| Ocean & Sand, Sunrise | 60/20 pomodoro, 60 minute pomodoro, pomodoro technique, 5 hour timer, study with me 5 hours, sunrise ambience, pomodoro adhd, 핑크 노이즈 공부 **(135 ch)** | |
-| ☐ | 30 | `C60-20x5h_sunrise_bell` | **Custom** · By count · work **240m** · breaks **3** · break length **20m** → 5 hours · 3 breaks | Time of day → Sunrise · Show | Always · top · solid · Jost · colon · Charcoal #20242e | ALL sounds OFF — bell only | 5-Hour Study With Me 🔔 60/20 Pomodoro Timer, No Music for Deep Focus & ADHD \| Sunrise | 60/20 pomodoro, 60 minute pomodoro, pomodoro technique, 5 hour timer, study with me 5 hours, sunrise ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(178 ch)** | |
+| ☐ | 01 | `P50-10x2h_sunset_ocn` | **Pomodoro** · focus **50m** · break **10m** · blocks **2** → 2 hours · 2 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · colon | Ocean 100 — master 100 | 50/10 Pomodoro Timer 🌊 2-Hour Study With Me for Deep Focus & ADHD \| Ocean Waves & Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, sunset ambience, pomodoro adhd, अध्ययन टाइमर **(137 ch)** | |
+| ☐ | 02 | `P50-10x2h_sunset_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **2** → 2 hours · 2 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · colon | ALL sounds OFF — bell only | 50/10 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD \| Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(187 ch)** | |
+| ☐ | 03 | `P50-10x3h_midnight_ocn-brz` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Midnight · Show | Always · horizon · glass · Serif · colon | Ocean 100 · Shore breeze 55 — master 100 | 50/10 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD \| Ocean & Breeze, Midnight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة **(139 ch)** | |
+| ☐ | 04 | `P50-10x3h_midnight_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Midnight · Show | Always · horizon · glass · Serif · colon | ALL sounds OFF — bell only | 50/10 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD \| Midnight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(188 ch)** | |
+| ☐ | 05 | `P50-10x4h_sunrise_ocn-brd` | **Pomodoro** · focus **50m** · break **10m** · blocks **4** → 4 hours · 4 breaks | Time of day → Sunrise · Show | Always · ledge · solid · Jost · none · Charcoal #20242e | Ocean 100 · Seabirds 55 — master 100 | 50/10 Pomodoro Timer 🌊 4-Hour Study With Me for Deep Focus & ADHD \| Ocean & Seabirds, Sunrise | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, sunrise ambience, pomodoro adhd, 핑크 노이즈 공부 **(135 ch)** | |
+| ☐ | 06 | `P50-10x4h_sunrise_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **4** → 4 hours · 4 breaks | Time of day → Sunrise · Show | Always · ledge · solid · Jost · none · Charcoal #20242e | ALL sounds OFF — bell only | 50/10 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD \| Sunrise | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, sunrise ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(178 ch)** | |
+| ☐ | 07 | `P50-10x1h_twilight_snd-brz` | **Pomodoro** · focus **50m** · break **10m** · blocks **1** → 1 hour · 1 breaks | Time of day → Twilight · Show | Always · top · glass · Jost · dot | Sand 100 · Shore breeze 55 — master 100 | 50/10 Pomodoro Timer 🍃 1-Hour Study With Me for Deep Focus & ADHD \| Sand & Breeze, Twilight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 1 hour timer, study with me 1 hours, twilight ambience, pomodoro adhd, çalışma zamanlayıcısı **(148 ch)** | |
+| ☐ | 08 | `P50-10x1h_twilight_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **1** → 1 hour · 1 breaks | Time of day → Twilight · Show | Always · top · glass · Jost · dot | ALL sounds OFF — bell only | 50/10 Pomodoro Timer, No Music 🔔 1-Hour Study With Me for Deep Focus & ADHD \| Twilight | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 1 hour timer, study with me 1 hours, twilight ambience, pomodoro adhd, pomodoro no music, silent study timer, ポモドーロタイマー **(175 ch)** | |
+| ☐ | 09 | `P50-10x3h_sunset_ocn-snd-brd` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Sunset · Show | Always · horizon · solid · Serif · dot · Charcoal #20242e | Ocean 100 · Sand 55 · Seabirds 40 — master 90 | 50/10 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD \| Ocean, Sand & Seabirds, Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, अध्ययन टाइमर **(137 ch)** | |
+| ☐ | 10 | `P50-10x3h_sunset_bell` | **Pomodoro** · focus **50m** · break **10m** · blocks **3** → 3 hours · 3 breaks | Time of day → Sunset · Show | Always · horizon · solid · Serif · dot · Charcoal #20242e | ALL sounds OFF — bell only | 50/10 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD \| Sunset | 50/10 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(187 ch)** | |
+| ☐ | 11 | `P25-5x2h_midnight_ocn` | **Pomodoro** · focus **25m** · break **5m** · blocks **4** → 2 hours · 4 breaks | Time of day → Midnight · Show | Always · top · glass · Serif · colon | Ocean 100 — master 100 | 25/5 Pomodoro Timer 🌊 2-Hour Study With Me for Deep Focus & ADHD \| Ocean Waves & Midnight | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة **(138 ch)** | |
+| ☐ | 12 | `P25-5x2h_midnight_bell` | **Pomodoro** · focus **25m** · break **5m** · blocks **4** → 2 hours · 4 breaks | Time of day → Midnight · Show | Always · top · glass · Serif · colon | ALL sounds OFF — bell only | 25/5 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD \| Midnight | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(187 ch)** | |
+| ☐ | 13 | `P25-5x3h_sunset_ocn-snd` | **Pomodoro** · focus **25m** · break **5m** · blocks **6** → 3 hours · 6 breaks | Time of day → Sunset · Show | Always · middle · glass · Jost · none | Ocean 100 · Sand 55 — master 100 | 25/5 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD \| Ocean & Sand, Sunset | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, 핑크 노이즈 공부 **(133 ch)** | |
+| ☐ | 14 | `P25-5x3h_sunset_bell` | **Pomodoro** · focus **25m** · break **5m** · blocks **6** → 3 hours · 6 breaks | Time of day → Sunset · Show | Always · middle · glass · Jost · none | ALL sounds OFF — bell only | 25/5 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD \| Sunset | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(176 ch)** | |
+| ☐ | 15 | `P25-5x4h_midday_brz-brd` | **Pomodoro** · focus **25m** · break **5m** · blocks **8** → 4 hours · 8 breaks | Time of day → Midday · Show | Always · horizon · solid · Jost · colon · Charcoal #20242e | Shore breeze 100 · Seabirds 55 — master 100 | 25/5 Pomodoro Timer 🍃 4-Hour Study With Me for Deep Focus & ADHD \| Breeze & Seabirds, Midday | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, midday ambience, pomodoro adhd, çalışma zamanlayıcısı **(145 ch)** | |
+| ☐ | 16 | `P25-5x4h_midday_bell` | **Pomodoro** · focus **25m** · break **5m** · blocks **8** → 4 hours · 8 breaks | Time of day → Midday · Show | Always · horizon · solid · Jost · colon · Charcoal #20242e | ALL sounds OFF — bell only | 25/5 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD \| Midday | 25/5 pomodoro, 25 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, midday ambience, pomodoro adhd, pomodoro no music, silent study timer, ポモドーロタイマー **(172 ch)** | |
+| ☐ | 17 | `F60mx1h_sunrise_ocn-brd` | **Flow** · flow length **60m** → 1 hour · 0 breaks | Time of day → Sunrise · Show | Always · ledge · glass · Serif · none | Ocean 100 · Seabirds 55 — master 100 | Deep Work Timer, No Breaks 🌊 1-Hour Study With Me for Flow State & ADHD \| Ocean & Seabirds, Sunrise | deep work, flow state, deep work timer, study with me no break, 1 hour timer, study with me 1 hours, sunrise ambience, pomodoro adhd, अध्ययन टाइमर **(146 ch)** | |
+| ☐ | 18 | `F60mx1h_sunrise_bell` | **Flow** · flow length **60m** → 1 hour · 0 breaks | Time of day → Sunrise · Show | Always · ledge · glass · Serif · none | ALL sounds OFF — bell only | Deep Work Timer, No Breaks 🔔 1-Hour Study With Me for Flow State & ADHD \| Sunrise | deep work, flow state, deep work timer, study with me no break, 1 hour timer, study with me 1 hours, sunrise ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(196 ch)** | |
+| ☐ | 19 | `F120mx2h_midnight_snd` | **Flow** · flow length **120m** → 2 hours · 0 breaks | Time of day → Midnight · Show | Always · top · solid · Serif · dot · White #ffffff | Sand 100 — master 100 | Deep Work Timer, No Breaks 🍃 2-Hour Study With Me for Flow State & ADHD \| Falling Sand & Midnight | deep work, flow state, deep work timer, study with me no break, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, مؤقت للدراسة **(147 ch)** | |
+| ☐ | 20 | `F120mx2h_midnight_bell` | **Flow** · flow length **120m** → 2 hours · 0 breaks | Time of day → Midnight · Show | Always · top · solid · Serif · dot · White #ffffff | ALL sounds OFF — bell only | Deep Work Timer, No Breaks 🔔 2-Hour Study With Me for Flow State & ADHD \| Midnight | deep work, flow state, deep work timer, study with me no break, 2 hour timer, study with me 2 hours, midnight ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(196 ch)** | |
+| ☐ | 21 | `F180mx3h_sunset_ocn-brz` | **Flow** · flow length **180m** → 3 hours · 0 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · dot | Ocean 100 · Shore breeze 55 — master 100 | Deep Work Timer, No Breaks 🌊 3-Hour Study With Me for Flow State & ADHD \| Ocean & Breeze, Sunset | deep work, flow state, deep work timer, study with me no break, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, 핑크 노이즈 공부 **(142 ch)** | |
+| ☐ | 22 | `F180mx3h_sunset_bell` | **Flow** · flow length **180m** → 3 hours · 0 breaks | Time of day → Sunset · Show | Always · horizon · glass · Jost · dot | ALL sounds OFF — bell only | Deep Work Timer, No Breaks 🔔 3-Hour Study With Me for Flow State & ADHD \| Sunset | deep work, flow state, deep work timer, study with me no break, 3 hour timer, study with me 3 hours, sunset ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(185 ch)** | |
+| ☐ | 23 | `C50-15x3h_twilight_ocn` | **Custom** · By count · work **150m** · breaks **2** · break length **15m** → 3 hours · 2 breaks | Time of day → Twilight · Show | Always · top · solid · Jost · colon · White #ffffff | Ocean 100 — master 100 | 50/15 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD \| Ocean Waves & Twilight | 50/15 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, twilight ambience, pomodoro adhd, çalışma zamanlayıcısı **(148 ch)** | |
+| ☐ | 24 | `C50-15x3h_twilight_bell` | **Custom** · By count · work **150m** · breaks **2** · break length **15m** → 3 hours · 2 breaks | Time of day → Twilight · Show | Always · top · solid · Jost · colon · White #ffffff | ALL sounds OFF — bell only | 50/15 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD \| Twilight | 50/15 pomodoro, 50 minute pomodoro, pomodoro technique, 3 hour timer, study with me 3 hours, twilight ambience, pomodoro adhd, pomodoro no music, silent study timer, ポモドーロタイマー **(175 ch)** | |
+| ☐ | 25 | `C40-10x4h_predawn_snd-brz` | **Custom** · By count · work **200m** · breaks **4** · break length **10m** → 4 hours · 4 breaks | Time of day → Pre-dawn · Show | Always · middle · solid · Serif · none · White #ffffff | Sand 100 · Shore breeze 55 — master 100 | 40/10 Pomodoro Timer 🍃 4-Hour Study With Me for Deep Focus & ADHD \| Sand & Breeze, Pre-Dawn | 40/10 pomodoro, 40 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, pre-dawn ambience, pomodoro adhd, अध्ययन टाइमर **(139 ch)** | |
+| ☐ | 26 | `C40-10x4h_predawn_bell` | **Custom** · By count · work **200m** · breaks **4** · break length **10m** → 4 hours · 4 breaks | Time of day → Pre-dawn · Show | Always · middle · solid · Serif · none · White #ffffff | ALL sounds OFF — bell only | 40/10 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD \| Pre-Dawn | 40/10 pomodoro, 40 minute pomodoro, pomodoro technique, 4 hour timer, study with me 4 hours, pre-dawn ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudio **(189 ch)** | |
+| ☐ | 27 | `C30-15x2h_midday_all4` | **Custom** · By count · work **90m** · breaks **2** · break length **15m** → 2 hours · 2 breaks | Time of day → Midday · Show | Always · top · solid · Serif · dot · Charcoal #20242e | Ocean 100 · Sand 55 · Shore breeze 40 · Seabirds 30 — master 85 | 30/15 Pomodoro Timer 🍃 2-Hour Study With Me for Deep Focus & ADHD \| Full Shore Ambience & Midday | 30/15 pomodoro, 30 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midday ambience, pomodoro adhd, مؤقت للدراسة **(137 ch)** | |
+| ☐ | 28 | `C30-15x2h_midday_bell` | **Custom** · By count · work **90m** · breaks **2** · break length **15m** → 2 hours · 2 breaks | Time of day → Midday · Show | Always · top · solid · Serif · dot · Charcoal #20242e | ALL sounds OFF — bell only | 30/15 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD \| Midday | 30/15 pomodoro, 30 minute pomodoro, pomodoro technique, 2 hour timer, study with me 2 hours, midday ambience, pomodoro adhd, pomodoro no music, silent study timer, temporizador de estudo **(186 ch)** | |
+| ☐ | 29 | `C60-20x5h_sunrise_ocn-snd` | **Custom** · By count · work **240m** · breaks **3** · break length **20m** → 5 hours · 3 breaks | Time of day → Sunrise · Show | Always · top · solid · Jost · colon · Charcoal #20242e | Ocean 100 · Sand 55 — master 100 | 60/20 Pomodoro Timer 🌊 5-Hour Study With Me for Deep Focus & ADHD \| Ocean & Sand, Sunrise | 60/20 pomodoro, 60 minute pomodoro, pomodoro technique, 5 hour timer, study with me 5 hours, sunrise ambience, pomodoro adhd, 핑크 노이즈 공부 **(135 ch)** | |
+| ☐ | 30 | `C60-20x5h_sunrise_bell` | **Custom** · By count · work **240m** · breaks **3** · break length **20m** → 5 hours · 3 breaks | Time of day → Sunrise · Show | Always · top · solid · Jost · colon · Charcoal #20242e | ALL sounds OFF — bell only | 60/20 Pomodoro Timer, No Music 🔔 5-Hour Study With Me for Deep Focus & ADHD \| Sunrise | 60/20 pomodoro, 60 minute pomodoro, pomodoro technique, 5 hour timer, study with me 5 hours, sunrise ambience, pomodoro adhd, pomodoro no music, silent study timer, timer belajar **(178 ch)** | |
 
 ---
 
@@ -299,13 +299,13 @@ Month 1 only, deliberately. Once these land we will have real Analytics, and lat
 rewritten from that data rather than frozen today.
 
 <details>
-<summary><code>P50-10x2h_sunset_ocn</code> — 2-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean Waves & Sunset</summary>
+<summary><code>P50-10x2h_sunset_ocn</code> — 50/10 Pomodoro Timer 🌊 2-Hour Study With Me for Deep Focus & ADHD | Ocean Waves & Sunset</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **2** · Time of day → Sunset · Ocean
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean Waves & Sunset
+**Title:** 50/10 Pomodoro Timer 🌊 2-Hour Study With Me for Deep Focus & ADHD | Ocean Waves & Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (137/219 chars):
 
@@ -337,13 +337,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P50-10x2h_sunset_bell</code> — 2-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunset</summary>
+<summary><code>P50-10x2h_sunset_bell</code> — 50/10 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD | Sunset</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **2** · Time of day → Sunset · ALL sounds OFF — bell only
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunset
+**Title:** 50/10 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD | Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (187/219 chars):
 
@@ -375,13 +375,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P50-10x3h_midnight_ocn-brz</code> — 3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean & Breeze, Midnight</summary>
+<summary><code>P50-10x3h_midnight_ocn-brz</code> — 50/10 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean & Breeze, Midnight</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **3** · Time of day → Midnight · Ocean + Shore breeze
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean & Breeze, Midnight
+**Title:** 50/10 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean & Breeze, Midnight
 
 **Extra tags** — paste after the Upload-defaults tags (139/219 chars):
 
@@ -415,13 +415,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P50-10x3h_midnight_bell</code> — 3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Midnight</summary>
+<summary><code>P50-10x3h_midnight_bell</code> — 50/10 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Midnight</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **3** · Time of day → Midnight · ALL sounds OFF — bell only
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Midnight
+**Title:** 50/10 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Midnight
 
 **Extra tags** — paste after the Upload-defaults tags (188/219 chars):
 
@@ -455,13 +455,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P50-10x4h_sunrise_ocn-brd</code> — 4-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean & Seabirds, Sunrise</summary>
+<summary><code>P50-10x4h_sunrise_ocn-brd</code> — 50/10 Pomodoro Timer 🌊 4-Hour Study With Me for Deep Focus & ADHD | Ocean & Seabirds, Sunrise</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **4** · Time of day → Sunrise · Ocean + Seabirds
 
 **Verified length: 4 hours exactly.**
 
-**Title:** 4-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean & Seabirds, Sunrise
+**Title:** 50/10 Pomodoro Timer 🌊 4-Hour Study With Me for Deep Focus & ADHD | Ocean & Seabirds, Sunrise
 
 **Extra tags** — paste after the Upload-defaults tags (135/219 chars):
 
@@ -497,13 +497,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P50-10x4h_sunrise_bell</code> — 4-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunrise</summary>
+<summary><code>P50-10x4h_sunrise_bell</code> — 50/10 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD | Sunrise</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **4** · Time of day → Sunrise · ALL sounds OFF — bell only
 
 **Verified length: 4 hours exactly.**
 
-**Title:** 4-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunrise
+**Title:** 50/10 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD | Sunrise
 
 **Extra tags** — paste after the Upload-defaults tags (178/219 chars):
 
@@ -539,13 +539,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P50-10x1h_twilight_snd-brz</code> — 1-Hour Study With Me 🍃 50/10 Pomodoro Timer for Deep Focus & ADHD | Sand & Breeze, Twilight</summary>
+<summary><code>P50-10x1h_twilight_snd-brz</code> — 50/10 Pomodoro Timer 🍃 1-Hour Study With Me for Deep Focus & ADHD | Sand & Breeze, Twilight</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **1** · Time of day → Twilight · Sand + Shore breeze
 
 **Verified length: 1 hour exactly.**
 
-**Title:** 1-Hour Study With Me 🍃 50/10 Pomodoro Timer for Deep Focus & ADHD | Sand & Breeze, Twilight
+**Title:** 50/10 Pomodoro Timer 🍃 1-Hour Study With Me for Deep Focus & ADHD | Sand & Breeze, Twilight
 
 **Extra tags** — paste after the Upload-defaults tags (148/219 chars):
 
@@ -570,13 +570,13 @@ One 50-minute block, with a soft bell to open and close it. The sky moves the wh
 </details>
 
 <details>
-<summary><code>P50-10x1h_twilight_bell</code> — 1-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Twilight</summary>
+<summary><code>P50-10x1h_twilight_bell</code> — 50/10 Pomodoro Timer, No Music 🔔 1-Hour Study With Me for Deep Focus & ADHD | Twilight</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **1** · Time of day → Twilight · ALL sounds OFF — bell only
 
 **Verified length: 1 hour exactly.**
 
-**Title:** 1-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Twilight
+**Title:** 50/10 Pomodoro Timer, No Music 🔔 1-Hour Study With Me for Deep Focus & ADHD | Twilight
 
 **Extra tags** — paste after the Upload-defaults tags (175/219 chars):
 
@@ -601,13 +601,13 @@ One 50-minute block, with a soft bell to open and close it. The sky moves the wh
 </details>
 
 <details>
-<summary><code>P50-10x3h_sunset_ocn-snd-brd</code> — 3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean, Sand & Seabirds, Sunset</summary>
+<summary><code>P50-10x3h_sunset_ocn-snd-brd</code> — 50/10 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean, Sand & Seabirds, Sunset</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **3** · Time of day → Sunset · Ocean + Sand + Seabirds
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🌊 50/10 Pomodoro Timer for Deep Focus & ADHD | Ocean, Sand & Seabirds, Sunset
+**Title:** 50/10 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean, Sand & Seabirds, Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (137/219 chars):
 
@@ -641,13 +641,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P50-10x3h_sunset_bell</code> — 3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunset</summary>
+<summary><code>P50-10x3h_sunset_bell</code> — 50/10 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Sunset</summary>
 
 **Setup:** Pomodoro · focus **50m** · break **10m** · blocks **3** · Time of day → Sunset · ALL sounds OFF — bell only
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🔔 50/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunset
+**Title:** 50/10 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (187/219 chars):
 
@@ -681,13 +681,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P25-5x2h_midnight_ocn</code> — 2-Hour Study With Me 🌊 25/5 Pomodoro Timer for Deep Focus & ADHD | Ocean Waves & Midnight</summary>
+<summary><code>P25-5x2h_midnight_ocn</code> — 25/5 Pomodoro Timer 🌊 2-Hour Study With Me for Deep Focus & ADHD | Ocean Waves & Midnight</summary>
 
 **Setup:** Pomodoro · focus **25m** · break **5m** · blocks **4** · Time of day → Midnight · Ocean
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🌊 25/5 Pomodoro Timer for Deep Focus & ADHD | Ocean Waves & Midnight
+**Title:** 25/5 Pomodoro Timer 🌊 2-Hour Study With Me for Deep Focus & ADHD | Ocean Waves & Midnight
 
 **Extra tags** — paste after the Upload-defaults tags (138/219 chars):
 
@@ -723,13 +723,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P25-5x2h_midnight_bell</code> — 2-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD | Midnight</summary>
+<summary><code>P25-5x2h_midnight_bell</code> — 25/5 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD | Midnight</summary>
 
 **Setup:** Pomodoro · focus **25m** · break **5m** · blocks **4** · Time of day → Midnight · ALL sounds OFF — bell only
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD | Midnight
+**Title:** 25/5 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD | Midnight
 
 **Extra tags** — paste after the Upload-defaults tags (187/219 chars):
 
@@ -765,13 +765,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P25-5x3h_sunset_ocn-snd</code> — 3-Hour Study With Me 🌊 25/5 Pomodoro Timer for Deep Focus & ADHD | Ocean & Sand, Sunset</summary>
+<summary><code>P25-5x3h_sunset_ocn-snd</code> — 25/5 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean & Sand, Sunset</summary>
 
 **Setup:** Pomodoro · focus **25m** · break **5m** · blocks **6** · Time of day → Sunset · Ocean + Sand
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🌊 25/5 Pomodoro Timer for Deep Focus & ADHD | Ocean & Sand, Sunset
+**Title:** 25/5 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean & Sand, Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (133/219 chars):
 
@@ -811,13 +811,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P25-5x3h_sunset_bell</code> — 3-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunset</summary>
+<summary><code>P25-5x3h_sunset_bell</code> — 25/5 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Sunset</summary>
 
 **Setup:** Pomodoro · focus **25m** · break **5m** · blocks **6** · Time of day → Sunset · ALL sounds OFF — bell only
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunset
+**Title:** 25/5 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (176/219 chars):
 
@@ -857,13 +857,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P25-5x4h_midday_brz-brd</code> — 4-Hour Study With Me 🍃 25/5 Pomodoro Timer for Deep Focus & ADHD | Breeze & Seabirds, Midday</summary>
+<summary><code>P25-5x4h_midday_brz-brd</code> — 25/5 Pomodoro Timer 🍃 4-Hour Study With Me for Deep Focus & ADHD | Breeze & Seabirds, Midday</summary>
 
 **Setup:** Pomodoro · focus **25m** · break **5m** · blocks **8** · Time of day → Midday · Shore breeze + Seabirds
 
 **Verified length: 4 hours exactly.**
 
-**Title:** 4-Hour Study With Me 🍃 25/5 Pomodoro Timer for Deep Focus & ADHD | Breeze & Seabirds, Midday
+**Title:** 25/5 Pomodoro Timer 🍃 4-Hour Study With Me for Deep Focus & ADHD | Breeze & Seabirds, Midday
 
 **Extra tags** — paste after the Upload-defaults tags (145/219 chars):
 
@@ -907,13 +907,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>P25-5x4h_midday_bell</code> — 4-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD | Midday</summary>
+<summary><code>P25-5x4h_midday_bell</code> — 25/5 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD | Midday</summary>
 
 **Setup:** Pomodoro · focus **25m** · break **5m** · blocks **8** · Time of day → Midday · ALL sounds OFF — bell only
 
 **Verified length: 4 hours exactly.**
 
-**Title:** 4-Hour Study With Me 🔔 25/5 Pomodoro Timer, No Music for Deep Focus & ADHD | Midday
+**Title:** 25/5 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD | Midday
 
 **Extra tags** — paste after the Upload-defaults tags (172/219 chars):
 
@@ -957,13 +957,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>F60mx1h_sunrise_ocn-brd</code> — 1-Hour Study With Me 🌊 Deep Work Timer, No Breaks for Flow State & ADHD | Ocean & Seabirds, Sunrise</summary>
+<summary><code>F60mx1h_sunrise_ocn-brd</code> — Deep Work Timer, No Breaks 🌊 1-Hour Study With Me for Flow State & ADHD | Ocean & Seabirds, Sunrise</summary>
 
 **Setup:** Flow · flow length **60m** · Time of day → Sunrise · Ocean + Seabirds
 
 **Verified length: 1 hour exactly.**
 
-**Title:** 1-Hour Study With Me 🌊 Deep Work Timer, No Breaks for Flow State & ADHD | Ocean & Seabirds, Sunrise
+**Title:** Deep Work Timer, No Breaks 🌊 1-Hour Study With Me for Flow State & ADHD | Ocean & Seabirds, Sunrise
 
 **Extra tags** — paste after the Upload-defaults tags (146/219 chars):
 
@@ -988,13 +988,13 @@ One 60-minute block, with a soft bell to open and close it. The sky moves the wh
 </details>
 
 <details>
-<summary><code>F60mx1h_sunrise_bell</code> — 1-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD | Sunrise</summary>
+<summary><code>F60mx1h_sunrise_bell</code> — Deep Work Timer, No Breaks 🔔 1-Hour Study With Me for Flow State & ADHD | Sunrise</summary>
 
 **Setup:** Flow · flow length **60m** · Time of day → Sunrise · ALL sounds OFF — bell only
 
 **Verified length: 1 hour exactly.**
 
-**Title:** 1-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD | Sunrise
+**Title:** Deep Work Timer, No Breaks 🔔 1-Hour Study With Me for Flow State & ADHD | Sunrise
 
 **Extra tags** — paste after the Upload-defaults tags (196/219 chars):
 
@@ -1019,13 +1019,13 @@ One 60-minute block, with a soft bell to open and close it. The sky moves the wh
 </details>
 
 <details>
-<summary><code>F120mx2h_midnight_snd</code> — 2-Hour Study With Me 🍃 Deep Work Timer, No Breaks for Flow State & ADHD | Falling Sand & Midnight</summary>
+<summary><code>F120mx2h_midnight_snd</code> — Deep Work Timer, No Breaks 🍃 2-Hour Study With Me for Flow State & ADHD | Falling Sand & Midnight</summary>
 
 **Setup:** Flow · flow length **120m** · Time of day → Midnight · Sand
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🍃 Deep Work Timer, No Breaks for Flow State & ADHD | Falling Sand & Midnight
+**Title:** Deep Work Timer, No Breaks 🍃 2-Hour Study With Me for Flow State & ADHD | Falling Sand & Midnight
 
 **Extra tags** — paste after the Upload-defaults tags (147/219 chars):
 
@@ -1050,13 +1050,13 @@ One 120-minute block, with a soft bell to open and close it. The sky moves the w
 </details>
 
 <details>
-<summary><code>F120mx2h_midnight_bell</code> — 2-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD | Midnight</summary>
+<summary><code>F120mx2h_midnight_bell</code> — Deep Work Timer, No Breaks 🔔 2-Hour Study With Me for Flow State & ADHD | Midnight</summary>
 
 **Setup:** Flow · flow length **120m** · Time of day → Midnight · ALL sounds OFF — bell only
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD | Midnight
+**Title:** Deep Work Timer, No Breaks 🔔 2-Hour Study With Me for Flow State & ADHD | Midnight
 
 **Extra tags** — paste after the Upload-defaults tags (196/219 chars):
 
@@ -1081,13 +1081,13 @@ One 120-minute block, with a soft bell to open and close it. The sky moves the w
 </details>
 
 <details>
-<summary><code>F180mx3h_sunset_ocn-brz</code> — 3-Hour Study With Me 🌊 Deep Work Timer, No Breaks for Flow State & ADHD | Ocean & Breeze, Sunset</summary>
+<summary><code>F180mx3h_sunset_ocn-brz</code> — Deep Work Timer, No Breaks 🌊 3-Hour Study With Me for Flow State & ADHD | Ocean & Breeze, Sunset</summary>
 
 **Setup:** Flow · flow length **180m** · Time of day → Sunset · Ocean + Shore breeze
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🌊 Deep Work Timer, No Breaks for Flow State & ADHD | Ocean & Breeze, Sunset
+**Title:** Deep Work Timer, No Breaks 🌊 3-Hour Study With Me for Flow State & ADHD | Ocean & Breeze, Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (142/219 chars):
 
@@ -1112,13 +1112,13 @@ One 180-minute block, with a soft bell to open and close it. The sky moves the w
 </details>
 
 <details>
-<summary><code>F180mx3h_sunset_bell</code> — 3-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD | Sunset</summary>
+<summary><code>F180mx3h_sunset_bell</code> — Deep Work Timer, No Breaks 🔔 3-Hour Study With Me for Flow State & ADHD | Sunset</summary>
 
 **Setup:** Flow · flow length **180m** · Time of day → Sunset · ALL sounds OFF — bell only
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🔔 Deep Work Timer, No Breaks for Flow State & ADHD | Sunset
+**Title:** Deep Work Timer, No Breaks 🔔 3-Hour Study With Me for Flow State & ADHD | Sunset
 
 **Extra tags** — paste after the Upload-defaults tags (185/219 chars):
 
@@ -1143,13 +1143,13 @@ One 180-minute block, with a soft bell to open and close it. The sky moves the w
 </details>
 
 <details>
-<summary><code>C50-15x3h_twilight_ocn</code> — 3-Hour Study With Me 🌊 50/15 Pomodoro Timer for Deep Focus & ADHD | Ocean Waves & Twilight</summary>
+<summary><code>C50-15x3h_twilight_ocn</code> — 50/15 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean Waves & Twilight</summary>
 
 **Setup:** Custom · By count · work **150m** · breaks **2** · break length **15m** · Time of day → Twilight · Ocean
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🌊 50/15 Pomodoro Timer for Deep Focus & ADHD | Ocean Waves & Twilight
+**Title:** 50/15 Pomodoro Timer 🌊 3-Hour Study With Me for Deep Focus & ADHD | Ocean Waves & Twilight
 
 **Extra tags** — paste after the Upload-defaults tags (148/219 chars):
 
@@ -1182,13 +1182,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>C50-15x3h_twilight_bell</code> — 3-Hour Study With Me 🔔 50/15 Pomodoro Timer, No Music for Deep Focus & ADHD | Twilight</summary>
+<summary><code>C50-15x3h_twilight_bell</code> — 50/15 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Twilight</summary>
 
 **Setup:** Custom · By count · work **150m** · breaks **2** · break length **15m** · Time of day → Twilight · ALL sounds OFF — bell only
 
 **Verified length: 3 hours exactly.**
 
-**Title:** 3-Hour Study With Me 🔔 50/15 Pomodoro Timer, No Music for Deep Focus & ADHD | Twilight
+**Title:** 50/15 Pomodoro Timer, No Music 🔔 3-Hour Study With Me for Deep Focus & ADHD | Twilight
 
 **Extra tags** — paste after the Upload-defaults tags (175/219 chars):
 
@@ -1221,13 +1221,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>C40-10x4h_predawn_snd-brz</code> — 4-Hour Study With Me 🍃 40/10 Pomodoro Timer for Deep Focus & ADHD | Sand & Breeze, Pre-Dawn</summary>
+<summary><code>C40-10x4h_predawn_snd-brz</code> — 40/10 Pomodoro Timer 🍃 4-Hour Study With Me for Deep Focus & ADHD | Sand & Breeze, Pre-Dawn</summary>
 
 **Setup:** Custom · By count · work **200m** · breaks **4** · break length **10m** · Time of day → Pre-dawn · Sand + Shore breeze
 
 **Verified length: 4 hours exactly.**
 
-**Title:** 4-Hour Study With Me 🍃 40/10 Pomodoro Timer for Deep Focus & ADHD | Sand & Breeze, Pre-Dawn
+**Title:** 40/10 Pomodoro Timer 🍃 4-Hour Study With Me for Deep Focus & ADHD | Sand & Breeze, Pre-Dawn
 
 **Extra tags** — paste after the Upload-defaults tags (139/219 chars):
 
@@ -1264,13 +1264,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>C40-10x4h_predawn_bell</code> — 4-Hour Study With Me 🔔 40/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Pre-Dawn</summary>
+<summary><code>C40-10x4h_predawn_bell</code> — 40/10 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD | Pre-Dawn</summary>
 
 **Setup:** Custom · By count · work **200m** · breaks **4** · break length **10m** · Time of day → Pre-dawn · ALL sounds OFF — bell only
 
 **Verified length: 4 hours exactly.**
 
-**Title:** 4-Hour Study With Me 🔔 40/10 Pomodoro Timer, No Music for Deep Focus & ADHD | Pre-Dawn
+**Title:** 40/10 Pomodoro Timer, No Music 🔔 4-Hour Study With Me for Deep Focus & ADHD | Pre-Dawn
 
 **Extra tags** — paste after the Upload-defaults tags (189/219 chars):
 
@@ -1307,13 +1307,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>C30-15x2h_midday_all4</code> — 2-Hour Study With Me 🍃 30/15 Pomodoro Timer for Deep Focus & ADHD | Full Shore Ambience & Midday</summary>
+<summary><code>C30-15x2h_midday_all4</code> — 30/15 Pomodoro Timer 🍃 2-Hour Study With Me for Deep Focus & ADHD | Full Shore Ambience & Midday</summary>
 
 **Setup:** Custom · By count · work **90m** · breaks **2** · break length **15m** · Time of day → Midday · Sand + Ocean + Shore breeze + Seabirds
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🍃 30/15 Pomodoro Timer for Deep Focus & ADHD | Full Shore Ambience & Midday
+**Title:** 30/15 Pomodoro Timer 🍃 2-Hour Study With Me for Deep Focus & ADHD | Full Shore Ambience & Midday
 
 **Extra tags** — paste after the Upload-defaults tags (137/219 chars):
 
@@ -1346,13 +1346,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>C30-15x2h_midday_bell</code> — 2-Hour Study With Me 🔔 30/15 Pomodoro Timer, No Music for Deep Focus & ADHD | Midday</summary>
+<summary><code>C30-15x2h_midday_bell</code> — 30/15 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD | Midday</summary>
 
 **Setup:** Custom · By count · work **90m** · breaks **2** · break length **15m** · Time of day → Midday · ALL sounds OFF — bell only
 
 **Verified length: 2 hours exactly.**
 
-**Title:** 2-Hour Study With Me 🔔 30/15 Pomodoro Timer, No Music for Deep Focus & ADHD | Midday
+**Title:** 30/15 Pomodoro Timer, No Music 🔔 2-Hour Study With Me for Deep Focus & ADHD | Midday
 
 **Extra tags** — paste after the Upload-defaults tags (186/219 chars):
 
@@ -1385,13 +1385,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>C60-20x5h_sunrise_ocn-snd</code> — 5-Hour Study With Me 🌊 60/20 Pomodoro Timer for Deep Focus & ADHD | Ocean & Sand, Sunrise</summary>
+<summary><code>C60-20x5h_sunrise_ocn-snd</code> — 60/20 Pomodoro Timer 🌊 5-Hour Study With Me for Deep Focus & ADHD | Ocean & Sand, Sunrise</summary>
 
 **Setup:** Custom · By count · work **240m** · breaks **3** · break length **20m** · Time of day → Sunrise · Ocean + Sand
 
 **Verified length: 5 hours exactly.**
 
-**Title:** 5-Hour Study With Me 🌊 60/20 Pomodoro Timer for Deep Focus & ADHD | Ocean & Sand, Sunrise
+**Title:** 60/20 Pomodoro Timer 🌊 5-Hour Study With Me for Deep Focus & ADHD | Ocean & Sand, Sunrise
 
 **Extra tags** — paste after the Upload-defaults tags (135/219 chars):
 
@@ -1426,13 +1426,13 @@ A calm, no-talking study timer for deep focus, ADHD, exam revision, coding and l
 </details>
 
 <details>
-<summary><code>C60-20x5h_sunrise_bell</code> — 5-Hour Study With Me 🔔 60/20 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunrise</summary>
+<summary><code>C60-20x5h_sunrise_bell</code> — 60/20 Pomodoro Timer, No Music 🔔 5-Hour Study With Me for Deep Focus & ADHD | Sunrise</summary>
 
 **Setup:** Custom · By count · work **240m** · breaks **3** · break length **20m** · Time of day → Sunrise · ALL sounds OFF — bell only
 
 **Verified length: 5 hours exactly.**
 
-**Title:** 5-Hour Study With Me 🔔 60/20 Pomodoro Timer, No Music for Deep Focus & ADHD | Sunrise
+**Title:** 60/20 Pomodoro Timer, No Music 🔔 5-Hour Study With Me for Deep Focus & ADHD | Sunrise
 
 **Extra tags** — paste after the Upload-defaults tags (178/219 chars):
 

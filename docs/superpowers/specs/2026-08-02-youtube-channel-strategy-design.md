@@ -842,6 +842,83 @@ grouped by month, newest first, persisting across regenerations forever. Ticking
 stores a full **snapshot** rather than an id, because next month's `month.json` will not contain this
 month's videos and an archive that cannot render without them is not an archive.
 
+## 25. The niche has five segments, and we were selling the wrong one — 2026-08-04
+
+Measured from 20 ranked competitors on `3 hour study with me pomodoro timer`, their real YouTube
+category settings, and ~60 keyword volumes.
+
+| Segment | Product | Who watches | Lead keywords | Category |
+|---|---|---|---|---|
+| **A · Study-With-Me** | a person, on camera, in real time | students who feel alone and want accountability | study with me 2,525,198 · study with me live 318,720 | People & Blogs |
+| **B · Pure Timer** | the timer itself | someone who has already decided to work | pomodoro timer 427,868 · study timer 103,138 · 50/10 pomodoro 47,568 | **Education** |
+| **C · Lofi / Music** | the music | wants a soundtrack | focus music 3,341,612 · study music 2,165,455 | Music |
+| **D · Ambience / Noise** | the soundscape | wants to mask distraction | white noise 2,267,059 · nature sounds 504,753 | mixed |
+| **E · Aesthetic / Scene** | the look | wants a beautiful second screen | aesthetic timer · cozy | mixed |
+
+Segment A's product is **not** the video — the CHI 2021 study (`dl.acm.org/doi/10.1145/3411764.3445222`)
+found viewers use those for personalised ambience, **controllable peer pressure**, and **emotional
+support**. A person is the deliverable. We have none of that.
+
+**Sustain is B + D + E. Not A, and never C.** Nearest analogue is Timer Palette almost exactly:
+faceless, Education, timer-first titles, noise rather than music, 546,673 views on one upload. Our only
+differentiator against them is E — they ship simple visuals, we ship a rendered living scene.
+
+**Our viewer:** has already decided to work, wants interval structure and calm non-musical sound, opens
+a second tab and leaves it running for hours. Arrives on a *tool* query, never a companionship query.
+
+### The title was selling segment A
+
+The original formula led with `Study With Me` because it is 2,525,198/mo against 47,568 for
+`50/10 pomodoro`. That optimises for **impressions, not matched intent** — and it produced 900
+impressions against ~15 views across videos 1–2. YouTube served us into study-with-me results, where a
+faceless hourglass sits in a row of people at desks and reads as the wrong result.
+
+The SERP splits perfectly on this: **every faceless timer channel leads with the timer** (Timer Palette
+546,673, Countdown Time 687,672); **every channel leading with STUDY WITH ME has a person on camera**
+(iCanStudy 13.2M, Sean Study 3M, Mr. Tiny's 843K).
+
+**LOCKED formula — timer first, study-with-me in the tail:**
+
+```
+{IV} Pomodoro Timer {emoji} {N}-Hour Study With Me for Deep Focus & ADHD | {Sound}, {Light}
+{IV} Pomodoro Timer, No Music 🔔 {N}-Hour Study With Me for Deep Focus & ADHD | {Light}
+Deep Work Timer, No Breaks {emoji} {N}-Hour Study With Me for Flow State & ADHD | {Sound}, {Light}
+```
+
+Word order does not change indexing — both phrases still match. It changes only what a human reads
+first. `Study With Me` stays because Timer Palette proves it works in the tail and it is honest: we are
+a study companion, just not a human one.
+
+### Thumbnail follows the same rule
+
+`POMODORO {IV}` is the headline as one unit — `50/10 pomodoro` is 47,568/mo on its own. **`STUDY WITH
+ME` comes off the thumbnail entirely**; it stays in the title where it still indexes, but at 168px
+there is no room for a promise a faceless timer cannot keep. Three lines, six words:
+
+```
+50/10 POMODORO
+2 HOURS
+SUNSET   OCEAN WAVES
+```
+
+### Two keyword traps, rejected
+
+`study for dreams` (8,843, competition 49) is **Countdown Time's** signature phrase, in every one of
+their titles. `hyper efficient` is **iCanStudy's**, tied to a doctor's personal brand. Chasing a
+competitor's brand phrase means ranking permanently below them on a term that means nothing to anyone
+who does not already know them. All cost, no return.
+
+`hyperfocus` is different and worth measuring — ADHD-adjacent, and ADHD is proven for us
+(`pomodoro adhd` 15,990).
+
+### Open: the hands-not-face bridge
+
+Study-with-me videos showing hands and a desk but no face deliver A's peer-pressure element without the
+parasocial one — the only genuine bridge from our scene to that audience. It is a different capture
+pipeline entirely (filming a desk in real time, not `/stage`) and would sit oddly among pure timers.
+Filed as a deliberate future experiment, possibly a second series, once retention data shows whether
+the timer-only format has a ceiling.
+
 ## 15. Sources
 
 - [YouTube Partner Program overview & eligibility](https://support.google.com/youtube/answer/72851?hl=en)
