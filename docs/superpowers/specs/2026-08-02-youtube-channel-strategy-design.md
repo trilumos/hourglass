@@ -919,6 +919,46 @@ pipeline entirely (filming a desk in real time, not `/stage`) and would sit oddl
 Filed as a deliberate future experiment, possibly a second series, once retention data shows whether
 the timer-only format has a ceiling.
 
+## 26. The thumbnail template — LOCKED 2026-08-04
+
+Built in Canva from a saved template, using a scene frame exported from `/stage`'s thumbnail studio.
+The studio stays as the scene-capture tool; Canva does the type.
+
+```
+50/10 POMODORO          size 90   bold
+2 HOURS AT MIDNIGHT     size 70   bold
+OCEAN & BREEZE          size 50   bold   (centred on the hourglass axis)
+```
+
+**Line 1 — `{interval} POMODORO`.** `50/10 pomodoro` is 47,568/mo as one phrase and it is what Timer
+Palette leads with. Flow videos read `DEEP WORK`.
+
+**Line 2 — `{N} HOURS AT {SKY}`.** Duration and sky merged into one phrase. The earlier version flanked
+them either side of the glass and read as a spec sheet; this reads as language, and it frees the bottom
+of the frame for the sound centred on the axis, where the composition actually wants it.
+`2 hour timer` is 204,296/mo.
+
+**Line 3 — the sound.** `OCEAN WAVES` · `FALLING SAND` · `SEA BREEZE` · `SEABIRDS` for singles;
+`OCEAN & BREEZE` for pairs; `FULL SHORE` for three or more; **`NO MUSIC`** for bell-only.
+This is the **only** visible difference between a session and its bell twin in the channel grid, which
+is why it gets its own line rather than being tucked beside the sky.
+
+### Two rules learned building it
+
+**`STUDY WITH ME` is not on the thumbnail.** It stays in the title where it still indexes, but at 168px
+there is no room for a promise a faceless timer cannot keep — see section 25.
+
+**Size carries hierarchy; weight must not.** Line 3 was first drawn smaller *and* lighter, and vanished
+at feed size. All three lines are the same bold weight; only the size steps down. Dropping both
+compounds, and the one line that distinguishes a video from its twin is the last one that can afford to
+disappear.
+
+Sound wording is `OCEAN`, not `WAVES` — `ocean` is 685,928/mo against `waves` 344,793, and "waves and
+breeze" reads as two kinds of wind while "ocean and breeze" is unambiguous.
+
+Every video's exact three lines are emitted by the directory under **Thumbnail text** with a copy
+button, including already-recorded rows.
+
 ## 15. Sources
 
 - [YouTube Partner Program overview & eligibility](https://support.google.com/youtube/answer/72851?hl=en)
