@@ -900,6 +900,30 @@ Word order does not change indexing — both phrases still match. It changes onl
 first. `Study With Me` stays because Timer Palette proves it works in the tail and it is honest: we are
 a study companion, just not a human one.
 
+### Distinct facts take distinct segments
+
+Flow rows state each fact on its own pipe:
+
+```
+Deep Work Timer | No Breaks 🌊 1-Hour Study With Me for Flow State | Ocean & Seabirds | Sunrise
+Deep Work Timer | No Breaks | No Music 🔔 1-Hour Study With Me for Flow State | Sunrise
+```
+
+Not `No Breaks or Music`. Two reasons, the second decisive:
+
+1. A reader scanning a results row takes them as two separate claims, which is what they are.
+2. **`No Breaks or Music` does not contain the string "no music"** — so it loses the exact-phrase match
+   for `study with me no music` 25,548 and `pomodoro no music` 9,661. Same class of error as
+   `Pomodoro 50/10` vs `50/10 Pomodoro Timer`: contiguity is what exact matching sees.
+
+**Flow drops `& ADHD`.** `pomodoro adhd` (15,990) is an *interval-technique* association, not a general
+claim about unbroken work — so dropping it from Flow is honest, and it buys the room `No Breaks` needs
+on all six rows (84–95 chars).
+
+**`NO BREAKS` stays off the thumbnail.** Line 1 could not hold `DEEP WORK · NO BREAKS` without shrinking
+the heading, and the heading is the one line that must survive 168px. The title has the room; the
+thumbnail does not.
+
 ### Thumbnail follows the same rule
 
 `POMODORO {IV}` is the headline as one unit — `50/10 pomodoro` is 47,568/mo on its own. **`STUDY WITH

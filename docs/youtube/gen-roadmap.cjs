@@ -412,12 +412,9 @@ const thumbSound = k => k === 'bell' ? '🔔 BELL ONLY'
 const thumbOf = r => {
   const m = totalOf(r), h = Math.floor(m/60), mm = m%60;
   const l1 = h ? (mm ? `${h}H ${mm}M` : `${h} ${h === 1 ? 'HOUR' : 'HOURS'}`) : `${mm} MIN`;
-  // Line 1 is the STRUCTURE slot and always carries two facts: Pomodoro gives interval + technique,
-  // so Flow gives mode + the thing that defines it. "No breaks" is Flow's structural fact, and the
-  // title only says "Deep Work" — stating it here makes the pair concrete instead of implied.
-  // 21 chars against POMODORO's 14, so Canva auto-fits it smaller; still the largest element, and it
-  // only affects the 6 flow videos.
-  const mode = r.kind === 'flow' ? 'DEEP WORK · NO BREAKS' : `${shapeOf(r).iv} POMODORO`;
+  // DEEP WORK alone. "No breaks" lives in the TITLE, which has the room -- putting it here forced the
+  // heading smaller, and the heading is the one line that must survive 168px.
+  const mode = r.kind === 'flow' ? 'DEEP WORK' : `${shapeOf(r).iv} POMODORO`;
   const snd = thumbSound(r.sound);
   // POMODORO + the interval is the headline, as one unit -- "50/10 pomodoro" is 47,568/mo on its own
   // and it is exactly what Timer Palette leads with. STUDY WITH ME comes OFF the thumbnail: it stays
@@ -446,11 +443,16 @@ const modePhrase = r => { const sh = shapeOf(r);
   // states outright ("1 HOUR AT SUNRISE"). study with me no break is ~4,388/mo against a sky the title
   // and thumbnail should agree on. Dropped from the head; "Flow State" in the benefit clause carries
   // the unbroken meaning.
-  if (r.kind==='flow')   return r.sound==='bell' ? 'Deep Work Timer | No Music' : 'Deep Work Timer';
+  // Distinct facts get distinct segments. Folding them into "No Breaks or Music" reads as one hedged
+  // clause; a reader scanning a results row should take them as the two separate claims they are.
+  if (r.kind==='flow')   return r.sound==='bell' ? 'Deep Work Timer | No Breaks | No Music'
+                                                 : 'Deep Work Timer | No Breaks';
   if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer | No Music`;
   return `${sh.iv} Pomodoro Timer`;
 };
-const benefit = r => r.kind==='flow' ? 'for Flow State & ADHD' : 'for Deep Focus & ADHD';
+// ADHD is a POMODORO association (pomodoro adhd 15,990) -- an interval technique, not a general claim
+// about unbroken work. Dropping it from flow is honest AND buys the room for No Breaks on all six rows.
+const benefit = r => r.kind==='flow' ? 'for Flow State' : 'for Deep Focus & ADHD';
 // A title YouTube truncates is a title nobody reads: 100 is the hard cap, ~70 is what Search shows.
 // The head carries every keyword that matters, so when a long sound name pushes past the cap the TAIL
 // gives way — the sound is already named in the description, the tags and the thumbnail.
@@ -494,7 +496,8 @@ for (const r of rows){
 
   // Study-with-me stays, but in the tail, where Timer Palette proves it works.
   if (!/\d-Hour Study With Me/.test(t))                 fail('missing the {N}-Hour Study With Me phrase');
-  if (!/ for (Deep Focus|Flow State) & ADHD\b/.test(t)) fail('missing the benefit clause');
+  if (!t.includes(' ' + benefit(r) + ' |')) fail('missing or malformed benefit clause');
+  if (r.kind === 'flow' && !/\| No Breaks( \||\s)/.test(t)) fail('flow row does not state No Breaks');
 
   // A bell row's whole reason to exist as a separate upload from its twin.
   if (bell  && !/\| (No Music|No Breaks or Music)\b/.test(t)) fail('bell row does not claim no music');
