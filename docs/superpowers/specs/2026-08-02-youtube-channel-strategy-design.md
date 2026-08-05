@@ -939,7 +939,14 @@ of the frame for the sound centred on the axis, where the composition actually w
 `2 hour timer` is 204,296/mo.
 
 **Line 3 — the sound.** `OCEAN WAVES` · `FALLING SAND` · `SEA BREEZE` · `SEABIRDS` for singles;
-`OCEAN & BREEZE` for pairs; `FULL SHORE` for three or more; **`NO MUSIC`** for bell-only.
+`OCEAN & BREEZE` for pairs; `FULL SHORE` for three or more; **`BELL ONLY`** for bell-only.
+
+**The thumbnail says `BELL ONLY`; the title says `No Music`.** Not a contradiction — different jobs.
+"No music" is the *query* (`study with me no music` 25,548, `pomodoro no music` 9,661) and searchers
+use it loosely to mean any audio bed, so the title keeps it. But nothing in this catalogue has music —
+the other videos carry **ambience**. Printing NO MUSIC on the thumbnail implies its twin has a
+soundtrack, a false contrast against our own library. The thumbnail carries no SEO weight, so accuracy
+wins there and the query wins in the title.
 This is the **only** visible difference between a session and its bell twin in the channel grid, which
 is why it gets its own line rather than being tucked beside the sky.
 
