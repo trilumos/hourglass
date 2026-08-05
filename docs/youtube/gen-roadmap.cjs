@@ -436,8 +436,12 @@ const modePhrase = r => { const sh = shapeOf(r);
   // Flow was checked FIRST and returned, so a flow row that is also bell-only never said No Music --
   // 3 of 29 videos silently lost their single strongest differentiator (study with me no music 25,548
   // + pomodoro no music 9,661 at competition 10.4). Both facts now travel together.
-  if (r.kind==='flow')   return r.sound==='bell' ? 'Deep Work Timer | No Breaks or Music'
-                                                 : 'Deep Work Timer | No Breaks';
+  // "No Breaks" cost 12 characters to say what "Deep Work" already implies, and it pushed all three
+  // flow ambience rows past 100 so the overflow guard silently dropped their SKY — which the thumbnail
+  // states outright ("1 HOUR AT SUNRISE"). study with me no break is ~4,388/mo against a sky the title
+  // and thumbnail should agree on. Dropped from the head; "Flow State" in the benefit clause carries
+  // the unbroken meaning.
+  if (r.kind==='flow')   return r.sound==='bell' ? 'Deep Work Timer | No Music' : 'Deep Work Timer';
   if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer | No Music`;
   return `${sh.iv} Pomodoro Timer`;
 };
@@ -468,8 +472,48 @@ const title = r => {
   const full = `${h2} | ${S} | ${L}`;
   return full.length <= 100 ? full : `${h2} | ${S}`;
 };
-for (const r of rows) if (title(r).length > 100)
-  throw new Error(`title still too long (${title(r).length}): ${title(r)}`);
+// ── The title engine is asserted, rule by rule ───────────────────────────────────────────────────
+// Every one of these has been wrong in a shipped title at some point today. A formula this loaded is
+// not something to eyeball 29 times a month.
+for (const r of rows){
+  const t = title(r), seg = t.split(' | '), bell = r.sound === 'bell';
+  const fail = m => { throw new Error('TITLE ' + slug(r) + ': ' + m + '  >> ' + t); };
+
+  if (t.length > 100)   fail(t.length + ' chars, cap is 100');
+  if (/\s\s/.test(t))   fail('double space');
+  if (t !== t.trim())   fail('leading or trailing space');
+
+  // Opens with what the video IS -- never "Study With Me", which promises a person (spec s25).
+  if (!/^(\d+\/\d+ Pomodoro Timer|Deep Work Timer)\b/.test(t)) fail('does not open with the timer');
+  if (/^\d+-Hour Study With Me/.test(t))                       fail('leads with Study With Me');
+
+  // Study-with-me stays, but in the tail, where Timer Palette proves it works.
+  if (!/\d-Hour Study With Me/.test(t))                 fail('missing the {N}-Hour Study With Me phrase');
+  if (!/ for (Deep Focus|Flow State) & ADHD\b/.test(t)) fail('missing the benefit clause');
+
+  // A bell row's whole reason to exist as a separate upload from its twin.
+  if (bell  && !/\| (No Music|No Breaks or Music)\b/.test(t)) fail('bell row does not claim no music');
+  if (!bell && /No Music|or Music/.test(t))                   fail('ambience row claims no music');
+
+  // Exactly one emoji, and it must be the one EMOJI() picked for the sound.
+  const emo = [...t].filter(c => c.codePointAt(0) > 0x2100);
+  if (emo.length !== 1)    fail(emo.length + ' emoji, want exactly 1');
+  if (emo[0] !== EMOJI(r)) fail('emoji ' + emo[0] + ' does not match the sound');
+
+  // Tail is read from the END, not by segment count: a flow row carries an extra "| No Breaks"
+  // segment up front, so counting from the start mistook its head for its tail.
+  // Ambience: last two segments are SOUND then SKY. Bell: last is SKY (there is no sound to name).
+  if (bell){
+    if (seg[seg.length-1] !== LIGHT[r.light].cap)
+      fail('bell tail is "' + seg[seg.length-1] + '", want the sky "' + LIGHT[r.light].cap + '"');
+  } else {
+    if (seg[seg.length-1] !== LIGHT[r.light].cap)
+      fail('SKY MISSING from the tail (overflow dropped it) -- last segment is "' + seg[seg.length-1] + '"');
+    if (seg[seg.length-2] !== SOUND[r.sound])
+      fail('tail sound is "' + seg[seg.length-2] + '", want "' + SOUND[r.sound] + '"');
+  }
+}
+console.log('title engine: ' + rows.length + ' titles pass every rule \u2713');
 // 500 is YouTube's hard cap on the whole tag field. The Upload-defaults block pre-fills 281 of it
 // (the channel-wide set: pomodoro, pomodoro timer, study with me, deep focus, ...), so this is what
 // is left for the per-video tags pasted after it. Re-measure if that default block is ever edited.
