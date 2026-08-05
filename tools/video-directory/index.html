@@ -110,6 +110,7 @@
   var esc  = function(x){ return String(x == null ? '' : x).replace(/[&<>]/g, function(c){
     return { '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c]; }); };
   var $ = function(id){ return document.getElementById(id); };
+  var BELL = String.fromCodePoint(0x1F514), WAVE = String.fromCodePoint(0x1F30A);
   var plan = null;
 
   fetch('./month.json').then(function(r){ return r.json(); }).then(function(pl){
@@ -159,36 +160,64 @@
     if (first) first.classList.add('next', 'open');
   }
 
+  // The snapshot exists only so past months still render once they leave month.json. Whenever the
+  // video IS still in the current plan the LIVE object wins — that is what makes this panel useful for
+  // going back and correcting something already published. Strategy changes after publication; today
+  // the entire title formula inverted, and an archive that froze the old title would be worse than
+  // useless because it would look authoritative.
+  function liveOf(snap){
+    return plan.videos.filter(function(x){ return x.id === snap.id; })[0] || snap;
+  }
   // Grouped by month so the record reads as a history, not one undifferentiated list.
   function group(all){
     var out = '', month = '';
-    all.forEach(function(v){
-      if (v.monthLabel !== month){ month = v.monthLabel;
+    all.forEach(function(snap){
+      var v = liveOf(snap), isLive = v !== snap;
+      if (snap.monthLabel !== month){ month = snap.monthLabel;
         out += '<p class="arch-m">' + esc(month) + '</p>'; }
-      out += '<div class="arch" data-id="' + esc(v.id) + '">'
-           + '<span class="d">' + esc(v.date || '—') + '</span>'
-           + '<span class="t">' + esc(v.title) + '</span>'
-           + '<button class="u" title="Move back to To record">untick</button></div>';
+      out += '<div class="row done" data-id="' + esc(snap.id) + '">'
+        + '<div class="head">'
+        +   '<span class="day">' + esc(snap.date || '—') + '</span>'
+        +   '<span class="kind">' + (v.silent ? BELL : WAVE) + '</span>'
+        +   '<span class="ttl">' + esc(v.title) + '</span>'
+        +   '<span class="tag">' + esc(v.duration || '') + '</span>'
+        +   '<button class="u" title="Move back to To record">untick</button>'
+        + '</div>'
+        + '<div class="body">'
+        +   (isLive ? cfgGrid(v) : '')
+        +   (v.thumb ? copy('Thumbnail text', v.thumb.join(NL)) : '')
+        +   copy('Title', v.title)
+        +   (v.tags ? copy('Tags — paste after the Upload-defaults tags', v.tags) : '')
+        +   (v.desc ? copy('Description — paste ABOVE the Upload-defaults text', v.desc) : '')
+        +   '<p class="note">ID <code>' + esc(snap.id) + '</code> · '
+        +     (isLive ? 'showing CURRENT metadata — if this differs from what is live on YouTube, update it there'
+                     : 'past month — showing the snapshot taken when it was recorded')
+        +   '</p>'
+        + '</div></div>';
     });
     return out;
   }
 
+  var NL = String.fromCharCode(10);
+  function cfgGrid(v){
+    return '<div class="grid">'
+      + cell('Mode', v.mode + ' ' + v.interval) + cell('Blocks', v.blocks + ' → ' + v.duration)
+      + cell('Setup', v.setup) + cell('Time of day', v.lightSetup)
+      + cell('Sound', v.sound) + cell('Audio levels', v.audio) + cell('Numerals', v.numerals)
+      + '</div>';
+  }
   function row(v){
     return '<div class="row" data-id="' + esc(v.id) + '">'
       + '<div class="head">'
       +   '<input type="checkbox">'
       +   '<span class="day">' + esc((v.date || '').slice(5)) + '</span>'
-      +   '<span class="kind">' + (v.silent ? '🔔' : '🌊') + '</span>'
+      +   '<span class="kind">' + (v.silent ? BELL : WAVE) + '</span>'
       +   '<span class="ttl">' + esc(v.title) + '</span>'
       +   '<span class="tag' + (v.silent ? ' b' : '') + '">'
       +     (v.silent ? 'silent' : esc(String(v.mode).toLowerCase())) + '</span>'
       +   '<span class="tag">' + esc(v.duration) + '</span>'
       + '</div>'
-      + '<div class="body"><div class="grid">'
-      +   cell('Mode', v.mode + ' ' + v.interval) + cell('Blocks', v.blocks + ' → ' + v.duration)
-      +   cell('Setup', v.setup) + cell('Time of day', v.lightSetup)
-      +   cell('Sound', v.sound) + cell('Audio levels', v.audio) + cell('Numerals', v.numerals)
-      + '</div>'
+      + '<div class="body">' + cfgGrid(v)
       +   copy('Thumbnail text', (v.thumb || []).join(String.fromCharCode(10)))
       +   copy('Title', v.title)
       +   copy('Tags — paste after the Upload-defaults tags', v.tags)
@@ -209,7 +238,7 @@
       .then(function(){ var t = cp.textContent; cp.textContent = 'copied';
         setTimeout(function(){ cp.textContent = t; }, 1200); }); return; }
 
-    var un = e.target.closest('.arch .u');
+    var un = e.target.closest('.u');
     if (un){ delete arch[un.closest('.arch').dataset.id]; save(); render(); return; }
 
     var r = e.target.closest('.row'); if (!r) return;

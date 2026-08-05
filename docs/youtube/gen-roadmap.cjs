@@ -417,7 +417,11 @@ const thumbOf = r => {
 const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
 // Opens the title now, so it carries no trailing benefit clause -- that moves after Study With Me.
 const modePhrase = r => { const sh = shapeOf(r);
-  if (r.kind==='flow')   return 'Deep Work Timer, No Breaks';
+  // Flow was checked FIRST and returned, so a flow row that is also bell-only never said No Music --
+  // 3 of 29 videos silently lost their single strongest differentiator (study with me no music 25,548
+  // + pomodoro no music 9,661 at competition 10.4). Both facts now travel together.
+  if (r.kind==='flow')   return r.sound==='bell' ? 'Deep Work Timer, No Breaks or Music'
+                                                 : 'Deep Work Timer, No Breaks';
   if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer, No Music`;
   return `${sh.iv} Pomodoro Timer`;
 };
@@ -447,7 +451,7 @@ for (const r of rows) if (title(r).length > 100)
 // 500 is YouTube's hard cap on the whole tag field. The Upload-defaults block pre-fills 281 of it
 // (the channel-wide set: pomodoro, pomodoro timer, study with me, deep focus, ...), so this is what
 // is left for the per-video tags pasted after it. Re-measure if that default block is ever edited.
-const TAG_BUDGET = 500-281;
+const TAG_BUDGET = 500-330;   // Upload-defaults tags occupy this much of the shared 500-char field
 const NONEN = ['ポモドーロタイマー','अध्ययन टाइमर','temporizador de estudio','مؤقت للدراسة',
                'temporizador de estudo','핑크 노이즈 공부','timer belajar','çalışma zamanlayıcısı'];
 // Tags carry what the title could not fit, in measured-volume order. The title already owns
@@ -455,13 +459,26 @@ const NONEN = ['ポモドーロタイマー','अध्ययन टाइमर
 //   study with me {N} hours 125,629/mo · pomodoro technique 69,409 · 50/10 pomodoro 47,568
 //   study pomodoro 24,362 · pomodoro adhd 15,990 · pomodoro no music 9,661 (competition 10.4)
 //   deep work 654,229 · flow state 316,535 — flow rows only, where they are the actual promise
+// Pushed in DESCENDING measured value, because the field is shared with the Upload-defaults tags and
+// the trimmer below drops from the end. Order used to be thematic, so a 25,548/mo term added late was
+// silently trimmed while a 5,233/mo one survived — the budget was spending itself on the wrong tags.
+// Volumes (vidIQ 2026-08-04): study with me {N} hours 125,629 | pomodoro technique 77,354 (comp 15.7)
+//   {iv} pomodoro 47,568 | study session 30,858 | study with me no music 25,548 | {N} hour timer 204,296
+//   pomodoro adhd 15,990 | pomodoro no music 9,661 (comp 10.4) | {focus} minute pomodoro 5,233
 const tags = (r,i) => { const L=LIGHT[r.light], m=totalOf(r), h=Math.floor(m/60), sh=shapeOf(r), t=[];
-  if (r.kind!=='flow') t.push(`${sh.iv} pomodoro`, `${sh.focus} minute pomodoro`, 'pomodoro technique');
-  else t.push('deep work', 'flow state', 'deep work timer', 'study with me no break');
-  if (m%60===0) t.push(`${h} hour timer`, `study with me ${h} hours`);   // 125,629/mo at h=3
-  t.push(`${L.cap.toLowerCase()} ambience`, 'pomodoro adhd');
-  if (r.sound==='bell') t.push('pomodoro no music','silent study timer');
+  if (m%60===0) t.push(`${h} hour timer`, `study with me ${h} hours`);
+  if (r.kind!=='flow') t.push('pomodoro technique', `${sh.iv} pomodoro`);
+  else                 t.push('deep work', 'flow state', 'deep work timer');
+  // Bell rows earn their differentiator BEFORE the long tail — it is the whole reason they exist, and
+  // it is true only of them, so it can never come from Upload defaults.
+  if (r.sound==='bell') t.push('study with me no music', 'pomodoro no music');
+  t.push('pomodoro adhd', `${L.cap.toLowerCase()} ambience`);
+  if (r.kind==='flow')  t.push('study with me no break');
+  if (r.sound==='bell') t.push('silent study timer');
+  if (r.kind!=='flow')  t.push(`${sh.focus} minute pomodoro`);
   t.push(NONEN[i%NONEN.length]);
+  // Keep the non-English tag (it is the last item and reaches an audience nothing else does) and drop
+  // from just before it, so trimming always sheds the lowest-value English term.
   while (t.join(', ').length>TAG_BUDGET) t.splice(-2,1);
   return t.join(', '); };
 
