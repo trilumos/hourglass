@@ -404,7 +404,7 @@ const TH_SOLO = { ocn:'OCEAN WAVES', snd:'FALLING SAND', brz:'SEA BREEZE', brd:'
 // the other videos carry AMBIENCE. Printing NO MUSIC on the thumbnail implies its twin has a
 // soundtrack, which is a false contrast against our own library — and the thumbnail carries no SEO
 // weight, so accuracy wins there.
-const thumbSound = k => k === 'bell' ? 'BELL ONLY'
+const thumbSound = k => k === 'bell' ? '🔔 BELL ONLY'
   : k === 'all4' ? 'FULL SHORE'
   : (p => p.length === 1 ? TH_SOLO[p[0]]
        : p.length === 2 ? `${TH_SND[p[0]]} & ${TH_SND[p[1]]}`
