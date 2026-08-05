@@ -406,9 +406,11 @@ const TH_SOLO = { ocn:'OCEAN WAVES', snd:'FALLING SAND', brz:'SEA BREEZE', brd:'
 // weight, so accuracy wins there.
 const thumbSound = k => k === 'bell' ? '🔔 BELL ONLY'
   : k === 'all4' ? 'FULL SHORE'
+  // FULL SHORE is reserved for the genuine four. A three-sound mix lists itself — the title already
+  // names all three, and a thumbnail claiming FULL SHORE while the title says three contradicts it.
   : (p => p.length === 1 ? TH_SOLO[p[0]]
        : p.length === 2 ? `${TH_SND[p[0]]} & ${TH_SND[p[1]]}`
-       : 'FULL SHORE')(k.split('+'));
+       : `${p.slice(0, -1).map(x => TH_SND[x]).join(', ')} & ${TH_SND[p[p.length-1]]}`)(k.split('+'));
 const thumbOf = r => {
   const m = totalOf(r), h = Math.floor(m/60), mm = m%60;
   const l1 = h ? (mm ? `${h}H ${mm}M` : `${h} ${h === 1 ? 'HOUR' : 'HOURS'}`) : `${mm} MIN`;
@@ -427,7 +429,10 @@ const thumbOf = r => {
   // session and its bell twin in the channel grid, so it earns its own line.
   return [mode, `${l1} AT ${LIGHT[r.light].cap.toUpperCase()}`, snd];
 };
-const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
+// Test the CONTENTS, not the key: 'all4' contains ocean but the string 'all4' does not contain
+// 'ocn', so a plain /ocn/ test gave the leaf emoji to the one mix with the most ocean in it.
+const hasOcean = k => k === 'all4' || /ocn/.test(k);
+const EMOJI = r => r.sound==='bell' ? '🔔' : hasOcean(r.sound) ? '🌊' : '🍃';
 // Opens the title now, so it carries no trailing benefit clause -- that moves after Study With Me.
 // A PIPE, not a comma. A comma makes "No Music" read as a subordinate qualifier of the timer; a pipe
 // makes it a standalone claim — and on a bell row, no-music is the entire reason that upload exists
@@ -507,6 +512,15 @@ for (const r of rows){
   const emo = [...t].filter(c => c.codePointAt(0) > 0x2100);
   if (emo.length !== 1)    fail(emo.length + ' emoji, want exactly 1');
   if (emo[0] !== EMOJI(r)) fail('emoji ' + emo[0] + ' does not match the sound');
+  // Semantic, not just self-consistent: asserting against EMOJI() alone would have passed happily
+  // while EMOJI() itself was wrong. Checks the rendered SOUND NAME, which is what a viewer reads.
+  const oceanic = /Ocean|Full Shore/.test(SOUND[r.sound]);
+  if (!bell && oceanic && emo[0] !== '🌊') fail('sound contains ocean but the emoji does not');
+  if (!bell && !oceanic && emo[0] === '🌊') fail('wave emoji on a sound with no ocean');
+  // FULL SHORE means all four. A three-sound mix borrowing it overclaims and contradicts its title.
+  const thumbSnd = thumbOf(r)[2];
+  if (/FULL SHORE/.test(thumbSnd) !== (r.sound === 'all4'))
+    fail('thumbnail says "' + thumbSnd + '" for sound ' + r.sound);
 
   // Tail is read from the END, not by segment count: a flow row carries an extra "| No Breaks"
   // segment up front, so counting from the start mistook its head for its tail.
