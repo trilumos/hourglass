@@ -412,7 +412,12 @@ const thumbOf = r => {
   // and it is exactly what Timer Palette leads with. STUDY WITH ME comes OFF the thumbnail: it stays
   // in the title where it still indexes, but at 168px there is no room for a promise a faceless timer
   // cannot keep. Six words instead of eight, closer to the 3-5 that actually read in a feed.
-  return [mode, l1, `${LIGHT[r.light].cap.toUpperCase()}   ${snd}`];
+  // Three tiers, largest first: interval, then duration+sky as ONE phrase, then the sound centred on
+  // the hourglass axis. Flanking the sky and sound either side of the glass read as a spec sheet;
+  // "2 HOURS AT MIDNIGHT" reads as language, and it frees the bottom for the sound where the
+  // composition actually wants it. The sound line is also the ONLY visible difference between a
+  // session and its bell twin in the channel grid, so it earns its own line.
+  return [mode, `${l1} AT ${LIGHT[r.light].cap.toUpperCase()}`, snd];
 };
 const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
 // Opens the title now, so it carries no trailing benefit clause -- that moves after Study With Me.
