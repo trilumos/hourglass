@@ -312,7 +312,12 @@ import { LQIP } from '../scene/lqip.js';
         // Nothing here is typed per video: change the Setup and the copy changes with it. This is also
         // the ONLY on-screen text in the whole capture, and relevance counts on-screen text in the first
         // seconds — so the config line doubles as the algorithm's read on what the video is.
-        var INTRO_MS = 10000, OUTRO_MS = 7000;
+        // 3s, not 10s. A viewer arriving on "50/10 Pomodoro Timer" wants the timer, and a static card
+        // is the one thing on screen that is NOT what they clicked for — the single most-cited fix for
+        // retention on timer content is to start instantly. 3s intro + 3s countdown puts the first
+        // focus block 6 seconds in instead of 13.
+        // Chapters key off this: gen-roadmap's LEAD_IN must match INTRO_MS/1000.
+        var INTRO_MS = 3000, OUTRO_MS = 7000;
         // The card is on screen for OUTRO_MS, but OBS is told to stop at OUTRO_STOP_MS so the
         // recording ends ON the thank-you card rather than on the fade-out or on black.
         var OUTRO_STOP_MS = 5000;

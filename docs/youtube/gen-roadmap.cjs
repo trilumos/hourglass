@@ -284,7 +284,7 @@ const presetURL = r => {
 // That makes the Intro chapter exactly 10 s, which is precisely YouTube's per-chapter minimum. Legal,
 // but with zero headroom — so MIN_CHAPTER below asserts it rather than trusting it. If stage.astro's
 // INTRO_MS is ever shortened, the generator refuses to emit instead of silently killing chapters again.
-const LEAD_IN = 10 / 60;                       // minutes, to match the plan's units
+const LEAD_IN = 3 / 60;                        // minutes; MUST equal stage.astro INTRO_MS/1000
 // No closing chapter for the thank-you card: recording stops 5 s into it (OUTRO_STOP_MS), and a chapter
 // under 10 s is invalid and would silently kill the markers for the whole video. The last break absorbs it.
 // Chapters start at 00:00:00 with Focus 1 — no "Intro" marker. Two reasons, one hard:
