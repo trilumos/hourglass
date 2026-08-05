@@ -412,7 +412,12 @@ const thumbSound = k => k === 'bell' ? '🔔 BELL ONLY'
 const thumbOf = r => {
   const m = totalOf(r), h = Math.floor(m/60), mm = m%60;
   const l1 = h ? (mm ? `${h}H ${mm}M` : `${h} ${h === 1 ? 'HOUR' : 'HOURS'}`) : `${mm} MIN`;
-  const mode = r.kind === 'flow' ? 'DEEP WORK' : `${shapeOf(r).iv} POMODORO`;
+  // Line 1 is the STRUCTURE slot and always carries two facts: Pomodoro gives interval + technique,
+  // so Flow gives mode + the thing that defines it. "No breaks" is Flow's structural fact, and the
+  // title only says "Deep Work" — stating it here makes the pair concrete instead of implied.
+  // 21 chars against POMODORO's 14, so Canva auto-fits it smaller; still the largest element, and it
+  // only affects the 6 flow videos.
+  const mode = r.kind === 'flow' ? 'DEEP WORK · NO BREAKS' : `${shapeOf(r).iv} POMODORO`;
   const snd = thumbSound(r.sound);
   // POMODORO + the interval is the headline, as one unit -- "50/10 pomodoro" is 47,568/mo on its own
   // and it is exactly what Timer Palette leads with. STUDY WITH ME comes OFF the thumbnail: it stays

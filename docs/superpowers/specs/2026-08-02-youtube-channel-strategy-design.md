@@ -941,8 +941,13 @@ The studio stays as the scene-capture tool; Canva does the type.
 OCEAN & BREEZE          size 50   bold   (centred on the hourglass axis)
 ```
 
-**Line 1 — `{interval} POMODORO`.** `50/10 pomodoro` is 47,568/mo as one phrase and it is what Timer
-Palette leads with. Flow videos read `DEEP WORK`.
+**Line 1 — the STRUCTURE slot, always two facts.** `{interval} POMODORO` for Pomodoro;
+**`DEEP WORK · NO BREAKS`** for Flow — no-breaks is Flow's structural fact, and the title only says
+"Deep Work", so stating it here makes the pair concrete rather than implied. 21 chars against 14, so it
+auto-fits smaller; still the largest element, and it affects only the 6 flow videos.
+
+**Interval detail:** `50/10 pomodoro` is 47,568/mo as one phrase and it is what Timer
+Palette leads with. 
 
 **Line 2 — `{N} HOURS AT {SKY}`.** Duration and sky merged into one phrase. The earlier version flanked
 them either side of the glass and read as a spec sheet; this reads as language, and it frees the bottom
