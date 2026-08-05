@@ -427,13 +427,18 @@ const thumbOf = r => {
 };
 const EMOJI = r => r.sound==='bell' ? '🔔' : /ocn/.test(r.sound) ? '🌊' : '🍃';
 // Opens the title now, so it carries no trailing benefit clause -- that moves after Study With Me.
+// A PIPE, not a comma. A comma makes "No Music" read as a subordinate qualifier of the timer; a pipe
+// makes it a standalone claim — and on a bell row, no-music is the entire reason that upload exists
+// separately from its twin, so it must not be grammatically demoted. Heavy chunking is also the norm
+// here: Mr Tiny's runs five pipes at 178k, Focus Station three stars at 582k, Countdown Time - and ||
+// at 687k. Two pipes is restrained by comparison.
 const modePhrase = r => { const sh = shapeOf(r);
   // Flow was checked FIRST and returned, so a flow row that is also bell-only never said No Music --
   // 3 of 29 videos silently lost their single strongest differentiator (study with me no music 25,548
   // + pomodoro no music 9,661 at competition 10.4). Both facts now travel together.
-  if (r.kind==='flow')   return r.sound==='bell' ? 'Deep Work Timer, No Breaks or Music'
-                                                 : 'Deep Work Timer, No Breaks';
-  if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer, No Music`;
+  if (r.kind==='flow')   return r.sound==='bell' ? 'Deep Work Timer | No Breaks or Music'
+                                                 : 'Deep Work Timer | No Breaks';
+  if (r.sound==='bell')  return `${sh.iv} Pomodoro Timer | No Music`;
   return `${sh.iv} Pomodoro Timer`;
 };
 const benefit = r => r.kind==='flow' ? 'for Flow State & ADHD' : 'for Deep Focus & ADHD';

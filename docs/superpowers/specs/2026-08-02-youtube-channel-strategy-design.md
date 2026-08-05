@@ -881,9 +881,14 @@ The SERP splits perfectly on this: **every faceless timer channel leads with the
 
 ```
 {IV} Pomodoro Timer {emoji} {N}-Hour Study With Me for Deep Focus & ADHD | {Sound}, {Light}
-{IV} Pomodoro Timer, No Music 🔔 {N}-Hour Study With Me for Deep Focus & ADHD | {Light}
-Deep Work Timer, No Breaks {emoji} {N}-Hour Study With Me for Flow State & ADHD | {Sound}, {Light}
+{IV} Pomodoro Timer | No Music 🔔 {N}-Hour Study With Me for Deep Focus & ADHD | {Light}
+Deep Work Timer | No Breaks {emoji} {N}-Hour Study With Me for Flow State & ADHD | {Sound}, {Light}
 ```
+
+The qualifier takes a **pipe, not a comma**. A comma makes `No Music` read as a subordinate
+qualifier of the timer; a pipe makes it a standalone claim — and on a bell row that is the entire
+reason the upload exists separately from its twin. Heavy chunking is the norm here: Mr. Tiny's runs
+five pipes at 178k, Focus Station three stars at 582k, Countdown Time `-` and `||` at 687k.
 
 Word order does not change indexing — both phrases still match. It changes only what a human reads
 first. `Study With Me` stays because Timer Palette proves it works in the tail and it is honest: we are
