@@ -459,8 +459,14 @@ const title = r => {
   const head = `${modePhrase(r)} ${EMOJI(r)} ${durTxt(totalOf(r))} Study With Me`;
   const L = LIGHT[r.light].cap, S = SOUND[r.sound], h2 = `${head} ${benefit(r)}`;
   if (r.sound === 'bell') return `${h2} | ${L}`;
-  const full = `${h2} | ${S}${/ & /.test(S) ? ',' : ' &'} ${L}`;
-  return full.length <= 100 ? full : `${h2} | ${L}`;
+  // Pipes throughout, not a comma — every other break in the title is a pipe, and the sound and the
+  // sky are two separate facts, not one phrase.
+  // SOUND leads the tail and the SKY is what gets dropped on overflow. The thumbnail already shows the
+  // sky (the image IS midnight), so naming it adds little; the sound is the one thing a viewer cannot
+  // see, decides on, and searches for — ocean waves 279,071 and nature sounds 504,753 against sky terms
+  // that barely register. The old guard dropped the sound and kept the sky, which had it backwards.
+  const full = `${h2} | ${S} | ${L}`;
+  return full.length <= 100 ? full : `${h2} | ${S}`;
 };
 for (const r of rows) if (title(r).length > 100)
   throw new Error(`title still too long (${title(r).length}): ${title(r)}`);
